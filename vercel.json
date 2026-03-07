@@ -9,6 +9,29 @@
       }
     },
     {
+      "src": "/sw\\.js",
+      "dest": "/sw.js",
+      "headers": {
+        "Content-Type": "application/javascript",
+        "Service-Worker-Allowed": "/",
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      }
+    },
+    {
+      "src": "/icon-192\\.png",
+      "dest": "/icon-192.png",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/icon-512\\.png",
+      "dest": "/icon-512.png",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
       "src": "/icons/(.*)",
       "dest": "/icons/$1",
       "headers": {

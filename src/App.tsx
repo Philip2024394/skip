@@ -20,6 +20,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import AddToHomeScreen from "./components/AddToHomeScreen";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AppContent />
+        <AddToHomeScreen />
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>
