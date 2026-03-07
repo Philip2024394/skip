@@ -17,12 +17,14 @@ interface DetailPanelProps {
   isMatch: boolean;
   onClose: () => void;
   onUnlock: (profile: Profile) => void;
+  onLike?: (profile: Profile) => void;
   nearbyUsers?: Profile[];
   onSelectUser?: (userId: string) => void;
   likedMeProfiles?: Profile[];
   hasSuperLike?: boolean;
   onSuperLike?: (profile: Profile) => void;
   onPurchaseFeature?: (feature: PremiumFeature) => void;
+  alreadyLiked?: boolean;
 }
 
 interface FloatingHeart {
@@ -35,19 +37,22 @@ interface FloatingHeart {
 
 let heartIdCounter = 0;
 
-const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], onSelectUser, likedMeProfiles = [], hasSuperLike = false, onSuperLike, onPurchaseFeature }: DetailPanelProps) => {
+const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers = [], onSelectUser, likedMeProfiles = [], hasSuperLike = false, onSuperLike, onPurchaseFeature, alreadyLiked = false }: DetailPanelProps) => {
   const navigate = useNavigate();
   const [imageIndex, setImageIndex] = useState(0);
   const [showSuperLikeDialog, setShowSuperLikeDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [showPlusOneModal, setShowPlusOneModal] = useState(false);
+  const [liked, setLiked] = useState(alreadyLiked);
   const images = profile.images ?? [profile.image];
   const autoShownRef = useRef(false);
 
+  const isPlusOne = !!profile.is_plusone;
+
   // Auto-show Plus One modal once per profile per session
   useEffect(() => {
-    if (!profile.is_plusone) return;
+    if (!isPlusOne) return;
     const key = `plusone_seen_${profile.id}`;
     if (sessionStorage.getItem(key)) return;
     if (autoShownRef.current) return;
@@ -56,11 +61,26 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
       setShowPlusOneModal(true);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [profile.id, profile.is_plusone]);
+  }, [profile.id, isPlusOne]);
 
   const handleClosePlusOneModal = () => {
     setShowPlusOneModal(false);
     sessionStorage.setItem(`plusone_seen_${profile.id}`, "1");
+  };
+
+  const handlePlusOneConnect = () => {
+    handleClosePlusOneModal();
+    const plusOneFeature = PREMIUM_FEATURES.find((f) => f.id === "plusone");
+    if (plusOneFeature && onPurchaseFeature) {
+      onPurchaseFeature(plusOneFeature);
+    }
+  };
+
+  const handleLikeClick = () => {
+    if (liked) return;
+    setLiked(true);
+    spawnHearts();
+    if (onLike) onLike(profile);
   };
 
   const dragX = useMotionValue(0);
@@ -285,50 +305,91 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
 
           {/* Bottom action buttons */}
           <div className="absolute bottom-6 left-0 right-0 z-30 flex flex-col items-center gap-3 px-6" style={{ overflow: "visible" }}>
-            {/* Mutual-match gate — only show WhatsApp button when both have liked */}
-            {isMatch ? (
-              <button
-                onClick={() => { spawnHearts(); onUnlock(profile); }}
-                aria-label="Unlock WhatsApp contact"
-                className="flex items-center gap-2 px-5 py-3 rounded-full bg-green-500/20 backdrop-blur-md border border-green-400/40 text-green-300 font-semibold text-sm hover:bg-green-500/30 hover:scale-105 transition-all"
-              >
-                <MessageCircle className="w-5 h-5" fill="currentColor" />
-                Connect on WhatsApp — $1.99
-              </button>
+
+            {isPlusOne ? (
+              /* ── Plus-One profile: like heart + $19.99 connect ── */
+              <>
+                <button
+                  onClick={() => {
+                    sessionStorage.removeItem(`plusone_seen_${profile.id}`);
+                    setShowPlusOneModal(true);
+                  }}
+                  className="flex items-center gap-2 px-5 py-3 rounded-full bg-primary/20 backdrop-blur-md border border-primary/40 text-primary font-semibold text-sm hover:bg-primary/30 hover:scale-105 transition-all"
+                >
+                  <MessageCircle className="w-5 h-5" fill="currentColor" />
+                  Connect on WhatsApp — $19.99
+                </button>
+                <div className="flex items-center justify-center gap-4">
+                  {/* Heart like button — always shown for +1 profiles */}
+                  <button
+                    onClick={handleLikeClick}
+                    aria-label="Like this profile"
+                    className={`w-14 h-14 rounded-full backdrop-blur-md border flex items-center justify-center hover:scale-105 transition-all ${
+                      liked
+                        ? "bg-primary/30 border-primary/60 text-primary"
+                        : "bg-black/50 border-white/10 text-white hover:bg-black/70"
+                    }`}
+                  >
+                    <Heart className="w-6 h-6" fill={liked ? "currentColor" : "none"} />
+                  </button>
+                  {/* Close */}
+                  <button
+                    onClick={onClose}
+                    aria-label="Close profile"
+                    className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </>
             ) : (
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10">
-                <MessageCircle className="w-4 h-4 text-white/30" />
-                <span className="text-white/40 text-xs">Like each other to unlock WhatsApp</span>
-              </div>
+              /* ── Normal profile: mutual-match WhatsApp + super like + close ── */
+              <>
+                {isMatch ? (
+                  <button
+                    onClick={() => { spawnHearts(); onUnlock(profile); }}
+                    aria-label="Unlock WhatsApp contact"
+                    className="flex items-center gap-2 px-5 py-3 rounded-full bg-green-500/20 backdrop-blur-md border border-green-400/40 text-green-300 font-semibold text-sm hover:bg-green-500/30 hover:scale-105 transition-all"
+                  >
+                    <MessageCircle className="w-5 h-5" fill="currentColor" />
+                    Connect on WhatsApp — $1.99
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10">
+                    <MessageCircle className="w-4 h-4 text-white/30" />
+                    <span className="text-white/40 text-xs">Like each other to unlock WhatsApp</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-center gap-4">
+                  {/* Super Like */}
+                  <button
+                    onClick={() => {
+                      spawnHearts();
+                      if (hasSuperLike && onSuperLike) {
+                        onSuperLike(profile);
+                      } else {
+                        setShowSuperLikeDialog(true);
+                      }
+                    }}
+                    aria-label="Super Like"
+                    className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                    style={{ color: hasSuperLike ? "hsl(45, 95%, 58%)" : "white" }}
+                  >
+                    <Star className="w-6 h-6" fill="currentColor" />
+                  </button>
+
+                  {/* Close */}
+                  <button
+                    onClick={onClose}
+                    aria-label="Close profile"
+                    className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </>
             )}
-
-            <div className="flex items-center justify-center gap-4">
-              {/* Super Like */}
-              <button
-                onClick={() => {
-                  spawnHearts();
-                  if (hasSuperLike && onSuperLike) {
-                    onSuperLike(profile);
-                  } else {
-                    setShowSuperLikeDialog(true);
-                  }
-                }}
-                aria-label="Super Like"
-                className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
-                style={{ color: hasSuperLike ? "hsl(45, 95%, 58%)" : "white" }}
-              >
-                <Star className="w-6 h-6" fill="currentColor" />
-              </button>
-
-              {/* Close */}
-              <button
-                onClick={onClose}
-                aria-label="Close profile"
-                className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
           </div>
         </div>
       </motion.div>
@@ -450,14 +511,22 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
                     </p>
                   </div>
 
-                  {/* CTA — same gradient-love button style as GuestAuthPrompt */}
+                  {/* Primary CTA — $19.99 connect */}
                   <Button
-                    onClick={handleClosePlusOneModal}
+                    onClick={handlePlusOneConnect}
                     className="w-full h-13 gradient-love border-0 text-white font-bold text-base rounded-2xl shadow-[0_0_24px_rgba(180,80,150,0.35)] hover:shadow-[0_0_32px_rgba(180,80,150,0.5)] transition-shadow"
                   >
-                    <Heart className="w-5 h-5 mr-2" fill="currentColor" />
-                    Got it
+                    <MessageCircle className="w-5 h-5 mr-2" fill="currentColor" />
+                    Connect on WhatsApp — $19.99
                   </Button>
+
+                  {/* Secondary dismiss */}
+                  <button
+                    onClick={handleClosePlusOneModal}
+                    className="w-full py-2 text-white/40 hover:text-white/70 text-sm font-medium transition-colors text-center"
+                  >
+                    Maybe later
+                  </button>
                 </div>
               </div>
             </motion.div>

@@ -784,6 +784,8 @@ const Index = () => {
             isMatch={iLiked.some((p) => p.id === detailProfile.id) && likedMe.some((p) => p.id === detailProfile.id)}
             onClose={() => setDetailProfile(null)}
             onUnlock={handleUnlock}
+            onLike={handleLike}
+            alreadyLiked={iLiked.some((p) => p.id === detailProfile.id)}
             nearbyUsers={allProfiles}
             onSelectUser={handleMapSelectUser}
             likedMeProfiles={likedMe}
