@@ -283,41 +283,51 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
           </AnimatePresence>
 
           {/* Bottom action buttons */}
-          <div className="absolute bottom-6 left-0 right-0 z-30 flex items-center justify-center gap-4 px-6" style={{ overflow: "visible" }}>
-            {/* Chat / Unlock WhatsApp */}
-            <button
-              onClick={() => { spawnHearts(); onUnlock(profile); }}
-              aria-label="Unlock WhatsApp contact"
-              className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
-            >
-              <MessageCircle className="w-6 h-6" fill="currentColor" />
-            </button>
+          <div className="absolute bottom-6 left-0 right-0 z-30 flex flex-col items-center gap-3 px-6" style={{ overflow: "visible" }}>
+            {/* Mutual-match gate — only show WhatsApp button when both have liked */}
+            {isMatch ? (
+              <button
+                onClick={() => { spawnHearts(); onUnlock(profile); }}
+                aria-label="Unlock WhatsApp contact"
+                className="flex items-center gap-2 px-5 py-3 rounded-full bg-green-500/20 backdrop-blur-md border border-green-400/40 text-green-300 font-semibold text-sm hover:bg-green-500/30 hover:scale-105 transition-all"
+              >
+                <MessageCircle className="w-5 h-5" fill="currentColor" />
+                Connect on WhatsApp — $1.99
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10">
+                <MessageCircle className="w-4 h-4 text-white/30" />
+                <span className="text-white/40 text-xs">Like each other to unlock WhatsApp</span>
+              </div>
+            )}
 
-            {/* Super Like */}
-            <button
-              onClick={() => {
-                spawnHearts();
-                if (hasSuperLike && onSuperLike) {
-                  onSuperLike(profile);
-                } else {
-                  setShowSuperLikeDialog(true);
-                }
-              }}
-              aria-label="Super Like"
-              className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
-              style={{ color: hasSuperLike ? "hsl(45, 95%, 58%)" : "white" }}
-            >
-              <Star className="w-6 h-6" fill="currentColor" />
-            </button>
+            <div className="flex items-center justify-center gap-4">
+              {/* Super Like */}
+              <button
+                onClick={() => {
+                  spawnHearts();
+                  if (hasSuperLike && onSuperLike) {
+                    onSuperLike(profile);
+                  } else {
+                    setShowSuperLikeDialog(true);
+                  }
+                }}
+                aria-label="Super Like"
+                className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                style={{ color: hasSuperLike ? "hsl(45, 95%, 58%)" : "white" }}
+              >
+                <Star className="w-6 h-6" fill="currentColor" />
+              </button>
 
-            {/* Close */}
-            <button
-              onClick={onClose}
-              aria-label="Close profile"
-              className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
-            >
-              <X className="w-6 h-6" />
-            </button>
+              {/* Close */}
+              <button
+                onClick={onClose}
+                aria-label="Close profile"
+                className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>
