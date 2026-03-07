@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, MessageCircle, ArrowLeft } from "lucide-react";
+import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, MessageCircle, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,15 +135,16 @@ const AuthPage = () => {
     <div className="h-screen-safe flex items-center justify-center p-4 relative overflow-hidden" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
-        {/* Back to home */}
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back to home
-        </button>
+      {/* Home icon — floating on right, below header area */}
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-20 right-5 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-black/70 transition-all"
+        aria-label="Go to home"
+      >
+        <Home className="w-5 h-5" />
+      </button>
 
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-4">
           <img src={logoHeart} alt="SkipTheApp" className="w-20 h-20 mx-auto mb-2 object-contain drop-shadow-xl" />
