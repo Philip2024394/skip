@@ -22,4 +22,5 @@ export interface Profile {
   first_date_idea?: string | null;
   first_date_places?: Array<{ idea: string; url: string; image_url: string | null; title: string | null }>;
   languages?: string[];
+  is_plusone?: boolean;
 }

@@ -633,7 +633,7 @@ const MapPage = () => {
 
   // ── Render ─────────────────────────────────────────────────────────
   return (
-    <div className="h-screen w-screen relative overflow-hidden bg-black">
+    <div className="h-screen-safe w-screen relative overflow-hidden bg-black">
       {/* Map */}
       <div ref={mapRef} className="absolute inset-0 z-0" />
 
@@ -644,13 +644,14 @@ const MapPage = () => {
       <button
         onClick={() => navigate("/")}
         aria-label="Back to home"
-        className="absolute top-4 left-4 z-20 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+        className="absolute left-4 z-20 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+        style={{ top: `max(1rem, env(safe-area-inset-top, 0px))` }}
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
 
       {/* ── Top-right stack: Recenter + Radius toggle + "Tonight" filter ── */}
-      <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+      <div className="absolute right-4 z-20 flex flex-col gap-2" style={{ top: `max(1rem, env(safe-area-inset-top, 0px))` }}>
         {userLocation && (
           <button
             onClick={() => {
@@ -680,13 +681,13 @@ const MapPage = () => {
         {/* Available Tonight filter */}
         <button
           onClick={() => setFilterTonight(v => !v)}
-          aria-label={filterTonight ? "Show all profiles" : "Show available tonight only"}
+          aria-label={filterTonight ? "Show all profiles" : "Show free tonight only"}
           className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
             filterTonight
-              ? "bg-teal-500/20 border-teal-400/50 text-teal-400"
+              ? "bg-yellow-400/15 border-yellow-400/60 text-yellow-400"
               : "bg-black/50 border-white/10 text-white/50 hover:text-white"
           }`}
-          title={filterTonight ? "Showing: available tonight" : "Filter: available tonight"}
+          title={filterTonight ? "Showing: free tonight" : "Filter: free tonight"}
         >
           <Moon className="w-4 h-4" />
         </button>
@@ -754,9 +755,14 @@ const MapPage = () => {
                 <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
               )}
               <span className="text-white/40 text-[10px] flex-shrink-0">{selectedProfile.city}</span>
-              {selectedProfile.available_tonight && (
-                <span className="text-teal-400 text-[10px] flex-shrink-0 flex items-center gap-0.5">
-                  <Moon className="w-2.5 h-2.5" /> tonight
+              {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
+                <span className="text-yellow-400 text-[10px] flex-shrink-0 flex items-center gap-0.5">
+                  <Moon className="w-2.5 h-2.5" fill="currentColor" /> free tonight
+                </span>
+              )}
+              {(selectedProfile as any).is_plusone && (
+                <span className="text-yellow-400 text-[10px] flex-shrink-0 flex items-center gap-0.5 font-bold">
+                  +1 Plus-One
                 </span>
               )}
             </div>
@@ -775,19 +781,19 @@ const MapPage = () => {
           >
             <div className="bg-teal-500/20 backdrop-blur-xl border border-teal-400/40 rounded-full px-3 py-1 flex items-center gap-1.5">
               <Moon className="w-3 h-3 text-teal-400" />
-              <span className="text-teal-300 text-[10px] font-semibold">Available Tonight only</span>
+              <span className="text-yellow-400 text-[10px] font-semibold">Free Tonight only</span>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* ── Bottom UI ── */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 pb-6">
+      <div className="absolute bottom-0 left-0 right-0 z-20" style={{ paddingBottom: `env(safe-area-inset-bottom, 0px)` }}>
         <div className="h-20 bg-gradient-to-t from-black/85 to-transparent pointer-events-none" />
-        <div className="px-4">
+        <div className="px-4 pb-6">
 
           {/* Avatar strip */}
-          <div className="flex items-end justify-center gap-4 mb-4">
+          <div className="flex items-end justify-center gap-4 mb-4 overflow-x-auto scroll-touch px-2" style={{ scrollbarWidth: "none" }}>
             {nearestProfiles.map((profile, idx) => {
               const isActive     = idx === selectedIndex;
               const isLiked      = likedIds.has(profile.id);
@@ -831,9 +837,11 @@ const MapPage = () => {
                         <Heart className="w-3 h-3 text-white" fill="white" />
                       </div>
                     )}
-                    {profile.available_tonight && !isLiked && (
-                      <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-teal-400/90 flex items-center justify-center text-[8px]">🌙</div>
-                    )}
+                    {(profile as any).is_plusone ? (
+                      <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-black border border-yellow-400/70 flex items-center justify-center text-[7px] font-black text-yellow-300 shadow-[0_0_6px_rgba(250,204,21,0.5)]">+1</div>
+                    ) : profile.available_tonight && !isLiked ? (
+                      <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black border border-yellow-400/70 flex items-center justify-center text-[8px] shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</div>
+                    ) : null}
                     {!isLiked && !profile.available_tonight && isOnline(profile.last_seen_at) && (
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-black shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
                     )}

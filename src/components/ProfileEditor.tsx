@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
-import { Camera, X, MapPin, Save, Loader2, CalendarHeart, Star, ZoomIn, ZoomOut, MoveHorizontal, MoveVertical, Heart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Camera, X, MapPin, Save, Loader2, CalendarHeart, Star, ZoomIn, ZoomOut, MoveHorizontal, MoveVertical, Heart, PauseCircle, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,6 +46,7 @@ interface ProfileData {
   first_date_idea: string | null;
   first_date_places: DatePlace[];
   languages: string[];
+  is_plusone: boolean;
 }
 
 const ProfileEditor = () => {
@@ -54,6 +55,27 @@ const ProfileEditor = () => {
   const [saving, setSaving] = useState(false);
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
   const [locating, setLocating] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [deactivateDone, setDeactivateDone] = useState(false);
+  const [freeTonightUntil, setFreeTonightUntil] = useState<Date | null>(null);
+
+  // On mount: check if Free Tonight has expired and auto-clear it
+  useEffect(() => {
+    if (!userId) return;
+    const stored = localStorage.getItem(`free_tonight_until_${userId}`);
+    if (stored) {
+      const expiry = new Date(stored);
+      if (Date.now() >= expiry.getTime()) {
+        // Expired — clear in DB silently
+        localStorage.removeItem(`free_tonight_until_${userId}`);
+        (supabase.from("profiles").update as any)({ available_tonight: false }).eq("id", userId);
+        setFreeTonightUntil(null);
+      } else {
+        setFreeTonightUntil(expiry);
+      }
+    }
+  }, [userId]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadSlot, setUploadSlot] = useState<number>(0);
   const [userId, setUserId] = useState<string>("");
@@ -67,7 +89,7 @@ const ProfileEditor = () => {
 
       const { data } = await supabase
         .from("profiles")
-        .select("name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages")
+        .select("name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone")
         .eq("id", user.id)
         .single();
 
@@ -96,6 +118,7 @@ const ProfileEditor = () => {
           first_date_idea: (data as any).first_date_idea || null,
           first_date_places: (data as any).first_date_places || [],
           languages: (data as any).languages || [],
+          is_plusone: (data as any).is_plusone || false,
         });
       }
       setLoading(false);
@@ -241,6 +264,7 @@ const ProfileEditor = () => {
         first_date_idea: profile.first_date_idea as any,
         first_date_places: profile.first_date_places as any,
         languages: profile.languages as any,
+        is_plusone: profile.is_plusone as any,
         main_image_pos: `${mainPos.x}% ${mainPos.y}%` as any,
         updated_at: new Date().toISOString(),
       })
@@ -251,6 +275,24 @@ const ProfileEditor = () => {
       toast.error("Save failed: " + error.message);
     } else {
       toast.success("Profile saved! ✅");
+    }
+  };
+
+  const handleDeactivate = async () => {
+    if (!userId) return;
+    setDeactivating(true);
+    // Set hidden_until to 100 days from now — hides from all browsing without deleting
+    const hiddenUntil = new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString();
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_active: false, hidden_until: hiddenUntil } as any)
+      .eq("id", userId);
+    setDeactivating(false);
+    if (error) {
+      toast.error("Could not deactivate: " + error.message);
+    } else {
+      setShowDeactivateConfirm(false);
+      setDeactivateDone(true);
     }
   };
 
@@ -599,19 +641,93 @@ const ProfileEditor = () => {
         )}
       </div>
 
-      {/* Available Tonight */}
-      <div className="flex items-center justify-between glass rounded-xl p-3">
-        <div className="flex items-center gap-2">
-          <CalendarHeart className="w-4 h-4 text-secondary" />
-          <div>
-            <p className="text-foreground text-sm font-medium">Available Tonight</p>
-            <p className="text-muted-foreground text-[10px]">Show a badge on your profile</p>
+      {/* Free Tonight */}
+      <div className="glass rounded-xl p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Moon className="w-4 h-4 text-yellow-400" fill="currentColor" />
+            <div>
+              <p className="text-foreground text-sm font-medium">Free Tonight</p>
+              <p className="text-muted-foreground text-[10px]">
+                {freeTonightUntil
+                  ? `Auto-clears at midnight · expires ${freeTonightUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                  : "Shows a badge on your profile until midnight"}
+              </p>
+            </div>
           </div>
+          <Switch
+            checked={profile.available_tonight}
+            onCheckedChange={(checked) => {
+              update("available_tonight", checked);
+              // Turning on Free Tonight clears Plus-One
+              if (checked) update("is_plusone", false);
+              if (checked) {
+                // Set expiry to end of today (midnight local time)
+                const midnight = new Date();
+                midnight.setHours(23, 59, 59, 999);
+                setFreeTonightUntil(midnight);
+                if (userId) localStorage.setItem(`free_tonight_until_${userId}`, midnight.toISOString());
+                // Schedule auto-clear
+                const msLeft = midnight.getTime() - Date.now();
+                setTimeout(async () => {
+                  await (supabase.from("profiles").update as any)({ available_tonight: false }).eq("id", userId);
+                  if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
+                  setFreeTonightUntil(null);
+                  update("available_tonight", false);
+                  toast("🌙 Free Tonight badge has been automatically removed at midnight.");
+                }, msLeft);
+              } else {
+                setFreeTonightUntil(null);
+                if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
+              }
+            }}
+          />
         </div>
-        <Switch
-          checked={profile.available_tonight}
-          onCheckedChange={(checked) => update("available_tonight", checked)}
-        />
+        {profile.available_tonight && freeTonightUntil && (
+          <div className="flex items-center gap-1.5 bg-yellow-400/10 border border-yellow-400/30 rounded-lg px-2.5 py-1.5">
+            <Moon className="w-3 h-3 text-yellow-400 flex-shrink-0" fill="currentColor" />
+            <p className="text-yellow-300 text-[10px]">
+              Badge is live on your profile and will automatically turn off at{" "}
+              <span className="font-bold">midnight tonight</span>. Turn the switch off anytime to remove it early.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Plus-One Premium */}
+      <div className="glass rounded-xl p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-yellow-400" />
+            <div>
+              <div className="flex items-center gap-1.5">
+                <p className="text-foreground text-sm font-medium">Plus-One Premium</p>
+                <span className="bg-yellow-500/20 border border-yellow-400/40 text-yellow-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">$19.99</span>
+              </div>
+              <p className="text-muted-foreground text-[10px]">Show you're open to events & social outings</p>
+            </div>
+          </div>
+          <Switch
+            checked={profile.is_plusone}
+            onCheckedChange={(checked) => {
+              update("is_plusone", checked);
+              // Turning on Plus-One clears Free Tonight
+              if (checked) {
+                update("available_tonight", false);
+                setFreeTonightUntil(null);
+                if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
+              }
+            }}
+          />
+        </div>
+        {profile.is_plusone && (
+          <div className="flex items-start gap-1.5 bg-yellow-500/10 border border-yellow-400/30 rounded-lg px-2.5 py-1.5">
+            <Calendar className="w-3 h-3 text-yellow-400 flex-shrink-0 mt-0.5" />
+            <p className="text-yellow-300 text-[10px] leading-relaxed">
+              Your <span className="font-bold">🎫 Plus-One</span> badge is live! Others can see you're open to dinners, weddings, concerts, travel & social occasions. Connect via WhatsApp to coordinate plans.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* First Date Idea */}
@@ -648,6 +764,126 @@ const ProfileEditor = () => {
       >
         {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : <><Save className="w-4 h-4 mr-2" /> Save Profile</>}
       </Button>
+
+      {/* Deactivate account */}
+      <div className="pt-2 border-t border-border">
+        <button
+          onClick={() => setShowDeactivateConfirm(true)}
+          className="w-full py-2.5 text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center gap-1.5"
+        >
+          <PauseCircle className="w-3.5 h-3.5" />
+          Deactivate my account
+        </button>
+      </div>
+
+      {/* ── Deactivate confirmation dialog ── */}
+      <AnimatePresence>
+        {showDeactivateConfirm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm"
+              onClick={() => setShowDeactivateConfirm(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              className="fixed inset-x-4 bottom-8 z-50 bg-[#111] border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-w-sm mx-auto"
+            >
+              <div className="h-1 w-full bg-gradient-to-r from-amber-400 to-orange-500" />
+              <div className="p-6 text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-amber-500/10 border border-amber-400/30 flex items-center justify-center mx-auto">
+                  <PauseCircle className="w-7 h-7 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-white text-lg">Taking a break?</h3>
+                  <p className="text-white/50 text-xs mt-2 leading-relaxed">
+                    No worries — life gets busy. Deactivating hides your profile from everyone while keeping everything safe and intact.
+                  </p>
+                  <p className="text-white/70 text-sm mt-3 font-medium leading-relaxed">
+                    Whenever you're ready to come back, simply log in and you'll be right where you left off — your profile, matches and history all waiting for you. 👋
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 pt-1">
+                  <button
+                    onClick={handleDeactivate}
+                    disabled={deactivating}
+                    className="w-full py-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 text-amber-400 font-semibold text-sm hover:bg-amber-500/30 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {deactivating
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Deactivating...</>
+                      : <><PauseCircle className="w-4 h-4" /> Yes, deactivate my account</>
+                    }
+                  </button>
+                  <button
+                    onClick={() => setShowDeactivateConfirm(false)}
+                    className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 text-sm font-medium hover:text-white transition-colors"
+                  >
+                    Cancel — keep my account active
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Deactivate success dialog ── */}
+      <AnimatePresence>
+        {deactivateDone && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.88 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              className="fixed inset-x-4 bottom-8 z-50 bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden shadow-2xl max-w-sm mx-auto"
+            >
+              <div className="h-1 w-full gradient-love" />
+              <div className="p-6 text-center space-y-4">
+                {/* Animated heart */}
+                <motion.div
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ duration: 1.2, repeat: Infinity }}
+                  className="w-16 h-16 rounded-full gradient-love flex items-center justify-center mx-auto shadow-[0_0_24px_rgba(180,80,150,0.4)]"
+                >
+                  <Heart className="w-8 h-8 text-white" fill="white" />
+                </motion.div>
+
+                <div>
+                  <h3 className="font-display font-bold text-white text-xl">Until next time 💕</h3>
+                  <p className="text-white/60 text-sm mt-2 leading-relaxed">
+                    Your account has been quietly deactivated and your profile is now hidden. Everything is safe and ready for when you return.
+                  </p>
+                  <p className="text-white/80 text-sm mt-3 font-medium leading-relaxed">
+                    We'll be here whenever you're ready — just log back in and you're all set. No fuss, no re-setup, just straight back into it.
+                  </p>
+                  <p className="text-primary text-xs mt-3 font-semibold">
+                    The whole team at SkipTheApp thanks you for being part of our community. We hope to see you back soon! 🙏
+                  </p>
+                </div>
+
+                <button
+                  onClick={async () => {
+                    const { supabase: sb } = await import("@/integrations/supabase/client");
+                    await sb.auth.signOut();
+                    window.location.href = "/auth";
+                  }}
+                  className="w-full py-3 rounded-2xl gradient-love text-white font-bold text-sm"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint } from "lucide-react";
@@ -100,21 +100,83 @@ const Index = () => {
     });
   }, [allProfiles, filters]);
 
-  // Split into top/bottom — true random shuffle then split with no duplicates
-  const { topProfiles, bottomProfiles } = useMemo(() => {
-    const shuffled = [...filteredProfiles];
-    for (let i = shuffled.length - 1; i > 0; i--) {
+  // ── Stable randomised queue ──────────────────────────────────────────────
+  // Shuffled ONCE per session. Persists across dashboard/map navigation via
+  // sessionStorage so the same order isn't replayed on remount.
+  // seenIds tracks which profiles have already been shown; they cycle back
+  // only when every profile has been seen (endless loop feel).
+  const shuffledQueueRef = useRef<Profile[]>([]);
+  const seenIdsRef = useRef<Set<string>>(new Set());
+  // Increment to force topProfiles/bottomProfiles to recompute after queue changes
+  const [queueTick, setQueueTick] = useState(0);
+
+  const fisherYates = (arr: Profile[]): Profile[] => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      [a[i], a[j]] = [a[j], a[i]];
     }
+    return a;
+  };
+
+  // Build/restore the queue whenever filteredProfiles changes
+  useEffect(() => {
+    if (filteredProfiles.length === 0) return;
+    const storageKey = "swipe_queue_ids";
+    const stored = sessionStorage.getItem(storageKey);
+    if (stored) {
+      // Restore order from session, mapping ids back to current profiles
+      const ids: string[] = JSON.parse(stored);
+      const profileMap = new Map(filteredProfiles.map(p => [p.id, p]));
+      const restored = ids.map(id => profileMap.get(id)).filter(Boolean) as Profile[];
+      // Add any new profiles not in the stored queue at random positions
+      const newProfiles = filteredProfiles.filter(p => !ids.includes(p.id));
+      const combined = [...restored, ...fisherYates(newProfiles)];
+      shuffledQueueRef.current = combined;
+    } else {
+      // First visit this session — shuffle fresh
+      shuffledQueueRef.current = fisherYates(filteredProfiles);
+      sessionStorage.setItem(storageKey, JSON.stringify(shuffledQueueRef.current.map(p => p.id)));
+    }
+
+    // Restore seen ids from sessionStorage
+    const seenStored = sessionStorage.getItem("swipe_seen_ids");
+    if (seenStored) seenIdsRef.current = new Set(JSON.parse(seenStored));
+
+    // Trigger recompute of topProfiles/bottomProfiles
+    setQueueTick(t => t + 1);
+  }, [filteredProfiles]);
+
+  // Advance the queue — called by SwipeStack on each pass/like
+  const advanceQueue = useCallback((profileId: string) => {
+    seenIdsRef.current.add(profileId);
+    // Persist seen ids
+    sessionStorage.setItem("swipe_seen_ids", JSON.stringify([...seenIdsRef.current]));
+    // If all profiles seen, reset seen list and re-shuffle for a fresh loop
+    if (seenIdsRef.current.size >= shuffledQueueRef.current.length) {
+      seenIdsRef.current = new Set();
+      sessionStorage.removeItem("swipe_seen_ids");
+      shuffledQueueRef.current = fisherYates(filteredProfiles);
+      sessionStorage.setItem("swipe_queue_ids", JSON.stringify(shuffledQueueRef.current.map(p => p.id)));
+    }
+    // Trigger re-render so topProfiles/bottomProfiles recompute
+    setQueueTick(t => t + 1);
+  }, [filteredProfiles]);
+
+  // Derive ordered top/bottom from the stable queue, skipping seen profiles
+  const { topProfiles, bottomProfiles } = useMemo(() => {
+    const unseen = shuffledQueueRef.current.filter(p => !seenIdsRef.current.has(p.id));
+    // If all seen (race condition before advanceQueue fires), use full queue
+    const pool = unseen.length > 0 ? unseen : shuffledQueueRef.current;
     const top: Profile[] = [];
     const bottom: Profile[] = [];
-    shuffled.forEach((p, i) => {
+    pool.forEach((p, i) => {
       if (i % 2 === 0) top.push(p);
       else bottom.push(p);
     });
     return { topProfiles: top, bottomProfiles: bottom };
-  }, [filteredProfiles]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredProfiles, queueTick]);
 
   // topIndex/bottomIndex removed — managed inside SwipeStack
   const [iLiked, setILiked] = useState<Profile[]>([]);
@@ -130,6 +192,8 @@ const Index = () => {
   const [selectedList, setSelectedList] = useState<Profile[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [detailProfile, setDetailProfile] = useState<Profile | null>(null);
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false);
+  const welcomeBackName = useRef<string>("");
 
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" }>({ open: false, trigger: "generic" });
@@ -167,7 +231,7 @@ const Index = () => {
         // Check rose availability, terms acceptance, and gender
         const { data: myProfile } = await supabase
           .from("profiles")
-          .select("last_rose_at, terms_accepted_at, gender")
+          .select("last_rose_at, terms_accepted_at, gender, is_active, display_name, username")
           .eq("id", session.user.id)
           .single();
         if (myProfile) {
@@ -181,6 +245,17 @@ const Index = () => {
           }
           if ((myProfile as any).gender) {
             setUserGender((myProfile as any).gender);
+          }
+
+          // Re-activate a previously deactivated account on login
+          if ((myProfile as any).is_active === false) {
+            await supabase
+              .from("profiles")
+              .update({ is_active: true, hidden_until: null } as any)
+              .eq("id", session.user.id);
+            const name = (myProfile as any).display_name || (myProfile as any).username || "friend";
+            welcomeBackName.current = name;
+            setShowWelcomeBack(true);
           }
         }
       }
@@ -239,6 +314,7 @@ const Index = () => {
           main_image_zoom: zoomMap.get(p.id) || 100,
           first_date_idea: dateIdeaMap.get(p.id) || (p as any).first_date_idea || null,
           first_date_places: datePlacesMap.get(p.id) || [],
+          is_plusone: (p as any).is_plusone || false,
         }));
         // Sort spotlight profiles to front
         mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
@@ -270,6 +346,7 @@ const Index = () => {
               voice_intro_url: p.voice_intro_url,
               expires_at: likedMap.get(p.id)!.expires_at,
               is_rose: likedMap.get(p.id)!.is_rose,
+              is_plusone: (p as any).is_plusone || false,
             }));
           const mergedLikes = [
             ...sentLikeProfiles,
@@ -306,6 +383,7 @@ const Index = () => {
               available_tonight: p.available_tonight,
               voice_intro_url: p.voice_intro_url,
               expires_at: likerMap.get(p.id),
+              is_plusone: (p as any).is_plusone || false,
             }));
           setLikedMe(likedProfiles);
           saveLocalLikedMeProfiles(likedProfiles);
@@ -487,11 +565,11 @@ const Index = () => {
   const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "Guest";
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden relative" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
+    <div className="h-screen-safe flex flex-col overflow-hidden relative" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
       {/* Image preloading handled inside SwipeStack */}
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-2.5 relative z-10">
+      {/* Header — padded for status bar safe area */}
+      <header className="flex items-center justify-between px-4 py-2.5 relative z-10 pt-safe" style={{ paddingTop: `max(0.625rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-2">
           <img src={logoHeart} alt={APP_NAME} className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,80,150,0.5)]" />
           <span className="font-display font-bold text-white text-xl tracking-tight leading-none">{APP_NAME}</span>
@@ -519,7 +597,7 @@ const Index = () => {
       </header>
 
       {/* Main 3-container layout */}
-      <div className="flex-1 grid grid-rows-[1fr_auto_1fr] gap-2 p-2 min-h-0">
+      <div className="flex-1 grid grid-rows-[1fr_auto_1fr] gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))` }}>
         {/* Top Card */}
         <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5">
           {selectedProfile ? (
@@ -541,6 +619,19 @@ const Index = () => {
                 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
+
+              {/* ── Status badge — top-left (+1 beats Free Tonight) ── */}
+              {(selectedProfile as any).is_plusone ? (
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.4)]">
+                  <span className="text-yellow-300 font-black text-[12px] leading-none">+1</span>
+                  <span className="text-white/80">Plus-One</span>
+                </div>
+              ) : selectedProfile.available_tonight ? (
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
+                  <span className="text-yellow-400">🌙</span>
+                  Free Tonight
+                </div>
+              ) : null}
 
               {/* Fingerprint next button */}
               <button
@@ -574,7 +665,15 @@ const Index = () => {
               </button>
 
               <div className="absolute bottom-0 left-0 right-0 p-4">
-                <h3 className="font-display font-bold text-xl text-white">{selectedProfile.name}, {selectedProfile.age}</h3>
+                <h3 className="font-display font-bold text-xl text-white flex items-center gap-2">
+                  {selectedProfile.name}, {selectedProfile.age}
+                  {isOnline(selectedProfile.last_seen_at) && (
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                    </span>
+                  )}
+                </h3>
                 <p className="text-white/60 text-sm flex items-center gap-1 mt-1">
                   <MapPin className="w-3 h-3" /> {selectedProfile.city}, {selectedProfile.country}
                 </p>
@@ -588,9 +687,10 @@ const Index = () => {
               onRose={handleRose}
               onLike={(p) => {
                 handleLike(p);
+                advanceQueue(p.id);
                 if (user) setDetailProfile(p);
               }}
-              onPass={() => {}}
+              onPass={(p) => advanceQueue(p.id)}
             />
           ) : (
             <div className="flex items-center justify-center h-full">
@@ -650,9 +750,10 @@ const Index = () => {
               onRose={handleRose}
               onLike={(p) => {
                 handleLike(p);
+                advanceQueue(p.id);
                 if (user) setDetailProfile(p);
               }}
-              onPass={() => {}}
+              onPass={(p) => advanceQueue(p.id)}
             />
           ) : (
             <div className="flex items-center justify-center h-full">
@@ -737,7 +838,14 @@ const Index = () => {
         open={showFilters}
         onClose={() => setShowFilters(false)}
         filters={filters}
-        onApply={setFilters}
+        onApply={(newFilters) => {
+          // Clear the stored queue so new filters get a fresh shuffle
+          sessionStorage.removeItem("swipe_queue_ids");
+          sessionStorage.removeItem("swipe_seen_ids");
+          seenIdsRef.current = new Set();
+          shuffledQueueRef.current = [];
+          setFilters(newFilters);
+        }}
       />
 
       {/* Terms Acceptance Dialog */}
@@ -751,6 +859,81 @@ const Index = () => {
         trigger={guestPrompt.trigger}
         onClose={() => setGuestPrompt(p => ({ ...p, open: false }))}
       />
+
+      {/* ── Welcome Back modal ── */}
+      <AnimatePresence>
+        {showWelcomeBack && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm"
+              onClick={() => setShowWelcomeBack(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.88, y: 32 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 24 }}
+              transition={{ type: "spring", stiffness: 300, damping: 26 }}
+              className="fixed inset-x-4 bottom-8 z-50 max-w-sm mx-auto bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
+            >
+              {/* Brand accent bar */}
+              <div className="h-1 w-full gradient-love" />
+
+              <div className="p-6 text-center space-y-4">
+                {/* Animated hearts stack */}
+                <div className="relative flex items-center justify-center h-20">
+                  {[0, 1, 2].map(i => (
+                    <motion.div
+                      key={i}
+                      className="absolute"
+                      initial={{ opacity: 0, y: 10, scale: 0.6 }}
+                      animate={{ opacity: [0, 1, 0.85], y: [10, -8 - i * 10], scale: [0.6, 1 - i * 0.12] }}
+                      transition={{ delay: i * 0.15, duration: 0.7, ease: "easeOut" }}
+                    >
+                      <Heart
+                        className="text-pink-500 drop-shadow-[0_0_8px_rgba(236,72,153,0.7)]"
+                        style={{ width: 36 - i * 8, height: 36 - i * 8 }}
+                        fill="currentColor"
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Headline */}
+                <div>
+                  <motion.h2
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="font-display font-bold text-white text-2xl leading-tight"
+                  >
+                    Welcome back{welcomeBackName.current ? `, ${welcomeBackName.current}` : ""}! 💕
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                    className="text-white/60 text-sm mt-2 leading-relaxed"
+                  >
+                    We genuinely missed you — and we're not just saying that. Your profile is live again and the connections are waiting.
+                  </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                    className="text-primary font-semibold text-sm mt-3 leading-relaxed"
+                  >
+                    Someone out there is about to be very glad you came back. Let's find them. 🔥
+                  </motion.p>
+                </div>
+
+                {/* CTA */}
+                <motion.button
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+                  onClick={() => setShowWelcomeBack(false)}
+                  className="w-full py-3.5 rounded-2xl gradient-love text-white font-bold text-base shadow-lg"
+                >
+                  Let's go! 🚀
+                </motion.button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

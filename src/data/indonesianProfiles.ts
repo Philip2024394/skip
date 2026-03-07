@@ -249,6 +249,7 @@ export const generateIndonesianProfiles = (count: number = 50): Profile[] => {
       looking_for: lookingForList[profileIdx % lookingForList.length],
       last_seen_at,
       languages: langs,
+      is_plusone: i % 4 === 1,   // every 4th profile shows the +1 badge
     });
   }
 

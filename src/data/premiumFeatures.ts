@@ -1,4 +1,4 @@
-import { Rocket, Star, ShieldCheck, EyeOff, Crown, type LucideIcon } from "lucide-react";
+import { Rocket, Star, ShieldCheck, EyeOff, Crown, Calendar, type LucideIcon } from "lucide-react";
 
 export const FEATURE_ICON_MAP: Record<string, LucideIcon> = {
   rocket: Rocket,
@@ -6,6 +6,7 @@ export const FEATURE_ICON_MAP: Record<string, LucideIcon> = {
   shield: ShieldCheck,
   "eye-off": EyeOff,
   crown: Crown,
+  calendar: Calendar,
 };
 
 export const FEATURE_GRADIENT_MAP: Record<string, string> = {
@@ -29,7 +30,7 @@ export interface PremiumFeature {
   priceId: string;
   productId: string;
   color: "love" | "gold" | "fresh" | "stealth" | "vip";
-  icon: "rocket" | "star" | "shield" | "eye-off" | "crown";
+  icon: "rocket" | "star" | "shield" | "eye-off" | "crown" | "calendar";
   isSubscription?: boolean;
   perks?: string[];
 }
@@ -56,7 +57,25 @@ export const PREMIUM_FEATURES: PremiumFeature[] = [
     ],
   },
   {
-    id: "boost",
+    id: "plusone",
+    name: "Plus-One Premium",
+    emoji: "🎫",
+    description: "Your trusted companion for events & outings. Connect via WhatsApp to coordinate plans and enjoy experiences together.",
+    price: "$19.99",
+    priceCents: 1999,
+    priceId: "price_plusone_premium",
+    productId: "prod_plusone_premium",
+    color: "fresh",
+    icon: "calendar",
+    perks: [
+      "🎫 Plus-One badge on your profile",
+      "💬 WhatsApp connection for fast coordination",
+      "🍽 Dinners, weddings, concerts & more",
+      "✈️ Travel outings & social gatherings",
+      "🤝 Great company, no pressure — events & experiences",
+    ],
+  },
+  {
     name: "Profile Boost",
     emoji: "🚀",
     description: "Top of swipe stack for 1 hour. 5–10× more views!",

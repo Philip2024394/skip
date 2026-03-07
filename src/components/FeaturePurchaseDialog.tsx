@@ -49,6 +49,15 @@ const featureDetails: Record<string, { bullets: string[]; tagline: string }> = {
       "🎯 Maximum visibility guaranteed",
     ],
   },
+  plusone: {
+    tagline: "Great company for events & experiences.",
+    bullets: [
+      "🎫 Plus-One badge on your profile",
+      "💬 WhatsApp connection for fast coordination",
+      "🍽 Dinners, weddings, concerts & more",
+      "🤝 Events and outings — no pressure, just good company",
+    ],
+  },
 };
 
 interface FeaturePurchaseDialogProps {

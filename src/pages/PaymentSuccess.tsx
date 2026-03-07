@@ -1,16 +1,150 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, MessageCircle, Loader2, EyeOff, Star } from "lucide-react";
+import { MessageCircle, Loader2, EyeOff, Star, Shield, Heart, ChevronDown, ChevronUp } from "lucide-react";
+import logoHeart from "@/assets/logo-heart.png";
 
+// ── Confetti particle ─────────────────────────────────────────────────────────
+interface Particle {
+  id: number;
+  x: number;
+  color: string;
+  delay: number;
+  duration: number;
+  size: number;
+  rotation: number;
+}
+
+const COLORS = ["#ff6b9d", "#c44dff", "#ffd700", "#ff4d4d", "#4dffb8", "#4d9fff", "#ff9f4d"];
+
+const Confetti = () => {
+  const [particles, setParticles] = useState<Particle[]>([]);
+
+  useEffect(() => {
+    const list: Particle[] = Array.from({ length: 60 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      delay: Math.random() * 1.5,
+      duration: 2.5 + Math.random() * 2,
+      size: 6 + Math.random() * 8,
+      rotation: Math.random() * 360,
+    }));
+    setParticles(list);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-10">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          className="absolute rounded-sm"
+          style={{
+            left: `${p.x}%`,
+            top: "-10px",
+            width: p.size,
+            height: p.size * 0.6,
+            backgroundColor: p.color,
+            rotate: p.rotation,
+          }}
+          initial={{ y: -20, opacity: 1, rotate: p.rotation }}
+          animate={{
+            y: "110vh",
+            opacity: [1, 1, 0.8, 0],
+            rotate: p.rotation + 360 * (Math.random() > 0.5 ? 1 : -1),
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            ease: "easeIn",
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// ── Safety tip accordion ──────────────────────────────────────────────────────
+const SafetyAdvisory = ({ name }: { name: string }) => {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 1.2 }}
+      className="w-full rounded-2xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm"
+    >
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4 text-teal-400 flex-shrink-0" />
+          <span className="text-white/80 text-xs font-semibold">Safety & Connection Tips</span>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-white/30" /> : <ChevronDown className="w-4 h-4 text-white/30" />}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3 text-white/60 text-xs leading-relaxed">
+              <p>
+                Congratulations on your new connection with <span className="text-primary font-semibold">{name}</span>! WhatsApp opens up a world of authentic conversation — but as with all new connections, a little caution goes a long way.
+              </p>
+
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <span className="text-amber-400 flex-shrink-0">⏳</span>
+                  <p><span className="text-white/80 font-medium">Take your time.</span> For the first few days — until you've had a live WhatsApp call and spoken with {name} — we recommend keeping your personal details private. No home address, workplace, or daily routines just yet.</p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-teal-400 flex-shrink-0">📍</span>
+                  <p><span className="text-white/80 font-medium">Meet smart.</span> When the time feels right to meet in person, always choose a well-established public place — a café, restaurant, or shopping mall you know well.</p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-blue-400 flex-shrink-0">🛡️</span>
+                  <p><span className="text-white/80 font-medium">Trust WhatsApp's tools.</span> WhatsApp has some of the most advanced blocking and reporting software available. If at any point you feel uncomfortable, don't hesitate to use it — no explanation needed.</p>
+                </div>
+                <div className="flex gap-2">
+                  <span className="text-primary flex-shrink-0">💬</span>
+                  <p><span className="text-white/80 font-medium">Evaluate before you trust.</span> Every profile deserves a period of genuine conversation before personal or private information is shared. Real connections build naturally over time.</p>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-white/10 text-center space-y-1">
+                <p className="text-white/50 text-[10px]">
+                  From all of us at <span className="text-primary font-semibold">SkipTheApp</span> — we're genuinely excited for this connection. Bringing people together is what we do best, and your trust means everything to us.
+                </p>
+                <p className="text-white/40 text-[10px]">
+                  We wish you many wonderful conversations and hope this is the beginning of something truly special. Thank you for being a valued member of <span className="text-primary">skiptheapp.com</span> 💕
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<{ whatsapp: string; name: string } | null>(null);
   const [featureActivated, setFeatureActivated] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     const verify = async () => {
@@ -25,35 +159,25 @@ const PaymentSuccess = () => {
 
       try {
         if (feature === "incognito") {
-          const { data, error } = await supabase.functions.invoke("activate-incognito", {
-            body: { sessionId },
-          });
+          const { data, error } = await supabase.functions.invoke("activate-incognito", { body: { sessionId } });
           if (error) throw error;
           if (!data.success) throw new Error(data.error);
           setFeatureActivated("incognito");
-          toast.success("👻 Incognito Mode activated for 24 hours!");
         } else if (feature === "spotlight") {
-          const { data, error } = await supabase.functions.invoke("activate-spotlight", {
-            body: { sessionId },
-          });
+          const { data, error } = await supabase.functions.invoke("activate-spotlight", { body: { sessionId } });
           if (error) throw error;
           if (!data.success) throw new Error(data.error);
           setFeatureActivated("spotlight");
-          toast.success("🌟 Spotlight activated for 24 hours!");
         } else if (feature) {
-          // Other features (boost, superlike, verified) - just confirm
           setFeatureActivated(feature);
-          toast.success("Power-Up activated! ⚡");
         } else {
-          // Connection unlock flow
-          const { data, error } = await supabase.functions.invoke("verify-payment", {
-            body: { sessionId },
-          });
+          const { data, error } = await supabase.functions.invoke("verify-payment", { body: { sessionId } });
           if (error) throw error;
           if (!data.success) throw new Error(data.error);
           setResult({ whatsapp: data.whatsapp, name: data.name });
-          toast.success("Payment verified! Connection unlocked 🔓");
         }
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 4500);
       } catch (err: any) {
         toast.error(err.message || "Payment verification failed");
       } finally {
@@ -67,65 +191,236 @@ const PaymentSuccess = () => {
   const openWhatsApp = () => {
     if (!result?.whatsapp) return;
     const cleaned = result.whatsapp.replace(/\D/g, "");
-    const message = encodeURIComponent(`Hey ${result.name}! We matched on SkipTheApp 🔥`);
+    const message = encodeURIComponent(
+      `Hi ${result.name}! 👋 I just unlocked your contact on SkipTheApp — the dating app where real connections start with a real conversation. I'd love to get to know you! 😊`
+    );
     window.open(`https://wa.me/${cleaned}?text=${message}`, "_blank");
   };
 
+  // ── Loading ──────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="h-screen-safe bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Verifying payment...</p>
+          <img src={logoHeart} alt="SkipTheApp" className="w-16 h-16 object-contain mx-auto animate-pulse" />
+          <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
+          <p className="text-white/50 text-sm">Verifying your payment...</p>
         </div>
       </div>
     );
   }
 
+  // ── Feature activated (non-unlock) ──────────────────────────────
+  const featureContent: Record<string, { icon: React.ReactNode; headline: string; sub: string }> = {
+    incognito: {
+      icon: <EyeOff className="w-8 h-8 text-white/80" />,
+      headline: "You're Invisible! 👻",
+      sub: "Incognito Mode is active for 24 hours. Browse freely — nobody can see you.",
+    },
+    spotlight: {
+      icon: <Star className="w-8 h-8 text-amber-400" fill="currentColor" />,
+      headline: "You're in the Spotlight! 🌟",
+      sub: "Your profile is now featured at the top of everyone's stack for 24 hours.",
+    },
+    vip: {
+      icon: <span className="text-4xl">👑</span>,
+      headline: "VIP Membership Activated!",
+      sub: "You now have 7 WhatsApp unlocks and 5 Super Likes ready to use this month.",
+    },
+    boost: {
+      icon: <span className="text-4xl">🚀</span>,
+      headline: "Profile Boost Active!",
+      sub: "You're now at the top of the swipe stack for the next hour.",
+    },
+    superlike: {
+      icon: <Star className="w-8 h-8 text-amber-400" fill="currentColor" />,
+      headline: "Super Like Ready!",
+      sub: "Your Super Like has been added. Use it to stand out from the crowd.",
+    },
+    verified: {
+      icon: <span className="text-4xl">✅</span>,
+      headline: "Verification Submitted!",
+      sub: "Your verified badge will appear once our team reviews your submission.",
+    },
+    plusone: {
+      icon: <span className="text-4xl">🎫</span>,
+      headline: "Plus-One Premium Activated!",
+      sub: "Your Plus-One badge is now on your profile. Others can see you're open to events and outings — connect via WhatsApp to coordinate plans.",
+    },
+  };
+
+  const fc = featureActivated ? (featureContent[featureActivated] ?? {
+    icon: <span className="text-4xl">⚡</span>,
+    headline: "Power-Up Activated!",
+    sub: `Your ${featureActivated} feature is now active.`,
+  }) : null;
+
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="glass rounded-2xl p-8 max-w-md w-full text-center space-y-6">
-        <CheckCircle className="w-16 h-16 text-green-400 mx-auto" />
+    <div className="h-screen-safe bg-black flex flex-col items-center justify-start p-4 overflow-y-auto scroll-touch" style={{ paddingTop: `max(2.5rem, env(safe-area-inset-top, 0px))`, paddingBottom: `max(1rem, env(safe-area-inset-bottom, 0px))` }}>
+      {/* Confetti */}
+      <AnimatePresence>{showConfetti && <Confetti />}</AnimatePresence>
 
-        {featureActivated === "incognito" ? (
-          <>
-            <EyeOff className="w-12 h-12 text-muted-foreground mx-auto" />
-            <h1 className="font-display font-bold text-2xl text-foreground">👻 You're Invisible!</h1>
-            <p className="text-muted-foreground">
-              Incognito Mode is active for <span className="text-accent font-semibold">24 hours</span>. Browse freely — nobody can see you.
-            </p>
-          </>
-        ) : featureActivated === "spotlight" ? (
-          <>
-            <Star className="w-12 h-12 text-accent mx-auto" />
-            <h1 className="font-display font-bold text-2xl text-foreground">🌟 You're in the Spotlight!</h1>
-            <p className="text-muted-foreground">
-              Your profile is featured at the <span className="text-accent font-semibold">top of everyone's stack</span> for 24 hours!
-            </p>
-          </>
-        ) : featureActivated ? (
-          <>
-            <h1 className="font-display font-bold text-2xl text-foreground">⚡ Power-Up Activated!</h1>
-            <p className="text-muted-foreground">Your <span className="text-primary font-semibold">{featureActivated}</span> is now active.</p>
-          </>
-        ) : result ? (
-          <>
-            <h1 className="font-display font-bold text-2xl text-foreground">Connection Unlocked!</h1>
-            <p className="text-muted-foreground">
-              You can now message <span className="text-primary font-semibold">{result.name}</span> on WhatsApp!
-            </p>
-            <p className="text-foreground text-lg font-mono glass rounded-lg p-3">{result.whatsapp}</p>
-            <Button onClick={openWhatsApp} className="w-full gradient-love text-primary-foreground border-0 h-12 text-base font-semibold">
-              <MessageCircle className="w-5 h-5 mr-2" /> Open WhatsApp
-            </Button>
-          </>
-        ) : (
-          <h1 className="font-display font-bold text-2xl text-foreground">Payment Complete!</h1>
-        )}
+      <div className="relative z-20 w-full max-w-sm flex flex-col items-center gap-5">
 
-        <Button variant="outline" onClick={() => navigate("/")} className="w-full border-border">
+        {/* Logo + brand */}
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="flex flex-col items-center gap-2"
+        >
+          <div className="relative">
+            <img src={logoHeart} alt="SkipTheApp" className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(220,80,150,0.6)]" />
+            {/* Pulsing ring */}
+            <motion.div
+              className="absolute inset-0 rounded-full border-2 border-primary/40"
+              animate={{ scale: [1, 1.3, 1], opacity: [0.6, 0, 0.6] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+          </div>
+          <span className="font-display font-bold text-white text-lg tracking-tight">SkipTheApp</span>
+        </motion.div>
+
+        {/* Main card */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, type: "spring", stiffness: 200, damping: 22 }}
+          className="w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden"
+        >
+          {/* Top gradient bar */}
+          <div className="h-1 w-full gradient-love" />
+
+          <div className="p-6 text-center space-y-4">
+
+            {/* Connection unlock */}
+            {result ? (
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+                  className="w-20 h-20 rounded-full gradient-love flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(180,80,150,0.5)]"
+                >
+                  <Heart className="w-10 h-10 text-white" fill="white" />
+                </motion.div>
+
+                <div>
+                  <motion.h1
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="font-display font-black text-2xl text-white"
+                  >
+                    Congratulations! 🎉
+                  </motion.h1>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.75 }}
+                    className="text-white/60 text-sm mt-1"
+                  >
+                    You've unlocked a direct connection with
+                  </motion.p>
+                  <motion.p
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.85 }}
+                    className="text-primary font-display font-bold text-xl mt-0.5"
+                  >
+                    {result.name}
+                  </motion.p>
+                </div>
+
+                {/* WhatsApp number */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5"
+                >
+                  <p className="text-white/40 text-[10px] uppercase tracking-wider mb-0.5">WhatsApp</p>
+                  <p className="text-white font-mono font-semibold text-base">{result.whatsapp}</p>
+                </motion.div>
+
+                {/* Open WhatsApp CTA */}
+                <motion.button
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.05 }}
+                  onClick={openWhatsApp}
+                  className="w-full h-13 py-3.5 rounded-2xl gradient-love text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(180,80,150,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                >
+                  <MessageCircle className="w-5 h-5" fill="white" />
+                  Message {result.name} on WhatsApp
+                </motion.button>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1.1 }}
+                  className="text-white/30 text-[10px]"
+                >
+                  A warm intro message has been pre-filled for you ✨
+                </motion.p>
+              </>
+            ) : fc ? (
+              /* Feature activated */
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
+                  className="flex justify-center"
+                >
+                  {fc.icon}
+                </motion.div>
+                <motion.h1
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="font-display font-black text-xl text-white"
+                >
+                  {fc.headline}
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.75 }}
+                  className="text-white/60 text-sm"
+                >
+                  {fc.sub}
+                </motion.p>
+              </>
+            ) : null}
+
+          </div>
+        </motion.div>
+
+        {/* Safety advisory — shown for WhatsApp unlocks */}
+        {result && <SafetyAdvisory name={result.name} />}
+
+        {/* Back to browsing */}
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.3 }}
+          onClick={() => navigate("/")}
+          className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 hover:text-white text-sm font-medium transition-colors"
+        >
           Back to Browsing
-        </Button>
+        </motion.button>
+
+        {/* Footer brand */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="text-white/20 text-[10px] text-center pb-6"
+        >
+          skiptheapp.com · Real connections, real conversations
+        </motion.p>
+
       </div>
     </div>
   );

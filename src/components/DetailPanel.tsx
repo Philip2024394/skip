@@ -4,6 +4,7 @@ import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "
 import { ChevronRight, Heart, MapPin, Map, X, MessageCircle, Star, Flag, Globe } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { isOnline } from "@/hooks/useOnlineStatus";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import ReportDialog from "./ReportDialog";
@@ -160,8 +161,14 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
 
           {/* Profile info — centered, raised */}
           <div className="absolute bottom-[140px] left-0 right-0 z-10 flex flex-col items-center text-center px-6">
-            <h2 className="font-display font-bold text-3xl text-white drop-shadow-lg">
+            <h2 className="font-display font-bold text-3xl text-white drop-shadow-lg flex items-center gap-2 justify-center">
               {profile.name}, <span className="font-normal text-white/80">{profile.age}</span>
+              {isOnline(profile.last_seen_at) && (
+                <span className="relative flex h-3 w-3 ml-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                </span>
+              )}
             </h2>
             <p className="text-white/70 text-sm flex items-center gap-1 mt-1.5">
               <MapPin className="w-3.5 h-3.5 text-primary" /> {profile.city}, {profile.country}
@@ -174,11 +181,16 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
                   {profile.gender}
                 </span>
               )}
-              {profile.available_tonight && (
-                <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-3 py-1 rounded-full">
-                  🌙 Available Tonight
+              {(profile as any).is_plusone ? (
+                <span className="bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
+                  <span className="text-yellow-300 font-black text-[11px]">+1</span>
+                  <span className="text-white/80">Plus-One</span>
                 </span>
-              )}
+              ) : profile.available_tonight ? (
+                <span className="bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
+                  <span className="text-yellow-400">🌙</span> Free Tonight
+                </span>
+              ) : null}
               {profile.bio && (
                 <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/70 text-[10px] px-3 py-1 rounded-full max-w-[200px] truncate">
                   {profile.bio}
@@ -212,6 +224,50 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
             {/* Date Places Cards */}
             {profile.first_date_places && profile.first_date_places.length > 0 && (
               <DatePlacesDisplay places={profile.first_date_places} profileName={profile.name} />
+            )}
+
+            {/* ── Plus-One Card ──────────────────────────────────── */}
+            {(profile as any).is_plusone && (
+              <div className="mx-2 mt-3 rounded-2xl overflow-hidden border border-yellow-400/30 shadow-[0_0_20px_rgba(250,204,21,0.12)]">
+                {/* Header bar */}
+                <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/10 border-b border-yellow-400/20 px-4 py-3 flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-full bg-yellow-500/20 border border-yellow-400/50 flex items-center justify-center flex-shrink-0">
+                    <span className="text-yellow-300 font-black text-[13px] leading-none">+1</span>
+                  </span>
+                  <div>
+                    <p className="text-white font-bold text-sm leading-none">Plus-One Available</p>
+                    <p className="text-yellow-300/80 text-[10px] mt-0.5">Open to events & social experiences</p>
+                  </div>
+                </div>
+
+                {/* Body */}
+                <div className="bg-black/40 backdrop-blur-md px-4 py-3 space-y-3">
+                  <p className="text-white/70 text-xs leading-relaxed">
+                    <span className="text-white font-medium">{profile.name}</span> is available as a Plus-One — a trusted companion for events and outings. No pressure, just great company and enjoyable experiences together.
+                  </p>
+
+                  {/* Occasions grid */}
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { icon: "🍽", label: "Dinners & casual meetups" },
+                      { icon: "💒", label: "Weddings & formal events" },
+                      { icon: "🎵", label: "Concerts & festivals" },
+                      { icon: "🤝", label: "Business & networking" },
+                      { icon: "✈️", label: "Travel outings" },
+                      { icon: "🎉", label: "Social gatherings" },
+                    ].map(({ icon, label }) => (
+                      <div key={label} className="flex items-center gap-1.5 bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5">
+                        <span className="text-[11px]">{icon}</span>
+                        <span className="text-white/70 text-[10px] leading-tight">{label}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-yellow-300/70 text-[10px] leading-relaxed border-t border-yellow-400/15 pt-2.5">
+                    Connect via WhatsApp to coordinate plans and confirm the occasion. Fast, direct communication — no back and forth in the app.
+                  </p>
+                </div>
+              </div>
             )}
 
             {/* Voice Intro Player */}

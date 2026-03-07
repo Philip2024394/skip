@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
-import { Heart, MapPin, Fingerprint } from "lucide-react";
-import availableTonightBadge from "@/assets/available-tonight-badge.png";
+import { Heart, MapPin, Fingerprint, Moon } from "lucide-react";
 import type { Profile } from "./SwipeCard";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import VoicePlayer from "./VoicePlayer";
@@ -11,7 +10,7 @@ interface SwipeStackProps {
   direction: "up" | "down";
   roseAvailable?: boolean;
   onLike: (profile: Profile) => void;
-  onPass: () => void;
+  onPass: (profile: Profile) => void;
   onRose?: (profile: Profile) => void;
 }
 
@@ -49,13 +48,25 @@ const SwipeStack = ({
     indexRef.current = displayIndex;
   }, [displayIndex]);
 
-  // Clamp index if profiles shrink
+  // Clamp index if profiles shrink; reset to 0 when parent refills the array
   useEffect(() => {
     if (len > 0 && indexRef.current >= len) {
       indexRef.current = 0;
       setDisplayIndex(0);
     }
   }, [len]);
+
+  // Reset to start whenever the profiles array identity changes (new shuffle)
+  const prevLenRef = useRef(len);
+  useEffect(() => {
+    if (len > 0 && len !== prevLenRef.current) {
+      prevLenRef.current = len;
+      if (indexRef.current >= len) {
+        indexRef.current = 0;
+        setDisplayIndex(0);
+      }
+    }
+  }, [profiles, len]);
 
   // Preload next image in memory (no DOM render)
   const preload = useCallback((url: string) => {
@@ -118,7 +129,7 @@ const SwipeStack = ({
       // Notify parent after paint so state is stable
       requestAnimationFrame(() => {
         if (action === "like") onLike(capturedProfile);
-        else onPass();
+        else onPass(capturedProfile);
       });
     },
     [onLike, onPass, x, y]
@@ -163,11 +174,11 @@ const SwipeStack = ({
       } else if (isRight) {
         exitX = EXIT_DISTANCE;
         exitY = oy * 0.2;
-        action = "pass";
+        action = "like";   // right swipe = Like ❤️
       } else {
         exitX = -EXIT_DISTANCE;
         exitY = oy * 0.2;
-        action = "pass";
+        action = "pass";   // left swipe = Pass ✗
       }
 
       // Fly off screen
@@ -241,7 +252,7 @@ const SwipeStack = ({
   return (
     <div
       className="relative w-full h-full overflow-hidden select-none"
-      style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
+      style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none", touchAction: "none" }}
     >
       {/* Key on displayIndex so React fully replaces the node on each card change,
           preventing any stale transform leaking onto the next card */}
@@ -260,6 +271,7 @@ const SwipeStack = ({
           rotate,
           willChange: "transform",
           backfaceVisibility: "hidden",
+          touchAction: "none",
         }}
         className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
       >
@@ -290,26 +302,32 @@ const SwipeStack = ({
           {/* ── Bottom gradient ───────────────────────────────── */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
 
-          {/* ── Available Tonight badge ───────────────────────── */}
-          {profile.available_tonight && (
-            <div className="absolute top-3 left-3 z-10">
-              <img src={availableTonightBadge} alt="Available Tonight" className="h-8 drop-shadow-lg" />
+          {/* ── Single status badge — +1 takes priority over Free Tonight ── */}
+          {(profile as any).is_plusone ? (
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.4)]">
+              <span className="text-yellow-300 font-black text-[12px] leading-none">+1</span>
+              <span className="text-white/80">Plus-One</span>
             </div>
-          )}
+          ) : profile.available_tonight ? (
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
+              <Moon className="w-3 h-3 text-yellow-400" fill="currentColor" />
+              Free Tonight
+            </div>
+          ) : null}
 
           {/* ── Swipe stamps ──────────────────────────────────── */}
           <motion.div
             style={{ opacity: likeOpacity }}
             className="absolute top-8 right-6 px-5 py-2 rounded-lg border-[3px] border-green-400 rotate-[-15deg] pointer-events-none"
           >
-            <span className="text-green-400 font-display font-extrabold text-2xl tracking-wider">NEXT</span>
+            <span className="text-green-400 font-display font-extrabold text-2xl tracking-wider flex items-center gap-1">❤️ LIKE</span>
           </motion.div>
 
           <motion.div
             style={{ opacity: nopeOpacity }}
             className="absolute top-8 left-6 px-5 py-2 rounded-lg border-[3px] border-red-400 rotate-[15deg] pointer-events-none"
           >
-            <span className="text-red-400 font-display font-extrabold text-2xl tracking-wider">PREV</span>
+            <span className="text-red-400 font-display font-extrabold text-2xl tracking-wider">NOPE</span>
           </motion.div>
 
           <motion.div
@@ -353,7 +371,10 @@ const SwipeStack = ({
                 {profile.name}, {profile.age}
               </h3>
               {isOnline(profile.last_seen_at) && (
-                <span className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse shadow-[0_0_6px_rgba(74,222,128,0.6)]" />
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                </span>
               )}
             </div>
             <p className="text-white/80 text-sm flex items-center gap-1 mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">

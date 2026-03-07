@@ -5,6 +5,7 @@ import { Profile } from "./SwipeCard";
 import { Button } from "@/components/ui/button";
 import PromoCard from "./PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
+import { isOnline } from "@/hooks/useOnlineStatus";
 
 // ── Countdown hook ────────────────────────────────────────────────────────────
 const useCountdown = (expiresAt: string | null | undefined) => {
@@ -215,8 +216,8 @@ const LikesLibrary = ({
       {/* ── Scrollable card row ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+        className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden scroll-touch"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -280,8 +281,35 @@ const LikesLibrary = ({
                       {profile.is_rose && tab !== "new" && (
                         <span className="absolute -top-1 -right-1 text-sm">❤️</span>
                       )}
-                      {tab === "new" && profile.available_tonight && (
-                        <span className="absolute -bottom-1 -right-1 text-[10px] bg-black border border-teal-500/60 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(20,184,166,0.6)]">🌙</span>
+                      {/* Plus-One badge — top-left corner, always visible */}
+                      {/* Single status badge — +1 beats Free Tonight */}
+                      {(profile as any).is_plusone ? (
+                        <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">
+                          <span className="text-yellow-300 font-black text-[7px] leading-none">+1</span>
+                        </span>
+                      ) : tab === "new" && profile.available_tonight ? (
+                        <span className="absolute -bottom-1 -right-1 text-[10px] bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</span>
+                      ) : null}
+                      {/* Green heartbeat dot — avoid overlap with moon badge */}
+                      {isOnline(profile.last_seen_at) && !((profile as any).is_plusone) && !(tab === "new" && profile.available_tonight) && (
+                        <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
+                        </span>
+                      )}
+                      {/* online dot when free tonight badge is showing — move to left */}
+                      {isOnline(profile.last_seen_at) && !((profile as any).is_plusone) && tab === "new" && profile.available_tonight && (
+                        <span className="absolute -bottom-0.5 -left-0.5 flex h-3.5 w-3.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
+                        </span>
+                      )}
+                      {/* online dot when +1 badge is showing — move to bottom-right */}
+                      {isOnline(profile.last_seen_at) && (profile as any).is_plusone && (
+                        <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
+                        </span>
                       )}
                     </div>
 

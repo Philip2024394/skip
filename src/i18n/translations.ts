@@ -60,7 +60,7 @@ export const translations = {
   "swipe.next": { en: "NEXT →", id: "LANJUT →" },
   "swipe.prev": { en: "← PREV", id: "← KEMBALI" },
   "swipe.like": { en: "LIKE", id: "SUKA" },
-  "swipe.availableTonight": { en: "Available Tonight", id: "Tersedia Malam Ini" },
+  "swipe.availableTonight": { en: "Free Tonight", id: "Bebas Malam Ini" },
 
   // Match
   "match.title": { en: "It's a Match! 🎉", id: "Cocok! 🎉" },
@@ -80,8 +80,8 @@ export const translations = {
   "filter.all": { en: "All", id: "Semua" },
   "filter.lookingFor": { en: "Looking For", id: "Mencari" },
   "filter.quickFilters": { en: "Quick Filters", id: "Filter Cepat" },
-  "filter.availableTonight": { en: "🌙 Available Tonight", id: "🌙 Tersedia Malam Ini" },
-  "filter.availableTonightDesc": { en: "Show only users free tonight", id: "Tampilkan pengguna yang tersedia malam ini" },
+  "filter.availableTonight": { en: "🌙 Free Tonight", id: "🌙 Bebas Malam Ini" },
+  "filter.availableTonightDesc": { en: "Show only users free tonight", id: "Tampilkan pengguna yang bebas malam ini" },
   "filter.onlineNow": { en: "🟢 Online Now", id: "🟢 Online Sekarang" },
   "filter.onlineNowDesc": { en: "Show only currently active users", id: "Tampilkan pengguna yang sedang aktif" },
   "filter.resetAll": { en: "Reset All", id: "Atur Ulang" },
@@ -116,7 +116,7 @@ export const translations = {
   "profile.locationSet": { en: "Location set — tap to update", id: "Lokasi diatur — ketuk untuk perbarui" },
   "profile.setLocation": { en: "Set my location on the map", id: "Atur lokasi saya di peta" },
   "profile.locationSuccess": { en: "Location set! You'll appear on the map 📍", id: "Lokasi diatur! Anda akan muncul di peta 📍" },
-  "profile.availableTonight": { en: "Available Tonight", id: "Tersedia Malam Ini" },
+  "profile.availableTonight": { en: "Free Tonight", id: "Bebas Malam Ini" },
   "profile.availableTonightDesc": { en: "Show a badge on your profile", id: "Tampilkan lencana di profil Anda" },
   "profile.saveProfile": { en: "Save Profile", id: "Simpan Profil" },
   "profile.saving": { en: "Saving...", id: "Menyimpan..." },
@@ -159,6 +159,8 @@ export const translations = {
   "premium.incognitoDesc": { en: "Browse profiles invisibly for 24 hours. Nobody sees you!", id: "Jelajahi profil secara tak terlihat selama 24 jam. Tidak ada yang melihat Anda!" },
   "premium.spotlight": { en: "Spotlight", id: "Sorotan" },
   "premium.spotlightDesc": { en: "Featured at top of everyone's stack for 24 hours!", id: "Tampil di atas tumpukan semua orang selama 24 jam!" },
+  "premium.plusone": { en: "Plus-One Premium", id: "Plus-One Premium" },
+  "premium.plusoneDesc": { en: "Your trusted companion for events & outings. Connect via WhatsApp to coordinate plans and enjoy experiences together.", id: "Teman terpercaya untuk acara & jalan-jalan. Terhubung via WhatsApp untuk mengoordinasikan rencana dan menikmati pengalaman bersama." },
 
   // Premium feature details
   "premium.boost.1": { en: "⏱ Lasts 1 hour", id: "⏱ Berlangsung 1 jam" },
@@ -181,6 +183,11 @@ export const translations = {
   "premium.vip.1": { en: "💬 7 WhatsApp unlocks (worth $13.93)", id: "💬 7 buka kunci WhatsApp (senilai $13.93)" },
   "premium.vip.2": { en: "⭐ 5 Super Likes (worth $9.95)", id: "⭐ 5 Super Like (senilai $9.95)" },
   "premium.vip.3": { en: "👑 VIP crown badge + priority listing", id: "👑 Lencana mahkota VIP + prioritas tampil" },
+  "premium.plusone.1": { en: "🎫 Plus-One badge on your profile", id: "Lencana Plus-One di profil Anda" },
+  "premium.plusone.2": { en: "💬 WhatsApp connection for fast coordination", id: "Koneksi WhatsApp untuk koordinasi cepat" },
+  "premium.plusone.3": { en: "🍽 Dinners, weddings, concerts & more", id: "Makan malam, pernikahan, konser & lainnya" },
+  "premium.plusone.4": { en: "✈️ Travel outings & social gatherings", id: "Jalan-jalan & acara sosial" },
+  "premium.plusone.5": { en: "🤝 Great company, no pressure — events & experiences", id: "Teman yang asyik, tanpa tekanan — acara & pengalaman" },
 
   // Report
   "report.title": { en: "Report", id: "Laporkan" },

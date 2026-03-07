@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Zap, User, LogOut, Crown, Check } from "lucide-react";
+import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 const featureNameKeys: Record<string, string> = {
   vip: "premium.vip",
+  plusone: "premium.plusone",
   boost: "premium.boost",
   superlike: "premium.superlike",
   verified: "premium.verified",
@@ -20,6 +21,7 @@ const featureNameKeys: Record<string, string> = {
 
 const featureDescKeys: Record<string, string> = {
   vip: "premium.vipDesc",
+  plusone: "premium.plusoneDesc",
   boost: "premium.boostDesc",
   superlike: "premium.superlikeDesc",
   verified: "premium.verifiedDesc",
@@ -49,13 +51,18 @@ const DashboardPage = () => {
   };
 
   const handleLogout = async () => {
+    // Clear online dot before signing out
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await (supabase.from("profiles").update as any)({ last_seen_at: null }).eq("id", session.user.id);
+    }
     await supabase.auth.signOut();
     navigate("/");
   };
 
   return (
-    <div className="h-screen bg-white flex flex-col overflow-hidden">
-      <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+    <div className="h-screen-safe bg-white flex flex-col overflow-hidden">
+      <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200" style={{ paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/")} className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors">
             <ArrowLeft className="w-4 h-4" />
@@ -91,10 +98,16 @@ const DashboardPage = () => {
           >
             <Zap className="w-3.5 h-3.5" /> {t("dash.powerups")}
           </button>
+          <button
+            onClick={() => navigate("/faq")}
+            className="flex-1 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 text-gray-500 hover:text-gray-800"
+          >
+            <HelpCircle className="w-3.5 h-3.5" /> Help
+          </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-touch" style={{ paddingBottom: `max(1rem, env(safe-area-inset-bottom, 0px))` }}>
         {tab === "profile" ? (
           <ProfileEditor />
         ) : (
