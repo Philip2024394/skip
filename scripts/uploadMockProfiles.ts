@@ -61,10 +61,10 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error("  SUPABASE_URL     =", SUPABASE_URL || "(not set)");
   console.error("  SUPABASE_SERVICE_KEY =", SUPABASE_SERVICE_KEY ? "***set***" : "(not set)");
   console.error("\nCreate  scripts/.env.script  with:");
-  console.error("  SUPABASE_URL=https://plazzgpcrzyolrvoeynl.supabase.co");
+  console.error("  SUPABASE_URL=https://grxaajpzwsmtpuewquag.supabase.co");
   console.error("  SUPABASE_SERVICE_KEY=<your service_role key from Supabase dashboard>");
   console.error("\nFind service_role key at:");
-  console.error("  https://supabase.com/dashboard/project/plazzgpcrzyolrvoeynl/settings/api\n");
+  console.error("  https://supabase.com/dashboard/project/grxaajpzwsmtpuewquag/settings/api\n");
   process.exit(1);
 }
 
