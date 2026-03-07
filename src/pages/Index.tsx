@@ -601,7 +601,7 @@ const Index = () => {
               </button>
             </>
           ) : (
-            <button onClick={() => navigate("/auth")} className="bg-black/50 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-white/80 hover:text-white transition-colors flex items-center gap-1" title={t("nav.signIn")}>
+            <button onClick={() => navigate("/auth?signin=1")} className="bg-black/50 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-white/80 hover:text-white transition-colors flex items-center gap-1" title={t("nav.signIn")}>
               <LogIn className="w-4 h-4" />
               <span className="text-xs font-medium">{t("nav.signIn")}</span>
             </button>
