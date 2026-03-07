@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Zap, User, LogOut } from "lucide-react";
+import { ArrowLeft, Zap, User, LogOut, Crown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ import ProfileEditor from "@/components/ProfileEditor";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const featureNameKeys: Record<string, string> = {
+  vip: "premium.vip",
   boost: "premium.boost",
   superlike: "premium.superlike",
   verified: "premium.verified",
@@ -18,6 +19,7 @@ const featureNameKeys: Record<string, string> = {
 };
 
 const featureDescKeys: Record<string, string> = {
+  vip: "premium.vipDesc",
   boost: "premium.boostDesc",
   superlike: "premium.superlikeDesc",
   verified: "premium.verifiedDesc",
@@ -100,7 +102,90 @@ const DashboardPage = () => {
             <p className="text-gray-500 text-xs text-center">
               {t("dash.supercharge")}
             </p>
-            {PREMIUM_FEATURES.map((feature, i) => {
+
+            {/* ── VIP Hero Card ─────────────────────────────────── */}
+            {(() => {
+              const vip = PREMIUM_FEATURES.find(f => f.id === "vip");
+              if (!vip) return null;
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0 }}
+                  className="relative overflow-hidden rounded-3xl border-2 border-amber-400/60 shadow-[0_0_30px_rgba(251,191,36,0.2)]"
+                >
+                  {/* Gold gradient background */}
+                  <div className="gradient-vip p-5">
+                    {/* Best Value badge */}
+                    <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1">
+                      <span className="text-[10px] font-black text-white tracking-wider">BEST VALUE</span>
+                    </div>
+
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-14 h-14 rounded-2xl bg-black/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                        <Crown className="w-7 h-7 text-white" fill="white" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-display font-black text-white text-xl">VIP Monthly</h3>
+                          <span className="text-white/70 text-xs">👑</span>
+                        </div>
+                        <p className="text-white/80 text-xs mt-0.5">Everything you need in one plan</p>
+                        <div className="flex items-baseline gap-1.5 mt-1">
+                          <span className="font-display font-black text-white text-3xl">$10.99</span>
+                          <span className="text-white/70 text-sm">/month</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Perks list */}
+                    <div className="space-y-2 mb-4">
+                      {vip.perks?.map((perk, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-2.5 h-2.5 text-white" />
+                          </div>
+                          <span className="text-white/90 text-xs">{perk}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Value bar */}
+                    <div className="bg-black/20 rounded-xl p-2.5 mb-4 flex items-center justify-between">
+                      <div className="text-center flex-1">
+                        <p className="text-white/60 text-[9px] uppercase tracking-wider">Retail Value</p>
+                        <p className="text-white font-bold text-sm line-through opacity-60">$23.88</p>
+                      </div>
+                      <div className="w-px h-8 bg-white/20" />
+                      <div className="text-center flex-1">
+                        <p className="text-white/60 text-[9px] uppercase tracking-wider">You Pay</p>
+                        <p className="text-white font-black text-sm">$10.99</p>
+                      </div>
+                      <div className="w-px h-8 bg-white/20" />
+                      <div className="text-center flex-1">
+                        <p className="text-white/60 text-[9px] uppercase tracking-wider">You Save</p>
+                        <p className="text-green-300 font-black text-sm">54%</p>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={() => handlePurchase(vip)}
+                      disabled={loadingId === vip.id}
+                      className="w-full bg-black/30 hover:bg-black/40 backdrop-blur-sm text-white border border-white/30 font-black h-12 rounded-xl text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      {loadingId === vip.id ? "Processing..." : "👑 Get VIP — $10.99/mo"}
+                    </Button>
+                  </div>
+                </motion.div>
+              );
+            })()}
+
+            {/* ── Individual features ───────────────────────────── */}
+            <p className="text-gray-400 text-[10px] text-center font-semibold uppercase tracking-wider pt-1">
+              Or buy individually
+            </p>
+
+            {PREMIUM_FEATURES.filter(f => f.id !== "vip").map((feature, i) => {
               const Icon = getFeatureIcon(feature.icon);
               const gradient = getFeatureGradient(feature.color);
               const nameKey = featureNameKeys[feature.id] as any;

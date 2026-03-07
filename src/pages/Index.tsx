@@ -137,13 +137,16 @@ const Index = () => {
 
   const selectedProfile = selectedList.length > 0 ? selectedList[selectedIndex] : null;
 
-  // New profiles for the library — exclude already-liked, filter by active country
+  // New profiles for the library — all profiles (sorted by recency), optionally filtered by country
   const libraryNewProfiles = useMemo(() => {
-    const likedSet = new Set(iLiked.map(p => p.id));
     return allProfiles
-      .filter(p => !likedSet.has(p.id))
-      .filter(p => !filters.country || p.country?.toLowerCase() === filters.country.toLowerCase());
-  }, [allProfiles, iLiked, filters.country]);
+      .filter(p => !filters.country || p.country?.toLowerCase() === filters.country.toLowerCase())
+      .sort((a, b) => {
+        const ta = a.last_seen_at ? new Date(a.last_seen_at).getTime() : 0;
+        const tb = b.last_seen_at ? new Date(b.last_seen_at).getTime() : 0;
+        return tb - ta;
+      });
+  }, [allProfiles, filters.country]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -488,10 +491,10 @@ const Index = () => {
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
       {/* Image preloading handled inside SwipeStack */}
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 relative z-10">
+      <header className="flex items-center justify-between px-4 py-2.5 relative z-10">
         <div className="flex items-center gap-2">
-          <img src={logoHeart} alt={APP_NAME} className="w-8 h-8 object-contain" />
-          <span className="font-display font-bold text-white text-lg tracking-tight">{APP_NAME}</span>
+          <img src={logoHeart} alt={APP_NAME} className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,80,150,0.5)]" />
+          <span className="font-display font-bold text-white text-xl tracking-tight leading-none">{APP_NAME}</span>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={toggleLocale} className="px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">

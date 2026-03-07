@@ -64,18 +64,18 @@ type DisplayItem =
 
 // ── Tab pill config ───────────────────────────────────────────────────────────
 const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
+  new:      (c) => `New${c.new > 0 ? ` · ${c.new}` : ""}`,
   sent:     (c) => `I Liked${c.sent > 0 ? ` · ${c.sent}` : ""}`,
   received: (c) => `Likes Me${c.received > 0 ? ` · ${c.received}` : ""}`,
-  new:      (c) => `New${c.new > 0 ? ` · ${c.new}` : ""}`,
 };
-const TABS: Tab[] = ["sent", "received", "new"];
+const TABS: Tab[] = ["new", "sent", "received"];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 const LikesLibrary = ({
   iLiked, likedMe, newProfiles, filterCountry,
   onUnlock, onSelectProfile, onPurchaseFeature,
 }: LikesLibraryProps) => {
-  const [tab, setTab] = useState<Tab>("sent");
+  const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
   const [promoPosition, setPromoPosition] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -90,7 +90,7 @@ const LikesLibrary = ({
         const tb = b.last_seen_at ? new Date(b.last_seen_at).getTime() : 0;
         return tb - ta;
       })
-      .slice(0, 30),
+      .slice(0, 50),
   [newProfiles]);
 
   const currentList: Profile[] =
@@ -154,9 +154,9 @@ const LikesLibrary = ({
 
   // ── Empty-state copy ────────────────────────────────────────────
   const emptyText =
+    tab === "new"      ? "Loading profiles..." :
     tab === "sent"     ? "Swipe up or down to like!" :
-    tab === "received" ? "No likes yet — keep swiping!" :
-    "No new profiles found.";
+    "No likes yet — keep swiping!";
 
   return (
     <div
@@ -215,8 +215,8 @@ const LikesLibrary = ({
       {/* ── Scrollable card row ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-x-auto overflow-y-hidden"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -269,26 +269,19 @@ const LikesLibrary = ({
                       </div>
                     )}
 
-                    {/* Available tonight glow */}
-                    {tab === "new" && profile.available_tonight && (
-                      <div className="absolute inset-0 rounded-xl border border-teal-400/40 pointer-events-none" />
-                    )}
+                    {/* Available tonight glow — shown as moon badge only, no ring */}
 
                     <div className="relative mt-1">
                       <img
                         src={profile.avatar_url || profile.image}
                         alt={profile.name}
-                        className={`w-12 h-12 rounded-full object-cover ${
-                          tab === "new" && profile.available_tonight
-                            ? "ring-2 ring-teal-400/60"
-                            : "border-2 border-white/10"
-                        }`}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
                       />
                       {profile.is_rose && tab !== "new" && (
                         <span className="absolute -top-1 -right-1 text-sm">❤️</span>
                       )}
                       {tab === "new" && profile.available_tonight && (
-                        <span className="absolute -top-1 -right-1 text-[10px]">🌙</span>
+                        <span className="absolute -bottom-1 -right-1 text-[10px] bg-black border border-teal-500/60 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(20,184,166,0.6)]">🌙</span>
                       )}
                     </div>
 
@@ -327,19 +320,7 @@ const LikesLibrary = ({
         </AnimatePresence>
       </div>
 
-      {/* ── Tab dot indicators ── */}
-      <div className="flex items-center justify-center gap-1.5 pt-1 flex-shrink-0">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            aria-label={`Switch to ${t} tab`}
-            className={`rounded-full transition-all duration-300 ${
-              tab === t ? "w-5 h-1.5 gradient-love" : "w-1.5 h-1.5 bg-white/20"
-            }`}
-          />
-        ))}
-      </div>
+      {/* ── Tab dot indicators removed — swipe tabs with finger ── */}
     </div>
   );
 };

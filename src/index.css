@@ -36,6 +36,7 @@
 
     --radius: 1rem;
 
+    --gradient-vip: linear-gradient(135deg, hsl(45, 95%, 45%), hsl(38, 100%, 50%), hsl(30, 100%, 55%));
     --gradient-love: linear-gradient(135deg, hsl(320, 50%, 50%), hsl(315, 40%, 55%));
     --gradient-card: linear-gradient(180deg, hsl(315, 38%, 72%), hsl(315, 40%, 62%));
     --gradient-gold: linear-gradient(135deg, hsl(36, 90%, 55%), hsl(45, 95%, 58%));
@@ -79,6 +80,10 @@
 
   .gradient-bg {
     background: var(--gradient-bg);
+  }
+
+  .gradient-vip {
+    background: var(--gradient-vip);
   }
 
   .gradient-love {

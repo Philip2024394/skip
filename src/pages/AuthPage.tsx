@@ -103,6 +103,14 @@ const AuthPage = () => {
           className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6"
         >
           <img src={logoHeart} alt="SkipTheApp" className="w-44 h-44 object-contain drop-shadow-xl mb-2" />
+          {/* 5-star rating */}
+          <div className="flex items-center gap-0.5 mb-1">
+            {[...Array(5)].map((_, i) => (
+              <svg key={i} className="w-5 h-5 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.7)]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+            ))}
+          </div>
           <h1 className="text-2xl font-display font-bold text-white drop-shadow-lg">{t("app.tagline")}</h1>
           <p className="text-white/70 text-sm drop-shadow-md">{t("app.subtitle")}</p>
           <div className="mt-6 w-full flex flex-col items-center gap-3">
@@ -112,19 +120,7 @@ const AuthPage = () => {
           >
             <MessageCircle className="w-5 h-5 mr-2" /> {t("landing.getStarted")}
           </Button>
-          <Button
-            onClick={() => { setShowAuth(true); setIsLogin(true); }}
-            variant="outline"
-            className="w-full max-w-sm h-12 text-base font-medium rounded-2xl border-white/20 text-white hover:bg-white/10 bg-black/40 backdrop-blur-md"
-          >
-            {t("landing.haveAccount")}
-          </Button>
-          <button
-            onClick={() => navigate("/")}
-            className="text-white/70 hover:text-white text-sm underline underline-offset-4 transition-colors mt-1"
-          >
-            {t("landing.browseFirst")}
-          </button>          </div>
+          </div>
         </motion.div>
       </div>
     );

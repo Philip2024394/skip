@@ -176,6 +176,11 @@ export const translations = {
   "premium.spotlight.1": { en: "🌟 Top of everyone's stack", id: "🌟 Teratas di tumpukan semua orang" },
   "premium.spotlight.2": { en: "⏰ Lasts 24 hours", id: "⏰ Berlangsung 24 jam" },
   "premium.spotlight.3": { en: "📊 10–20× more views", id: "📊 10–20× lebih banyak dilihat" },
+  "premium.vip": { en: "VIP Monthly", id: "VIP Bulanan" },
+  "premium.vipDesc": { en: "Everything you need — unlocks, super likes & VIP crown badge.", id: "Semua yang kamu butuhkan — buka kunci, super like & lencana mahkota VIP." },
+  "premium.vip.1": { en: "💬 7 WhatsApp unlocks (worth $13.93)", id: "💬 7 buka kunci WhatsApp (senilai $13.93)" },
+  "premium.vip.2": { en: "⭐ 5 Super Likes (worth $9.95)", id: "⭐ 5 Super Like (senilai $9.95)" },
+  "premium.vip.3": { en: "👑 VIP crown badge + priority listing", id: "👑 Lencana mahkota VIP + prioritas tampil" },
 
   // Report
   "report.title": { en: "Report", id: "Laporkan" },

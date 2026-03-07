@@ -1,10 +1,11 @@
-import { Rocket, Star, ShieldCheck, EyeOff, type LucideIcon } from "lucide-react";
+import { Rocket, Star, ShieldCheck, EyeOff, Crown, type LucideIcon } from "lucide-react";
 
 export const FEATURE_ICON_MAP: Record<string, LucideIcon> = {
   rocket: Rocket,
   star: Star,
   shield: ShieldCheck,
   "eye-off": EyeOff,
+  crown: Crown,
 };
 
 export const FEATURE_GRADIENT_MAP: Record<string, string> = {
@@ -12,6 +13,7 @@ export const FEATURE_GRADIENT_MAP: Record<string, string> = {
   gold: "gradient-gold",
   fresh: "gradient-fresh",
   stealth: "gradient-stealth",
+  vip: "gradient-vip",
 };
 
 export const getFeatureIcon = (icon: string): LucideIcon => FEATURE_ICON_MAP[icon] ?? Rocket;
@@ -26,11 +28,33 @@ export interface PremiumFeature {
   priceCents: number;
   priceId: string;
   productId: string;
-  color: "love" | "gold" | "fresh" | "stealth";
-  icon: "rocket" | "star" | "shield" | "eye-off";
+  color: "love" | "gold" | "fresh" | "stealth" | "vip";
+  icon: "rocket" | "star" | "shield" | "eye-off" | "crown";
+  isSubscription?: boolean;
+  perks?: string[];
 }
 
 export const PREMIUM_FEATURES: PremiumFeature[] = [
+  {
+    id: "vip",
+    name: "VIP Monthly",
+    emoji: "👑",
+    description: "Everything you need — unlocks, super likes & a VIP crown badge. Best value!",
+    price: "$10.99/mo",
+    priceCents: 1099,
+    priceId: "price_vip_monthly",
+    productId: "prod_vip_monthly",
+    color: "vip",
+    icon: "crown",
+    isSubscription: true,
+    perks: [
+      "💬 7 WhatsApp unlocks (worth $13.93)",
+      "⭐ 5 Super Likes (worth $9.95)",
+      "👑 VIP crown badge on your profile",
+      "🔝 Priority in New Profiles list",
+      "💰 Save 54% vs buying separately",
+    ],
+  },
   {
     id: "boost",
     name: "Profile Boost",
