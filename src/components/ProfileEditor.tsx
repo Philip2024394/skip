@@ -902,8 +902,7 @@ const ProfileEditor = () => {
 
                 <button
                   onClick={async () => {
-                    const { supabase: sb } = await import("@/integrations/supabase/client");
-                    await sb.auth.signOut();
+                    await supabase.auth.signOut();
                     window.location.href = "/auth";
                   }}
                   className="w-full py-3 rounded-2xl gradient-love text-white font-bold text-sm"
