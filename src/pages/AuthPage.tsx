@@ -24,6 +24,18 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // If a session already exists (user navigated here while logged in), send them home
+  // Also listens for SIGNED_IN event so the header on Index updates immediately
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) navigate("/", { replace: true });
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") navigate("/", { replace: true });
+    });
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
   // Auto-open sign-in tab if ?signin=1 is in URL
   // Auto-open register tab if ?register=1 is in URL
   useEffect(() => {
