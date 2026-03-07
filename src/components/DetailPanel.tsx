@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "framer-motion";
-import { ChevronRight, Heart, MapPin, Map, X, MessageCircle, Star, Flag, Globe } from "lucide-react";
+import { ChevronRight, MapPin, Map, X, MessageCircle, Star, Flag, Globe } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isOnline } from "@/hooks/useOnlineStatus";
@@ -40,7 +40,27 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
   const [showSuperLikeDialog, setShowSuperLikeDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
+  const [showPlusOneModal, setShowPlusOneModal] = useState(false);
   const images = profile.images ?? [profile.image];
+  const autoShownRef = useRef(false);
+
+  // Auto-show Plus One modal once per profile per session
+  useEffect(() => {
+    if (!profile.is_plusone) return;
+    const key = `plusone_seen_${profile.id}`;
+    if (sessionStorage.getItem(key)) return;
+    if (autoShownRef.current) return;
+    autoShownRef.current = true;
+    const timer = setTimeout(() => {
+      setShowPlusOneModal(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [profile.id, profile.is_plusone]);
+
+  const handleClosePlusOneModal = () => {
+    setShowPlusOneModal(false);
+    sessionStorage.setItem(`plusone_seen_${profile.id}`, "1");
+  };
 
   const dragX = useMotionValue(0);
   const imageRotate = useTransform(dragX, [-200, 0, 200], [-8, 0, 8]);
@@ -182,10 +202,17 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
                 </span>
               )}
               {profile.is_plusone ? (
-                <span className="bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
-                  <span className="text-yellow-300 font-black text-[11px]">+1</span>
+                <button
+                  onClick={() => {
+                    const key = `plusone_seen_${profile.id}`;
+                    sessionStorage.removeItem(key);
+                    setShowPlusOneModal(true);
+                  }}
+                  className="bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 hover:bg-black/90 transition-colors"
+                >
+                  <span className="font-black text-[11px]">+1</span>
                   <span className="text-white/80">Plus-One</span>
-                </span>
+                </button>
               ) : profile.available_tonight ? (
                 <span className="bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
                   <span className="text-yellow-400">🌙</span> Free Tonight
@@ -224,50 +251,6 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
             {/* Date Places Cards */}
             {profile.first_date_places && profile.first_date_places.length > 0 && (
               <DatePlacesDisplay places={profile.first_date_places} profileName={profile.name} />
-            )}
-
-            {/* ── Plus-One Card ──────────────────────────────────── */}
-            {profile.is_plusone && (
-              <div className="mx-2 mt-3 rounded-2xl overflow-hidden border border-yellow-400/30 shadow-[0_0_20px_rgba(250,204,21,0.12)]">
-                {/* Header bar */}
-                <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/10 border-b border-yellow-400/20 px-4 py-3 flex items-center gap-2">
-                  <span className="w-7 h-7 rounded-full bg-yellow-500/20 border border-yellow-400/50 flex items-center justify-center flex-shrink-0">
-                    <span className="text-yellow-300 font-black text-[13px] leading-none">+1</span>
-                  </span>
-                  <div>
-                    <p className="text-white font-bold text-sm leading-none">Plus-One Available</p>
-                    <p className="text-yellow-300/80 text-[10px] mt-0.5">Open to events & social experiences</p>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <div className="bg-black/40 backdrop-blur-md px-4 py-3 space-y-3">
-                  <p className="text-white/70 text-xs leading-relaxed">
-                    <span className="text-white font-medium">{profile.name}</span> is available as a Plus-One — a trusted companion for events and outings. No pressure, just great company and enjoyable experiences together.
-                  </p>
-
-                  {/* Occasions grid */}
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {[
-                      { icon: "🍽", label: "Dinners & casual meetups" },
-                      { icon: "💒", label: "Weddings & formal events" },
-                      { icon: "🎵", label: "Concerts & festivals" },
-                      { icon: "🤝", label: "Business & networking" },
-                      { icon: "✈️", label: "Travel outings" },
-                      { icon: "🎉", label: "Social gatherings" },
-                    ].map(({ icon, label }) => (
-                      <div key={label} className="flex items-center gap-1.5 bg-white/5 border border-white/8 rounded-lg px-2.5 py-1.5">
-                        <span className="text-[11px]">{icon}</span>
-                        <span className="text-white/70 text-[10px] leading-tight">{label}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <p className="text-yellow-300/70 text-[10px] leading-relaxed border-t border-yellow-400/15 pt-2.5">
-                    Connect via WhatsApp to coordinate plans and confirm the occasion. Fast, direct communication — no back and forth in the app.
-                  </p>
-                </div>
-              </div>
             )}
 
             {/* Voice Intro Player */}
@@ -377,6 +360,96 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
         reportedUserId={profile.id}
         reportedUserName={profile.name}
       />
+
+      {/* ── Plus-One Info Modal ─────────────────────────────── */}
+      <AnimatePresence>
+        {showPlusOneModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="plusone-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+              onClick={handleClosePlusOneModal}
+            />
+
+            {/* Sheet */}
+            <motion.div
+              key="plusone-sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 320 }}
+              className="fixed bottom-0 left-0 right-0 z-[61] rounded-t-3xl bg-[#0d0d0d] border-t border-white/10 overflow-hidden"
+              style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))" }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-white/20" />
+              </div>
+
+              {/* Close button — 44×44 touch target */}
+              <button
+                onClick={handleClosePlusOneModal}
+                aria-label="Close"
+                className="absolute top-3 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white/60 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="px-6 pt-2 pb-2">
+                {/* Badge icon */}
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full bg-white/8 border border-white/15 flex items-center justify-center">
+                    <span className="text-white font-black text-2xl leading-none">+1</span>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h2 className="text-white font-bold text-xl text-center leading-tight mb-2">
+                  Plus One
+                </h2>
+
+                {/* Explanation */}
+                <p className="text-white/60 text-sm text-center leading-relaxed mb-5">
+                  <span className="text-white font-medium">{profile.name}</span> is looking for someone to accompany them as a guest to events and social occasions — this is <span className="text-white font-medium">not</span> for relationships or dating.
+                </p>
+
+                {/* Occasion pills */}
+                <div className="grid grid-cols-2 gap-2 mb-5">
+                  {[
+                    { icon: "🍽", label: "Dinners & meetups" },
+                    { icon: "💒", label: "Weddings & events" },
+                    { icon: "🎵", label: "Concerts & festivals" },
+                    { icon: "🤝", label: "Business & networking" },
+                    { icon: "✈️", label: "Travel outings" },
+                    { icon: "🎉", label: "Social gatherings" },
+                  ].map(({ icon, label }) => (
+                    <div
+                      key={label}
+                      className="flex items-center gap-2 bg-white/5 border border-white/8 rounded-xl px-3 py-2.5"
+                    >
+                      <span className="text-sm">{icon}</span>
+                      <span className="text-white/70 text-xs leading-tight">{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA */}
+                <Button
+                  onClick={handleClosePlusOneModal}
+                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-bold text-sm border-0 shadow-lg"
+                >
+                  Got it
+                </Button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 };
