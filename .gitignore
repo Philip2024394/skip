@@ -32,6 +32,9 @@ generate-android-assets.mjs
 # Supabase Edge Function secrets — never commit
 supabase/functions/.env
 
+# Script secrets — never commit
+scripts/.env.script
+
 # Environment files — never commit secrets
 .env
 .env.local
