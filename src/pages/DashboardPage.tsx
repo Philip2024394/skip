@@ -51,13 +51,33 @@ const DashboardPage = () => {
   const handlePurchase = async (feature: PremiumFeature) => {
     setLoadingId(feature.id);
     try {
-      const { data, error } = await supabase.functions.invoke("purchase-feature", {
+      // VIP uses subscription mode via dedicated function
+      const fnName = feature.id === "vip" ? "purchase-subscription" : "purchase-feature";
+      const { data, error } = await supabase.functions.invoke(fnName, {
         body: { priceId: feature.priceId, featureId: feature.id },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Purchase failed");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleCancelVip = async () => {
+    if (!window.confirm("Cancel your VIP membership? Your benefits will continue until the end of the current billing period.")) return;
+    setLoadingId("vip-cancel");
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription", {
+        body: { featureId: "vip" },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success("VIP membership cancelled. Benefits active until end of billing period.");
+      }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Cancellation failed");
     } finally {
       setLoadingId(null);
     }

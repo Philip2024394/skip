@@ -13,3 +13,13 @@ project_id = "plazzgpcrzyolrvoeynl"
     verify_jwt = true
   [functions.activate-spotlight]
     verify_jwt = true
+  [functions.delete-account]
+    verify_jwt = true
+  [functions.activate-feature-native]
+    verify_jwt = true
+  [functions.purchase-subscription]
+    verify_jwt = true
+  [functions.cancel-subscription]
+    verify_jwt = true
+  [functions.fetch-og-image]
+    verify_jwt = false

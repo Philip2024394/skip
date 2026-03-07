@@ -169,6 +169,39 @@ serve(async (req) => {
       }
     }
 
+    // VIP subscription renewed
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const subId = invoice.subscription as string;
+      if (subId) {
+        const sub = await stripe.subscriptions.retrieve(subId);
+        const userId = sub.metadata?.user_id;
+        if (userId) {
+          const vipUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          await supabaseAdmin.from("profiles").update({
+            is_spotlight: true,
+            spotlight_until: vipUntil,
+            vip_subscription_id: subId,
+            vip_subscription_status: "active",
+          }).eq("id", userId);
+        }
+      }
+    }
+
+    // VIP subscription cancelled / expired
+    if (event.type === "customer.subscription.deleted" || event.type === "customer.subscription.paused") {
+      const sub = event.data.object as Stripe.Subscription;
+      const userId = sub.metadata?.user_id;
+      if (userId) {
+        await supabaseAdmin.from("profiles").update({
+          is_spotlight: false,
+          spotlight_until: null,
+          vip_subscription_id: null,
+          vip_subscription_status: "cancelled",
+        }).eq("id", userId);
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -190,12 +223,15 @@ serve(async (req) => {
     const user = data.user;
     if (!user) throw new Error("User not authenticated");
 
-    const { sessionId } = await req.json();
+    const { sessionId, featureId: clientFeatureId } = await req.json();
     if (!sessionId) throw new Error("sessionId is required");
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (session.payment_status !== "paid") {
+    // For subscriptions (VIP), payment_status may be "no_payment_required" on first setup
+    // Accept both "paid" and subscription sessions
+    const isPaid = session.payment_status === "paid" || session.mode === "subscription";
+    if (!isPaid) {
       return new Response(JSON.stringify({ success: false, error: "Payment not completed" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -207,7 +243,12 @@ serve(async (req) => {
 
     if (userId !== user.id) throw new Error("Unauthorized");
 
-    // Activate via the same helper (idempotent — safe to run twice if webhook already fired)
+    // If featureId supplied by client, override session metadata for activation
+    if (clientFeatureId && !session.metadata?.feature_id) {
+      (session.metadata as Record<string, string>).feature_id = clientFeatureId;
+    }
+
+    // Activate server-side (idempotent — safe if webhook already fired)
     await activateFeature(session);
 
     // Return WhatsApp details for connection payments

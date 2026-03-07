@@ -61,6 +61,8 @@ const ProfileEditor = () => {
   const [deactivating, setDeactivating] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deactivateDone, setDeactivateDone] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [freeTonightUntil, setFreeTonightUntil] = useState<Date | null>(null);
   const [userId, setUserId] = useState<string>("");
 
@@ -284,7 +286,6 @@ const ProfileEditor = () => {
   const handleDeactivate = async () => {
     if (!userId) return;
     setDeactivating(true);
-    // Set hidden_until to 100 days from now — hides from all browsing without deleting
     const hiddenUntil = new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString();
     const { error } = await supabase
       .from("profiles")
@@ -296,6 +297,22 @@ const ProfileEditor = () => {
     } else {
       setShowDeactivateConfirm(false);
       setDeactivateDone(true);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Deletion failed");
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Could not delete account";
+      toast.error(msg);
+      setDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -772,14 +789,21 @@ const ProfileEditor = () => {
         {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : <><Save className="w-4 h-4 mr-2" /> Save Profile</>}
       </Button>
 
-      {/* Deactivate account */}
-      <div className="pt-2 border-t border-border">
+      {/* Deactivate / Delete account */}
+      <div className="pt-2 border-t border-border space-y-1">
         <button
           onClick={() => setShowDeactivateConfirm(true)}
-          className="w-full py-2.5 text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center gap-1.5"
+          className="w-full py-2.5 text-xs text-muted-foreground hover:text-amber-400 transition-colors flex items-center justify-center gap-1.5"
         >
           <PauseCircle className="w-3.5 h-3.5" />
           Deactivate my account
+        </button>
+        <button
+          onClick={() => setShowDeleteConfirm(true)}
+          className="w-full py-2.5 text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center gap-1.5"
+        >
+          <XIcon className="w-3.5 h-3.5" />
+          Permanently delete my account
         </button>
       </div>
 
@@ -891,6 +915,61 @@ const ProfileEditor = () => {
           </>
         )}
       </AnimatePresence>
+      {/* ── Delete account confirmation dialog ── */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+              onClick={() => !deleting && setShowDeleteConfirm(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+              className="fixed inset-x-4 bottom-8 z-50 bg-[#111] border border-red-500/30 rounded-3xl overflow-hidden shadow-2xl max-w-sm mx-auto"
+            >
+              <div className="h-1 w-full bg-gradient-to-r from-red-500 to-rose-600" />
+              <div className="p-6 text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto">
+                  <XIcon className="w-7 h-7 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-white text-lg">Delete Account?</h3>
+                  <p className="text-white/50 text-xs mt-2 leading-relaxed">
+                    This is permanent and cannot be undone. Your profile, photos, matches, and all data will be erased immediately.
+                  </p>
+                  <p className="text-red-400 text-xs mt-2 font-medium">
+                    ⚠️ There is no way to recover your account after this.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 pt-1">
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleting}
+                    className="w-full py-3 rounded-2xl bg-red-500/20 border border-red-500/40 text-red-400 font-semibold text-sm hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {deleting
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Deleting everything...</>
+                      : <><XIcon className="w-4 h-4" /> Yes, permanently delete my account</>
+                    }
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={deleting}
+                    className="w-full py-3 rounded-2xl bg-white/5 border border-white/10 text-white/60 text-sm font-medium hover:text-white transition-colors"
+                  >
+                    Cancel — keep my account
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 };
