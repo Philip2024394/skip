@@ -138,7 +138,7 @@ const AuthPage = () => {
       {/* Home icon — floating on right, below header area */}
       <button
         onClick={() => navigate("/")}
-        className="absolute top-20 right-5 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-black/70 transition-all"
+        className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/60 hover:text-white hover:bg-black/70 transition-all"
         aria-label="Go to home"
       >
         <Home className="w-5 h-5" />
