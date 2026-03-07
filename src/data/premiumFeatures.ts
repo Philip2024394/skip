@@ -37,14 +37,16 @@ export interface PremiumFeature {
 
 export const PREMIUM_FEATURES: PremiumFeature[] = [
   {
+    // ⚠️ BEFORE LAUNCH: Create a VIP Monthly recurring price in Stripe dashboard
+    // and replace the priceId and productId below with the real values.
     id: "vip",
     name: "VIP Monthly",
     emoji: "👑",
     description: "Everything you need — unlocks, super likes & a VIP crown badge. Best value!",
     price: "$10.99/mo",
     priceCents: 1099,
-    priceId: "price_vip_monthly",
-    productId: "prod_vip_monthly",
+    priceId: import.meta.env.VITE_STRIPE_PRICE_VIP ?? "price_vip_monthly",
+    productId: import.meta.env.VITE_STRIPE_PRODUCT_VIP ?? "prod_vip_monthly",
     color: "vip",
     icon: "crown",
     isSubscription: true,
@@ -57,14 +59,16 @@ export const PREMIUM_FEATURES: PremiumFeature[] = [
     ],
   },
   {
+    // ⚠️ BEFORE LAUNCH: Create a Plus-One Premium one-time price in Stripe dashboard
+    // and replace the priceId and productId below with the real values.
     id: "plusone",
     name: "Plus-One Premium",
     emoji: "🎫",
     description: "Your trusted companion for events & outings. Connect via WhatsApp to coordinate plans and enjoy experiences together.",
     price: "$19.99",
     priceCents: 1999,
-    priceId: "price_plusone_premium",
-    productId: "prod_plusone_premium",
+    priceId: import.meta.env.VITE_STRIPE_PRICE_PLUSONE ?? "price_plusone_premium",
+    productId: import.meta.env.VITE_STRIPE_PRODUCT_PLUSONE ?? "prod_plusone_premium",
     color: "fresh",
     icon: "calendar",
     perks: [
@@ -76,6 +80,7 @@ export const PREMIUM_FEATURES: PremiumFeature[] = [
     ],
   },
   {
+    id: "boost",
     name: "Profile Boost",
     emoji: "🚀",
     description: "Top of swipe stack for 1 hour. 5–10× more views!",

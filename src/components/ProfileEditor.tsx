@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, X, MapPin, Save, Loader2, CalendarHeart, Star, ZoomIn, ZoomOut, MoveHorizontal, MoveVertical, Heart, PauseCircle, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import DatePlacesEditor, { DatePlace } from "./DatePlacesEditor";
 import { LANGUAGES, getNativeLanguage } from "@/data/languages";
 import { Languages, Plus, X as XIcon } from "lucide-react";
+import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 
 const GENDERS = ["Male", "Female", "Non-binary", "Other"];
 const LOOKING_FOR = ["Men", "Women", "Everyone"];
@@ -50,6 +52,7 @@ interface ProfileData {
 }
 
 const ProfileEditor = () => {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -69,7 +72,7 @@ const ProfileEditor = () => {
       if (Date.now() >= expiry.getTime()) {
         // Expired — clear in DB silently
         localStorage.removeItem(`free_tonight_until_${userId}`);
-        (supabase.from("profiles").update as any)({ available_tonight: false }).eq("id", userId);
+        supabase.from("profiles").update({ available_tonight: false }).eq("id", userId);
         setFreeTonightUntil(null);
       } else {
         setFreeTonightUntil(expiry);
@@ -94,8 +97,8 @@ const ProfileEditor = () => {
         .single();
 
       if (data) {
-        const imgs = (data as any).images || [];
-        const positions: ImagePosition[] = (data as any).image_positions || [];
+        const imgs = (data.images as string[]) || [];
+        const positions: ImagePosition[] = ((data as { image_positions?: ImagePosition[] }).image_positions) || [];
         // Ensure positions array matches images length
         while (positions.length < imgs.length) positions.push({ ...defaultPos });
 
@@ -112,13 +115,13 @@ const ProfileEditor = () => {
           images: imgs,
           latitude: data.latitude,
           longitude: data.longitude,
-          available_tonight: (data as any).available_tonight || false,
-          voice_intro_url: (data as any).voice_intro_url || null,
+          available_tonight: (data.available_tonight as boolean) || false,
+          voice_intro_url: (data.voice_intro_url as string | null) || null,
           image_positions: positions,
-          first_date_idea: (data as any).first_date_idea || null,
-          first_date_places: (data as any).first_date_places || [],
-          languages: (data as any).languages || [],
-          is_plusone: (data as any).is_plusone || false,
+          first_date_idea: (data.first_date_idea as string | null) || null,
+          first_date_places: ((data.first_date_places as DatePlace[]) || []),
+          languages: ((data.languages as string[]) || []),
+          is_plusone: ((data as Record<string, unknown>).is_plusone as boolean) || false,
         });
       }
       setLoading(false);
@@ -126,7 +129,7 @@ const ProfileEditor = () => {
     loadProfile();
   }, []);
 
-  const update = (key: keyof ProfileData, value: any) => {
+  const update = (key: keyof ProfileData, value: ProfileData[keyof ProfileData]) => {
     setProfile((p) => p ? { ...p, [key]: value } : p);
   };
 
@@ -255,17 +258,17 @@ const ProfileEditor = () => {
         bio: profile.bio,
         whatsapp: profile.whatsapp,
         avatar_url: profile.avatar_url,
-        images: profile.images as any,
+        images: profile.images,
         latitude: profile.latitude,
         longitude: profile.longitude,
-        available_tonight: profile.available_tonight as any,
-        voice_intro_url: profile.voice_intro_url as any,
-        image_positions: profile.image_positions as any,
-        first_date_idea: profile.first_date_idea as any,
-        first_date_places: profile.first_date_places as any,
-        languages: profile.languages as any,
-        is_plusone: profile.is_plusone as any,
-        main_image_pos: `${mainPos.x}% ${mainPos.y}%` as any,
+        available_tonight: profile.available_tonight,
+        voice_intro_url: profile.voice_intro_url,
+        image_positions: profile.image_positions as unknown as import("@/integrations/supabase/types").Json,
+        first_date_idea: profile.first_date_idea,
+        first_date_places: profile.first_date_places as unknown as import("@/integrations/supabase/types").Json,
+        languages: profile.languages as unknown as import("@/integrations/supabase/types").Json,
+        is_plusone: profile.is_plusone,
+        main_image_pos: `${mainPos.x}% ${mainPos.y}%`,
         updated_at: new Date().toISOString(),
       })
       .eq("id", userId);
@@ -285,7 +288,7 @@ const ProfileEditor = () => {
     const hiddenUntil = new Date(Date.now() + 100 * 24 * 60 * 60 * 1000).toISOString();
     const { error } = await supabase
       .from("profiles")
-      .update({ is_active: false, hidden_until: hiddenUntil } as any)
+      .update({ is_active: false, hidden_until: hiddenUntil })
       .eq("id", userId);
     setDeactivating(false);
     if (error) {
@@ -670,7 +673,7 @@ const ProfileEditor = () => {
                 // Schedule auto-clear
                 const msLeft = midnight.getTime() - Date.now();
                 setTimeout(async () => {
-                  await (supabase.from("profiles").update as any)({ available_tonight: false }).eq("id", userId);
+                  await supabase.from("profiles").update({ available_tonight: false }).eq("id", userId);
                   if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
                   setFreeTonightUntil(null);
                   update("available_tonight", false);
@@ -710,13 +713,17 @@ const ProfileEditor = () => {
           <Switch
             checked={profile.is_plusone}
             onCheckedChange={(checked) => {
-              update("is_plusone", checked);
-              // Turning on Plus-One clears Free Tonight
               if (checked) {
-                update("available_tonight", false);
-                setFreeTonightUntil(null);
-                if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
+                // Redirect to purchase — cannot enable for free
+                const plusoneFeature = PREMIUM_FEATURES.find(f => f.id === "plusone");
+                if (plusoneFeature) {
+                  toast("🎫 Purchase Plus-One Premium to activate this badge.", { duration: 3000 });
+                  navigate(`/dashboard?purchase=plusone`);
+                }
+                return;
               }
+              // Turning off is always free
+              update("is_plusone", false);
             }}
           />
         </div>

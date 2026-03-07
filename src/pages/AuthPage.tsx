@@ -27,11 +27,15 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   // Auto-open sign-in tab if ?signin=1 is in URL
+  // Auto-open register tab if ?register=1 is in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("signin") === "1") {
       setShowAuth(true);
       setIsLogin(true);
+    } else if (params.get("register") === "1") {
+      setShowAuth(true);
+      setIsLogin(false);
     }
   }, []);
 

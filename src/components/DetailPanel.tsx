@@ -46,7 +46,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
   const imageRotate = useTransform(dragX, [-200, 0, 200], [-8, 0, 8]);
   const imageScale = useTransform(dragX, [-200, 0, 200], [0.95, 1, 0.95]);
 
-  const handleImageDrag = (_: any, info: PanInfo) => {
+  const handleImageDrag = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (info.offset.x < -80) {
       setImageIndex((i) => (i + 1) % images.length);
     } else if (info.offset.x > 80) {
@@ -181,7 +181,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
                   {profile.gender}
                 </span>
               )}
-              {(profile as any).is_plusone ? (
+              {profile.is_plusone ? (
                 <span className="bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
                   <span className="text-yellow-300 font-black text-[11px]">+1</span>
                   <span className="text-white/80">Plus-One</span>
@@ -227,7 +227,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
             )}
 
             {/* ── Plus-One Card ──────────────────────────────────── */}
-            {(profile as any).is_plusone && (
+            {profile.is_plusone && (
               <div className="mx-2 mt-3 rounded-2xl overflow-hidden border border-yellow-400/30 shadow-[0_0_20px_rgba(250,204,21,0.12)]">
                 {/* Header bar */}
                 <div className="bg-gradient-to-r from-yellow-500/20 to-amber-500/10 border-b border-yellow-400/20 px-4 py-3 flex items-center gap-2">

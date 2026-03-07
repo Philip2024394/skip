@@ -168,6 +168,53 @@ const PaymentSuccess = () => {
           if (error) throw error;
           if (!data.success) throw new Error(data.error);
           setFeatureActivated("spotlight");
+        } else if (feature === "superlike") {
+          // Write super like to DB now that payment is confirmed
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const targetUserId = searchParams.get("target_user_id");
+            if (targetUserId) {
+              const existing = await supabase.from("likes")
+                .select("id").eq("liker_id", user.id).eq("liked_id", targetUserId).maybeSingle();
+              if (existing.data) {
+                await supabase.from("likes").update({ is_rose: true })
+                  .eq("liker_id", user.id).eq("liked_id", targetUserId);
+              } else {
+                await supabase.from("likes").insert({ liker_id: user.id, liked_id: targetUserId, is_rose: true });
+              }
+            }
+          }
+          setFeatureActivated("superlike");
+        } else if (feature === "boost") {
+          // Boost: set spotlight_until to 1 hour from now
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const boostUntil = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+            await supabase.from("profiles").update({ spotlight_until: boostUntil, is_spotlight: true }).eq("id", user.id);
+          }
+          setFeatureActivated("boost");
+        } else if (feature === "vip") {
+          // VIP: mark profile, store subscription expiry (30 days)
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const vipUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+            await supabase.from("profiles").update({ is_spotlight: true, spotlight_until: vipUntil }).eq("id", user.id);
+          }
+          setFeatureActivated("vip");
+        } else if (feature === "plusone") {
+          // Plus-One: set is_plusone = true on profile
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from("profiles").update({ is_plusone: true } as Record<string, unknown>).eq("id", user.id);
+          }
+          setFeatureActivated("plusone");
+        } else if (feature === "verified") {
+          // Verified badge — store in profile (needs is_verified column; graceful fail if missing)
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from("profiles").update({ is_verified: true } as Record<string, unknown>).eq("id", user.id);
+          }
+          setFeatureActivated("verified");
         } else if (feature) {
           setFeatureActivated(feature);
         } else {

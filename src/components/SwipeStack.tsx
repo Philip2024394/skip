@@ -303,7 +303,7 @@ const SwipeStack = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
 
           {/* ── Single status badge — +1 takes priority over Free Tonight ── */}
-          {(profile as any).is_plusone ? (
+          {profile.is_plusone ? (
             <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.4)]">
               <span className="text-yellow-300 font-black text-[12px] leading-none">+1</span>
               <span className="text-white/80">Plus-One</span>

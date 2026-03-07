@@ -32,7 +32,7 @@ const ReportDialog = ({ open, onOpenChange, reportedUserId, reportedUserName }: 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error("Please sign in"); setLoading(false); return; }
 
-    const { error } = await supabase.from("reports" as any).insert({
+    const { error } = await supabase.from("reports").insert({
       reporter_id: user.id,
       reported_id: reportedUserId,
       reason,
@@ -53,7 +53,7 @@ const ReportDialog = ({ open, onOpenChange, reportedUserId, reportedUserName }: 
   const handleBlock = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error("Please sign in"); return; }
-    await supabase.from("blocked_users" as any).insert({
+    await supabase.from("blocked_users").insert({
       blocker_id: user.id,
       blocked_id: reportedUserId,
     });

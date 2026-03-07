@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle } from "lucide-react";
@@ -34,6 +34,19 @@ const DashboardPage = () => {
   const { t, toggleLocale, locale } = useLanguage();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [tab, setTab] = useState<"profile" | "powerups">("profile");
+  const [autoOpenFeatureId, setAutoOpenFeatureId] = useState<string | null>(null);
+
+  // Handle ?purchase=featureId param from ProfileEditor redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const purchaseId = params.get("purchase");
+    if (purchaseId) {
+      setTab("powerups");
+      setAutoOpenFeatureId(purchaseId);
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, []);
 
   const handlePurchase = async (feature: PremiumFeature) => {
     setLoadingId(feature.id);
@@ -43,12 +56,23 @@ const DashboardPage = () => {
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
-    } catch (err: any) {
-      toast.error(err.message || "Purchase failed");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Purchase failed");
     } finally {
       setLoadingId(null);
     }
   };
+
+  // Auto-trigger purchase if redirected from ProfileEditor with ?purchase=id
+  useEffect(() => {
+    if (!autoOpenFeatureId) return;
+    const feature = PREMIUM_FEATURES.find(f => f.id === autoOpenFeatureId);
+    if (feature) {
+      handlePurchase(feature);
+    }
+    setAutoOpenFeatureId(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpenFeatureId]);
 
   const handleLogout = async () => {
     // Clear online dot before signing out

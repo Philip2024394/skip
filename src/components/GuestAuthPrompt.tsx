@@ -33,7 +33,7 @@ const GuestAuthPrompt = ({ open, onClose, trigger = "generic" }: GuestAuthPrompt
   const navigate = useNavigate();
   const copy = TRIGGER_COPY[trigger];
 
-  const goSignUp  = () => { onClose(); navigate("/auth"); };
+  const goSignUp  = () => { onClose(); navigate("/auth?register=1"); };
   const goSignIn  = () => { onClose(); navigate("/auth?signin=1"); };
 
   return (

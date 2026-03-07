@@ -19,6 +19,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import GuestAuthPrompt from "@/components/GuestAuthPrompt";
+import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 const spreadOverlapping = (positions: Map<string, [number, number]>, minDistDeg = 0.003) => {
@@ -354,7 +355,8 @@ const MapPage = () => {
           }));
         setProfiles(mapped);
       } else {
-        setProfiles(generateIndonesianProfiles(50));
+        const useMocks = import.meta.env.VITE_USE_MOCK_PROFILES === "true" || import.meta.env.DEV;
+        if (useMocks) setProfiles(generateIndonesianProfiles(50));
       }
     };
     load();
@@ -595,26 +597,35 @@ const MapPage = () => {
 
   const handleSuperLike = useCallback(async (profile: Profile) => {
     if (!user) { showGuestPrompt("superlike"); return; }
-    const likedProfile = { ...profile, expires_at: new Date(Date.now() + LIKE_EXPIRY_MS).toISOString(), is_rose: true };
-    setLikedIds(prev => new Set(prev).add(profile.id));
-    setSuperLikedIds(prev => new Set(prev).add(profile.id));
-    upsertLocalLikedProfile(likedProfile, true);
-    window.dispatchEvent(new Event("storage"));
-    setAttentionProfile(null);
 
-    const isMock = profile.id.startsWith("indo-") || profile.id.startsWith("profile-");
-    if (!isMock) {
-      if (likedIds.has(profile.id)) {
-        await supabase.from("likes").update({ is_rose: true })
-          .eq("liker_id", user.id).eq("liked_id", profile.id);
-      } else {
-        await supabase.from("likes").insert({ liker_id: user.id, liked_id: profile.id, is_rose: true });
+    // Super Like requires payment — invoke purchase-feature Stripe checkout
+    const superLikeFeature = PREMIUM_FEATURES.find(f => f.id === "superlike");
+    if (!superLikeFeature) return;
+
+    try {
+      toast("⭐ Starting Super Like checkout…");
+      const { data, error } = await supabase.functions.invoke("purchase-feature", {
+        body: {
+          priceId: superLikeFeature.priceId,
+          featureId: "superlike",
+          targetUserId: profile.id,
+          targetUserName: profile.name,
+        },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        // Optimistically mark locally so UI updates
+        setLikedIds(prev => new Set(prev).add(profile.id));
+        setSuperLikedIds(prev => new Set(prev).add(profile.id));
+        upsertLocalLikedProfile({ ...profile, expires_at: new Date(Date.now() + LIKE_EXPIRY_MS).toISOString(), is_rose: true }, true);
+        window.dispatchEvent(new Event("storage"));
+        setAttentionProfile(null);
+        window.open(data.url, "_blank");
       }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Super Like failed. Please try again.");
     }
-
-    if (likedMeIds.has(profile.id)) setMatchDialog(profile);
-    else toast("⭐ Super Liked!", { description: `You're now first in ${profile.name}'s library!` });
-  }, [user, likedIds, likedMeIds, navigate]);
+  }, [user, showGuestPrompt, likedIds, likedMeIds, navigate, upsertLocalLikedProfile]);
 
   const handleUnlockMatch = async () => {
     if (!matchDialog) return;

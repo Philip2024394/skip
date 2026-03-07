@@ -4,6 +4,12 @@ project_id = "plazzgpcrzyolrvoeynl"
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.create-payment]
-    verify_jwt = false
+    verify_jwt = true
+  [functions.purchase-feature]
+    verify_jwt = true
   [functions.verify-payment]
     verify_jwt = false
+  [functions.activate-incognito]
+    verify_jwt = true
+  [functions.activate-spotlight]
+    verify_jwt = true
