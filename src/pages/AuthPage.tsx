@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, MessageCircle } from "lucide-react";
+import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, MessageCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -136,6 +136,14 @@ const AuthPage = () => {
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
+        {/* Back to home */}
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-1.5 text-white/50 hover:text-white text-sm mb-4 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back to home
+        </button>
+
         {/* Logo */}
         <div className="text-center mb-4">
           <img src={logoHeart} alt="SkipTheApp" className="w-20 h-20 mx-auto mb-2 object-contain drop-shadow-xl" />
