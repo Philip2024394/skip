@@ -8,23 +8,183 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+  apiVersion: "2025-08-27.basil",
+});
+
+const supabaseAdmin = createClient(
+  Deno.env.get("SUPABASE_URL") ?? "",
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+);
+
+// ─── Helper: activate features after a completed checkout ────────────────────
+async function activateFeature(session: Stripe.Checkout.Session) {
+  const userId = session.metadata?.user_id;
+  const featureId = session.metadata?.feature_id;
+  const targetUserId = session.metadata?.target_user_id;
+
+  if (!userId) return;
+
+  // WhatsApp connection payment (create-payment flow)
+  if (targetUserId && !featureId) {
+    const hiddenUntil = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+
+    const existing = await supabaseAdmin
+      .from("connections")
+      .select("id")
+      .eq("user_a", userId)
+      .eq("user_b", targetUserId)
+      .maybeSingle();
+
+    if (!existing.data) {
+      const { data: connection } = await supabaseAdmin
+        .from("connections")
+        .insert({
+          user_a: userId,
+          user_b: targetUserId,
+          stripe_session_id: session.id,
+          amount_cents: session.amount_total ?? 199,
+        })
+        .select()
+        .single();
+
+      await supabaseAdmin.from("payments").insert({
+        user_id: userId,
+        stripe_session_id: session.id,
+        stripe_payment_intent: session.payment_intent as string,
+        amount_cents: session.amount_total ?? 199,
+        currency: session.currency ?? "usd",
+        status: "paid",
+        connection_id: connection?.id,
+        target_user_id: targetUserId,
+      });
+
+      await supabaseAdmin.from("profiles").update({ hidden_until: hiddenUntil }).eq("id", userId);
+      await supabaseAdmin.from("profiles").update({ hidden_until: hiddenUntil }).eq("id", targetUserId);
+    }
+    return;
+  }
+
+  // Premium feature activation
+  switch (featureId) {
+    case "plusone":
+      await supabaseAdmin.from("profiles").update({ is_plusone: true }).eq("id", userId);
+      break;
+
+    case "vip":
+      await supabaseAdmin.from("profiles").update({
+        is_spotlight: true,
+        spotlight_until: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }).eq("id", userId);
+      break;
+
+    case "boost":
+      await supabaseAdmin.from("profiles").update({
+        is_spotlight: true,
+        spotlight_until: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      }).eq("id", userId);
+      break;
+
+    case "superlike":
+      if (targetUserId) {
+        const { data: existing } = await supabaseAdmin
+          .from("likes")
+          .select("id")
+          .eq("liker_id", userId)
+          .eq("liked_id", targetUserId)
+          .maybeSingle();
+
+        if (existing) {
+          await supabaseAdmin.from("likes").update({ is_rose: true }).eq("id", existing.id);
+        } else {
+          await supabaseAdmin.from("likes").insert({
+            liker_id: userId,
+            liked_id: targetUserId,
+            is_rose: true,
+          });
+        }
+      }
+      break;
+
+    case "verified":
+      await supabaseAdmin.from("profiles").update({ is_verified: true }).eq("id", userId);
+      break;
+
+    case "incognito":
+      await supabaseAdmin.from("profiles").update({
+        hidden_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }).eq("id", userId);
+      break;
+
+    case "spotlight":
+      await supabaseAdmin.from("profiles").update({
+        is_spotlight: true,
+        spotlight_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }).eq("id", userId);
+      break;
+  }
+
+  // Record payment for all feature purchases
+  await supabaseAdmin.from("payments").insert({
+    user_id: userId,
+    stripe_session_id: session.id,
+    stripe_payment_intent: session.payment_intent as string,
+    amount_cents: session.amount_total ?? 0,
+    currency: session.currency ?? "usd",
+    status: "paid",
+    feature_id: featureId,
+  }).then(() => {});
+}
+
+// ─── Main handler ────────────────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseAdmin = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
+  // ── STRIPE WEBHOOK PATH ──────────────────────────────────────────────────
+  // Stripe sends a Stripe-Signature header; handle as webhook event
+  const stripeSignature = req.headers.get("stripe-signature");
+  if (stripeSignature) {
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") ?? "";
+    let event: Stripe.Event;
 
+    try {
+      const body = await req.text();
+      event = await stripe.webhooks.constructEventAsync(body, stripeSignature, webhookSecret);
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err);
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (event.type === "checkout.session.completed") {
+      const session = event.data.object as Stripe.Checkout.Session;
+      try {
+        await activateFeature(session);
+      } catch (err) {
+        console.error("Feature activation error:", err);
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  // ── CLIENT-SIDE VERIFICATION PATH ────────────────────────────────────────
+  // Called from PaymentSuccess.tsx after a redirect, with the user's JWT
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) throw new Error("User not authenticated");
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
@@ -32,10 +192,6 @@ serve(async (req) => {
 
     const { sessionId } = await req.json();
     if (!sessionId) throw new Error("sessionId is required");
-
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2025-08-27.basil",
-    });
 
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
@@ -51,50 +207,24 @@ serve(async (req) => {
 
     if (userId !== user.id) throw new Error("Unauthorized");
 
-    // Create connection record
-    const { data: connection, error: connErr } = await supabaseAdmin
-      .from("connections")
-      .insert({
-        user_a: userId,
-        user_b: targetUserId,
-        stripe_session_id: sessionId,
-        amount_cents: 199,
-      })
-      .select()
-      .single();
+    // Activate via the same helper (idempotent — safe to run twice if webhook already fired)
+    await activateFeature(session);
 
-    if (connErr) throw connErr;
-
-    // Create payment record
-    await supabaseAdmin.from("payments").insert({
-      user_id: userId,
-      stripe_session_id: sessionId,
-      stripe_payment_intent: session.payment_intent as string,
-      amount_cents: 199,
-      currency: "usd",
-      status: "paid",
-      connection_id: connection.id,
-      target_user_id: targetUserId,
-    });
-
-    // Hide both profiles for 3 days
-    const hiddenUntil = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
-    await supabaseAdmin.from("profiles").update({ hidden_until: hiddenUntil }).eq("id", userId);
-    await supabaseAdmin.from("profiles").update({ hidden_until: hiddenUntil }).eq("id", targetUserId);
-
-    // Get target user's WhatsApp
-    const { data: targetProfile } = await supabaseAdmin
-      .from("profiles")
-      .select("whatsapp, name")
-      .eq("id", targetUserId)
-      .single();
+    // Return WhatsApp details for connection payments
+    let whatsapp = null;
+    let name = null;
+    if (targetUserId) {
+      const { data: targetProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("whatsapp, name")
+        .eq("id", targetUserId)
+        .single();
+      whatsapp = targetProfile?.whatsapp;
+      name = targetProfile?.name;
+    }
 
     return new Response(
-      JSON.stringify({
-        success: true,
-        whatsapp: targetProfile?.whatsapp,
-        name: targetProfile?.name,
-      }),
+      JSON.stringify({ success: true, whatsapp, name }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
