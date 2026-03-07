@@ -62,8 +62,9 @@ const ProfileEditor = () => {
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
   const [deactivateDone, setDeactivateDone] = useState(false);
   const [freeTonightUntil, setFreeTonightUntil] = useState<Date | null>(null);
+  const [userId, setUserId] = useState<string>("");
 
-  // On mount: check if Free Tonight has expired and auto-clear it
+  // Check if Free Tonight has expired and auto-clear it (runs whenever userId is set)
   useEffect(() => {
     if (!userId) return;
     const stored = localStorage.getItem(`free_tonight_until_${userId}`);
@@ -81,7 +82,6 @@ const ProfileEditor = () => {
   }, [userId]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadSlot, setUploadSlot] = useState<number>(0);
-  const [userId, setUserId] = useState<string>("");
   const [editingImageIdx, setEditingImageIdx] = useState<number | null>(null);
 
   useEffect(() => {

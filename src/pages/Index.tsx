@@ -776,6 +776,7 @@ const Index = () => {
             nearbyUsers={allProfiles}
             onSelectUser={handleMapSelectUser}
             likedMeProfiles={likedMe}
+            onPurchaseFeature={handlePurchaseFeature}
           />
         )}
       </AnimatePresence>
