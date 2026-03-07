@@ -270,13 +270,24 @@ const Index = () => {
         .eq("is_active", true)
         .eq("is_banned", false);
       if (session) query.neq("id", session.user.id);
-      const { data: profiles } = await query;
+      const { data: profiles, error: profilesError } = await query;
+
+      console.log("[SkipTheApp] profiles_public query result:", {
+        count: profiles?.length ?? 0,
+        error: profilesError?.message ?? null,
+        sample: profiles?.[0] ?? null,
+      });
 
       if (profiles && profiles.length > 0) {
         // Fetch spotlight status and main_image_pos from profiles table
-        const { data: extraData } = await supabase
+        const { data: extraData, error: extraError } = await supabase
           .from("profiles")
           .select("id, is_spotlight, spotlight_until, main_image_pos, image_positions, first_date_idea, first_date_places");
+
+        console.log("[SkipTheApp] profiles extra data:", {
+          count: extraData?.length ?? 0,
+          error: extraError?.message ?? null,
+        });
         const spotlightIds = new Set(
           (extraData || [])
             .filter((s: any) => s.is_spotlight && s.spotlight_until && new Date(s.spotlight_until) > new Date())
