@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN image_positions jsonb DEFAULT '[]'::jsonb;

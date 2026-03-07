@@ -1,0 +1,3 @@
+
+ALTER TABLE public.profiles ADD COLUMN is_spotlight BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN spotlight_until TIMESTAMP WITH TIME ZONE DEFAULT NULL;

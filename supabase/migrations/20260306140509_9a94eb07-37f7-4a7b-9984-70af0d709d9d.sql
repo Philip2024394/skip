@@ -1,0 +1,12 @@
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS terms_accepted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL;
+
+DROP VIEW IF EXISTS public.profiles_public;
+
+CREATE VIEW public.profiles_public WITH (security_invoker = on) AS
+SELECT 
+  id, name, age, gender, bio, city, country, looking_for,
+  avatar_url, images, latitude, longitude, available_tonight,
+  voice_intro_url, is_active, is_banned, hidden_until, created_at,
+  last_seen_at
+FROM public.profiles;

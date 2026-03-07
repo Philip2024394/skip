@@ -1,0 +1,256 @@
+export type Locale = "id" | "en";
+
+export const translations = {
+  // Common
+  "app.name": { en: "SkipTheApp", id: "SkipTheApp" },
+  "app.tagline": { en: "WhatsApp Dating", id: "Kencan WhatsApp" },
+  "app.subtitle": { en: "Start chatting instantly", id: "Mulai ngobrol sekarang" },
+  "app.realConnections": { en: "WhatsApp Dating At Your Finger Tips ✨", id: "Kencan WhatsApp Di Ujung Jari Anda ✨" },
+
+  // Landing
+  "landing.getStarted": { en: "Let's Get Started", id: "Ayo Mulai" },
+  "landing.haveAccount": { en: "I already have an account", id: "Saya sudah punya akun" },
+  "landing.browseFirst": { en: "Browse profiles first →", id: "Lihat profil dulu →" },
+
+  // Auth
+  "auth.signIn": { en: "Sign In", id: "Masuk" },
+  "auth.register": { en: "Register", id: "Daftar" },
+  "auth.email": { en: "Email", id: "Email" },
+  "auth.password": { en: "Password", id: "Kata Sandi" },
+  "auth.fullName": { en: "Full Name", id: "Nama Lengkap" },
+  "auth.yourName": { en: "Your name", id: "Nama Anda" },
+  "auth.signingIn": { en: "Signing in...", id: "Sedang masuk..." },
+  "auth.welcomeBack": { en: "Welcome back! 💚", id: "Selamat datang kembali! 💚" },
+  "auth.fillAllFields": { en: "Please fill in all fields", id: "Harap isi semua kolom" },
+  "auth.completeProfile": { en: "Please complete your profile", id: "Harap lengkapi profil Anda" },
+  "auth.addLocation": { en: "Please add your location and WhatsApp", id: "Harap tambahkan lokasi dan WhatsApp Anda" },
+  "auth.checkEmail": { en: "Check your email to verify your account! 📧", id: "Cek email Anda untuk verifikasi akun! 📧" },
+  "auth.forgotPassword": { en: "Forgot your password?", id: "Lupa kata sandi?" },
+  "auth.or": { en: "or", id: "atau" },
+  "auth.continueGoogle": { en: "Continue with Google", id: "Lanjutkan dengan Google" },
+  "auth.age": { en: "Age", id: "Usia" },
+  "auth.iAm": { en: "I am", id: "Saya" },
+  "auth.selectGender": { en: "Select gender", id: "Pilih jenis kelamin" },
+  "auth.lookingFor": { en: "Looking for", id: "Mencari" },
+  "auth.whoInterests": { en: "Who interests you?", id: "Siapa yang menarik bagi Anda?" },
+  "auth.country": { en: "Country", id: "Negara" },
+  "auth.selectCountry": { en: "Select country", id: "Pilih negara" },
+  "auth.city": { en: "City", id: "Kota" },
+  "auth.yourCity": { en: "Your city", id: "Kota Anda" },
+  "auth.whatsapp": { en: "WhatsApp Number", id: "Nomor WhatsApp" },
+  "auth.shortBio": { en: "Short Bio", id: "Bio Singkat" },
+  "auth.tellUs": { en: "Tell us about yourself...", id: "Ceritakan tentang diri Anda..." },
+  "auth.back": { en: "Back", id: "Kembali" },
+  "auth.next": { en: "Next", id: "Selanjutnya" },
+  "auth.creating": { en: "Creating...", id: "Membuat..." },
+  "auth.createAccount": { en: "Create Account", id: "Buat Akun" },
+  "auth.minChars": { en: "Min 6 characters", id: "Min 6 karakter" },
+
+  // Header / Nav
+  "nav.signIn": { en: "Sign in", id: "Masuk" },
+  "nav.filters": { en: "Filters", id: "Filter" },
+  "nav.powerups": { en: "Power-Ups", id: "Power-Up" },
+
+  // Swipe
+  "swipe.noMore": { en: "No more profiles to show", id: "Tidak ada profil lagi" },
+  "swipe.liked": { en: "Liked!", id: "Disukai!" },
+  "swipe.youLiked": { en: "You liked", id: "Anda menyukai" },
+  "swipe.roseSent": { en: "Like sent!", id: "Suka terkirim!" },
+  "swipe.roseSentTo": { en: "You sent a like to", id: "Anda mengirim suka ke" },
+  "swipe.next": { en: "NEXT →", id: "LANJUT →" },
+  "swipe.prev": { en: "← PREV", id: "← KEMBALI" },
+  "swipe.like": { en: "LIKE", id: "SUKA" },
+  "swipe.availableTonight": { en: "Available Tonight", id: "Tersedia Malam Ini" },
+
+  // Match
+  "match.title": { en: "It's a Match! 🎉", id: "Cocok! 🎉" },
+  "match.desc": { en: "liked you back! Unlock their WhatsApp to start chatting.", id: "menyukai Anda kembali! Buka WhatsApp mereka untuk mulai ngobrol." },
+  "match.unlock": { en: "Unlock WhatsApp — $1.99", id: "Buka WhatsApp — $1,99" },
+  "match.later": { en: "Maybe Later", id: "Nanti Saja" },
+  "match.expired": { en: "This match has expired", id: "Kecocokan ini telah kedaluwarsa" },
+
+  // Filters
+  "filter.title": { en: "Filters", id: "Filter" },
+  "filter.country": { en: "Country", id: "Negara" },
+  "filter.searchCountry": { en: "Search any country…", id: "Cari negara…" },
+  "filter.city": { en: "City", id: "Kota" },
+  "filter.anyCity": { en: "Any city…", id: "Kota mana saja…" },
+  "filter.ageRange": { en: "Age Range", id: "Rentang Usia" },
+  "filter.gender": { en: "Gender", id: "Jenis Kelamin" },
+  "filter.all": { en: "All", id: "Semua" },
+  "filter.lookingFor": { en: "Looking For", id: "Mencari" },
+  "filter.quickFilters": { en: "Quick Filters", id: "Filter Cepat" },
+  "filter.availableTonight": { en: "🌙 Available Tonight", id: "🌙 Tersedia Malam Ini" },
+  "filter.availableTonightDesc": { en: "Show only users free tonight", id: "Tampilkan pengguna yang tersedia malam ini" },
+  "filter.onlineNow": { en: "🟢 Online Now", id: "🟢 Online Sekarang" },
+  "filter.onlineNowDesc": { en: "Show only currently active users", id: "Tampilkan pengguna yang sedang aktif" },
+  "filter.resetAll": { en: "Reset All", id: "Atur Ulang" },
+  "filter.apply": { en: "Apply Filters", id: "Terapkan Filter" },
+  "filter.noCountries": { en: "No countries found", id: "Tidak ada negara ditemukan" },
+
+  // Dashboard
+  "dash.title": { en: "Dashboard", id: "Dasbor" },
+  "dash.myProfile": { en: "My Profile", id: "Profil Saya" },
+  "dash.powerups": { en: "Power-Ups", id: "Power-Up" },
+  "dash.supercharge": { en: "Supercharge your profile with premium features ✨", id: "Tingkatkan profil Anda dengan fitur premium ✨" },
+  "dash.get": { en: "Get", id: "Dapatkan" },
+  "dash.processing": { en: "Processing...", id: "Memproses..." },
+  "dash.logout": { en: "Log Out", id: "Keluar" },
+
+  // Profile Editor
+  "profile.photos": { en: "Photos (min 2, max 5) — tap image to adjust position", id: "Foto (min 2, maks 5) — ketuk foto untuk atur posisi" },
+  "profile.setMain": { en: "⭐ = set as main swipe card image", id: "⭐ = jadikan foto utama kartu geser" },
+  "profile.mainImage": { en: "Main", id: "Utama" },
+  "profile.profilePage": { en: "Profile", id: "Profil" },
+  "profile.add": { en: "Add", id: "Tambah" },
+  "profile.name": { en: "Name", id: "Nama" },
+  "profile.age": { en: "Age", id: "Usia" },
+  "profile.gender": { en: "Gender", id: "Jenis Kelamin" },
+  "profile.lookingFor": { en: "Looking for", id: "Mencari" },
+  "profile.country": { en: "Country", id: "Negara" },
+  "profile.city": { en: "City", id: "Kota" },
+  "profile.whatsapp": { en: "WhatsApp", id: "WhatsApp" },
+  "profile.bio": { en: "Bio", id: "Bio" },
+  "profile.mapLocation": { en: "Map Location", id: "Lokasi Peta" },
+  "profile.gettingLocation": { en: "Getting location...", id: "Mendapatkan lokasi..." },
+  "profile.locationSet": { en: "Location set — tap to update", id: "Lokasi diatur — ketuk untuk perbarui" },
+  "profile.setLocation": { en: "Set my location on the map", id: "Atur lokasi saya di peta" },
+  "profile.locationSuccess": { en: "Location set! You'll appear on the map 📍", id: "Lokasi diatur! Anda akan muncul di peta 📍" },
+  "profile.availableTonight": { en: "Available Tonight", id: "Tersedia Malam Ini" },
+  "profile.availableTonightDesc": { en: "Show a badge on your profile", id: "Tampilkan lencana di profil Anda" },
+  "profile.saveProfile": { en: "Save Profile", id: "Simpan Profil" },
+  "profile.saving": { en: "Saving...", id: "Menyimpan..." },
+  "profile.saved": { en: "Profile saved! ✅", id: "Profil tersimpan! ✅" },
+  "profile.saveFailed": { en: "Save failed:", id: "Gagal menyimpan:" },
+  "profile.uploadFailed": { en: "Upload failed:", id: "Gagal mengunggah:" },
+  "profile.photoUploaded": { en: "Photo uploaded! Adjust positioning below.", id: "Foto terunggah! Atur posisi di bawah." },
+  "profile.mainUpdated": { en: "Main photo updated!", id: "Foto utama diperbarui!" },
+  "profile.minPhotos": { en: "Please add at least 2 photos: 1 main image + 1 profile image", id: "Harap tambahkan minimal 2 foto: 1 foto utama + 1 foto profil" },
+  "profile.setMainImage": { en: "Please set a main image", id: "Harap atur foto utama" },
+  "profile.donePositioning": { en: "Done Positioning", id: "Selesai Mengatur Posisi" },
+  "profile.languages": { en: "Languages I Speak", id: "Bahasa yang Saya Kuasai" },
+  "profile.nativeLanguage": { en: "Native", id: "Bahasa Ibu" },
+  "profile.addLanguage": { en: "Add a language (up to 3)", id: "Tambah bahasa (maks 3)" },
+  "profile.selectLanguage": { en: "Select language", id: "Pilih bahasa" },
+  "profile.reset": { en: "Reset", id: "Atur Ulang" },
+  "profile.lr": { en: "L/R", id: "Ki/Ka" },
+  "profile.ud": { en: "U/D", id: "At/Bw" },
+  "profile.zoom": { en: "Zoom", id: "Zoom" },
+  "profile.cardPreview": { en: "Card preview — drag to reposition", id: "Pratinjau kartu — geser untuk atur posisi" },
+  "profile.notFound": { en: "Profile not found", id: "Profil tidak ditemukan" },
+  "profile.yourCity": { en: "Your city", id: "Kota Anda" },
+
+  // Detail panel
+  "detail.noLikes": { en: "No likes yet", id: "Belum ada suka" },
+  "detail.viewMap": { en: "View Map", id: "Lihat Peta" },
+  "detail.superLike": { en: "Super Like", id: "Super Like" },
+  "detail.superLikeDesc": { en: "Stand out from the crowd! Send a Super Like so", id: "Tampil beda! Kirim Super Like agar" },
+  "detail.seesYouFirst": { en: "sees you first.", id: "melihat Anda lebih dulu." },
+  "detail.getSuperLike": { en: "Get Super Like — $1.99", id: "Dapatkan Super Like — $1,99" },
+
+  // Premium features
+  "premium.boost": { en: "Profile Boost", id: "Tingkatkan Profil" },
+  "premium.boostDesc": { en: "Top of swipe stack for 1 hour. 5–10× more views!", id: "Teratas di tumpukan geser selama 1 jam. 5–10× lebih banyak dilihat!" },
+  "premium.superlike": { en: "Super Like", id: "Super Like" },
+  "premium.superlikeDesc": { en: "Flash in their library first! They get notified.", id: "Muncul pertama di perpustakaan mereka! Mereka akan diberitahu." },
+  "premium.verified": { en: "Verified Badge", id: "Lencana Terverifikasi" },
+  "premium.verifiedDesc": { en: "Get verified. Rank higher & build trust.", id: "Dapatkan verifikasi. Peringkat lebih tinggi & bangun kepercayaan." },
+  "premium.incognito": { en: "Incognito Mode", id: "Mode Penyamaran" },
+  "premium.incognitoDesc": { en: "Browse profiles invisibly for 24 hours. Nobody sees you!", id: "Jelajahi profil secara tak terlihat selama 24 jam. Tidak ada yang melihat Anda!" },
+  "premium.spotlight": { en: "Spotlight", id: "Sorotan" },
+  "premium.spotlightDesc": { en: "Featured at top of everyone's stack for 24 hours!", id: "Tampil di atas tumpukan semua orang selama 24 jam!" },
+
+  // Premium feature details
+  "premium.boost.1": { en: "⏱ Lasts 1 hour", id: "⏱ Berlangsung 1 jam" },
+  "premium.boost.2": { en: "👀 5–10× more views", id: "👀 5–10× lebih banyak dilihat" },
+  "premium.boost.3": { en: "📊 See views + matches after", id: "📊 Lihat tayangan + kecocokan setelahnya" },
+  "premium.superlike.1": { en: "⭐ Appears first in their library", id: "⭐ Muncul pertama di perpustakaan mereka" },
+  "premium.superlike.2": { en: "🔔 They get notified", id: "🔔 Mereka akan diberitahu" },
+  "premium.superlike.3": { en: "💫 Highlighted with star", id: "💫 Disorot dengan bintang" },
+  "premium.verified.1": { en: "📸 Submit selfie + ID", id: "📸 Kirim selfie + KTP" },
+  "premium.verified.2": { en: "✅ Verified badge on profile", id: "✅ Lencana terverifikasi di profil" },
+  "premium.verified.3": { en: "📈 Rank higher in search", id: "📈 Peringkat lebih tinggi di pencarian" },
+  "premium.incognito.1": { en: "👻 Invisible for 24 hours", id: "👻 Tak terlihat selama 24 jam" },
+  "premium.incognito.2": { en: "🔍 Browse without being seen", id: "🔍 Jelajahi tanpa terlihat" },
+  "premium.incognito.3": { en: "🛡️ No trace left behind", id: "🛡️ Tidak ada jejak yang tertinggal" },
+  "premium.spotlight.1": { en: "🌟 Top of everyone's stack", id: "🌟 Teratas di tumpukan semua orang" },
+  "premium.spotlight.2": { en: "⏰ Lasts 24 hours", id: "⏰ Berlangsung 24 jam" },
+  "premium.spotlight.3": { en: "📊 10–20× more views", id: "📊 10–20× lebih banyak dilihat" },
+
+  // Report
+  "report.title": { en: "Report", id: "Laporkan" },
+  "report.why": { en: "Why are you reporting this user?", id: "Mengapa Anda melaporkan pengguna ini?" },
+  "report.inappropriatePhotos": { en: "Inappropriate photos", id: "Foto tidak pantas" },
+  "report.harassment": { en: "Harassment or abuse", id: "Pelecehan atau kekerasan" },
+  "report.fakeProfile": { en: "Fake profile / Catfishing", id: "Profil palsu / Penipuan" },
+  "report.spam": { en: "Spam or scam", id: "Spam atau penipuan" },
+  "report.underage": { en: "Underage user", id: "Pengguna di bawah umur" },
+  "report.other": { en: "Other", id: "Lainnya" },
+  "report.details": { en: "Additional details (optional)", id: "Detail tambahan (opsional)" },
+  "report.blockUser": { en: "Block User", id: "Blokir Pengguna" },
+  "report.submit": { en: "Submit Report", id: "Kirim Laporan" },
+  "report.sending": { en: "Sending...", id: "Mengirim..." },
+  "report.selectReason": { en: "Please select a reason", id: "Harap pilih alasan" },
+  "report.signIn": { en: "Please sign in", id: "Harap masuk" },
+  "report.alreadyReported": { en: "You already reported this user", id: "Anda sudah melaporkan pengguna ini" },
+  "report.failed": { en: "Failed to submit report", id: "Gagal mengirim laporan" },
+  "report.success": { en: "Report submitted. We'll review it shortly.", id: "Laporan terkirim. Kami akan segera meninjau." },
+  "report.blocked": { en: "has been blocked", id: "telah diblokir" },
+
+  // Likes Library
+  "likes.title": { en: "Likes", id: "Suka" },
+  "likes.noLikes": { en: "No one has liked you yet", id: "Belum ada yang menyukai Anda" },
+  "likes.expired": { en: "Expired", id: "Kedaluwarsa" },
+  "likes.unlock": { en: "Unlock WhatsApp", id: "Buka WhatsApp" },
+
+  // Gender options (keep as values, not translated)
+  "gender.male": { en: "Male", id: "Pria" },
+  "gender.female": { en: "Female", id: "Wanita" },
+  "gender.nonbinary": { en: "Non-binary", id: "Non-biner" },
+  "gender.other": { en: "Other", id: "Lainnya" },
+
+  // Looking for
+  "lookingFor.men": { en: "Men", id: "Pria" },
+  "lookingFor.women": { en: "Women", id: "Wanita" },
+  "lookingFor.everyone": { en: "Everyone", id: "Semua" },
+  "lookingFor.friendship": { en: "Friendship", id: "Pertemanan" },
+  "lookingFor.dating": { en: "Dating", id: "Kencan" },
+  "lookingFor.relationship": { en: "Relationship", id: "Hubungan" },
+  "lookingFor.networking": { en: "Networking", id: "Jaringan" },
+
+  // Voice
+  "voice.record": { en: "Record Voice Intro", id: "Rekam Intro Suara" },
+  "voice.recording": { en: "Recording...", id: "Merekam..." },
+  "voice.play": { en: "Play", id: "Putar" },
+
+  // Map
+  "map.title": { en: "Nearby", id: "Di Sekitar" },
+  "map.back": { en: "Back", id: "Kembali" },
+
+  // Misc
+  "misc.loading": { en: "Loading...", id: "Memuat..." },
+  "misc.locationDenied": { en: "Location access denied", id: "Akses lokasi ditolak" },
+  "misc.geolocationNotSupported": { en: "Geolocation not supported", id: "Geolokasi tidak didukung" },
+
+  // Language
+  "lang.switch": { en: "🇮🇩 Bahasa", id: "🇬🇧 English" },
+  "lang.label": { en: "Language", id: "Bahasa" },
+
+  // Password reset
+  "reset.title": { en: "Reset Password", id: "Atur Ulang Kata Sandi" },
+  "reset.newPassword": { en: "New Password", id: "Kata Sandi Baru" },
+  "reset.update": { en: "Update Password", id: "Perbarui Kata Sandi" },
+  "reset.enterEmail": { en: "Enter your email", id: "Masukkan email Anda" },
+  "reset.sendLink": { en: "Send Reset Link", id: "Kirim Tautan Reset" },
+
+  // Terms
+  "terms.title": { en: "Terms of Service", id: "Syarat Layanan" },
+  "terms.privacy": { en: "Privacy Policy", id: "Kebijakan Privasi" },
+  "terms.accept": { en: "Accept", id: "Terima" },
+
+  // Payment
+  "payment.success": { en: "Payment Successful!", id: "Pembayaran Berhasil!" },
+  "payment.connectionUnlocked": { en: "Connection unlocked! You can now chat on WhatsApp.", id: "Koneksi terbuka! Anda sekarang bisa ngobrol di WhatsApp." },
+} as const;
+
+export type TranslationKey = keyof typeof translations;

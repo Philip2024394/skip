@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN main_image_pos text DEFAULT '50% 50%';

@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN first_date_idea text DEFAULT NULL;
