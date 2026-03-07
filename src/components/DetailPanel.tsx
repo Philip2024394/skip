@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "framer-motion";
-import { ChevronRight, MapPin, Map, X, MessageCircle, Star, Flag, Globe } from "lucide-react";
+import { ChevronRight, MapPin, Map, X, MessageCircle, Star, Flag, Globe, Heart } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isOnline } from "@/hooks/useOnlineStatus";
@@ -10,6 +10,7 @@ import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import ReportDialog from "./ReportDialog";
 import DatePlacesDisplay from "./DatePlacesDisplay";
 import VoicePlayer from "./VoicePlayer";
+import logoHeart from "@/assets/logo-heart.png";
 
 interface DetailPanelProps {
   profile: Profile;
@@ -375,86 +376,89 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, nearbyUsers = [], on
       <AnimatePresence>
         {showPlusOneModal && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop — matches GuestAuthPrompt */}
             <motion.div
               key="plusone-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+              className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm"
               onClick={handleClosePlusOneModal}
             />
 
-            {/* Sheet */}
+            {/* Sheet — matches GuestAuthPrompt exactly */}
             <motion.div
               key="plusone-sheet"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 28, stiffness: 320 }}
-              className="fixed bottom-0 left-0 right-0 z-[61] rounded-t-3xl bg-[#0d0d0d] border-t border-white/10 overflow-hidden"
-              style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom, 0px))" }}
+              transition={{ type: "spring", damping: 30, stiffness: 340 }}
+              className="fixed inset-x-0 bottom-0 z-[70] px-4 pb-10 pt-2"
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full bg-white/20" />
-              </div>
+              <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-5" />
 
-              {/* Close button — 44×44 touch target */}
-              <button
-                onClick={handleClosePlusOneModal}
-                aria-label="Close"
-                className="absolute top-3 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white/60 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              <div className="px-6 pt-2 pb-2">
-                {/* Badge icon */}
-                <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 rounded-full bg-white/8 border border-white/15 flex items-center justify-center">
-                    <span className="text-white font-black text-2xl leading-none">+1</span>
-                  </div>
-                </div>
-
-                {/* Title */}
-                <h2 className="text-white font-bold text-xl text-center leading-tight mb-2">
-                  Plus One
-                </h2>
-
-                {/* Explanation */}
-                <p className="text-white/60 text-sm text-center leading-relaxed mb-5">
-                  <span className="text-white font-medium">{profile.name}</span> is looking for someone to accompany them as a guest to events and social occasions — this is <span className="text-white font-medium">not</span> for relationships or dating.
-                </p>
-
-                {/* Occasion pills */}
-                <div className="grid grid-cols-2 gap-2 mb-5">
-                  {[
-                    { icon: "🍽", label: "Dinners & meetups" },
-                    { icon: "💒", label: "Weddings & events" },
-                    { icon: "🎵", label: "Concerts & festivals" },
-                    { icon: "🤝", label: "Business & networking" },
-                    { icon: "✈️", label: "Travel outings" },
-                    { icon: "🎉", label: "Social gatherings" },
-                  ].map(({ icon, label }) => (
-                    <div
-                      key={label}
-                      className="flex items-center gap-2 bg-white/5 border border-white/8 rounded-xl px-3 py-2.5"
-                    >
-                      <span className="text-sm">{icon}</span>
-                      <span className="text-white/70 text-xs leading-tight">{label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* CTA */}
-                <Button
+              <div className="bg-black/95 backdrop-blur-2xl border border-white/10 rounded-3xl overflow-hidden relative">
+                {/* Close button — 44×44 touch target */}
+                <button
                   onClick={handleClosePlusOneModal}
-                  className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400 text-white font-bold text-sm border-0 shadow-lg"
+                  aria-label="Close"
+                  className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white/50 hover:text-white z-10"
                 >
-                  Got it
-                </Button>
+                  <X className="w-5 h-5" />
+                </button>
+
+                {/* Hero gradient strip — same as GuestAuthPrompt */}
+                <div className="h-1.5 w-full gradient-love" />
+
+                <div className="p-6 space-y-5">
+                  {/* Logo + headline — same layout as GuestAuthPrompt */}
+                  <div className="flex items-center gap-3">
+                    <img src={logoHeart} alt="SkipTheApp" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
+                    <div>
+                      <p className="text-2xl">🎫</p>
+                      <h2 className="text-white font-display font-bold text-lg leading-tight">Plus One</h2>
+                      <p className="text-white/50 text-xs mt-0.5">
+                        <span className="text-white/80 font-medium">{profile.name}</span> is available to accompany you as a guest to any function or event without relationship ties.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Occasion perks list — same style as GuestAuthPrompt perks */}
+                  <ul className="space-y-2">
+                    {[
+                      { icon: "🍽", label: "Dinners & casual meetups" },
+                      { icon: "💒", label: "Weddings & formal events" },
+                      { icon: "🎵", label: "Concerts & festivals" },
+                      { icon: "🤝", label: "Business & networking" },
+                      { icon: "✈️", label: "Travel outings" },
+                      { icon: "🎉", label: "Social gatherings" },
+                    ].map(({ icon, label }) => (
+                      <li key={label} className="flex items-center gap-2.5">
+                        <span className="flex-shrink-0 text-base">{icon}</span>
+                        <span className="text-white/70 text-sm">{label}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Info badge — same style as GuestAuthPrompt free badge */}
+                  <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-2xl px-4 py-2.5">
+                    <span className="text-primary text-base flex-shrink-0">✨</span>
+                    <p className="text-primary text-xs font-semibold">
+                      No strings attached — events & experiences only
+                    </p>
+                  </div>
+
+                  {/* CTA — same gradient-love button style as GuestAuthPrompt */}
+                  <Button
+                    onClick={handleClosePlusOneModal}
+                    className="w-full h-13 gradient-love border-0 text-white font-bold text-base rounded-2xl shadow-[0_0_24px_rgba(180,80,150,0.35)] hover:shadow-[0_0_32px_rgba(180,80,150,0.5)] transition-shadow"
+                  >
+                    <Heart className="w-5 h-5 mr-2" fill="currentColor" />
+                    Got it
+                  </Button>
+                </div>
               </div>
             </motion.div>
           </>
