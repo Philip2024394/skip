@@ -28,3 +28,6 @@ android/
 ios/
 generate-icons.mjs
 generate-android-assets.mjs
+
+# Supabase Edge Function secrets — never commit
+supabase/functions/.env
