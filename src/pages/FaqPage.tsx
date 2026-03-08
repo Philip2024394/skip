@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle } from "lucide-react";
+import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppLogo from "@/components/AppLogo";
 
@@ -96,6 +96,10 @@ const FAQ_SECTIONS: FaqSection[] = [
         a: "The Map shows real profiles near you with their approximate distance. You can zoom in and out, scroll to any area in the world, filter by 'Free Tonight' availability, and see your radius circle. Tap a profile avatar to select them and like or view their profile.",
       },
       {
+        q: "Profiles Free Tonight",
+        a: "The Free Tonight option shows that a profile is available to meet on short notice. It's designed for people who are open to spontaneous plans such as dinner, a drink, a walk, an event, or simply meeting someone new the same day.\n\nThis feature helps connect members who don't want to spend days chatting before meeting. Instead, it allows two people who are both available tonight to quickly arrange something simple and enjoyable.\n\nActivating Free Tonight does not create any obligation. It simply lets others know you are open to meeting if the right opportunity comes up. Always communicate clearly, meet in safe public places, and respect each other's comfort levels.",
+      },
+      {
         q: "Does the map show my exact location?",
         a: "No — profile locations are approximate, not pin-point accurate. This protects everyone's privacy while still showing who is nearby.",
       },
@@ -121,6 +125,17 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         q: "Can I cancel VIP anytime?",
         a: "Yes. VIP is a monthly subscription and you can cancel at any time. Your benefits continue until the end of the billing period.",
+      },
+    ],
+  },
+  {
+    title: "Plus One",
+    icon: <UserPlus className="w-4 h-4" />,
+    color: "text-amber-400",
+    items: [
+      {
+        q: "What is +1 Plus One?",
+        a: "The Plus-One option is for profiles who enjoy being part of social occasions and good company but are not currently looking for a traditional date or a serious relationship.\n\nPeople who select this option prefer a more relaxed connection. They may be open to attending events, dinners, gatherings, or special occasions as a companion, without the expectation of constant communication or romantic commitment.\n\nIn many cases, Plus-One members may be shy about dating or new to the dating world. This feature allows them to connect with others in a comfortable, low-pressure way. Over time, these connections may naturally grow into friendship, closer companionship, or potentially a relationship if both people feel the same.\n\nBecause many Plus-One profiles may have limited dating experience, it's important to approach them with respect, patience, and emotional consideration.",
       },
     ],
   },
@@ -192,7 +207,7 @@ const FaqAccordion = ({ item, isOpen, onToggle }: { item: FaqItem; isOpen: boole
           transition={{ duration: 0.22, ease: "easeInOut" }}
           className="overflow-hidden"
         >
-          <p className="px-4 pb-4 text-white/55 text-sm leading-relaxed border-t border-white/8 pt-3">
+          <p className="px-4 pb-4 text-white/55 text-sm leading-relaxed border-t border-white/8 pt-3 whitespace-pre-line">
             {item.a}
           </p>
         </motion.div>
@@ -208,9 +223,9 @@ const FaqPage = () => {
   const toggle = (id: string) => setOpenId(prev => prev === id ? null : id);
 
   return (
-    <div className="min-h-screen-safe bg-[#0a0a0a] text-white">
+    <div className="h-screen-safe bg-[#0a0a0a] text-white flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/8 px-4 py-3 flex items-center gap-3" style={{ paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px))` }}>
+      <div className="shrink-0 sticky top-0 z-10 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/8 px-4 py-3 flex items-center gap-3" style={{ paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px))` }}>
         <button
           onClick={() => navigate(-1)}
           className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center hover:bg-white/15 transition-colors"
@@ -227,7 +242,8 @@ const FaqPage = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6 max-w-lg mx-auto space-y-8 scroll-touch" style={{ paddingBottom: `max(6rem, env(safe-area-inset-bottom, 0px))` }}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="px-4 py-6 max-w-lg mx-auto space-y-8" style={{ paddingBottom: `max(6rem, env(safe-area-inset-bottom, 0px))` }}>
         {/* Hero */}
         <div className="text-center space-y-2 pt-2">
           <div className="w-14 h-14 rounded-2xl gradient-love flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(180,80,150,0.35)]">
@@ -289,6 +305,7 @@ const FaqPage = () => {
             <span className="text-white/20">·</span>
             <button onClick={() => navigate("/privacy")} className="text-white/30 hover:text-white/60 transition-colors">Privacy</button>
           </div>
+        </div>
         </div>
       </div>
     </div>

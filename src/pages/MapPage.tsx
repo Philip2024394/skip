@@ -746,7 +746,7 @@ const MapPage = () => {
         <ArrowLeft className="w-5 h-5" />
       </button>
 
-      {/* ── Top-right stack: Recenter + Radius toggle + "Tonight" filter ── */}
+      {/* ── Top-right stack: Recenter + Radius toggle only ── */}
       <div className="absolute right-4 z-30 flex flex-col gap-2" style={{ top: `max(1rem, env(safe-area-inset-top, 0px))` }}>
         {userLocation && (
           <button
@@ -773,103 +773,110 @@ const MapPage = () => {
         >
           <Eye className="w-4.5 h-4.5" />
         </button>
-
-        {/* Available Tonight filter */}
-        <button
-          onClick={() => setFilterTonight(v => !v)}
-          aria-label={filterTonight ? "Show all profiles" : "Show free tonight only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
-            filterTonight
-              ? "bg-yellow-400/15 border-yellow-400/60 text-yellow-400"
-              : "bg-black/50 border-white/10 text-white/50 hover:text-white"
-          }`}
-          title={filterTonight ? "Showing: free tonight" : "Filter: free tonight"}
-        >
-          <Moon className="w-4 h-4" />
-        </button>
-
-        {/* +1 Plus One filter */}
-        <button
-          onClick={() => setFilterPlusOne(v => !v)}
-          aria-label={filterPlusOne ? "Show all profiles" : "Show +1 Plus One only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
-            filterPlusOne
-              ? "bg-yellow-400/15 border-yellow-400/60 text-yellow-400"
-              : "bg-black/50 border-white/10 text-white/50 hover:text-white"
-          }`}
-          title={filterPlusOne ? "Showing: +1 only" : "Filter: +1 Plus One"}
-        >
-          <UserPlus className="w-4 h-4" />
-        </button>
       </div>
 
-      {/* ── Stats pill (top-left, below back button) ── */}
+      {/* ── Header container: name+km (or stats) + Available Tonight / +1 Plus One (one at a time) ── */}
       {!detailProfile && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute z-20 pointer-events-none"
-          style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 3rem)`, left: "1rem" }}
+          className="absolute z-20 pointer-events-auto"
+          style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 3rem)`, left: "1rem", right: "5rem" }}
         >
-          <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 whitespace-nowrap">
-            <span className="flex items-center gap-1 text-[10px] text-white/70">
-              <Users className="w-3 h-3 text-white/50" />
-              <span className="font-semibold text-white">{stats.total}</span> nearby
-            </span>
-            <span className="w-px h-3 bg-white/10" />
-            <span className="flex items-center gap-1 text-[10px] text-white/70">
-              <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
-              <span className="font-semibold text-green-400">{stats.online}</span> online
-            </span>
-            {stats.liked > 0 && <>
-              <span className="w-px h-3 bg-white/10" />
-              <span className="flex items-center gap-1 text-[10px] text-white/70">
-                <Heart className="w-3 h-3 text-primary" fill="currentColor" />
-                <span className="font-semibold text-primary">{stats.liked}</span>
-              </span>
-            </>}
-            {stats.matches > 0 && <>
-              <span className="w-px h-3 bg-white/10" />
-              <span className="flex items-center gap-1 text-[10px] text-amber-400">
-                <Star className="w-3 h-3" fill="currentColor" />
-                <span className="font-semibold">{stats.matches} match{stats.matches > 1 ? "es" : ""}</span>
-              </span>
-            </>}
-            {showRadius && (
-              <>
-                <span className="w-px h-3 bg-white/10" />
-                <span className="text-[10px] text-white/40">{radiusKm}km</span>
-              </>
-            )}
+          <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 flex items-center gap-2 min-h-0 overflow-hidden">
+            {/* Left: selected profile name+km or stats */}
+            <div className="flex items-center gap-2 flex-1 min-w-0 pointer-events-none">
+              {selectedProfile ? (
+                <>
+                  <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
+                  <span className="text-white text-xs font-medium truncate">{selectedProfile.name}, {selectedProfile.age}</span>
+                  {selectedProfile.distanceKm !== undefined ? (
+                    <span className="text-primary text-[10px] font-semibold flex-shrink-0">
+                      {fmtDist(selectedProfile.distanceKm)}
+                    </span>
+                  ) : (
+                    <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
+                  )}
+                  <span className="text-white/40 text-[10px] flex-shrink-0 hidden sm:inline truncate">{selectedProfile.city}</span>
+                </>
+              ) : (
+                <>
+                  <span className="flex items-center gap-1 text-[10px] text-white/70">
+                    <Users className="w-3 h-3 text-white/50" />
+                    <span className="font-semibold text-white">{stats.total}</span> nearby
+                  </span>
+                  <span className="w-px h-3 bg-white/10" />
+                  <span className="flex items-center gap-1 text-[10px] text-white/70">
+                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                    <span className="font-semibold text-green-400">{stats.online}</span> online
+                  </span>
+                  {stats.liked > 0 && (
+                    <>
+                      <span className="w-px h-3 bg-white/10" />
+                      <span className="flex items-center gap-1 text-[10px] text-white/70">
+                        <Heart className="w-3 h-3 text-primary" fill="currentColor" />
+                        <span className="font-semibold text-primary">{stats.liked}</span>
+                      </span>
+                    </>
+                  )}
+                  {stats.matches > 0 && (
+                    <>
+                      <span className="w-px h-3 bg-white/10" />
+                      <span className="flex items-center gap-1 text-[10px] text-amber-400">
+                        <Star className="w-3 h-3" fill="currentColor" />
+                        <span className="font-semibold">{stats.matches} match{stats.matches > 1 ? "es" : ""}</span>
+                      </span>
+                    </>
+                  )}
+                  {showRadius && (
+                    <>
+                      <span className="w-px h-3 bg-white/10" />
+                      <span className="text-[10px] text-white/40">{radiusKm}km</span>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Right: filter buttons — only one selectable at a time */}
+            <span className="w-px h-4 bg-white/10 flex-shrink-0" />
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  if (filterTonight) setFilterTonight(false);
+                  else { setFilterTonight(true); setFilterPlusOne(false); }
+                }}
+                aria-label={filterTonight ? "Clear filter" : "Show free tonight only"}
+                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
+                  filterTonight
+                    ? "bg-yellow-400/25 border border-yellow-400/60 text-yellow-400"
+                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                }`}
+              >
+                <Moon className="w-3 h-3" fill={filterTonight ? "currentColor" : "none"} />
+                Tonight
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (filterPlusOne) setFilterPlusOne(false);
+                  else { setFilterPlusOne(true); setFilterTonight(false); }
+                }}
+                aria-label={filterPlusOne ? "Clear filter" : "Show +1 Plus One only"}
+                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
+                  filterPlusOne
+                    ? "bg-yellow-400/25 border border-yellow-400/60 text-yellow-400"
+                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                }`}
+              >
+                <UserPlus className="w-3 h-3" />
+                +1
+              </button>
+            </div>
           </div>
         </motion.div>
       )}
-
-      {/* ── Selected profile name chip (replaces stats while a profile is active) ── */}
-      <AnimatePresence>
-        {selectedProfile && !detailProfile && (
-          <motion.div
-            key={selectedProfile.id}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 6 }}
-            className="absolute top-[3.6rem] left-4 right-16 z-20 pointer-events-none"
-          >
-            <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 flex items-center gap-2 overflow-hidden">
-              <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
-              <span className="text-white text-xs font-medium truncate">{selectedProfile.name}, {selectedProfile.age}</span>
-              {selectedProfile.distanceKm !== undefined ? (
-                <span className="text-primary text-[10px] font-semibold flex-shrink-0">
-                  {fmtDist(selectedProfile.distanceKm)}
-                </span>
-              ) : (
-                <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
-              )}
-              <span className="text-white/40 text-[10px] flex-shrink-0 hidden sm:inline">{selectedProfile.city}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── Radius slider (under badge / stats) ── */}
       {userLocation && showRadius && (
@@ -950,40 +957,9 @@ const MapPage = () => {
         </div>
       )}
 
-      {/* ── "Tonight" filter active banner ── */}
-      <AnimatePresence>
-        {filterTonight && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute top-[7rem] left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-          >
-            <div className="bg-teal-500/20 backdrop-blur-xl border border-teal-400/40 rounded-full px-3 py-1 flex items-center gap-1.5">
-              <Moon className="w-3 h-3 text-teal-400" />
-              <span className="text-yellow-400 text-[10px] font-semibold">Free Tonight only</span>
-            </div>
-          </motion.div>
-        )}
-        {filterPlusOne && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-            style={{ top: filterTonight ? "8.25rem" : "7rem" }}
-          >
-            <div className="bg-black/60 backdrop-blur-xl border border-yellow-400/40 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-[0_0_12px_rgba(250,204,21,0.2)]">
-              <UserPlus className="w-3 h-3 text-yellow-400" />
-              <span className="text-yellow-400 text-[10px] font-semibold">+1 Plus One only</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* ── Bottom UI ── */}
       <div className="absolute bottom-0 left-0 right-0 z-20" style={{ paddingBottom: `env(safe-area-inset-bottom, 0px)` }}>
-        <div className="px-4 pb-6">
+        <div className="px-4 pb-10 sm:pb-6">
 
           {/* Avatar strip — extra top padding so circles and badges (-top-1) aren't clipped */}
           <div className="flex items-end justify-center gap-4 mb-4 overflow-x-auto scroll-touch px-2 pt-5" style={{ scrollbarWidth: "none" }}>

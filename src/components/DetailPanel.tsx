@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import ReportDialog from "./ReportDialog";
 import DatePlacesDisplay from "./DatePlacesDisplay";
+import ProfileSecondPage from "./ProfileSecondPage";
 import VoicePlayer from "./VoicePlayer";
 import AppLogo from "./AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -48,6 +49,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
   const [floatingHearts, setFloatingHearts] = useState<FloatingHeart[]>([]);
   const [showPlusOneModal, setShowPlusOneModal] = useState(false);
   const [liked, setLiked] = useState(alreadyLiked);
+  const [showSecondPage, setShowSecondPage] = useState(false);
   const images = profile.images ?? [profile.image];
 
   const isPlusOne = !!profile.is_plusone;
@@ -192,19 +194,12 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
             ))}
           </div>
 
-          {/* VIP Plus-One badge — under profile page bars; gender without parentheses; high visibility */}
-          {isPlusOne && (
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full px-4 py-2 bg-amber-400/95 border-2 border-amber-300 shadow-[0_0_24px_rgba(251,191,36,0.6),0_2px_8px_rgba(0,0,0,0.4)]">
-              <span className="text-amber-900 text-lg leading-none" aria-hidden>👑</span>
-              <span className="text-amber-900 text-xs font-extrabold tracking-wider uppercase drop-shadow-[0_1px_0_rgba(255,255,255,0.5)]">
-                VIP {profile.gender ? `${profile.gender} ` : ""}Plus One
-              </span>
-            </div>
-          )}
+          </div>
 
-          {/* Profile info — centered, raised */}
+          {/* Profile info — centered, raised; crown before name for +1 only */}
           <div className="absolute bottom-[140px] left-0 right-0 z-10 flex flex-col items-center text-center px-6">
             <h2 className="font-display font-bold text-3xl text-white drop-shadow-lg flex items-center gap-2 justify-center">
+              {isPlusOne && <Crown className="w-7 h-7 text-amber-400 flex-shrink-0" aria-hidden />}
               {profile.name}, <span className="font-normal text-white/80">{profile.age}</span>
               {isOnline(profile.last_seen_at) && (
                 <span className="relative flex h-3 w-3 ml-1">
@@ -217,12 +212,19 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
               <MapPin className="w-3.5 h-3.5 text-primary" /> {profile.city}, {profile.country}
             </p>
 
-            {/* Bio container — under location; no emoji or phone numbers */}
+            {/* Bio container — under location; header "+1 Plus One" for +1 members */}
             {profile.bio && (
-              <div className="mt-3 mx-4 px-4 py-3 rounded-xl bg-black/40 backdrop-blur-md border border-white/10">
-                <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap break-words">
-                  {sanitizeBio(profile.bio)}
-                </p>
+              <div className="mt-3 mx-4 w-[calc(100%-2rem)] max-w-md">
+                {isPlusOne && (
+                  <h3 className="text-amber-400/95 text-xs font-bold tracking-wider uppercase mb-2 text-center">
+                    +1 Plus One
+                  </h3>
+                )}
+                <div className="px-4 py-3 rounded-xl bg-black/40 backdrop-blur-md border border-white/10">
+                  <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    {sanitizeBio(profile.bio)}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -265,6 +267,16 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 />
               </div>
             )}
+
+            {/* See full profile — second page with photos, places, pro badges */}
+            <button
+              type="button"
+              onClick={() => setShowSecondPage(true)}
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-medium transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+              See full profile
+            </button>
           </div>
 
           {/* Floating hearts animation */}
@@ -392,6 +404,13 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
           </div>
         </div>
       </motion.div>
+
+      {/* Second page — full profile (photos, places, pro badges) */}
+      <AnimatePresence>
+        {showSecondPage && (
+          <ProfileSecondPage profile={profile} onBack={() => setShowSecondPage(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Super Like Purchase Dialog */}
       <Dialog open={showSuperLikeDialog} onOpenChange={setShowSuperLikeDialog}>
