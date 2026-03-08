@@ -48,25 +48,24 @@ const SwipeStack = ({
     indexRef.current = displayIndex;
   }, [displayIndex]);
 
-  // Clamp index if profiles shrink; reset to 0 when parent refills the array
-  useEffect(() => {
-    if (len > 0 && indexRef.current >= len) {
-      indexRef.current = 0;
-      setDisplayIndex(0);
-    }
-  }, [len]);
-
-  // Reset to start whenever the profiles array identity changes (new shuffle)
+  // Clamp index if profiles shrink; only reset to 0 when current profile is no longer in list
+  // (so the other stack advancing doesn't reset this stack — top and bottom operate 100% independently)
   const prevLenRef = useRef(len);
   useEffect(() => {
-    if (len > 0 && len !== prevLenRef.current) {
-      prevLenRef.current = len;
-      if (indexRef.current >= len) {
-        indexRef.current = 0;
-        setDisplayIndex(0);
-      }
+    if (len === 0) return;
+    const currentProfile = profiles[displayIndex % len] ?? null;
+    const currentId = currentProfile?.id;
+    const stillInList = currentId && profiles.some((p) => p.id === currentId);
+    if (!stillInList) {
+      indexRef.current = 0;
+      setDisplayIndex(0);
+    } else if (displayIndex >= len) {
+      const newIndex = Math.max(0, len - 1);
+      indexRef.current = newIndex;
+      setDisplayIndex(newIndex);
     }
-  }, [profiles, len]);
+    prevLenRef.current = len;
+  }, [profiles, len, displayIndex]);
 
   // Preload next image in memory (no DOM render)
   const preload = useCallback((url: string) => {
@@ -94,13 +93,11 @@ const SwipeStack = ({
   const likeOpacity  = useTransform(x, [0, 50, 100], [0, 0.6, 1]);
   const nopeOpacity  = useTransform(x, [-100, -50, 0], [1, 0.6, 0]);
 
-  // Vertical stamp: only respond when y is dominant axis
-  // We derive a "vertical-dominant" opacity in the commit logic,
-  // but for the motion value we clamp to y axis only.
+  // Vertical stamp: show LIKE when swiping up (negative y) on both stacks, or when swiping down on bottom stack.
   const verticalOpacity = useTransform(
     y,
-    direction === "up"   ? [-100, -50, 0, 50] : [-50, 0, 50, 100],
-    direction === "up"   ? [1, 0.7, 0, 0]     : [0, 0, 0.7, 1]
+    direction === "up"   ? [-100, -50, 0, 50] : [-100, -50, 0, 50, 100],
+    direction === "up"   ? [1, 0.7, 0, 0]     : [1, 0.7, 0, 0, 0.7]
   );
 
   const bgOverlay = useTransform(
@@ -145,8 +142,9 @@ const SwipeStack = ({
       const absVx = Math.abs(vx), absVy = Math.abs(vy);
       const horizontalDominant = absX >= absY || absVx >= absVy;
 
-      const isVerticalUp   = direction === "up"   && !horizontalDominant && (oy < -SWIPE_THRESHOLD || vy < -VELOCITY_THRESHOLD);
-      const isVerticalDown = direction === "down"  && !horizontalDominant && (oy >  SWIPE_THRESHOLD || vy >  VELOCITY_THRESHOLD);
+      // Swipe UP = like on both stacks (top and bottom). Swipe DOWN = like only on bottom stack.
+      const isVerticalUp   = !horizontalDominant && (oy < -SWIPE_THRESHOLD || vy < -VELOCITY_THRESHOLD);
+      const isVerticalDown = direction === "down" && !horizontalDominant && (oy >  SWIPE_THRESHOLD || vy >  VELOCITY_THRESHOLD);
       const isRight        = horizontalDominant && (ox >  SWIPE_THRESHOLD || vx >  VELOCITY_THRESHOLD);
       const isLeft         = horizontalDominant && (ox < -SWIPE_THRESHOLD || vx < -VELOCITY_THRESHOLD);
 

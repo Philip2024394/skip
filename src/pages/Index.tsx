@@ -859,8 +859,8 @@ const Index = () => {
 
       {/* Main 3-container layout */}
       <div className="flex-1 grid grid-rows-[1fr_auto_1fr] gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))` }}>
-        {/* Top Card — isolation so transform doesn't affect bottom */}
-        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate">
+        {/* Top Card — isolation so transform and touch don't affect bottom stack; 100% independent */}
+        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate" style={{ contain: "layout" }}>
           {selectedProfile ? (
             <motion.div
               key={`lib-${selectedProfile.id}`}
@@ -1098,8 +1098,8 @@ const Index = () => {
           </>
         )}
 
-        {/* Bottom Card — isolation so top transform cannot affect this */}
-        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate">
+        {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
+        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate" style={{ contain: "layout" }}>
           {bottomProfiles.length > 0 ? (
             <SwipeStack
               key="bottom-stack"
