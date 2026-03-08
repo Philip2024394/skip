@@ -30,11 +30,12 @@ const AuthPage = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) navigate("/", { replace: true });
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN") navigate("/", { replace: true });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Only redirect on sign-in from the login form — signup is handled in handleRegisterStep
+      if (event === "SIGNED_IN" && session && isLogin) navigate("/", { replace: true });
     });
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, isLogin]);
 
   // Auto-open sign-in tab if ?signin=1 is in URL
   // Auto-open register tab if ?register=1 is in URL
@@ -90,22 +91,22 @@ const AuthPage = () => {
       });
       if (error) { setLoading(false); toast.error(error.message); return; }
 
-      // If Supabase auto-confirmed the session, navigate directly
+      // If Supabase auto-confirmed the session, go straight to dashboard
       if (signUpData.session) {
         setLoading(false);
-        toast.success("Welcome to 2DateMe! 🎉");
-        navigate("/");
+        toast.success("Welcome to 2DateMe! 🎉 Let's complete your profile.");
+        navigate("/dashboard");
         return;
       }
 
-      // Email confirmation required — try signing in anyway in case confirm is disabled server-side
+      // Email confirmation may be required — try silent sign-in first
       const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
         email: form.email, password: form.password,
       });
       setLoading(false);
       if (!loginErr && loginData.session) {
-        toast.success("Welcome to 2DateMe! 🎉");
-        navigate("/");
+        toast.success("Welcome to 2DateMe! 🎉 Let's complete your profile.");
+        navigate("/dashboard");
       } else {
         toast.success("Account created! Check your email to confirm, then sign in.");
         setIsLogin(true);
