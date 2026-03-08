@@ -263,38 +263,64 @@ const DashboardPage = () => {
               const gradient = getFeatureGradient(feature.color);
               const nameKey = featureNameKeys[feature.id] as any;
               const descKey = featureDescKeys[feature.id] as any;
+              const borderShadowMap: Record<string, { border: string; shadow: string }> = {
+                plusone: { border: "border-2 border-emerald-400/60", shadow: "shadow-[0_0_30px_rgba(52,211,153,0.2)]" },
+                boost: { border: "border-2 border-pink-400/60", shadow: "shadow-[0_0_30px_rgba(236,72,153,0.2)]" },
+                superlike: { border: "border-2 border-amber-400/60", shadow: "shadow-[0_0_30px_rgba(251,191,36,0.2)]" },
+                verified: { border: "border-2 border-emerald-400/60", shadow: "shadow-[0_0_30px_rgba(52,211,153,0.2)]" },
+                incognito: { border: "border-2 border-slate-400/60", shadow: "shadow-[0_0_30px_rgba(100,116,139,0.2)]" },
+                spotlight: { border: "border-2 border-amber-400/60", shadow: "shadow-[0_0_30px_rgba(251,191,36,0.2)]" },
+              };
+              const { border, shadow } = borderShadowMap[feature.id] || { border: "border-2 border-white/20", shadow: "" };
+              const perks = feature.perks ?? [1, 2, 3].map((n) => t(`premium.${feature.id}.${n}` as any)).filter(Boolean);
               return (
                 <motion.div
                   key={feature.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-white border border-gray-200 rounded-3xl p-4 shadow-sm"
+                  transition={{ delay: (i + 1) * 0.08 }}
+                  className={`relative overflow-hidden rounded-3xl ${border} ${shadow}`}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-12 h-12 rounded-xl ${gradient} flex items-center justify-center flex-shrink-0`}>
-                      <Icon className="w-6 h-6 text-white" />
+                  <div className={`${gradient} p-5`}>
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-14 h-14 rounded-2xl bg-black/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
+                        <Icon className="w-7 h-7 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-display font-black text-white text-xl">
+                            {feature.emoji} {t(nameKey)}
+                          </h3>
+                        </div>
+                        <p className="text-white/80 text-xs mt-0.5">{t(descKey)}</p>
+                        <div className="flex items-baseline gap-1.5 mt-1">
+                          <span className="font-display font-black text-white text-3xl">{feature.price.replace(/\/mo$/, "")}</span>
+                          {feature.isSubscription && <span className="text-white/70 text-sm">/month</span>}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-bold text-gray-900 text-sm">
-                        {feature.emoji} {t(nameKey)}
-                      </h3>
-                      <p className="text-gray-500 text-xs mt-0.5">{t(descKey)}</p>
-                      <ul className="text-gray-400 text-[10px] mt-2 space-y-0.5">
-                        {[1, 2, 3].map((n) => {
-                          const key = `premium.${feature.id}.${n}` as any;
-                          return <li key={n}>{t(key)}</li>;
-                        })}
-                      </ul>
-                    </div>
+
+                    {perks.length > 0 && (
+                      <div className="space-y-2 mb-4">
+                        {perks.map((perk, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                              <Check className="w-2.5 h-2.5 text-white" />
+                            </div>
+                            <span className="text-white/90 text-xs">{perk}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <Button
+                      onClick={() => handlePurchase(feature)}
+                      disabled={loadingId === feature.id}
+                      className="w-full bg-black/30 hover:bg-black/40 backdrop-blur-sm text-white border border-white/30 font-black h-12 rounded-xl text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      {loadingId === feature.id ? t("dash.processing") : `${t("dash.get")} ${t(nameKey)} — ${feature.price}`}
+                    </Button>
                   </div>
-                  <Button
-                    onClick={() => handlePurchase(feature)}
-                    disabled={loadingId === feature.id}
-                    className={`w-full mt-3 ${gradient} text-white border-0 font-bold h-10 rounded-xl`}
-                  >
-                    {loadingId === feature.id ? t("dash.processing") : `${t("dash.get")} ${t(nameKey)} — ${feature.price}`}
-                  </Button>
                 </motion.div>
               );
             })}

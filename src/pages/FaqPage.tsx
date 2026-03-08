@@ -43,7 +43,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "Swiping & Liking",
     icon: <Heart className="w-4 h-4" />,
-    color: "text-rose-400",
+    color: "text-pink-400",
     items: [
       {
         q: "How does swiping work?",
@@ -66,7 +66,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "WhatsApp Connection",
     icon: <MessageCircle className="w-4 h-4" />,
-    color: "text-green-400",
+    color: "text-pink-400",
     items: [
       {
         q: "How do I get someone's WhatsApp number?",
@@ -89,7 +89,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "The Map",
     icon: <Map className="w-4 h-4" />,
-    color: "text-blue-400",
+    color: "text-pink-400",
     items: [
       {
         q: "What does the Map page show?",
@@ -112,7 +112,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "VIP & Premium Features",
     icon: <Zap className="w-4 h-4" />,
-    color: "text-amber-400",
+    color: "text-pink-400",
     items: [
       {
         q: "What is the VIP membership?",
@@ -131,7 +131,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "Plus One",
     icon: <UserPlus className="w-4 h-4" />,
-    color: "text-amber-400",
+    color: "text-pink-400",
     items: [
       {
         q: "What is +1 Plus One?",
@@ -142,7 +142,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "Badges",
     icon: <Gift className="w-4 h-4" />,
-    color: "text-amber-400",
+    color: "text-pink-400",
     items: [
       {
         q: "What does the \"Generous Lifestyle\" badge mean?",
@@ -165,7 +165,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "Safety & Privacy",
     icon: <Shield className="w-4 h-4" />,
-    color: "text-teal-400",
+    color: "text-pink-400",
     items: [
       {
         q: "How do I stay safe when connecting on WhatsApp?",
@@ -188,7 +188,7 @@ const FAQ_SECTIONS: FaqSection[] = [
   {
     title: "Payments & Billing",
     icon: <CreditCard className="w-4 h-4" />,
-    color: "text-purple-400",
+    color: "text-pink-400",
     items: [
       {
         q: "What payment methods are accepted?",

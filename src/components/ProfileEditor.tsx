@@ -71,6 +71,7 @@ const ProfileEditor = () => {
   const [deleting, setDeleting] = useState(false);
   const [freeTonightUntil, setFreeTonightUntil] = useState<Date | null>(null);
   const [userId, setUserId] = useState<string>("");
+  const [schemaHasBadgeColumns, setSchemaHasBadgeColumns] = useState(true);
 
   // Check if Free Tonight has expired and auto-clear it (runs whenever userId is set)
   useEffect(() => {
@@ -98,43 +99,64 @@ const ProfileEditor = () => {
       if (!user) return;
       setUserId(user.id);
 
-      const { data } = await supabase
+      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone, generous_lifestyle, weekend_plans, late_night_chat, no_drama";
+      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone, generous_lifestyle";
+
+      let data: Record<string, unknown> | null = null;
+      let useBadgeColumns = true;
+
+      const { data: fullData, error: fullError } = await supabase
         .from("profiles")
-        .select("name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone, generous_lifestyle, weekend_plans, late_night_chat, no_drama")
+        .select(columnsWithBadges)
         .eq("id", user.id)
         .single();
 
+      if (fullError) {
+        const isColumnError = fullError.code === "42703" || (fullError.message && /column.*does not exist/i.test(fullError.message));
+        if (isColumnError) {
+          const { data: fallbackData } = await supabase
+            .from("profiles")
+            .select(columnsWithoutBadges)
+            .eq("id", user.id)
+            .single();
+          data = fallbackData as Record<string, unknown> | null;
+          useBadgeColumns = false;
+        }
+      } else {
+        data = fullData as Record<string, unknown>;
+      }
+
       if (data) {
-        const imgs = (data.images as string[]) || [];
-        const positions: ImagePosition[] = ((data as { image_positions?: ImagePosition[] }).image_positions) || [];
-        // Ensure positions array matches images length
+        const imgs = ((data.images as string[]) || []);
+        const positions: ImagePosition[] = ((data.image_positions as ImagePosition[]) || []);
         while (positions.length < imgs.length) positions.push({ ...defaultPos });
 
         setProfile({
-          name: data.name,
-          age: data.age,
-          gender: data.gender,
-          looking_for: data.looking_for,
-          country: data.country,
-          city: data.city || "",
-          bio: sanitizeBio(data.bio || ""),
-          whatsapp: data.whatsapp,
-          avatar_url: data.avatar_url,
+          name: data.name as string,
+          age: data.age as number,
+          gender: data.gender as string,
+          looking_for: data.looking_for as string,
+          country: data.country as string,
+          city: (data.city as string) || "",
+          bio: sanitizeBio((data.bio as string) || ""),
+          whatsapp: data.whatsapp as string,
+          avatar_url: data.avatar_url as string | null,
           images: imgs,
-          latitude: data.latitude,
-          longitude: data.longitude,
+          latitude: data.latitude as number | null,
+          longitude: data.longitude as number | null,
           available_tonight: (data.available_tonight as boolean) || false,
           voice_intro_url: (data.voice_intro_url as string | null) || null,
           image_positions: positions,
           first_date_idea: (data.first_date_idea as string | null) || null,
           first_date_places: ((data.first_date_places as DatePlace[]) || []),
           languages: ((data.languages as string[]) || []),
-          is_plusone: ((data as Record<string, unknown>).is_plusone as boolean) || false,
-          generous_lifestyle: ((data as Record<string, unknown>).generous_lifestyle as boolean) || false,
-          weekend_plans: ((data as Record<string, unknown>).weekend_plans as boolean) || false,
-          late_night_chat: ((data as Record<string, unknown>).late_night_chat as boolean) || false,
-          no_drama: ((data as Record<string, unknown>).no_drama as boolean) || false,
+          is_plusone: (data.is_plusone as boolean) || false,
+          generous_lifestyle: (data.generous_lifestyle as boolean) || false,
+          weekend_plans: useBadgeColumns ? ((data.weekend_plans as boolean) || false) : false,
+          late_night_chat: useBadgeColumns ? ((data.late_night_chat as boolean) || false) : false,
+          no_drama: useBadgeColumns ? ((data.no_drama as boolean) || false) : false,
         });
+        setSchemaHasBadgeColumns(useBadgeColumns);
       }
       setLoading(false);
     };
@@ -281,9 +303,11 @@ const ProfileEditor = () => {
         languages: profile.languages as unknown as import("@/integrations/supabase/types").Json,
         is_plusone: profile.is_plusone,
         generous_lifestyle: profile.generous_lifestyle,
-        weekend_plans: profile.weekend_plans,
-        late_night_chat: profile.late_night_chat,
-        no_drama: profile.no_drama,
+        ...(schemaHasBadgeColumns && {
+          weekend_plans: profile.weekend_plans,
+          late_night_chat: profile.late_night_chat,
+          no_drama: profile.no_drama,
+        }),
         main_image_pos: `${mainPos.x}% ${mainPos.y}%`,
         updated_at: new Date().toISOString(),
       })
