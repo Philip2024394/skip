@@ -77,8 +77,17 @@ const Index = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [userGender, setUserGender] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [dbProfiles, setDbProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(() => {
+    try {
+      return !sessionStorage.getItem("skiptheapp_profiles_cache");
+    } catch { return true; }
+  });
+  const [dbProfiles, setDbProfiles] = useState<Profile[]>(() => {
+    try {
+      const cached = sessionStorage.getItem("skiptheapp_profiles_cache");
+      return cached ? JSON.parse(cached) : [];
+    } catch { return []; }
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() => defaultFilters);
 
@@ -264,122 +273,37 @@ const Index = () => {
       setLoading(false);
 
       // Fetch real profiles from DB (excluding current user)
-      const query = supabase
-        .from("profiles_public")
-        .select("*")
-        .eq("is_active", true)
-        .eq("is_banned", false);
-      if (session) query.neq("id", session.user.id);
-      const { data: profiles, error: profilesError } = await query;
+      try {
+        const query = supabase
+          .from("profiles_public")
+          .select("*")
+          .eq("is_active", true)
+          .eq("is_banned", false);
+        if (session) query.neq("id", session.user.id);
+        const { data: profiles } = await query;
 
-      console.log("[SkipTheApp] profiles_public query result:", {
-        count: profiles?.length ?? 0,
-        error: profilesError?.message ?? null,
-        sample: profiles?.[0] ?? null,
-      });
+        if (profiles && profiles.length > 0) {
+          // Fetch extra fields from profiles table (spotlight, image positions, date ideas)
+          const { data: extraData } = await supabase
+            .from("profiles")
+            .select("id, is_spotlight, spotlight_until, main_image_pos, image_positions, first_date_idea, first_date_places");
 
-      if (profiles && profiles.length > 0) {
-        // Fetch spotlight status and main_image_pos from profiles table
-        const { data: extraData, error: extraError } = await supabase
-          .from("profiles")
-          .select("id, is_spotlight, spotlight_until, main_image_pos, image_positions, first_date_idea, first_date_places");
+          const spotlightIds = new Set(
+            (extraData || [])
+              .filter((s: any) => s.is_spotlight && s.spotlight_until && new Date(s.spotlight_until) > new Date())
+              .map((s: any) => s.id)
+          );
+          const posMap = new Map((extraData || []).map((s: any) => [s.id, s.main_image_pos]));
+          const zoomMap = new Map((extraData || []).map((s: any) => {
+            const positions = s.image_positions || [];
+            const mainPos = positions[0];
+            return [s.id, mainPos?.zoom || 100];
+          }));
+          const dateIdeaMap = new Map((extraData || []).map((s: any) => [s.id, s.first_date_idea]));
+          const datePlacesMap = new Map((extraData || []).map((s: any) => [s.id, s.first_date_places || []]));
 
-        console.log("[SkipTheApp] profiles extra data:", {
-          count: extraData?.length ?? 0,
-          error: extraError?.message ?? null,
-        });
-        const spotlightIds = new Set(
-          (extraData || [])
-            .filter((s: any) => s.is_spotlight && s.spotlight_until && new Date(s.spotlight_until) > new Date())
-            .map((s: any) => s.id)
-        );
-        const posMap = new Map((extraData || []).map((s: any) => [s.id, s.main_image_pos]));
-        const zoomMap = new Map((extraData || []).map((s: any) => {
-          const positions = s.image_positions || [];
-          // Find the main image index and get its zoom
-          const mainPos = positions[0];
-          return [s.id, mainPos?.zoom || 100];
-        }));
-
-        const dateIdeaMap = new Map((extraData || []).map((s: any) => [s.id, s.first_date_idea]));
-        const datePlacesMap = new Map((extraData || []).map((s: any) => [s.id, s.first_date_places || []]));
-
-        const mapped: Profile[] = (profiles as any[])
-          .filter((p) => p.avatar_url || (p.images && p.images.length > 0))
-          .map((p) => ({
-          id: p.id,
-          name: p.name,
-          age: p.age,
-          city: p.city || "",
-          country: p.country || "",
-          bio: p.bio || "",
-          image: p.avatar_url || p.images[0],
-          images: p.images && p.images.length > 0 ? p.images : (p.avatar_url ? [p.avatar_url] : []),
-          gender: p.gender,
-          avatar_url: p.avatar_url,
-          latitude: p.latitude,
-          longitude: p.longitude,
-          available_tonight: p.available_tonight,
-          voice_intro_url: p.voice_intro_url,
-          last_seen_at: p.last_seen_at,
-          looking_for: p.looking_for,
-          main_image_pos: posMap.get(p.id) || "50% 50%",
-          main_image_zoom: zoomMap.get(p.id) || 100,
-          first_date_idea: dateIdeaMap.get(p.id) || (p as any).first_date_idea || null,
-          first_date_places: datePlacesMap.get(p.id) || [],
-          is_plusone: (p as any).is_plusone || false,
-        }));
-        // Sort spotlight profiles to front
-        mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
-        setDbProfiles(mapped);
-      }
-
-      // Fetch likes only if logged in
-      if (session) {
-        // Fetch likes I sent
-        const { data: myLikes } = await supabase
-          .from("likes")
-          .select("liked_id, expires_at, is_rose")
-          .eq("liker_id", session.user.id)
-          .gte("expires_at", new Date().toISOString());
-
-        if (myLikes && myLikes.length > 0 && profiles) {
-          const likedMap = new Map(myLikes.map((l: any) => [l.liked_id, { expires_at: l.expires_at, is_rose: l.is_rose }]));
-          const sentLikeProfiles = (profiles as any[])
-            .filter((p) => likedMap.has(p.id))
-            .map((p) => ({
-              id: p.id, name: p.name, age: p.age,
-              city: p.city || "", country: p.country || "",
-              bio: p.bio || "", gender: p.gender,
-              image: p.avatar_url || (p.images && p.images[0]) || "/placeholder.svg",
-              images: p.images && p.images.length > 0 ? p.images : (p.avatar_url ? [p.avatar_url] : []),
-              avatar_url: p.avatar_url,
-              latitude: p.latitude, longitude: p.longitude,
-              available_tonight: p.available_tonight,
-              voice_intro_url: p.voice_intro_url,
-              expires_at: likedMap.get(p.id)!.expires_at,
-              is_rose: likedMap.get(p.id)!.is_rose,
-              is_plusone: (p as any).is_plusone || false,
-            }));
-          const mergedLikes = [
-            ...sentLikeProfiles,
-            ...localLikes.filter((p) => !sentLikeProfiles.some((dbLike) => dbLike.id === p.id)),
-          ];
-          setILiked(mergedLikes);
-          mergedLikes.forEach((p) => upsertLocalLikedProfile(p));
-        }
-
-        // Fetch likes received
-        const { data: likesReceived } = await supabase
-          .from("likes")
-          .select("liker_id, expires_at")
-          .eq("liked_id", session.user.id)
-          .gte("expires_at", new Date().toISOString());
-
-        if (likesReceived && likesReceived.length > 0 && profiles) {
-          const likerMap = new Map(likesReceived.map((l: any) => [l.liker_id, l.expires_at]));
-          const likedProfiles = (profiles as any[])
-            .filter((p) => likerMap.has(p.id))
+          const mapped: Profile[] = (profiles as any[])
+            .filter((p) => p.avatar_url || (p.images && p.images.length > 0))
             .map((p) => ({
               id: p.id,
               name: p.name,
@@ -387,7 +311,7 @@ const Index = () => {
               city: p.city || "",
               country: p.country || "",
               bio: p.bio || "",
-              image: p.avatar_url || (p.images && p.images[0]) || "/placeholder.svg",
+              image: p.avatar_url || p.images[0],
               images: p.images && p.images.length > 0 ? p.images : (p.avatar_url ? [p.avatar_url] : []),
               gender: p.gender,
               avatar_url: p.avatar_url,
@@ -395,12 +319,83 @@ const Index = () => {
               longitude: p.longitude,
               available_tonight: p.available_tonight,
               voice_intro_url: p.voice_intro_url,
-              expires_at: likerMap.get(p.id),
+              last_seen_at: p.last_seen_at,
+              looking_for: p.looking_for,
+              main_image_pos: posMap.get(p.id) || "50% 50%",
+              main_image_zoom: zoomMap.get(p.id) || 100,
+              first_date_idea: dateIdeaMap.get(p.id) || (p as any).first_date_idea || null,
+              first_date_places: datePlacesMap.get(p.id) || [],
               is_plusone: (p as any).is_plusone || false,
             }));
-          setLikedMe(likedProfiles);
-          saveLocalLikedMeProfiles(likedProfiles);
+          // Sort spotlight profiles to front
+          mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
+          setDbProfiles(mapped);
+          try { sessionStorage.setItem("skiptheapp_profiles_cache", JSON.stringify(mapped)); } catch { /* quota */ }
+
+          // Fetch likes only if logged in
+          if (session) {
+            const { data: myLikes } = await supabase
+              .from("likes")
+              .select("liked_id, expires_at, is_rose")
+              .eq("liker_id", session.user.id)
+              .gte("expires_at", new Date().toISOString());
+
+            if (myLikes && myLikes.length > 0) {
+              const likedMap = new Map(myLikes.map((l: any) => [l.liked_id, { expires_at: l.expires_at, is_rose: l.is_rose }]));
+              const sentLikeProfiles = (profiles as any[])
+                .filter((p) => likedMap.has(p.id))
+                .map((p) => ({
+                  id: p.id, name: p.name, age: p.age,
+                  city: p.city || "", country: p.country || "",
+                  bio: p.bio || "", gender: p.gender,
+                  image: p.avatar_url || (p.images && p.images[0]) || "/placeholder.svg",
+                  images: p.images && p.images.length > 0 ? p.images : (p.avatar_url ? [p.avatar_url] : []),
+                  avatar_url: p.avatar_url,
+                  latitude: p.latitude, longitude: p.longitude,
+                  available_tonight: p.available_tonight,
+                  voice_intro_url: p.voice_intro_url,
+                  expires_at: likedMap.get(p.id)!.expires_at,
+                  is_rose: likedMap.get(p.id)!.is_rose,
+                  is_plusone: (p as any).is_plusone || false,
+                }));
+              const mergedLikes = [
+                ...sentLikeProfiles,
+                ...localLikes.filter((p) => !sentLikeProfiles.some((dbLike) => dbLike.id === p.id)),
+              ];
+              setILiked(mergedLikes);
+              mergedLikes.forEach((p) => upsertLocalLikedProfile(p));
+            }
+
+            const { data: likesReceived } = await supabase
+              .from("likes")
+              .select("liker_id, expires_at")
+              .eq("liked_id", session.user.id)
+              .gte("expires_at", new Date().toISOString());
+
+            if (likesReceived && likesReceived.length > 0) {
+              const likerMap = new Map(likesReceived.map((l: any) => [l.liker_id, l.expires_at]));
+              const likedProfiles = (profiles as any[])
+                .filter((p) => likerMap.has(p.id))
+                .map((p) => ({
+                  id: p.id, name: p.name, age: p.age,
+                  city: p.city || "", country: p.country || "",
+                  bio: p.bio || "",
+                  image: p.avatar_url || (p.images && p.images[0]) || "/placeholder.svg",
+                  images: p.images && p.images.length > 0 ? p.images : (p.avatar_url ? [p.avatar_url] : []),
+                  gender: p.gender, avatar_url: p.avatar_url,
+                  latitude: p.latitude, longitude: p.longitude,
+                  available_tonight: p.available_tonight,
+                  voice_intro_url: p.voice_intro_url,
+                  expires_at: likerMap.get(p.id),
+                  is_plusone: (p as any).is_plusone || false,
+                }));
+              setLikedMe(likedProfiles);
+              saveLocalLikedMeProfiles(likedProfiles);
+            }
+          }
         }
+      } catch {
+        // Profile fetch failed silently — app still renders
       }
 
       // No mock "liked me" — only real likes from DB

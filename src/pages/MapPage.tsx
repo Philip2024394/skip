@@ -662,7 +662,7 @@ const MapPage = () => {
       </button>
 
       {/* ── Top-right stack: Recenter + Radius toggle + "Tonight" filter ── */}
-      <div className="absolute right-4 z-20 flex flex-col gap-2" style={{ top: `max(1rem, env(safe-area-inset-top, 0px))` }}>
+      <div className="absolute right-4 z-30 flex flex-col gap-2" style={{ top: `max(1rem, env(safe-area-inset-top, 0px))` }}>
         {userLocation && (
           <button
             onClick={() => {
@@ -753,11 +753,11 @@ const MapPage = () => {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 6 }}
-            className="absolute top-[3.6rem] left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+            className="absolute top-[3.6rem] left-4 right-16 z-20 pointer-events-none"
           >
-            <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 flex items-center gap-2 whitespace-nowrap">
+            <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-4 py-1.5 flex items-center gap-2 overflow-hidden">
               <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
-              <span className="text-white text-xs font-medium">{selectedProfile.name}, {selectedProfile.age}</span>
+              <span className="text-white text-xs font-medium truncate">{selectedProfile.name}, {selectedProfile.age}</span>
               {selectedProfile.distanceKm !== undefined ? (
                 <span className="text-primary text-[10px] font-semibold flex-shrink-0">
                   {fmtDist(selectedProfile.distanceKm)}
@@ -765,7 +765,7 @@ const MapPage = () => {
               ) : (
                 <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
               )}
-              <span className="text-white/40 text-[10px] flex-shrink-0">{selectedProfile.city}</span>
+              <span className="text-white/40 text-[10px] flex-shrink-0 hidden sm:inline">{selectedProfile.city}</span>
               {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
                 <span className="text-yellow-400 text-[10px] flex-shrink-0 flex items-center gap-0.5">
                   <Moon className="w-2.5 h-2.5" fill="currentColor" /> free tonight
@@ -773,7 +773,7 @@ const MapPage = () => {
               )}
               {(selectedProfile as any).is_plusone && (
                 <span className="text-yellow-400 text-[10px] flex-shrink-0 flex items-center gap-0.5 font-bold">
-                  +1 Plus-One
+                  +1
                 </span>
               )}
             </div>
