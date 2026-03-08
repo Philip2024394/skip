@@ -84,6 +84,8 @@ export const translations = {
   "filter.availableTonightDesc": { en: "Show only users free tonight", id: "Tampilkan pengguna yang bebas malam ini" },
   "filter.onlineNow": { en: "🟢 Online Now", id: "🟢 Online Sekarang" },
   "filter.onlineNowDesc": { en: "Show only currently active users", id: "Tampilkan pengguna yang sedang aktif" },
+  "filter.plusOne": { en: "👑 +1 Plus One", id: "👑 +1 Plus One" },
+  "filter.plusOneDesc": { en: "Show only Plus One event companions", id: "Tampilkan hanya pendamping acara Plus One" },
   "filter.resetAll": { en: "Reset All", id: "Atur Ulang" },
   "filter.apply": { en: "Apply Filters", id: "Terapkan Filter" },
   "filter.noCountries": { en: "No countries found", id: "Tidak ada negara ditemukan" },

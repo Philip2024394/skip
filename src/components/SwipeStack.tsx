@@ -302,26 +302,13 @@ const SwipeStack = ({
           {/* ── Bottom gradient ───────────────────────────────── */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
 
-          {/* ── Single status badge — +1 takes priority over Free Tonight ── */}
-          {profile.is_plusone ? (
-            <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.4)]">
-              <span className="text-yellow-300 font-black text-[12px] leading-none">+1</span>
-              <span className="text-white/80">Plus-One</span>
-            </div>
-          ) : profile.available_tonight ? (
+          {/* ── Status badge — Free Tonight only (+1 no longer on image) ── */}
+          {!profile.is_plusone && profile.available_tonight ? (
             <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
               <Moon className="w-3 h-3 text-yellow-400" fill="currentColor" />
               Free Tonight
             </div>
           ) : null}
-
-          {/* VIP crown for Plus One — top right of swipe card */}
-          {profile.is_plusone && (
-            <div className="absolute top-3 right-3 z-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl px-2 py-1.5 shadow-[0_0_14px_rgba(250,204,21,0.6)] flex flex-col items-center pointer-events-none">
-              <span className="text-black text-base leading-none">👑</span>
-              <span className="text-black text-[8px] font-black tracking-widest uppercase">VIP</span>
-            </div>
-          )}
 
           {/* ── Swipe stamps ──────────────────────────────────── */}
           <motion.div
@@ -375,6 +362,9 @@ const SwipeStack = ({
           {/* ── Name / location ───────────────────────────────── */}
           <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
             <div className="flex items-center gap-2">
+              {profile.is_plusone && (
+                <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-yellow-400/50 rounded-md px-1.5 py-0.5 text-yellow-300 font-black text-[10px] leading-none">+1</span>
+              )}
               <h3 className="font-display font-bold text-xl text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
                 {profile.name}, {profile.age}
               </h3>

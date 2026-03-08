@@ -108,6 +108,7 @@ const Index = () => {
       if (filters.lookingFor && p.looking_for?.toLowerCase() !== filters.lookingFor.toLowerCase()) return false;
       if (filters.availableTonight && !p.available_tonight) return false;
       if (filters.onlineNow && !isOnline(p.last_seen_at)) return false;
+      if (filters.plusOne && !(p as { is_plusone?: boolean }).is_plusone) return false;
       return true;
     });
   }, [allProfiles, filters]);
@@ -691,13 +692,8 @@ const Index = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
 
-              {/* ── Status badge — top-left (+1 beats Free Tonight) ── */}
-              {(selectedProfile as any).is_plusone ? (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.4)]">
-                  <span className="text-yellow-300 font-black text-[12px] leading-none">+1</span>
-                  <span className="text-white/80">Plus-One</span>
-                </div>
-              ) : selectedProfile.available_tonight ? (
+              {/* ── Status badge — Free Tonight only (+1 no longer on image) ── */}
+              {!(selectedProfile as any).is_plusone && selectedProfile.available_tonight ? (
                 <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
                   <span className="text-yellow-400">🌙</span>
                   Free Tonight
@@ -737,6 +733,9 @@ const Index = () => {
 
               <div className="absolute bottom-0 left-0 right-0 p-4">
                 <h3 className="font-display font-bold text-xl text-white flex items-center gap-2">
+                  {(selectedProfile as any).is_plusone && (
+                    <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-yellow-400/50 rounded-md px-1.5 py-0.5 text-yellow-300 font-black text-[10px] leading-none">+1</span>
+                  )}
                   {selectedProfile.name}, {selectedProfile.age}
                   {isOnline(selectedProfile.last_seen_at) && (
                     <span className="relative flex h-3 w-3">

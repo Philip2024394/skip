@@ -298,6 +298,8 @@ const MapPage = () => {
   const [mapZoom,         setMapZoom]         = useState(10);
   const [filterTonight,   setFilterTonight]   = useState(false);
   const [showRadius,      setShowRadius]      = useState(true);
+  const [radiusKm,        setRadiusKm]        = useState(15); // 1–50 km, user-controlled
+  const [selectedFromMapId, setSelectedFromMapId] = useState<string | null>(null);
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" | "purchase" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
@@ -369,15 +371,24 @@ const MapPage = () => {
     load();
   }, []);
 
-  // ── Filtered + nearest 5 profiles ─────────────────────────────────
+  // ── Filtered + within radius + nearest 5 profiles ─────────────────
   const visibleProfiles = useMemo(() => {
     return filterTonight ? profiles.filter(p => p.available_tonight) : profiles;
   }, [profiles, filterTonight]);
 
+  const withinRadiusProfiles = useMemo(() => {
+    if (!userLocation) return visibleProfiles;
+    return visibleProfiles.filter(p => {
+      if (!p.latitude || !p.longitude) return false;
+      const d = haversineKm(userLocation.lat, userLocation.lng, p.latitude, p.longitude);
+      return d <= radiusKm;
+    });
+  }, [visibleProfiles, userLocation, radiusKm]);
+
   const nearestProfiles = useMemo(() => {
     const refLat = mapCenter?.lat ?? userLocation?.lat ?? visibleProfiles.find(p => p.latitude)?.latitude ?? 0;
     const refLng = mapCenter?.lng ?? userLocation?.lng ?? visibleProfiles.find(p => p.longitude)?.longitude ?? 0;
-    return visibleProfiles
+    return withinRadiusProfiles
       .filter(p => p.latitude && p.longitude)
       .map(p => ({
         ...p,
@@ -388,26 +399,38 @@ const MapPage = () => {
       }))
       .sort((a, b) => a.distanceFromCenter - b.distanceFromCenter)
       .slice(0, 5);
-  }, [visibleProfiles, userLocation, mapCenter]);
+  }, [withinRadiusProfiles, visibleProfiles, userLocation, mapCenter]);
 
-  const selectedProfile = nearestProfiles[selectedIndex] ?? null;
-
-  // ── Map stats ──────────────────────────────────────────────────────
-  const stats = useMemo(() => {
+  const footerProfiles = useMemo(() => {
+    if (!selectedFromMapId) return nearestProfiles;
+    const inNearest = nearestProfiles.find(p => p.id === selectedFromMapId);
+    if (inNearest && nearestProfiles[0]?.id === selectedFromMapId) return nearestProfiles;
+    const profile = visibleProfiles.find(p => p.id === selectedFromMapId);
+    if (!profile?.latitude || !profile?.longitude) return nearestProfiles;
     const refLat = mapCenter?.lat ?? userLocation?.lat ?? 0;
     const refLng = mapCenter?.lng ?? userLocation?.lng ?? 0;
-    const radiusKm = zoomToRadiusKm(mapZoom);
-    const nearby = visibleProfiles.filter(p =>
-      p.latitude && p.longitude &&
-      haversineKm(refLat, refLng, p.latitude!, p.longitude!) <= radiusKm
-    );
+    const withDist = {
+      ...profile,
+      distanceKm: userLocation
+        ? haversineKm(userLocation.lat, userLocation.lng, profile.latitude, profile.longitude)
+        : undefined,
+      distanceFromCenter: haversineKm(refLat, refLng, profile.latitude, profile.longitude),
+    };
+    return [withDist, ...nearestProfiles.filter(p => p.id !== selectedFromMapId)].slice(0, 5);
+  }, [selectedFromMapId, nearestProfiles, visibleProfiles, mapCenter, userLocation]);
+
+  const selectedProfile = footerProfiles[selectedIndex] ?? null;
+
+  // ── Map stats (within user radius) ────────────────────────────────
+  const stats = useMemo(() => {
+    const nearby = withinRadiusProfiles;
     return {
       total: nearby.length,
       online: nearby.filter(p => isOnline(p.last_seen_at)).length,
       liked: nearby.filter(p => likedIds.has(p.id)).length,
       matches: nearby.filter(p => likedIds.has(p.id) && likedMeIds.has(p.id)).length,
     };
-  }, [visibleProfiles, mapCenter, userLocation, mapZoom, likedIds, likedMeIds]);
+  }, [withinRadiusProfiles, likedIds, likedMeIds]);
 
   // ── Focus on URL profile param ─────────────────────────────────────
   useEffect(() => {
@@ -421,16 +444,16 @@ const MapPage = () => {
 
   useEffect(() => {
     if (!focusProfileId || !hasFocusedRef.current) return;
-    const idx = nearestProfiles.findIndex(p => p.id === focusProfileId);
+    const idx = footerProfiles.findIndex(p => p.id === focusProfileId);
     if (idx >= 0) setSelectedIndex(idx);
-  }, [nearestProfiles, focusProfileId]);
+  }, [footerProfiles, focusProfileId]);
 
   // ── After marker click — resolve correct index once memo updates ───
   useEffect(() => {
     if (!_clickedIdRef.current) return;
-    const idx = nearestProfiles.findIndex(p => p.id === _clickedIdRef.current);
+    const idx = footerProfiles.findIndex(p => p.id === _clickedIdRef.current);
     if (idx >= 0) { setSelectedIndex(idx); _clickedIdRef.current = null; }
-  }, [nearestProfiles]);
+  }, [footerProfiles]);
 
   // ── Init Leaflet map ───────────────────────────────────────────────
   useEffect(() => {
@@ -497,6 +520,7 @@ const MapPage = () => {
       }).addTo(map);
 
       marker.on("click", () => {
+        setSelectedFromMapId(profile.id);
         setMapCenter({ lat: pos[0], lng: pos[1] });
         setSelectedIndex(0);
         _clickedIdRef.current = profile.id;
@@ -515,16 +539,16 @@ const MapPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profiles, userLocation]);
 
-  // ── Radius circle — updates on zoom change ─────────────────────────
+  // ── Radius circle — uses user-controlled radius (1–50 km) ─────────
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !userLocation) return;
     if (radiusCircle.current) { radiusCircle.current.remove(); radiusCircle.current = null; }
     if (!showRadius) return;
 
-    const radiusKm = zoomToRadiusKm(mapZoom);
+    const radiusMeters = Math.min(50, Math.max(1, radiusKm)) * 1000;
     radiusCircle.current = L.circle([userLocation.lat, userLocation.lng], {
-      radius: radiusKm * 1000,
+      radius: radiusMeters,
       color: PINK,
       weight: 1.2,
       opacity: 0.35,
@@ -533,13 +557,17 @@ const MapPage = () => {
       dashArray: "6 10",
       interactive: false,
     }).addTo(map);
-  }, [userLocation, mapZoom, showRadius]);
+  }, [userLocation, radiusKm, showRadius]);
 
   // ── Update marker icons + draw selection line ──────────────────────
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (selLineRef.current) { selLineRef.current.remove(); selLineRef.current = null; }
     if (selLabelRef.current) { selLabelRef.current.remove(); selLabelRef.current = null; }
+
+    const withinRadiusIds = userLocation
+      ? new Set(withinRadiusProfiles.map(p => p.id))
+      : null;
 
     markersRef.current.forEach((marker, id) => {
       const p = profiles.find(pr => pr.id === id);
@@ -553,6 +581,12 @@ const MapPage = () => {
         !!p.available_tonight,
         viewedMeIds.has(id),
       ));
+      const el = marker.getElement();
+      if (el) {
+        const inRadius = !withinRadiusIds || withinRadiusIds.has(id);
+        el.style.opacity = inRadius ? "1" : "0.25";
+        el.style.pointerEvents = inRadius ? "auto" : "none";
+      }
     });
 
     if (!selectedProfile?.latitude || !selectedProfile?.longitude || !map) return;
@@ -581,7 +615,7 @@ const MapPage = () => {
         }
       ).addTo(map);
     }
-  }, [selectedIndex, selectedProfile, profiles, likedIds, superLikedIds, viewedMeIds, userLocation]);
+  }, [selectedIndex, selectedProfile, profiles, withinRadiusProfiles, userLocation, likedIds, superLikedIds, viewedMeIds]);
 
   // ── Like / super-like handlers ─────────────────────────────────────
   const handleLike = useCallback(async (profile: Profile) => {
@@ -783,7 +817,7 @@ const MapPage = () => {
             {showRadius && (
               <>
                 <span className="w-px h-3 bg-white/10" />
-                <span className="text-[10px] text-white/40">{zoomToRadiusKm(mapZoom)}km</span>
+                <span className="text-[10px] text-white/40">{radiusKm}km</span>
               </>
             )}
           </div>
@@ -826,6 +860,32 @@ const MapPage = () => {
         )}
       </AnimatePresence>
 
+      {/* ── Radius slider (under badge / stats) ── */}
+      {userLocation && showRadius && (
+        <div
+          className="absolute left-4 right-16 z-20 pointer-events-auto"
+          style={{
+            top: selectedProfile && !detailProfile
+              ? "6.25rem"
+              : "calc(max(1rem, env(safe-area-inset-top, 0px)) + 5.5rem)",
+          }}
+        >
+          <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-3 py-2 flex items-center gap-3">
+            <span className="text-white/70 text-[10px] font-medium whitespace-nowrap">Radius</span>
+            <input
+              type="range"
+              min={1}
+              max={50}
+              value={radiusKm}
+              onChange={(e) => setRadiusKm(Math.round(Number(e.target.value)))}
+              className="flex-1 h-2 rounded-full appearance-none bg-white/15 accent-primary cursor-pointer"
+              aria-label="Search radius in km"
+            />
+            <span className="text-primary text-[10px] font-semibold w-8 text-right">{radiusKm} km</span>
+          </div>
+        </div>
+      )}
+
       {/* ── "Tonight" filter active banner ── */}
       <AnimatePresence>
         {filterTonight && (
@@ -849,7 +909,7 @@ const MapPage = () => {
 
           {/* Avatar strip */}
           <div className="flex items-end justify-center gap-4 mb-4 overflow-x-auto scroll-touch px-2" style={{ scrollbarWidth: "none" }}>
-            {nearestProfiles.map((profile, idx) => {
+            {footerProfiles.map((profile, idx) => {
               const isActive     = idx === selectedIndex;
               const isLiked      = likedIds.has(profile.id);
               const isSuperLiked = superLikedIds.has(profile.id);
@@ -1045,7 +1105,7 @@ const MapPage = () => {
               const p = profiles.find(pr => pr.id === userId);
               if (p) {
                 setDetailProfile(p);
-                const idx = nearestProfiles.findIndex(pr => pr.id === userId);
+                const idx = footerProfiles.findIndex(pr => pr.id === userId);
                 if (idx >= 0) setSelectedIndex(idx);
               }
             }}
@@ -1086,6 +1146,31 @@ const MapPage = () => {
 
         /* Radius circle soft dash */
         .leaflet-interactive { outline: none; }
+
+        /* Radius slider (range input) */
+        input[type="range"].accent-primary {
+          -webkit-appearance: none;
+          appearance: none;
+        }
+        input[type="range"].accent-primary::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: hsl(320, 50%, 50%);
+          border: 2px solid rgba(255,255,255,0.5);
+          box-shadow: 0 0 10px rgba(180,80,150,0.5);
+          cursor: pointer;
+        }
+        input[type="range"].accent-primary::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: hsl(320, 50%, 50%);
+          border: 2px solid rgba(255,255,255,0.5);
+          box-shadow: 0 0 10px rgba(180,80,150,0.5);
+          cursor: pointer;
+        }
 
         /* Keyframe animations embedded in marker HTML */
         @keyframes userHeartbeat {

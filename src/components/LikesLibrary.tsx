@@ -260,6 +260,7 @@ const LikesLibrary = ({
                 if (!profile) return null;
                 const isMatch = matches.some((m) => m.id === profile.id);
                 const fresh   = tab === "new" && isNewProfile(profile);
+                const iLikedThis = iLiked.some((p) => p.id === profile.id);
 
                 return (
                   <motion.div
@@ -289,6 +290,12 @@ const LikesLibrary = ({
                         alt={profile.name}
                         className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
                       />
+                      {/* Heart when I liked this profile */}
+                      {iLikedThis && (
+                        <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/30 pointer-events-none">
+                          <Heart className="w-6 h-6 text-primary drop-shadow-lg" fill="currentColor" />
+                        </div>
+                      )}
                       {profile.is_rose && tab !== "new" && (
                         <span className="absolute -top-1 -right-1 text-sm">❤️</span>
                       )}
