@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Unlock, Clock, Sparkles, MapPin } from "lucide-react";
+import { Heart, Unlock, Clock, Sparkles, MapPin, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Button } from "@/components/ui/button";
 import PromoCard from "./PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import { isOnline } from "@/hooks/useOnlineStatus";
+import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 
 // ── Countdown hook ────────────────────────────────────────────────────────────
 const useCountdown = (expiresAt: string | null | undefined) => {
@@ -327,11 +328,27 @@ const LikesLibrary = ({
                         <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">
                           <span className="text-yellow-300 font-black text-[7px] leading-none">+1</span>
                         </span>
+                      ) : profile.generous_lifestyle ? (
+                        <span className="absolute -top-1 -left-1 bg-black border border-amber-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(245,158,11,0.5)]">
+                          <Gift className="w-2.5 h-2.5 text-amber-300" />
+                        </span>
+                      ) : profile.weekend_plans ? (
+                        <span className="absolute -top-1 -left-1 bg-black border border-primary/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(180,80,150,0.5)]">
+                          <CalendarDays className="w-2.5 h-2.5 text-primary" />
+                        </span>
+                      ) : profile.late_night_chat ? (
+                        <span className="absolute -top-1 -left-1 bg-black border border-indigo-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(99,102,241,0.5)]">
+                          <MoonStar className="w-2.5 h-2.5 text-indigo-300" />
+                        </span>
+                      ) : profile.no_drama ? (
+                        <span className="absolute -top-1 -left-1 bg-black border border-teal-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(45,212,191,0.5)]">
+                          <ShieldCheck className="w-2.5 h-2.5 text-teal-300" />
+                        </span>
                       ) : tab === "new" && profile.available_tonight ? (
                         <span className="absolute -bottom-1 -right-1 text-[10px] bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</span>
                       ) : null}
                       {/* Green heartbeat dot — avoid overlap with moon badge */}
-                      {isOnline(profile.last_seen_at) && !(profile.is_plusone) && !(tab === "new" && profile.available_tonight) && (
+                      {isOnline(profile.last_seen_at) && !(profile.is_plusone) && !(profile.generous_lifestyle) && !(profile.weekend_plans) && !(profile.late_night_chat) && !(profile.no_drama) && !(tab === "new" && profile.available_tonight) && (
                         <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
                           <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
@@ -344,8 +361,8 @@ const LikesLibrary = ({
                           <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
                         </span>
                       )}
-                      {/* online dot when +1 badge is showing — move to bottom-right */}
-                      {isOnline(profile.last_seen_at) && profile.is_plusone && (
+                      {/* online dot when +1 / generous / weekend / late / no-drama badge is showing — move to bottom-right */}
+                      {isOnline(profile.last_seen_at) && (profile.is_plusone || profile.generous_lifestyle || profile.weekend_plans || profile.late_night_chat || profile.no_drama) && (
                         <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
                           <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
@@ -377,7 +394,7 @@ const LikesLibrary = ({
                         className="gradient-love text-primary-foreground border-0 text-[8px] h-5 px-1.5 mt-0.5 w-full"
                         aria-label={`Unlock WhatsApp with ${profile.name}`}
                       >
-                        <Unlock className="w-2.5 h-2.5 mr-0.5" /> $1.99
+                        <Unlock className="w-2.5 h-2.5 mr-0.5" /> {getUnlockPriceLabel(profile)}
                       </Button>
                     )}
                   </motion.div>

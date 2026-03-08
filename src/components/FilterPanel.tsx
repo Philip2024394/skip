@@ -18,6 +18,10 @@ export interface FilterState {
   availableTonight: boolean;
   onlineNow: boolean;
   plusOne: boolean;
+  generousLifestyle: boolean;
+  weekendPlans: boolean;
+  lateNightChat: boolean;
+  noDrama: boolean;
 }
 
 export const defaultFilters: FilterState = {
@@ -29,6 +33,10 @@ export const defaultFilters: FilterState = {
   availableTonight: false,
   onlineNow: false,
   plusOne: false,
+  generousLifestyle: false,
+  weekendPlans: false,
+  lateNightChat: false,
+  noDrama: false,
 };
 
 const COUNTRIES = ALL_COUNTRIES;
@@ -56,7 +64,7 @@ const FilterPanel = ({ open, onClose, filters, onApply }: FilterPanelProps) => {
 
   const activeCount = [
     local.country, local.city, local.gender, local.lookingFor,
-    local.availableTonight, local.onlineNow, local.plusOne,
+    local.availableTonight, local.onlineNow, local.plusOne, local.generousLifestyle, local.weekendPlans, local.lateNightChat, local.noDrama,
     local.ageRange[0] !== 18 || local.ageRange[1] !== 60,
   ].filter(Boolean).length;
 
@@ -204,6 +212,10 @@ const FilterPanel = ({ open, onClose, filters, onApply }: FilterPanelProps) => {
                     { key: "availableTonight" as const, label: t("filter.availableTonight"), desc: t("filter.availableTonightDesc") },
                     { key: "onlineNow" as const, label: t("filter.onlineNow"), desc: t("filter.onlineNowDesc") },
                     { key: "plusOne" as const, label: t("filter.plusOne"), desc: t("filter.plusOneDesc") },
+                    { key: "generousLifestyle" as const, label: t("filter.generousLifestyle"), desc: t("filter.generousLifestyleDesc") },
+                    { key: "weekendPlans" as const, label: t("filter.weekendPlans"), desc: t("filter.weekendPlansDesc") },
+                    { key: "lateNightChat" as const, label: t("filter.lateNightChat"), desc: t("filter.lateNightChatDesc") },
+                    { key: "noDrama" as const, label: t("filter.noDrama"), desc: t("filter.noDramaDesc") },
                   ].map(({ key, label, desc }) => (
                     <button key={key} onClick={() => setLocal((f) => ({ ...f, [key]: !f[key] }))}
                       className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all ${

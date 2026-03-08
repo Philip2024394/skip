@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart, ArrowLeft, MapPin, Star, MessageCircle, Unlock,
-  LocateFixed, ChevronUp, Zap, X, Moon, Users, Eye, UserPlus,
+  LocateFixed, ChevronUp, Zap, X, Moon, Users, Eye, UserPlus, Gift, CalendarDays, MoonStar, ShieldCheck,
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -21,6 +21,7 @@ import {
 import GuestAuthPrompt from "@/components/GuestAuthPrompt";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { isNetworkError } from "@/utils/payments";
+import { hasUnlockBadges, getUnlockPriceLabel } from "@/utils/unlockPrice";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -300,6 +301,10 @@ const MapPage = () => {
   const [mapZoom,         setMapZoom]         = useState(10);
   const [filterTonight,   setFilterTonight]   = useState(false);
   const [filterPlusOne,   setFilterPlusOne]   = useState(false);
+  const [filterGenerous,  setFilterGenerous]  = useState(false);
+  const [filterWeekend,   setFilterWeekend]   = useState(false);
+  const [filterLateNight, setFilterLateNight] = useState(false);
+  const [filterNoDrama,   setFilterNoDrama]   = useState(false);
   const [showRadius,      setShowRadius]      = useState(true);
   const [radiusKm,        setRadiusKm]        = useState(15); // 1–50 km, user-controlled
   const [selectedFromMapId, setSelectedFromMapId] = useState<string | null>(null);
@@ -362,6 +367,10 @@ const MapPage = () => {
             latitude: p.latitude, longitude: p.longitude,
             available_tonight: p.available_tonight,
             is_plusone: !!(p as any).is_plusone,
+            generous_lifestyle: !!(p as any).generous_lifestyle,
+            weekend_plans: !!(p as any).weekend_plans,
+            late_night_chat: !!(p as any).late_night_chat,
+            no_drama: !!(p as any).no_drama,
             voice_intro_url: p.voice_intro_url,
             last_seen_at: p.last_seen_at,
             main_image_pos: p.main_image_pos,
@@ -379,8 +388,12 @@ const MapPage = () => {
   const visibleProfiles = useMemo(() => {
     let v = filterTonight ? profiles.filter(p => p.available_tonight) : profiles;
     if (filterPlusOne) v = v.filter(p => !!(p as any).is_plusone);
+    if (filterGenerous) v = v.filter(p => !!(p as any).generous_lifestyle);
+    if (filterWeekend) v = v.filter(p => !!(p as any).weekend_plans);
+    if (filterLateNight) v = v.filter(p => !!(p as any).late_night_chat);
+    if (filterNoDrama) v = v.filter(p => !!(p as any).no_drama);
     return v;
-  }, [profiles, filterTonight, filterPlusOne]);
+  }, [profiles, filterTonight, filterPlusOne, filterGenerous, filterWeekend, filterLateNight, filterNoDrama]);
 
   const withinRadiusProfiles = useMemo(() => {
     if (!userLocation) return visibleProfiles;
@@ -695,7 +708,12 @@ const MapPage = () => {
   const handleUnlockMatch = async () => {
     if (!matchDialog) return;
     setPaymentLoading(true);
-    const invokeCreatePayment = () => supabase.functions.invoke("create-payment", { body: { targetUserId: matchDialog!.id } });
+    const invokeCreatePayment = () => supabase.functions.invoke("create-payment", {
+      body: {
+        targetUserId: matchDialog!.id,
+        targetHasBadges: hasUnlockBadges(matchDialog),
+      },
+    });
     try {
       let result = await invokeCreatePayment();
       if (result.error && isNetworkError(result.error)) {
@@ -845,7 +863,7 @@ const MapPage = () => {
                 type="button"
                 onClick={() => {
                   if (filterTonight) setFilterTonight(false);
-                  else { setFilterTonight(true); setFilterPlusOne(false); }
+                  else { setFilterTonight(true); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
                 }}
                 aria-label={filterTonight ? "Clear filter" : "Show free tonight only"}
                 className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
@@ -861,7 +879,7 @@ const MapPage = () => {
                 type="button"
                 onClick={() => {
                   if (filterPlusOne) setFilterPlusOne(false);
-                  else { setFilterPlusOne(true); setFilterTonight(false); }
+                  else { setFilterPlusOne(true); setFilterTonight(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
                 }}
                 aria-label={filterPlusOne ? "Clear filter" : "Show +1 Plus One only"}
                 className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
@@ -872,6 +890,64 @@ const MapPage = () => {
               >
                 <UserPlus className="w-3 h-3" />
                 +1
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (filterGenerous) setFilterGenerous(false);
+                  else { setFilterGenerous(true); setFilterTonight(false); setFilterPlusOne(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
+                }}
+                aria-label={filterGenerous ? "Clear filter" : "Show Generous Lifestyle only"}
+                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
+                  filterGenerous
+                    ? "bg-amber-400/25 border border-amber-400/60 text-amber-400"
+                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                }`}
+              >
+                <Gift className="w-3 h-3" />
+                Generous
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (filterWeekend) setFilterWeekend(false);
+                  else { setFilterWeekend(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterLateNight(false); setFilterNoDrama(false); }
+                }}
+                aria-label={filterWeekend ? "Clear filter" : "Show Weekend Plans only"}
+                className={`rounded-full px-2 py-1 text-[9px] font-semibold flex items-center gap-0.5 transition-colors ${
+                  filterWeekend ? "bg-primary/25 border border-primary/60 text-primary" : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                }`}
+              >
+                <CalendarDays className="w-2.5 h-2.5" />
+                Weekend
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (filterLateNight) setFilterLateNight(false);
+                  else { setFilterLateNight(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterNoDrama(false); }
+                }}
+                aria-label={filterLateNight ? "Clear filter" : "Show Late Night Chat only"}
+                className={`rounded-full px-2 py-1 text-[9px] font-semibold flex items-center gap-0.5 transition-colors ${
+                  filterLateNight ? "bg-indigo-400/25 border border-indigo-400/60 text-indigo-300" : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                }`}
+              >
+                <MoonStar className="w-2.5 h-2.5" />
+                Late
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (filterNoDrama) setFilterNoDrama(false);
+                  else { setFilterNoDrama(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); }
+                }}
+                aria-label={filterNoDrama ? "Clear filter" : "Show No Drama only"}
+                className={`rounded-full px-2 py-1 text-[9px] font-semibold flex items-center gap-0.5 transition-colors ${
+                  filterNoDrama ? "bg-teal-400/25 border border-teal-400/60 text-teal-300" : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+                }`}
+              >
+                <ShieldCheck className="w-2.5 h-2.5" />
+                No Drama
               </button>
             </div>
           </div>
@@ -902,8 +978,8 @@ const MapPage = () => {
             <span className="text-primary text-[10px] font-semibold w-8 text-right">{radiusKm} km</span>
           </div>
 
-          {/* Available Tonight / +1 Plus One badges — under km bar, glass black + yellow text + glow */}
-          {selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone) && (
+          {/* Available Tonight / +1 / Generous / Weekend / Late Night / No Drama badges — under km bar */}
+          {selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone || (selectedProfile as any).generous_lifestyle || (selectedProfile as any).weekend_plans || (selectedProfile as any).late_night_chat || (selectedProfile as any).no_drama) && (
             <div className="flex flex-wrap items-center justify-center gap-2">
               {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
                 <span
@@ -923,18 +999,43 @@ const MapPage = () => {
                   +1 Plus One
                 </span>
               )}
+              {(selectedProfile as any).generous_lifestyle && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-amber-400 border border-white/10 bg-black/60 backdrop-blur-md"
+                  style={{ boxShadow: "0 0 12px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.12)" }}
+                >
+                  <Gift className="w-3 h-3" />
+                  Generous Lifestyle
+                </span>
+              )}
+              {(selectedProfile as any).weekend_plans && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-primary border border-white/10 bg-black/60 backdrop-blur-md">
+                  <CalendarDays className="w-3 h-3" />
+                  Weekend Plans
+                </span>
+              )}
+              {(selectedProfile as any).late_night_chat && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-indigo-300 border border-white/10 bg-black/60 backdrop-blur-md">
+                  <MoonStar className="w-3 h-3" />
+                  Late Night Chat
+                </span>
+              )}
+              {(selectedProfile as any).no_drama && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-teal-300 border border-white/10 bg-black/60 backdrop-blur-md">
+                  <ShieldCheck className="w-3 h-3" />
+                  No Drama
+                </span>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* ── Available Tonight / +1 badges when radius slider hidden (same spot under "km bar" area) ── */}
-      {userLocation && !showRadius && selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone) && (
+      {/* ── Available Tonight / +1 / Generous / Weekend / Late / No Drama badges when radius slider hidden ── */}
+      {userLocation && !showRadius && selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone || (selectedProfile as any).generous_lifestyle || (selectedProfile as any).weekend_plans || (selectedProfile as any).late_night_chat || (selectedProfile as any).no_drama) && (
         <div
           className="absolute left-4 right-16 z-20 pointer-events-none flex flex-wrap items-center justify-center gap-2"
-          style={{
-            top: "6.25rem",
-          }}
+          style={{ top: "6.25rem" }}
         >
           {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
             <span
@@ -952,6 +1053,30 @@ const MapPage = () => {
             >
               <UserPlus className="w-3 h-3" />
               +1 Plus One
+            </span>
+          )}
+          {(selectedProfile as any).generous_lifestyle && (
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-amber-400 border border-white/10 bg-black/60 backdrop-blur-md"
+              style={{ boxShadow: "0 0 12px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.12)" }}
+            >
+              <Gift className="w-3 h-3" />
+              Generous Lifestyle
+            </span>
+          )}
+          {(selectedProfile as any).weekend_plans && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-primary border border-white/10 bg-black/60 backdrop-blur-md">
+              <CalendarDays className="w-3 h-3" /> Weekend Plans
+            </span>
+          )}
+          {(selectedProfile as any).late_night_chat && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-indigo-300 border border-white/10 bg-black/60 backdrop-blur-md">
+              <MoonStar className="w-3 h-3" /> Late Night Chat
+            </span>
+          )}
+          {(selectedProfile as any).no_drama && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-teal-300 border border-white/10 bg-black/60 backdrop-blur-md">
+              <ShieldCheck className="w-3 h-3" /> No Drama
             </span>
           )}
         </div>
@@ -1008,8 +1133,24 @@ const MapPage = () => {
                     )}
                     {(profile as any).is_plusone ? (
                       <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-black border border-yellow-400/70 flex items-center justify-center text-[7px] font-black text-yellow-300 shadow-[0_0_6px_rgba(250,204,21,0.5)]">+1</div>
+                    ) : (profile as any).generous_lifestyle ? (
+                      <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-black border border-amber-400/70 flex items-center justify-center text-[7px] font-bold text-amber-300 shadow-[0_0_6px_rgba(245,158,11,0.5)]">
+                        <Gift className="w-2.5 h-2.5" />
+                      </div>
                     ) : profile.available_tonight && !isLiked ? (
                       <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-black border border-yellow-400/70 flex items-center justify-center text-[8px] shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</div>
+                    ) : (profile as any).weekend_plans ? (
+                      <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-black border border-primary/70 flex items-center justify-center text-[6px] font-bold text-primary">
+                        <CalendarDays className="w-2.5 h-2.5" />
+                      </div>
+                    ) : (profile as any).late_night_chat ? (
+                      <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-black border border-indigo-400/70 flex items-center justify-center text-[6px] font-bold text-indigo-300">
+                        <MoonStar className="w-2.5 h-2.5" />
+                      </div>
+                    ) : (profile as any).no_drama ? (
+                      <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-black border border-teal-400/70 flex items-center justify-center text-[6px] font-bold text-teal-300">
+                        <ShieldCheck className="w-2.5 h-2.5" />
+                      </div>
                     ) : null}
                     {!isLiked && !profile.available_tonight && isOnline(profile.last_seen_at) && (
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-black shadow-[0_0_6px_rgba(34,197,94,0.6)]" />
@@ -1136,7 +1277,7 @@ const MapPage = () => {
               <Button onClick={handleUnlockMatch} disabled={paymentLoading}
                 className="w-full gradient-love text-white border-0 h-12 text-base font-semibold rounded-xl">
                 <Unlock className="w-4 h-4 mr-2" />
-                {paymentLoading ? "Processing..." : "Unlock WhatsApp — $1.99"}
+                {paymentLoading ? "Processing..." : `Unlock WhatsApp — ${matchDialog ? getUnlockPriceLabel(matchDialog) : "$1.99"}`}
               </Button>
               <button onClick={() => setMatchDialog(null)} className="text-white/40 hover:text-white/70 text-sm transition-colors">
                 Maybe later

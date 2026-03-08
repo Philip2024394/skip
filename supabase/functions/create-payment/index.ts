@@ -38,9 +38,11 @@ serve(async (req) => {
     }
 
     let targetUserId: string | undefined;
+    let targetHasBadges: boolean | undefined;
     try {
       const body = await req.json();
       targetUserId = body?.targetUserId;
+      targetHasBadges = body?.targetHasBadges === true;
     } catch {
       return new Response(JSON.stringify({ error: "Missing or invalid request body" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -53,6 +55,10 @@ serve(async (req) => {
         status: 400,
       });
     }
+
+    const priceId = targetHasBadges
+      ? (Deno.env.get("STRIPE_PRICE_WHATSAPP_BADGES") || Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ")
+      : (Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ");
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2024-11-20.acacia",
@@ -70,7 +76,7 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ",
+          price: priceId,
           quantity: 1,
         },
       ],

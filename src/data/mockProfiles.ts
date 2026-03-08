@@ -25,4 +25,8 @@ export const generateMockProfiles = (count: number = 20): Profile[] =>
     images: [MOCK_IMAGES[i % MOCK_IMAGES.length]],
     gender: i % 2 === 0 ? "Female" : "Male",
     is_plusone: i % 4 === 1,
+    generous_lifestyle: i % 5 === 2,
+    weekend_plans: i % 5 === 1,
+    late_night_chat: i % 5 === 3,
+    no_drama: i % 5 === 0,
   }));

@@ -2,10 +2,11 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, X, MapPin, ExternalLink, Sparkles, ShieldCheck,
-  Heart, Zap, Calendar,
+  Heart, Zap, Calendar, Gift, CalendarDays, MoonStar, Share2,
 } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { isOnline } from "@/hooks/useOnlineStatus";
+import { useLanguage } from "@/i18n/LanguageContext";
 import type { DatePlace } from "./DatePlacesEditor";
 
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -34,12 +35,20 @@ interface ProfileSecondPageProps {
 }
 
 export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPageProps) {
+  const { t } = useLanguage();
   const images = (profile.images ?? [profile.image]).filter(Boolean).slice(0, 4);
   const places = (profile.first_date_places ?? []).slice(0, 3) as DatePlace[];
   const [enlargedImageIndex, setEnlargedImageIndex] = useState<number | null>(null);
   const [enlargedPlaceIndex, setEnlargedPlaceIndex] = useState<number | null>(null);
 
   const activeOn2DateMe = isOnline(profile.last_seen_at);
+
+  const shareProfileViaWhatsApp = () => {
+    const appUrl = window.location.origin;
+    const text = `${profile.name}, ${profile.age} — ${profile.city}, ${profile.country}. Check out on 2DateMe: ${appUrl}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <motion.div
@@ -59,7 +68,13 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
           <ChevronLeft className="w-5 h-5" />
         </button>
         <span className="text-white/80 text-sm font-medium">Full profile</span>
-        <div className="w-10" />
+        <button
+          onClick={shareProfileViaWhatsApp}
+          aria-label={t("detail.shareProfile")}
+          className="w-10 h-10 rounded-full bg-green-500/20 hover:bg-green-500/30 border border-green-400/40 flex items-center justify-center text-green-400 transition-colors"
+        >
+          <Share2 className="w-5 h-5" />
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
@@ -94,6 +109,30 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
               <Calendar className="w-3.5 h-3.5" />
               Has dated on 2DateMe
             </span>
+            {profile.generous_lifestyle && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/25 text-amber-300 text-xs font-medium">
+                <Gift className="w-3.5 h-3.5" />
+                Generous Lifestyle
+              </span>
+            )}
+            {profile.weekend_plans && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-medium">
+                <CalendarDays className="w-3.5 h-3.5" />
+                Weekend Plans
+              </span>
+            )}
+            {profile.late_night_chat && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-400/25 text-indigo-300 text-xs font-medium">
+                <MoonStar className="w-3.5 h-3.5" />
+                Late Night Chat
+              </span>
+            )}
+            {profile.no_drama && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-400/25 text-teal-300 text-xs font-medium">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                No Drama
+              </span>
+            )}
           </div>
           {/* Activity / profile strength — visual only, pro look */}
           <div className="mt-4 rounded-xl bg-white/5 border border-white/10 px-4 py-3">

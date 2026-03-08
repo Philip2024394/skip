@@ -250,6 +250,10 @@ export const generateIndonesianProfiles = (count: number = 50): Profile[] => {
       last_seen_at,
       languages: langs,
       is_plusone: i % 4 === 1,   // every 4th profile shows the +1 badge
+      generous_lifestyle: i % 5 === 2,
+      weekend_plans: i % 5 === 1,
+      late_night_chat: i % 5 === 3,
+      no_drama: i % 5 === 0,
     });
   }
 

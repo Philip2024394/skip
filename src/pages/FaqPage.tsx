@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle, UserPlus } from "lucide-react";
+import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle, UserPlus, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppLogo from "@/components/AppLogo";
 
@@ -70,11 +70,11 @@ const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "How do I get someone's WhatsApp number?",
-        a: "When there's a mutual like (you both liked each other), tap the unlock button on their profile card in the Likes Library. A secure $1.99 payment unlocks their WhatsApp number and opens a pre-filled message to break the ice.",
+        a: "When there's a mutual like (you both liked each other), tap the unlock button on their profile card in the Likes Library. A secure payment ($1.99, or $2.99 for profiles with badges) unlocks their WhatsApp number and opens a pre-filled message to break the ice.",
       },
       {
-        q: "What is the $1.99 fee for?",
-        a: "The $1.99 covers the WhatsApp unlock for both profiles — you get their number and they get yours. It's a one-time fee per connection, not a subscription.",
+        q: "What is the $1.99 / $2.99 fee for?",
+        a: "The unlock fee covers the WhatsApp connection for both profiles — you get their number and they get yours. It's $1.99 for standard profiles, or $2.99 for profiles that have badges (e.g. Free Tonight, Generous Lifestyle, Weekend Plans). One-time fee per connection, not a subscription.",
       },
       {
         q: "What does the pre-filled message say?",
@@ -136,6 +136,29 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         q: "What is +1 Plus One?",
         a: "The Plus-One option is for profiles who enjoy being part of social occasions and good company but are not currently looking for a traditional date or a serious relationship.\n\nPeople who select this option prefer a more relaxed connection. They may be open to attending events, dinners, gatherings, or special occasions as a companion, without the expectation of constant communication or romantic commitment.\n\nIn many cases, Plus-One members may be shy about dating or new to the dating world. This feature allows them to connect with others in a comfortable, low-pressure way. Over time, these connections may naturally grow into friendship, closer companionship, or potentially a relationship if both people feel the same.\n\nBecause many Plus-One profiles may have limited dating experience, it's important to approach them with respect, patience, and emotional consideration.",
+      },
+    ],
+  },
+  {
+    title: "Badges",
+    icon: <Gift className="w-4 h-4" />,
+    color: "text-amber-400",
+    items: [
+      {
+        q: "What does the \"Generous Lifestyle\" badge mean?",
+        a: "The Generous Lifestyle badge indicates that a member enjoys sharing experiences and may like treating their companion to things such as dinners, events, travel, or special outings.\n\nMembers who select this badge often appreciate traditional gestures of generosity and enjoy creating memorable moments when spending time with someone. It reflects a lifestyle preference where kindness, appreciation, and thoughtful experiences are part of the connection.\n\nThis badge does not imply any expectations or obligations between members. It simply helps people understand each other's lifestyle preferences and dating style. All interactions should remain respectful, genuine, and based on mutual interest.",
+      },
+      {
+        q: "What does the \"Weekend Plans\" badge mean?",
+        a: "The Weekend Plans badge shows that a member is usually available on weekends and may be open to meeting, socializing, or making plans during that time.\n\nMany people have busy weekday schedules, so this badge helps connect members who prefer to arrange activities such as dinners, events, outings, or casual meetups on Saturdays or Sundays.\n\nHaving this badge simply signals availability and interest in weekend social plans. All arrangements should be discussed and agreed upon between members.",
+      },
+      {
+        q: "What does the \"Late Night Chat\" badge mean?",
+        a: "The Late Night Chat badge indicates that a member is typically active later in the evening and enjoys conversations during nighttime hours.\n\nSome members prefer connecting when their day is finished and things are more relaxed. This badge helps others know that late evening chats, messages, or conversations may be the best time to connect with this person.\n\nIt does not create any expectation—only a signal of preferred communication times.",
+      },
+      {
+        q: "What does the \"No Drama\" badge mean?",
+        a: "The No Drama badge shows that a member prefers relaxed, positive, and respectful connections.\n\nPeople who select this badge usually value simple communication, honesty, and enjoyable interactions without unnecessary conflict or tension. They are generally looking for easygoing connections where both people feel comfortable and respected.\n\nThis badge helps signal a calm and friendly approach to meeting new people.",
       },
     ],
   },

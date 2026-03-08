@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, X, MapPin, Save, Loader2, CalendarHeart, Calendar, Star, ZoomIn, ZoomOut, MoveHorizontal, MoveVertical, Heart, PauseCircle, Moon } from "lucide-react";
+import { Camera, X, MapPin, Save, Loader2, CalendarHeart, Calendar, Star, ZoomIn, ZoomOut, MoveHorizontal, MoveVertical, Heart, PauseCircle, Moon, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,6 +51,10 @@ interface ProfileData {
   first_date_places: DatePlace[];
   languages: string[];
   is_plusone: boolean;
+  generous_lifestyle: boolean;
+  weekend_plans: boolean;
+  late_night_chat: boolean;
+  no_drama: boolean;
 }
 
 const ProfileEditor = () => {
@@ -96,7 +100,7 @@ const ProfileEditor = () => {
 
       const { data } = await supabase
         .from("profiles")
-        .select("name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone")
+        .select("name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone, generous_lifestyle, weekend_plans, late_night_chat, no_drama")
         .eq("id", user.id)
         .single();
 
@@ -126,6 +130,10 @@ const ProfileEditor = () => {
           first_date_places: ((data.first_date_places as DatePlace[]) || []),
           languages: ((data.languages as string[]) || []),
           is_plusone: ((data as Record<string, unknown>).is_plusone as boolean) || false,
+          generous_lifestyle: ((data as Record<string, unknown>).generous_lifestyle as boolean) || false,
+          weekend_plans: ((data as Record<string, unknown>).weekend_plans as boolean) || false,
+          late_night_chat: ((data as Record<string, unknown>).late_night_chat as boolean) || false,
+          no_drama: ((data as Record<string, unknown>).no_drama as boolean) || false,
         });
       }
       setLoading(false);
@@ -272,6 +280,10 @@ const ProfileEditor = () => {
         first_date_places: profile.first_date_places as unknown as import("@/integrations/supabase/types").Json,
         languages: profile.languages as unknown as import("@/integrations/supabase/types").Json,
         is_plusone: profile.is_plusone,
+        generous_lifestyle: profile.generous_lifestyle,
+        weekend_plans: profile.weekend_plans,
+        late_night_chat: profile.late_night_chat,
+        no_drama: profile.no_drama,
         main_image_pos: `${mainPos.x}% ${mainPos.y}%`,
         updated_at: new Date().toISOString(),
       })
@@ -763,6 +775,73 @@ const ProfileEditor = () => {
             </p>
           </div>
         )}
+      </div>
+
+      {/* Generous Lifestyle badge */}
+      <div className="glass rounded-xl p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Gift className="w-4 h-4 text-amber-400" />
+            <div>
+              <p className="text-foreground text-sm font-medium">Generous Lifestyle</p>
+              <p className="text-muted-foreground text-[10px]">You enjoy treating companions to dinners, events & memorable experiences</p>
+            </div>
+          </div>
+          <Switch
+            checked={profile.generous_lifestyle}
+            onCheckedChange={(checked) => update("generous_lifestyle", checked)}
+          />
+        </div>
+        {profile.generous_lifestyle && (
+          <div className="flex items-start gap-1.5 bg-amber-500/10 border border-amber-400/30 rounded-lg px-2.5 py-1.5">
+            <Gift className="w-3 h-3 text-amber-400 flex-shrink-0 mt-0.5" />
+            <p className="text-amber-300 text-[10px] leading-relaxed">
+              Your <span className="font-bold">Generous Lifestyle</span> badge is live. It signals that you enjoy sharing experiences and thoughtful gestures—no expectations or obligations.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Weekend Plans badge */}
+      <div className="glass rounded-xl p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-primary" />
+            <div>
+              <p className="text-foreground text-sm font-medium">Weekend Plans</p>
+              <p className="text-muted-foreground text-[10px]">Usually available on weekends for meetups & social plans</p>
+            </div>
+          </div>
+          <Switch checked={profile.weekend_plans} onCheckedChange={(c) => update("weekend_plans", c)} />
+        </div>
+      </div>
+
+      {/* Late Night Chat badge */}
+      <div className="glass rounded-xl p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MoonStar className="w-4 h-4 text-indigo-400" />
+            <div>
+              <p className="text-foreground text-sm font-medium">Late Night Chat</p>
+              <p className="text-muted-foreground text-[10px]">Typically active later in the evening; prefer nighttime conversations</p>
+            </div>
+          </div>
+          <Switch checked={profile.late_night_chat} onCheckedChange={(c) => update("late_night_chat", c)} />
+        </div>
+      </div>
+
+      {/* No Drama badge */}
+      <div className="glass rounded-xl p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-teal-400" />
+            <div>
+              <p className="text-foreground text-sm font-medium">No Drama</p>
+              <p className="text-muted-foreground text-[10px]">Prefer relaxed, positive & respectful connections</p>
+            </div>
+          </div>
+          <Switch checked={profile.no_drama} onCheckedChange={(c) => update("no_drama", c)} />
+        </div>
       </div>
 
       {/* First Date Idea */}

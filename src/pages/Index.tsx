@@ -22,6 +22,7 @@ import TermsAcceptanceDialog from "@/components/TermsAcceptanceDialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/lib/constants";
 import { isNetworkError } from "@/utils/payments";
+import { hasUnlockBadges } from "@/utils/unlockPrice";
 import { useDevFeatures, isDevBuild } from "@/hooks/useDevFeatures";
 import {
   Dialog,
@@ -113,6 +114,10 @@ const Index = () => {
       if (filters.availableTonight && !p.available_tonight) return false;
       if (filters.onlineNow && !isOnline(p.last_seen_at)) return false;
       if (filters.plusOne && !(p as { is_plusone?: boolean }).is_plusone) return false;
+      if (filters.generousLifestyle && !(p as { generous_lifestyle?: boolean }).generous_lifestyle) return false;
+      if (filters.weekendPlans && !(p as { weekend_plans?: boolean }).weekend_plans) return false;
+      if (filters.lateNightChat && !(p as { late_night_chat?: boolean }).late_night_chat) return false;
+      if (filters.noDrama && !(p as { no_drama?: boolean }).no_drama) return false;
       return true;
     });
   }, [allProfiles, filters]);
@@ -360,6 +365,10 @@ const Index = () => {
               first_date_idea: dateIdeaMap.get(p.id) || (p as any).first_date_idea || null,
               first_date_places: datePlacesMap.get(p.id) || [],
               is_plusone: (p as any).is_plusone || false,
+              generous_lifestyle: (p as any).generous_lifestyle || false,
+              weekend_plans: (p as any).weekend_plans || false,
+              late_night_chat: (p as any).late_night_chat || false,
+              no_drama: (p as any).no_drama || false,
             }));
           // Sort spotlight profiles to front
           mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
@@ -391,6 +400,10 @@ const Index = () => {
                   expires_at: likedMap.get(p.id)!.expires_at,
                   is_rose: likedMap.get(p.id)!.is_rose,
                   is_plusone: (p as any).is_plusone || false,
+                  generous_lifestyle: (p as any).generous_lifestyle || false,
+                  weekend_plans: (p as any).weekend_plans || false,
+                  late_night_chat: (p as any).late_night_chat || false,
+                  no_drama: (p as any).no_drama || false,
                 }));
               const mergedLikes = [
                 ...sentLikeProfiles,
@@ -422,6 +435,10 @@ const Index = () => {
                   voice_intro_url: p.voice_intro_url,
                   expires_at: likerMap.get(p.id),
                   is_plusone: (p as any).is_plusone || false,
+                  generous_lifestyle: (p as any).generous_lifestyle || false,
+                  weekend_plans: (p as any).weekend_plans || false,
+                  late_night_chat: (p as any).late_night_chat || false,
+                  no_drama: (p as any).no_drama || false,
                 }));
               setLikedMe(likedProfiles);
               saveLocalLikedMeProfiles(likedProfiles);
@@ -510,6 +527,10 @@ const Index = () => {
             last_seen_at: p.last_seen_at,
             expires_at: expiresAt,
             is_plusone: p.is_plusone || false,
+            generous_lifestyle: p.generous_lifestyle || false,
+            weekend_plans: p.weekend_plans || false,
+            late_night_chat: p.late_night_chat || false,
+            no_drama: p.no_drama || false,
             is_rose: isRose,
           };
           if (isRose) {
@@ -642,7 +663,12 @@ const Index = () => {
     if (!unlockDialog) return;
     setPaymentLoading(true);
     const invokeCreatePayment = async () =>
-      supabase.functions.invoke("create-payment", { body: { targetUserId: unlockDialog!.id } });
+      supabase.functions.invoke("create-payment", {
+        body: {
+          targetUserId: unlockDialog!.id,
+          targetHasBadges: hasUnlockBadges(unlockDialog),
+        },
+      });
     try {
       let result = await invokeCreatePayment();
       if (result.error && isNetworkError(result.error)) {
@@ -889,6 +915,26 @@ const Index = () => {
                   {t("popup.freeTonight")}
                 </div>
               ) : null}
+              {(selectedProfile as any).generous_lifestyle && (
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.45)]">
+                  <span className="text-amber-400">🎁</span> Generous
+                </div>
+              )}
+              {(selectedProfile as any).weekend_plans && (
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-primary/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-primary">📅</span> Weekend
+                </div>
+              )}
+              {(selectedProfile as any).late_night_chat && (
+                <div className="absolute top-10 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-indigo-400">🌙</span> Late Night
+                </div>
+              )}
+              {(selectedProfile as any).no_drama && (
+                <div className="absolute top-10 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-teal-400">✨</span> No Drama
+                </div>
+              )}
 
               {/* Fingerprint next — swipe this card only; stop propagation so bottom stack is not affected */}
               <button
@@ -1154,7 +1200,7 @@ const Index = () => {
           <div className="flex gap-3 mt-2">
             <Button variant="outline" onClick={() => setMatchDialog(null)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("match.later")}</Button>
             <Button onClick={() => { setMatchDialog(null); if (matchDialog) handleUnlock(matchDialog); }} className="flex-1 gradient-love text-primary-foreground border-0">
-              <Heart className="w-4 h-4 mr-1" /> {t("match.unlock")}
+              <Heart className="w-4 h-4 mr-1" /> {matchDialog && hasUnlockBadges(matchDialog) ? t("match.unlock299") : t("match.unlock")}
             </Button>
           </div>
         </DialogContent>
@@ -1169,7 +1215,7 @@ const Index = () => {
               {t("popup.unlockTitle")}
             </DialogTitle>
             <DialogDescription className="text-center text-white/60">
-              {t("popup.unlockDesc")}
+              {unlockDialog && hasUnlockBadges(unlockDialog) ? t("popup.unlockDesc299") : t("popup.unlockDesc")}
             </DialogDescription>
           </DialogHeader>
           <ul className="text-white/50 text-xs space-y-1 mt-1">
@@ -1180,7 +1226,7 @@ const Index = () => {
           <div className="flex gap-3 mt-2">
             <Button variant="outline" onClick={() => setUnlockDialog(null)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("popup.cancel")}</Button>
             <Button onClick={confirmUnlock} disabled={paymentLoading} className="flex-1 gradient-love text-primary-foreground border-0 font-bold">
-              {paymentLoading ? t("popup.processing") : t("popup.pay199")}
+              {paymentLoading ? t("popup.processing") : (unlockDialog && hasUnlockBadges(unlockDialog) ? t("popup.pay299") : t("popup.pay199"))}
             </Button>
           </div>
         </DialogContent>

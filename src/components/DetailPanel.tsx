@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "framer-motion";
-import { ChevronRight, MapPin, Map, X, MessageCircle, Star, Flag, Globe, Heart, Crown } from "lucide-react";
+import { ChevronRight, MapPin, Map, X, MessageCircle, Star, Flag, Globe, Heart, Crown, Gift, Share2 } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isOnline } from "@/hooks/useOnlineStatus";
@@ -14,6 +14,7 @@ import VoicePlayer from "./VoicePlayer";
 import AppLogo from "./AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { sanitizeBio } from "@/utils/bio";
+import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 
 interface DetailPanelProps {
   profile: Profile;
@@ -107,6 +108,13 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
   }, []);
 
   const hasLocation = profile.latitude && profile.longitude;
+
+  const shareProfileViaWhatsApp = () => {
+    const appUrl = window.location.origin;
+    const text = `${profile.name}, ${profile.age} — ${profile.city}, ${profile.country}. Check out on 2DateMe: ${appUrl}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <>
@@ -235,6 +243,30 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   <span className="text-yellow-400">🌙</span> Free Tonight
                 </span>
               ) : null}
+              {profile.generous_lifestyle && (
+                <span className="bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(245,158,11,0.4)]">
+                  <Gift className="w-3 h-3 text-amber-400" />
+                  Generous Lifestyle
+                </span>
+              )}
+              {profile.weekend_plans && (
+                <span className="bg-black/80 backdrop-blur-md border border-primary/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(180,80,150,0.4)]">
+                  <CalendarDays className="w-3 h-3 text-primary" />
+                  Weekend Plans
+                </span>
+              )}
+              {profile.late_night_chat && (
+                <span className="bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(99,102,241,0.4)]">
+                  <MoonStar className="w-3 h-3 text-indigo-400" />
+                  Late Night Chat
+                </span>
+              )}
+              {profile.no_drama && (
+                <span className="bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(45,212,191,0.4)]">
+                  <ShieldCheck className="w-3 h-3 text-teal-400" />
+                  No Drama
+                </span>
+              )}
               {profile.first_date_idea && (
                 <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-3 py-1 rounded-full">
                   💕 {profile.first_date_idea}
@@ -334,6 +366,14 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   >
                     <Map className="w-6 h-6" />
                   </button>
+                  {/* Share profile via WhatsApp */}
+                  <button
+                    onClick={shareProfileViaWhatsApp}
+                    aria-label={t("detail.shareProfile")}
+                    className="w-14 h-14 rounded-full bg-green-500/20 backdrop-blur-md border border-green-400/40 flex items-center justify-center text-green-400 hover:bg-green-500/30 hover:scale-105 transition-all"
+                  >
+                    <Share2 className="w-6 h-6" />
+                  </button>
                   {/* Close */}
                   <button
                     onClick={onClose}
@@ -354,7 +394,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                     className="flex items-center gap-2 px-5 py-3 rounded-full bg-green-500/20 backdrop-blur-md border border-green-400/40 text-green-300 font-semibold text-sm hover:bg-green-500/30 hover:scale-105 transition-all"
                   >
                     <MessageCircle className="w-5 h-5" fill="currentColor" />
-                    Connect on WhatsApp — $1.99
+                    Connect on WhatsApp — {getUnlockPriceLabel(profile)}
                   </button>
                 ) : (
                   <div className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10">
@@ -390,6 +430,15 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                     <Map className="w-6 h-6" />
                   </button>
 
+                  {/* Share profile via WhatsApp */}
+                  <button
+                    onClick={shareProfileViaWhatsApp}
+                    aria-label={t("detail.shareProfile")}
+                    className="w-14 h-14 rounded-full bg-green-500/20 backdrop-blur-md border border-green-400/40 flex items-center justify-center text-green-400 hover:bg-green-500/30 hover:scale-105 transition-all"
+                  >
+                    <Share2 className="w-6 h-6" />
+                  </button>
+
                   {/* Close */}
                   <button
                     onClick={onClose}
@@ -402,8 +451,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
               </>
             )}
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
 
       {/* Second page — full profile (photos, places, pro badges) */}
       <AnimatePresence>
