@@ -12,6 +12,7 @@ import DatePlacesDisplay from "./DatePlacesDisplay";
 import VoicePlayer from "./VoicePlayer";
 import AppLogo from "./AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { sanitizeBio } from "@/utils/bio";
 
 interface DetailPanelProps {
   profile: Profile;
@@ -191,12 +192,12 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
             ))}
           </div>
 
-          {/* VIP Plus-One badge — under profile page bars; includes gender */}
+          {/* VIP Plus-One badge — under profile page bars; gender without parentheses; high visibility */}
           {isPlusOne && (
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/20 to-amber-400/20 border border-yellow-400/50 backdrop-blur-md rounded-full px-3 py-1 shadow-[0_0_16px_rgba(250,204,21,0.4)]">
-              <span className="text-yellow-400 text-base leading-none">👑</span>
-              <span className="text-yellow-300 text-[11px] font-bold tracking-wider uppercase">
-                VIP {profile.gender ? `(${profile.gender}) ` : ""}Plus One
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full px-4 py-2 bg-amber-400/95 border-2 border-amber-300 shadow-[0_0_24px_rgba(251,191,36,0.6),0_2px_8px_rgba(0,0,0,0.4)]">
+              <span className="text-amber-900 text-lg leading-none" aria-hidden>👑</span>
+              <span className="text-amber-900 text-xs font-extrabold tracking-wider uppercase drop-shadow-[0_1px_0_rgba(255,255,255,0.5)]">
+                VIP {profile.gender ? `${profile.gender} ` : ""}Plus One
               </span>
             </div>
           )}
@@ -216,35 +217,18 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
               <MapPin className="w-3.5 h-3.5 text-primary" /> {profile.city}, {profile.country}
             </p>
 
-            {/* Bio container — under location */}
+            {/* Bio container — under location; no emoji or phone numbers */}
             {profile.bio && (
               <div className="mt-3 mx-4 px-4 py-3 rounded-xl bg-black/40 backdrop-blur-md border border-white/10">
                 <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap break-words">
-                  {profile.bio}
+                  {sanitizeBio(profile.bio)}
                 </p>
               </div>
             )}
 
-            {/* Activity badges */}
+            {/* Activity badges — no gender, +1, or View Map here */}
             <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
-              {profile.gender && (
-                <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-3 py-1 rounded-full">
-                  {profile.gender}
-                </span>
-              )}
-              {profile.is_plusone ? (
-                <button
-                  onClick={() => {
-                    const key = `plusone_seen_${profile.id}`;
-                    sessionStorage.removeItem(key);
-                    setShowPlusOneModal(true);
-                  }}
-                  className="bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 hover:bg-black/90 transition-colors"
-                >
-                  <span className="font-black text-[11px]">+1</span>
-                  <span className="text-white/80">Plus-One</span>
-                </button>
-              ) : profile.available_tonight ? (
+              {profile.available_tonight && !profile.is_plusone ? (
                 <span className="bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
                   <span className="text-yellow-400">🌙</span> Free Tonight
                 </span>
@@ -254,14 +238,6 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   💕 {profile.first_date_idea}
                 </span>
               )}
-              {hasLocation && (
-                <button
-                  onClick={() => navigate(`/map?profile=${profile.id}`)}
-                  className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-3 py-1 rounded-full flex items-center gap-1 hover:bg-black/70 transition-colors"
-                >
-                  <Map className="w-3 h-3" /> View Map
-                </button>
-               )}
               {profile.languages && profile.languages.length > 0 && (
                 <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
                   <Globe className="w-3.5 h-3.5 text-white/60 flex-shrink-0" />

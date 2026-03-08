@@ -17,6 +17,8 @@ import DatePlacesEditor, { DatePlace } from "./DatePlacesEditor";
 import { LANGUAGES, getNativeLanguage } from "@/data/languages";
 import { Languages, Plus, X as XIcon } from "lucide-react";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
+import { BIO_MAX_LENGTH } from "@/lib/constants";
+import { sanitizeBio } from "@/utils/bio";
 
 const GENDERS = ["Male", "Female", "Non-binary", "Other"];
 const LOOKING_FOR = ["Men", "Women", "Everyone"];
@@ -111,7 +113,7 @@ const ProfileEditor = () => {
           looking_for: data.looking_for,
           country: data.country,
           city: data.city || "",
-          bio: data.bio || "",
+          bio: sanitizeBio(data.bio || ""),
           whatsapp: data.whatsapp,
           avatar_url: data.avatar_url,
           images: imgs,
@@ -257,7 +259,7 @@ const ProfileEditor = () => {
         looking_for: profile.looking_for,
         country: profile.country,
         city: profile.city,
-        bio: profile.bio,
+        bio: sanitizeBio(profile.bio),
         whatsapp: profile.whatsapp,
         avatar_url: profile.avatar_url,
         images: profile.images,
@@ -634,7 +636,16 @@ const ProfileEditor = () => {
 
       <div>
         <Label className="text-muted-foreground text-xs mb-1 block">Bio</Label>
-        <Textarea value={profile.bio} onChange={(e) => update("bio", e.target.value)} rows={3} className="bg-muted border-border text-sm resize-none" />
+        <Textarea
+          value={profile.bio}
+          onChange={(e) => update("bio", sanitizeBio(e.target.value))}
+          rows={3}
+          className="bg-muted border-border text-sm resize-none"
+          placeholder="About you (no emoji or phone numbers, max 250 characters)"
+        />
+        <p className="text-muted-foreground text-[10px] mt-1 text-right">
+          {profile.bio.length}/{BIO_MAX_LENGTH}
+        </p>
       </div>
 
       {/* Location */}

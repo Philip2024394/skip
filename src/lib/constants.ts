@@ -1,5 +1,8 @@
 export const APP_NAME = "2DateMe";
 
+/** Max bio length (letters + spaces) */
+export const BIO_MAX_LENGTH = 250;
+
 /** 48 hours in milliseconds — how long a like stays active */
 export const LIKE_EXPIRY_MS = 48 * 60 * 60 * 1000;
 

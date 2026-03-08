@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Heart, ArrowLeft, MapPin, Star, MessageCircle, Unlock,
-  LocateFixed, ChevronUp, Zap, X, Moon, Users, Eye,
+  LocateFixed, ChevronUp, Zap, X, Moon, Users, Eye, UserPlus,
 } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -299,6 +299,7 @@ const MapPage = () => {
   const [mapCenter,       setMapCenter]       = useState<{ lat: number; lng: number } | null>(null);
   const [mapZoom,         setMapZoom]         = useState(10);
   const [filterTonight,   setFilterTonight]   = useState(false);
+  const [filterPlusOne,   setFilterPlusOne]   = useState(false);
   const [showRadius,      setShowRadius]      = useState(true);
   const [radiusKm,        setRadiusKm]        = useState(15); // 1–50 km, user-controlled
   const [selectedFromMapId, setSelectedFromMapId] = useState<string | null>(null);
@@ -360,6 +361,7 @@ const MapPage = () => {
             avatar_url: p.avatar_url,
             latitude: p.latitude, longitude: p.longitude,
             available_tonight: p.available_tonight,
+            is_plusone: !!(p as any).is_plusone,
             voice_intro_url: p.voice_intro_url,
             last_seen_at: p.last_seen_at,
             main_image_pos: p.main_image_pos,
@@ -375,8 +377,10 @@ const MapPage = () => {
 
   // ── Filtered + within radius + nearest 5 profiles ─────────────────
   const visibleProfiles = useMemo(() => {
-    return filterTonight ? profiles.filter(p => p.available_tonight) : profiles;
-  }, [profiles, filterTonight]);
+    let v = filterTonight ? profiles.filter(p => p.available_tonight) : profiles;
+    if (filterPlusOne) v = v.filter(p => !!(p as any).is_plusone);
+    return v;
+  }, [profiles, filterTonight, filterPlusOne]);
 
   const withinRadiusProfiles = useMemo(() => {
     if (!userLocation) return visibleProfiles;
@@ -407,7 +411,8 @@ const MapPage = () => {
     if (!selectedFromMapId) return nearestProfiles;
     const inNearest = nearestProfiles.find(p => p.id === selectedFromMapId);
     if (inNearest && nearestProfiles[0]?.id === selectedFromMapId) return nearestProfiles;
-    const profile = visibleProfiles.find(p => p.id === selectedFromMapId);
+    // Resolve from all profiles (any marker on map can be selected)
+    const profile = profiles.find(p => p.id === selectedFromMapId);
     if (!profile?.latitude || !profile?.longitude) return nearestProfiles;
     const refLat = mapCenter?.lat ?? userLocation?.lat ?? 0;
     const refLng = mapCenter?.lng ?? userLocation?.lng ?? 0;
@@ -419,7 +424,7 @@ const MapPage = () => {
       distanceFromCenter: haversineKm(refLat, refLng, profile.latitude, profile.longitude),
     };
     return [withDist, ...nearestProfiles.filter(p => p.id !== selectedFromMapId)].slice(0, 5);
-  }, [selectedFromMapId, nearestProfiles, visibleProfiles, mapCenter, userLocation]);
+  }, [selectedFromMapId, nearestProfiles, profiles, mapCenter, userLocation]);
 
   const selectedProfile = footerProfiles[selectedIndex] ?? null;
 
@@ -586,8 +591,8 @@ const MapPage = () => {
       const el = marker.getElement();
       if (el) {
         const inRadius = !withinRadiusIds || withinRadiusIds.has(id);
-        el.style.opacity = inRadius ? "1" : "0.25";
-        el.style.pointerEvents = inRadius ? "auto" : "none";
+        el.style.opacity = inRadius ? "1" : "0.4";
+        el.style.pointerEvents = "auto";
       }
     });
 
@@ -782,6 +787,20 @@ const MapPage = () => {
         >
           <Moon className="w-4 h-4" />
         </button>
+
+        {/* +1 Plus One filter */}
+        <button
+          onClick={() => setFilterPlusOne(v => !v)}
+          aria-label={filterPlusOne ? "Show all profiles" : "Show +1 Plus One only"}
+          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+            filterPlusOne
+              ? "bg-yellow-400/15 border-yellow-400/60 text-yellow-400"
+              : "bg-black/50 border-white/10 text-white/50 hover:text-white"
+          }`}
+          title={filterPlusOne ? "Showing: +1 only" : "Filter: +1 Plus One"}
+        >
+          <UserPlus className="w-4 h-4" />
+        </button>
       </div>
 
       {/* ── Stats pill (top-left, below back button) ── */}
@@ -847,16 +866,6 @@ const MapPage = () => {
                 <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
               )}
               <span className="text-white/40 text-[10px] flex-shrink-0 hidden sm:inline">{selectedProfile.city}</span>
-              {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
-                <span className="text-yellow-400 text-[10px] flex-shrink-0 flex items-center gap-0.5">
-                  <Moon className="w-2.5 h-2.5" fill="currentColor" /> free tonight
-                </span>
-              )}
-              {(selectedProfile as any).is_plusone && (
-                <span className="text-yellow-400 text-[10px] flex-shrink-0 flex items-center gap-0.5 font-bold">
-                  +1
-                </span>
-              )}
             </div>
           </motion.div>
         )}
@@ -865,7 +874,7 @@ const MapPage = () => {
       {/* ── Radius slider (under badge / stats) ── */}
       {userLocation && showRadius && (
         <div
-          className="absolute left-4 right-16 z-20 pointer-events-auto"
+          className="absolute left-4 right-16 z-20 pointer-events-auto flex flex-col gap-2"
           style={{
             top: selectedProfile && !detailProfile
               ? "6.25rem"
@@ -885,6 +894,59 @@ const MapPage = () => {
             />
             <span className="text-primary text-[10px] font-semibold w-8 text-right">{radiusKm} km</span>
           </div>
+
+          {/* Available Tonight / +1 Plus One badges — under km bar, glass black + yellow text + glow */}
+          {selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone) && (
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
+                  style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
+                >
+                  <Moon className="w-3 h-3" fill="currentColor" />
+                  Available Tonight
+                </span>
+              )}
+              {(selectedProfile as any).is_plusone && (
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
+                  style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
+                >
+                  <UserPlus className="w-3 h-3" />
+                  +1 Plus One
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Available Tonight / +1 badges when radius slider hidden (same spot under "km bar" area) ── */}
+      {userLocation && !showRadius && selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone) && (
+        <div
+          className="absolute left-4 right-16 z-20 pointer-events-none flex flex-wrap items-center justify-center gap-2"
+          style={{
+            top: "6.25rem",
+          }}
+        >
+          {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
+              style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
+            >
+              <Moon className="w-3 h-3" fill="currentColor" />
+              Available Tonight
+            </span>
+          )}
+          {(selectedProfile as any).is_plusone && (
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
+              style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
+            >
+              <UserPlus className="w-3 h-3" />
+              +1 Plus One
+            </span>
+          )}
         </div>
       )}
 
@@ -903,14 +965,28 @@ const MapPage = () => {
             </div>
           </motion.div>
         )}
+        {filterPlusOne && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+            style={{ top: filterTonight ? "8.25rem" : "7rem" }}
+          >
+            <div className="bg-black/60 backdrop-blur-xl border border-yellow-400/40 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-[0_0_12px_rgba(250,204,21,0.2)]">
+              <UserPlus className="w-3 h-3 text-yellow-400" />
+              <span className="text-yellow-400 text-[10px] font-semibold">+1 Plus One only</span>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ── Bottom UI ── */}
       <div className="absolute bottom-0 left-0 right-0 z-20" style={{ paddingBottom: `env(safe-area-inset-bottom, 0px)` }}>
         <div className="px-4 pb-6">
 
-          {/* Avatar strip */}
-          <div className="flex items-end justify-center gap-4 mb-4 overflow-x-auto scroll-touch px-2" style={{ scrollbarWidth: "none" }}>
+          {/* Avatar strip — extra top padding so circles and badges (-top-1) aren't clipped */}
+          <div className="flex items-end justify-center gap-4 mb-4 overflow-x-auto scroll-touch px-2 pt-5" style={{ scrollbarWidth: "none" }}>
             {footerProfiles.map((profile, idx) => {
               const isActive     = idx === selectedIndex;
               const isLiked      = likedIds.has(profile.id);
