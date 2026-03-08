@@ -13,7 +13,11 @@
     "test:watch": "vitest",
     "cap:build": "npm run build && npx cap copy android && npx cap sync android",
     "cap:open": "npx cap open android",
-    "cap:sync": "npx cap sync android"
+    "cap:sync": "npx cap sync android",
+    "supabase:link": "npx supabase link --project-ref grxaajpzwsmtpuewquag",
+    "supabase:secrets": "npx supabase secrets set --env-file supabase/functions/.env",
+    "supabase:deploy": "npx supabase functions deploy",
+    "supabase:list": "npx supabase functions list"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
