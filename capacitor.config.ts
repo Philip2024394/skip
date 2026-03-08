@@ -2,6 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.2dateme.app',
+  /** Shown under the app icon on home screen (mobile). Use 2DateMe for branding. */
   appName: '2DateMe',
   webDir: 'dist',
   server: {

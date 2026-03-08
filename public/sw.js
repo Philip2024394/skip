@@ -1,7 +1,9 @@
 // 2DateMe Service Worker
-// Enables PWA install prompt and offline capability
+// Enables PWA install prompt, offline capability, and auto-update.
+// Bump CACHE_VERSION on each deploy so returning users get the new app.
 
-const CACHE_NAME = "2dateme-v1";
+const CACHE_VERSION = "v2";
+const CACHE_NAME = `2dateme-${CACHE_VERSION}`;
 
 // Assets to cache on install for offline use
 const PRECACHE_ASSETS = [
@@ -26,6 +28,13 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+// Let the client trigger immediate activation when they click "Refresh" for update
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {

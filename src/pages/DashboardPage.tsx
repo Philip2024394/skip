@@ -65,14 +65,14 @@ const DashboardPage = () => {
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
-        toast.success("Opening checkout… Complete payment in the new tab.");
+        toast.success(t("popup.checkoutOpen"));
       } else {
-        toast.error("Could not start checkout. Please try again.");
+        toast.error(t("popup.checkoutError"));
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Purchase failed";
       if (isNetworkError(err)) {
-        toast.error("Connection issue. Please check your internet and try again.");
+        toast.error(t("popup.connectionError"));
       } else {
         toast.error(msg);
       }
@@ -82,7 +82,7 @@ const DashboardPage = () => {
   };
 
   const handleCancelVip = async () => {
-    if (!window.confirm("Cancel your VIP membership? Your benefits will continue until the end of the current billing period.")) return;
+    if (!window.confirm(t("popup.vipCancelConfirm"))) return;
     setLoadingId("vip-cancel");
     try {
       const { data, error } = await supabase.functions.invoke("cancel-subscription", {
@@ -90,10 +90,10 @@ const DashboardPage = () => {
       });
       if (error) throw error;
       if (data?.success) {
-        toast.success("VIP membership cancelled. Benefits active until end of billing period.");
+        toast.success(t("popup.vipCancelled"));
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Cancellation failed");
+      toast.error(err instanceof Error ? err.message : t("popup.cancellationFailed"));
     } finally {
       setLoadingId(null);
     }

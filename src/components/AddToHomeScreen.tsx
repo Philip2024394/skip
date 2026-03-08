@@ -111,7 +111,7 @@ export const AddToHomeScreen = () => {
                     onClick={handleInstall}
                     className="mt-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold"
                   >
-                    Install App
+                    Install 2DateMe
                   </button>
                 )}
               </div>

@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield } from "lucide-react";
 import AppLogo from "./AppLogo";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface TermsAcceptanceDialogProps {
   onAccept: () => void;
 }
 
 const TermsAcceptanceDialog = ({ onAccept }: TermsAcceptanceDialogProps) => {
+  const { t } = useLanguage();
   const [agreed, setAgreed] = useState(false);
 
   return (
@@ -30,8 +32,8 @@ const TermsAcceptanceDialog = ({ onAccept }: TermsAcceptanceDialogProps) => {
         <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-border">
           <AppLogo className="w-10 h-10 object-contain" />
           <div>
-            <h2 className="font-display font-bold text-lg text-foreground">Terms & Conditions</h2>
-            <p className="text-muted-foreground text-xs">Please read and accept to continue</p>
+            <h2 className="font-display font-bold text-lg text-foreground">{t("terms.popupTitle")}</h2>
+            <p className="text-muted-foreground text-xs">{t("terms.popupDesc")}</p>
           </div>
           <Shield className="w-5 h-5 text-primary ml-auto" />
         </div>
@@ -156,7 +158,7 @@ const TermsAcceptanceDialog = ({ onAccept }: TermsAcceptanceDialogProps) => {
               className="mt-0.5"
             />
             <label htmlFor="terms-agree" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-              I have read, understood, and agree to the <strong className="text-foreground">Terms & Conditions</strong> and <strong className="text-foreground">Privacy Policy</strong> of 2DateMe.
+              {t("terms.readAndAgree")}
             </label>
           </div>
           <Button
@@ -164,7 +166,7 @@ const TermsAcceptanceDialog = ({ onAccept }: TermsAcceptanceDialogProps) => {
             disabled={!agreed}
             className="w-full gradient-love text-primary-foreground border-0 rounded-xl h-11 font-semibold"
           >
-            I Accept — Continue
+            {t("terms.acceptContinue")}
           </Button>
         </div>
       </motion.div>

@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const featureDetails: Record<string, { bullets: string[]; tagline: string }> = {
   boost: {
@@ -68,6 +69,7 @@ interface FeaturePurchaseDialogProps {
 }
 
 const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: FeaturePurchaseDialogProps) => {
+  const { t } = useLanguage();
   if (!feature) return null;
 
   const Icon = getFeatureIcon(feature.icon);
@@ -129,11 +131,11 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
             disabled={loading}
             className={`w-full ${gradient} text-primary-foreground border-0 font-bold h-12 rounded-xl text-base`}
           >
-            {loading ? "Processing..." : `Continue to Payment — ${feature.price}`}
+            {loading ? t("popup.processing") : `${t("popup.continueToPayment")} — ${feature.price}`}
           </Button>
 
           <p className="text-muted-foreground text-[10px] text-center mt-3">
-            Secure payment via Stripe • Cancel anytime
+            {t("popup.securePayment")}
           </p>
         </motion.div>
       </motion.div>

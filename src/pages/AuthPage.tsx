@@ -73,12 +73,19 @@ const AuthPage = () => {
 
   const update = (key: string, value: string) => setForm((p) => ({ ...p, [key]: value }));
 
+  const getLoginErrorMessage = (error: { message: string }): string => {
+    const msg = error.message.toLowerCase();
+    if (msg.includes("invalid login") || msg.includes("invalid credentials")) return t("auth.invalidLogin");
+    if (msg.includes("email not confirmed") || msg.includes("confirm your email")) return t("auth.emailNotConfirmed");
+    return error.message;
+  };
+
   const handleLogin = async () => {
     if (!form.email || !form.password) { toast.error(t("auth.fillAllFields")); return; }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
     setLoading(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(getLoginErrorMessage(error)); return; }
     toast.success(t("auth.welcomeBack"));
     navigate("/");
   };
@@ -98,7 +105,7 @@ const AuthPage = () => {
       // If Supabase auto-confirmed the session, go straight to dashboard
       if (signUpData.session) {
         setLoading(false);
-        toast.success("Welcome to 2DateMe! 🎉 Let's complete your profile.");
+        toast.success(t("auth.welcome2DateMe") + " 🎉 " + t("auth.completeProfile"));
         navigate("/dashboard");
         return;
       }
@@ -109,10 +116,10 @@ const AuthPage = () => {
       });
       setLoading(false);
       if (!loginErr && loginData.session) {
-        toast.success("Welcome to 2DateMe! 🎉 Let's complete your profile.");
+        toast.success(t("auth.welcome2DateMe") + " 🎉 " + t("auth.completeProfile"));
         navigate("/dashboard");
       } else {
-        toast.success("Account created! Check your email to confirm, then sign in.");
+        toast.success(t("auth.accountCreated"));
         setIsLogin(true);
         setStep(1);
       }
@@ -173,9 +180,9 @@ const AuthPage = () => {
       </button>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
-        {/* Logo */}
+        {/* Logo — 30% larger than before (w-20 → ~w-[6.5rem]) */}
         <div className="text-center mb-4">
-          <AppLogo className="w-20 h-20 mx-auto mb-2 object-contain drop-shadow-xl" />
+          <AppLogo className="w-[6.5rem] h-[6.5rem] mx-auto mb-2 object-contain drop-shadow-xl" />
           <h1 className="text-xl font-display font-bold text-white">2DateMe</h1>
           <p className="text-white/60 text-xs mt-1">{t("app.realConnections")}</p>
         </div>
@@ -231,7 +238,9 @@ const AuthPage = () => {
                         const { error: err } = await supabase.auth.signInWithPassword({ email: TEST_EMAIL, password: TEST_PASSWORD });
                         setLoading(false);
                         if (err) {
-                          toast.error(err.message);
+                          toast.error(getLoginErrorMessage(err), {
+                            description: "Create user first: npx tsx scripts/create-test-user.ts — or turn off email confirmation in Supabase.",
+                          });
                           return;
                         }
                         toast.success(t("auth.welcomeBack"));

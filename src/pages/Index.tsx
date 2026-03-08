@@ -8,6 +8,7 @@ import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
 import LikesLibrary from "@/components/LikesLibrary";
 import ButterflyLikeAnimation from "@/components/ButterflyLikeAnimation";
+import SuperLikeRevealModal from "@/components/SuperLikeRevealModal";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import TermsAcceptanceDialog from "@/components/TermsAcceptanceDialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/lib/constants";
 import { isNetworkError } from "@/utils/payments";
+import { useDevFeatures, isDevBuild } from "@/hooks/useDevFeatures";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FlaskConical, Sparkles, Star, X } from "lucide-react";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -216,6 +219,14 @@ const Index = () => {
   const prevLikedMeIdsRef = useRef<Set<string>>(new Set());
   const [butterflyTarget, setButterflyTarget] = useState<string | null>(null);
   const [heartDropProfileId, setHeartDropProfileId] = useState<string | null>(null);
+  const [superLikeRevealProfile, setSuperLikeRevealProfile] = useState<Profile | null>(null);
+  const [superLikeGlowProfileId, setSuperLikeGlowProfileId] = useState<string | null>(null);
+
+  const [devFeaturesEnabled, setDevFeaturesEnabled] = useDevFeatures();
+  const [devPanelOpen, setDevPanelOpen] = useState(false);
+
+  const POST_LOGIN_LANDING_KEY = "post_login_landing_dismissed";
+  const [showPostLoginLanding, setShowPostLoginLanding] = useState(false);
 
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" }>({ open: false, trigger: "generic" });
@@ -228,7 +239,14 @@ const Index = () => {
     topCardX.set(0);
   }, [selectedIndex, selectedList.length, topCardX]);
 
-  // New profiles for the library — all profiles (sorted by recency), optionally filtered by country
+  // Show post-login landing once per session when user lands on /
+  useEffect(() => {
+    if (!loading && user && typeof sessionStorage !== "undefined" && !sessionStorage.getItem(POST_LOGIN_LANDING_KEY)) {
+      setShowPostLoginLanding(true);
+    }
+  }, [loading, user]);
+
+  // New profiles for the library
   const libraryNewProfiles = useMemo(() => {
     return allProfiles
       .filter(p => !filters.country || p.country?.toLowerCase() === filters.country.toLowerCase())
@@ -288,7 +306,7 @@ const Index = () => {
       }
       setLoading(false);
 
-      // Fetch real profiles from DB (excluding current user)
+      // Fetch real profiles from DB
       try {
         const query = supabase
           .from("profiles_public")
@@ -436,13 +454,14 @@ const Index = () => {
     };
   }, [navigate]);
 
-  // Detect new like: when likedMe gains an id we didn't have before (and we had a previous set), trigger butterfly
+  // Detect new like: when likedMe gains an id we didn't have before (and we had a previous set), trigger butterfly (not for super likes — those use the dynamite modal)
   useEffect(() => {
     const currentIds = new Set(likedMe.map((p) => p.id));
     const prev = prevLikedMeIdsRef.current;
-    const newIds = likedMe.filter((p) => !prev.has(p.id)).map((p) => p.id);
-    if (prev.size > 0 && newIds.length > 0) {
-      setButterflyTarget(newIds[0]);
+    const newProfiles = likedMe.filter((p) => !prev.has(p.id));
+    const newRegular = newProfiles.find((p) => !p.is_rose);
+    if (prev.size > 0 && newRegular) {
+      setButterflyTarget(newRegular.id);
     }
     prevLikedMeIdsRef.current = currentIds;
   }, [likedMe]);
@@ -460,7 +479,7 @@ const Index = () => {
           table: "likes",
           filter: `liked_id=eq.${user.id}`,
         },
-        async (payload: { new?: { liker_id: string; expires_at?: string } }) => {
+        async (payload: { new?: { liker_id: string; expires_at?: string; is_rose?: boolean } }) => {
           const likerId = payload.new?.liker_id;
           if (!likerId) return;
           const { data: rows } = await supabase
@@ -472,6 +491,7 @@ const Index = () => {
           const p = rows?.[0] as any;
           if (!p || !(p.avatar_url || (p.images && p.images.length > 0))) return;
           const expiresAt = payload.new?.expires_at ?? new Date(Date.now() + LIKE_EXPIRY_MS).toISOString();
+          const isRose = payload.new?.is_rose ?? false;
           const profile: Profile = {
             id: p.id,
             name: p.name,
@@ -490,9 +510,16 @@ const Index = () => {
             last_seen_at: p.last_seen_at,
             expires_at: expiresAt,
             is_plusone: p.is_plusone || false,
+            is_rose: isRose,
           };
-          setLikedMe((prev) => (prev.some((x) => x.id === profile.id) ? prev : [...prev, profile]));
-          saveLocalLikedMeProfiles([...getLocalLikedMeProfiles().filter((x) => x.id !== profile.id), profile].slice(0, 100));
+          if (isRose) {
+            setLikedMe((prev) => [profile, ...prev.filter((x) => x.id !== profile.id)]);
+            setSuperLikeRevealProfile(profile);
+            saveLocalLikedMeProfiles([profile, ...getLocalLikedMeProfiles().filter((x) => x.id !== profile.id)].slice(0, 100));
+          } else {
+            setLikedMe((prev) => (prev.some((x) => x.id === profile.id) ? prev : [...prev, profile]));
+            saveLocalLikedMeProfiles([...getLocalLikedMeProfiles().filter((x) => x.id !== profile.id), profile].slice(0, 100));
+          }
         }
       )
       .subscribe();
@@ -507,6 +534,47 @@ const Index = () => {
     setSelectedIndex(idx >= 0 ? idx : 0);
     setDetailProfile(null);
   }, []);
+
+  const createDevProfile = useCallback(
+    (idPrefix: string, isRose: boolean): Profile => {
+      const base = allProfiles[0];
+      const id = `${idPrefix}-${Date.now()}`;
+      const expiresAt = new Date(Date.now() + LIKE_EXPIRY_MS).toISOString();
+      if (base) {
+        return { ...base, id, expires_at: expiresAt, is_rose: isRose };
+      }
+      return {
+        id,
+        name: "Dev User",
+        age: 25,
+        city: "Test",
+        country: "Test",
+        bio: "",
+        image: "/placeholder.svg",
+        images: ["/placeholder.svg"],
+        gender: "Other",
+        expires_at: expiresAt,
+        is_rose: isRose,
+      };
+    },
+    [allProfiles]
+  );
+
+  const simulateLike = useCallback(() => {
+    const profile = createDevProfile("dev-like", false);
+    setLikedMe((prev) => [...prev, profile]);
+    setButterflyTarget(profile.id);
+    setDevPanelOpen(false);
+    toast("Development: Simulated like — butterfly should fly to library.");
+  }, [createDevProfile]);
+
+  const simulateSuperLike = useCallback(() => {
+    const profile = createDevProfile("dev-super", true);
+    setLikedMe((prev) => [profile, ...prev.filter((p) => p.id !== profile.id)]);
+    setSuperLikeRevealProfile(profile);
+    setDevPanelOpen(false);
+    toast("Development: Simulated super like — dynamite + glitter modal.");
+  }, [createDevProfile]);
 
   const handleLike = async (profile: Profile) => {
     if (!user) {
@@ -541,7 +609,7 @@ const Index = () => {
       return;
     }
     if (!roseAvailable) {
-      toast.error("🌹 Rose used this week!", { description: "Your free rose resets weekly." });
+      toast.error("🌹 " + t("popup.roseUsed"), { description: t("popup.roseReset") });
       return;
     }
     setRoseAvailable(false);
@@ -585,17 +653,17 @@ const Index = () => {
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
-        toast.success("Opening checkout… Complete payment in the new tab.");
+        toast.success(t("popup.checkoutOpen"));
       } else {
-        toast.error("Could not start checkout. Please try again.");
+        toast.error(t("popup.checkoutError"));
       }
     } catch (err: any) {
       const msg = err?.message || "Payment failed";
       if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
         setGuestPrompt({ open: true, trigger: "purchase" });
-        toast.info("Please sign in or create an account to purchase.");
+        toast.info(t("popup.signInToPurchase"));
       } else if (isNetworkError(err)) {
-        toast.error("Connection issue. Please check your internet and try again.");
+        toast.error(t("popup.connectionError"));
       } else {
         toast.error(msg);
       }
@@ -630,19 +698,19 @@ const Index = () => {
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
-        toast.success("Opening checkout… Complete payment in the new tab.");
+        toast.success(t("popup.checkoutOpen"));
         setFeatureDialog(null);
       } else {
-        toast.error("Could not start checkout. Please try again.");
+        toast.error(t("popup.checkoutError"));
       }
     } catch (err: any) {
       const msg = err?.message || "Purchase failed";
       if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
         setFeatureDialog(null);
         setGuestPrompt({ open: true, trigger: "purchase" });
-        toast.info("Please sign in or create an account to purchase.");
+        toast.info(t("popup.signInToPurchase"));
       } else if (isNetworkError(err)) {
-        toast.error("Connection issue. Please check your internet and try again.");
+        toast.error(t("popup.connectionError"));
       } else {
         toast.error(msg);
       }
@@ -661,6 +729,11 @@ const Index = () => {
   };
 
   const handleLogout = async () => {
+    try {
+      sessionStorage.removeItem(POST_LOGIN_LANDING_KEY);
+    } catch {
+      // ignore
+    }
     await supabase.auth.signOut();
     navigate("/auth");
   };
@@ -691,11 +764,48 @@ const Index = () => {
     }
   };
 
+  // Post-login landing — show once when user lands on / after login
+  if (showPostLoginLanding && user) {
+    const landingName = user?.user_metadata?.name || user?.email?.split("@")[0] || "there";
+    return (
+      <div className="h-screen-safe relative overflow-hidden" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+          className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6"
+        >
+          <AppLogo className="w-44 h-44 object-contain drop-shadow-xl mb-2" />
+          <h1 className="text-2xl font-display font-bold text-white drop-shadow-lg text-center">
+            {t("popup.welcomeBack")}{landingName !== "there" ? `, ${landingName}` : ""}!
+          </h1>
+          <p className="text-white/70 text-sm drop-shadow-md text-center">{t("popup.connectInstantly")}</p>
+          <div className="mt-8 w-full flex flex-col items-center gap-3">
+            <Button
+              onClick={() => {
+                try {
+                  sessionStorage.setItem(POST_LOGIN_LANDING_KEY, "1");
+                } catch {
+                  // ignore
+                }
+                setShowPostLoginLanding(false);
+              }}
+              className="w-full max-w-sm h-14 text-base font-bold gradient-love text-primary-foreground border-0 rounded-2xl shadow-glow"
+            >
+              <MessageCircle className="w-5 h-5 mr-2" /> {t("popup.enterApp")}
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (loading) return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
       <AppLogo
-        className="w-24 h-24 object-contain"
-        style={{ imageRendering: "crisp-edges", filter: "drop-shadow(0 0 24px rgba(220,80,150,0.6))" }}
+        className="w-32 h-32 object-contain drop-shadow-[0_0_24px_rgba(220,80,150,0.6)]"
+        style={{ imageRendering: "auto" }}
       />
       <p className="mt-5 text-white text-xl font-bold tracking-widest" style={{ fontFamily: "inherit" }}>2DateMe</p>
       <p className="mt-1 text-white/40 text-xs tracking-wider">Connect Instantly</p>
@@ -776,7 +886,7 @@ const Index = () => {
               {!(selectedProfile as any).is_plusone && selectedProfile.available_tonight ? (
                 <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
                   <span className="text-yellow-400">🌙</span>
-                  Free Tonight
+                  {t("popup.freeTonight")}
                 </div>
               ) : null}
 
@@ -888,8 +998,9 @@ const Index = () => {
               likedMe={likedMe}
               newProfiles={libraryNewProfiles}
               filterCountry={filters.country}
-              receivedHighlightProfileId={butterflyTarget}
+              receivedHighlightProfileId={butterflyTarget || superLikeRevealProfile?.id ?? null}
               heartDropProfileId={heartDropProfileId}
+              superLikeGlowProfileId={superLikeGlowProfileId}
               onUnlock={handleUnlock}
               onSelectProfile={(profile, sourceList) => {
                 handleSelectProfile(profile, sourceList);
@@ -909,6 +1020,82 @@ const Index = () => {
               setHeartDropProfileId(null);
             }}
           />
+        )}
+
+        {superLikeRevealProfile && (
+          <SuperLikeRevealModal
+            profile={superLikeRevealProfile}
+            onComplete={() => {
+              const id = superLikeRevealProfile.id;
+              setSuperLikeRevealProfile(null);
+              setSuperLikeGlowProfileId(id);
+              setTimeout(() => setSuperLikeGlowProfileId(null), 5000);
+            }}
+          />
+        )}
+
+        {/* Development: toggle and simulate butterfly / super like — only in dev build */}
+        {isDevBuild() && (
+          <>
+            <button
+              type="button"
+              onClick={() => setDevPanelOpen((o) => !o)}
+              className="fixed bottom-24 left-3 z-[75] w-10 h-10 rounded-full bg-amber-500/90 hover:bg-amber-500 text-black flex items-center justify-center shadow-lg border border-amber-600/50"
+              aria-label="Development panel"
+              title="Development features"
+            >
+              <FlaskConical className="w-5 h-5" />
+            </button>
+            {devPanelOpen && (
+              <div className="fixed bottom-24 left-3 z-[76] w-56 rounded-xl bg-black/95 backdrop-blur-xl border border-amber-500/40 shadow-xl p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-amber-400 text-xs font-semibold">Development features</span>
+                  <button
+                    type="button"
+                    onClick={() => setDevPanelOpen(false)}
+                    className="text-white/50 hover:text-white p-0.5"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={devFeaturesEnabled}
+                    onChange={(e) => setDevFeaturesEnabled(e.target.checked)}
+                    className="rounded border-amber-500/50 bg-black/50 text-amber-500"
+                  />
+                  <span className="text-white/80 text-xs">On — animations & triggers live</span>
+                </label>
+                <p className="text-white/40 text-[10px]">
+                  Off = same as production: only real events trigger butterfly & super like.
+                </p>
+                <div className="flex flex-col gap-1.5 pt-1 border-t border-white/10">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!devFeaturesEnabled}
+                    onClick={simulateLike}
+                    className="bg-primary/80 hover:bg-primary text-white border-0 text-xs h-8"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Simulate Like (butterfly)
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!devFeaturesEnabled}
+                    onClick={simulateSuperLike}
+                    className="bg-amber-500/80 hover:bg-amber-500 text-black border-0 text-xs h-8"
+                  >
+                    <Star className="w-3 h-3 mr-1" />
+                    Simulate Super Like
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Bottom Card — isolation so top transform cannot affect this */}
@@ -967,7 +1154,7 @@ const Index = () => {
           <div className="flex gap-3 mt-2">
             <Button variant="outline" onClick={() => setMatchDialog(null)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("match.later")}</Button>
             <Button onClick={() => { setMatchDialog(null); if (matchDialog) handleUnlock(matchDialog); }} className="flex-1 gradient-love text-primary-foreground border-0">
-              <Heart className="w-4 h-4 mr-1" /> Unlock $1.99
+              <Heart className="w-4 h-4 mr-1" /> {t("match.unlock")}
             </Button>
           </div>
         </DialogContent>
@@ -979,22 +1166,21 @@ const Index = () => {
           <DialogHeader>
             <DialogTitle className="font-display text-center text-white">
               <MessageCircle className="w-10 h-10 mx-auto mb-2" fill="white" stroke="white" />
-              Unlock WhatsApp
+              {t("popup.unlockTitle")}
             </DialogTitle>
             <DialogDescription className="text-center text-white/60">
-              Pay <span className="text-primary font-bold">$1.99</span> to reveal both WhatsApp numbers.<br />
-              Both profiles will go offline for 3 days.
+              {t("popup.unlockDesc")}
             </DialogDescription>
           </DialogHeader>
           <ul className="text-white/50 text-xs space-y-1 mt-1">
-            <li>💬 Get each other's WhatsApp</li>
-            <li>🔒 Private & secure connection</li>
-            <li>⏰ Profiles hidden for 3 days</li>
+            <li>💬 {t("popup.unlockBullet1")}</li>
+            <li>🔒 {t("popup.unlockBullet2")}</li>
+            <li>⏰ {t("popup.unlockBullet3")}</li>
           </ul>
           <div className="flex gap-3 mt-2">
-            <Button variant="outline" onClick={() => setUnlockDialog(null)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">Cancel</Button>
+            <Button variant="outline" onClick={() => setUnlockDialog(null)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("popup.cancel")}</Button>
             <Button onClick={confirmUnlock} disabled={paymentLoading} className="flex-1 gradient-love text-primary-foreground border-0 font-bold">
-              {paymentLoading ? "Processing..." : "Pay $1.99"}
+              {paymentLoading ? t("popup.processing") : t("popup.pay199")}
             </Button>
           </div>
         </DialogContent>
@@ -1080,19 +1266,19 @@ const Index = () => {
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                     className="font-display font-bold text-white text-2xl leading-tight"
                   >
-                    Welcome back{welcomeBackName.current ? `, ${welcomeBackName.current}` : ""}! 💕
+                    {t("popup.welcomeBack")}{welcomeBackName.current ? `, ${welcomeBackName.current}` : ""}! 💕
                   </motion.h2>
                   <motion.p
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
                     className="text-white/60 text-sm mt-2 leading-relaxed"
                   >
-                    We genuinely missed you — and we're not just saying that. Your profile is live again and the connections are waiting.
+                    {t("popup.welcomeBackDesc")}
                   </motion.p>
                   <motion.p
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
                     className="text-primary font-semibold text-sm mt-3 leading-relaxed"
                   >
-                    Someone out there is about to be very glad you came back. Let's find them. 🔥
+                    {t("popup.welcomeBackCta")} 🔥
                   </motion.p>
                 </div>
 
@@ -1102,7 +1288,7 @@ const Index = () => {
                   onClick={() => setShowWelcomeBack(false)}
                   className="w-full py-3.5 rounded-2xl gradient-love text-white font-bold text-base shadow-lg"
                 >
-                  Let's go! 🚀
+                  {t("popup.letsGo")} 🚀
                 </motion.button>
               </div>
             </motion.div>

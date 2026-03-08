@@ -26,7 +26,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "id" || saved === "en") return saved;
-    return "en"; // default, will be overridden by IP detection
+    return "id"; // default: Indonesian (second: English)
   });
   const [initialized, setInitialized] = useState(false);
 
@@ -36,13 +36,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       setInitialized(true);
       return;
     }
-    // Auto-detect by IP
+    // Auto-detect by IP; if not Indonesia, still default to Indonesian (id)
     detectCountryByIP().then((countryCode) => {
       if (countryCode === "ID") {
         setLocaleState("id");
         localStorage.setItem(STORAGE_KEY, "id");
       } else {
-        localStorage.setItem(STORAGE_KEY, "en");
+        // Default to Indonesian; user can switch to EN via header
+        setLocaleState("id");
+        localStorage.setItem(STORAGE_KEY, "id");
       }
       setInitialized(true);
     });
@@ -60,7 +62,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const t = useCallback((key: TranslationKey, replacements?: Record<string, string>): string => {
     const entry = translations[key];
     if (!entry) return key as string;
-    let text: string = entry[locale] || entry.en;
+    let text: string = entry[locale] || entry.id || entry.en;
     if (replacements) {
       Object.entries(replacements).forEach(([k, v]) => {
         text = text.replace(`{${k}}`, v);

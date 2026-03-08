@@ -11,6 +11,7 @@ import ReportDialog from "./ReportDialog";
 import DatePlacesDisplay from "./DatePlacesDisplay";
 import VoicePlayer from "./VoicePlayer";
 import AppLogo from "./AppLogo";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface DetailPanelProps {
   profile: Profile;
@@ -39,6 +40,7 @@ let heartIdCounter = 0;
 
 const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers = [], onSelectUser, likedMeProfiles = [], hasSuperLike = false, onSuperLike, onPurchaseFeature, alreadyLiked = false }: DetailPanelProps) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [imageIndex, setImageIndex] = useState(0);
   const [showSuperLikeDialog, setShowSuperLikeDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -397,16 +399,16 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
           <DialogHeader>
             <DialogTitle className="font-display text-center text-white">
               <Star className="w-10 h-10 mx-auto mb-2" fill="hsl(45, 95%, 58%)" stroke="hsl(45, 95%, 58%)" />
-              Super Like
+              {t("detail.superLike")}
             </DialogTitle>
           </DialogHeader>
           <p className="text-white/60 text-sm text-center">
-            Stand out from the crowd! Send a Super Like so {profile.name} sees you first.
+            {t("detail.superLikeDesc")} {profile.name} {t("detail.seesYouFirst")}
           </p>
           <ul className="text-white/50 text-xs space-y-1 mt-1">
-            <li>⭐ Appears first in their library</li>
-            <li>🔔 They get notified instantly</li>
-            <li>💫 Highlighted with a star</li>
+            <li>⭐ {t("premium.superlike.1")}</li>
+            <li>🔔 {t("premium.superlike.2")}</li>
+            <li>💫 {t("premium.superlike.3")}</li>
           </ul>
           <Button
             onClick={() => {
@@ -418,7 +420,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
             }}
             className="w-full gradient-gold text-primary-foreground border-0 font-bold mt-2"
           >
-            Get Super Like — $1.99
+            {t("detail.getSuperLike")}
           </Button>
         </DialogContent>
       </Dialog>

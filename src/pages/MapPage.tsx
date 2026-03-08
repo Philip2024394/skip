@@ -21,6 +21,7 @@ import {
 import GuestAuthPrompt from "@/components/GuestAuthPrompt";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { isNetworkError } from "@/utils/payments";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 const spreadOverlapping = (positions: Map<string, [number, number]>, minDistDeg = 0.003) => {
@@ -269,6 +270,7 @@ const AttentionSheet = ({ profile, onSuperLike, onClose }: AttentionSheetProps) 
 // ── Main component ────────────────────────────────────────────────────────────
 const MapPage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const focusProfileId = searchParams.get("profile");
 
@@ -667,18 +669,18 @@ const MapPage = () => {
         window.dispatchEvent(new Event("storage"));
         setAttentionProfile(null);
         window.open(data.url, "_blank");
-        toast.success("Opening checkout… Complete payment in the new tab.");
+        toast.success(t("popup.checkoutOpen"));
       } else {
-        toast.error("Could not start checkout. Please try again.");
+        toast.error(t("popup.checkoutError"));
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
         setAttentionProfile(null);
         showGuestPrompt("purchase");
-        toast.info("Please sign in or create an account to purchase.");
+        toast.info(t("popup.signInToPurchase"));
       } else if (isNetworkError(err)) {
-        toast.error("Connection issue. Please check your internet and try again.");
+        toast.error(t("popup.connectionError"));
       } else {
         toast.error(msg);
       }
@@ -699,18 +701,18 @@ const MapPage = () => {
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
-        toast.success("Opening checkout… Complete payment in the new tab.");
+        toast.success(t("popup.checkoutOpen"));
       } else {
-        toast.error("Could not start checkout. Please try again.");
+        toast.error(t("popup.checkoutError"));
       }
     } catch (err: any) {
       const msg = err?.message || "Payment failed";
       if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
         setMatchDialog(null);
         showGuestPrompt("purchase");
-        toast.info("Please sign in or create an account to purchase.");
+        toast.info(t("popup.signInToPurchase"));
       } else if (isNetworkError(err)) {
-        toast.error("Connection issue. Please check your internet and try again.");
+        toast.error(t("popup.connectionError"));
       } else {
         toast.error(msg);
       }

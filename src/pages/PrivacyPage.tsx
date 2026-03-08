@@ -12,7 +12,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 const PrivacyPage = () => {
   const navigate = useNavigate();
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="h-screen overflow-y-auto overflow-x-hidden bg-black text-white scroll-touch">
       <div className="max-w-2xl mx-auto px-5 py-8 pb-20">
         <Button variant="ghost" onClick={() => navigate(-1)} className="text-white/70 hover:text-white mb-6 -ml-2">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back

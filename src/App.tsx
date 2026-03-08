@@ -20,6 +20,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
+import { useServiceWorkerUpdate } from "./hooks/useServiceWorkerUpdate";
 import AddToHomeScreen from "./components/AddToHomeScreen";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const AndroidBackHandler = () => {
 
 const AppContent = () => {
   useOnlineStatus();
+  useServiceWorkerUpdate();
   return (
     <BrowserRouter>
       <ErrorBoundary>
