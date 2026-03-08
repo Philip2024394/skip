@@ -84,13 +84,33 @@ const AuthPage = () => {
     if (step === 3 && (!form.country || !form.whatsapp)) { toast.error(t("auth.addLocation")); return; }
     if (step < 3) { setStep(step + 1); } else {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email: form.email, password: form.password,
         options: { data: { name: form.name, age: form.age, gender: form.gender, looking_for: form.lookingFor, country: form.country, city: form.city, bio: form.bio, whatsapp: form.whatsapp, first_date_idea: form.firstDateIdea || null } },
       });
+      if (error) { setLoading(false); toast.error(error.message); return; }
+
+      // If Supabase auto-confirmed the session, navigate directly
+      if (signUpData.session) {
+        setLoading(false);
+        toast.success("Welcome to 2DateMe! 🎉");
+        navigate("/");
+        return;
+      }
+
+      // Email confirmation required — try signing in anyway in case confirm is disabled server-side
+      const { data: loginData, error: loginErr } = await supabase.auth.signInWithPassword({
+        email: form.email, password: form.password,
+      });
       setLoading(false);
-      if (error) { toast.error(error.message); return; }
-      toast.success(t("auth.checkEmail"));
+      if (!loginErr && loginData.session) {
+        toast.success("Welcome to 2DateMe! 🎉");
+        navigate("/");
+      } else {
+        toast.success("Account created! Check your email to confirm, then sign in.");
+        setIsLogin(true);
+        setStep(1);
+      }
     }
   };
 
