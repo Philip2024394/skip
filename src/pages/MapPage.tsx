@@ -176,11 +176,17 @@ const createAvatarIcon = (
 
 const createUserIcon = () => L.divIcon({
   className: "map-avatar-marker",
-  html: `<div style="position:relative;">
-    <div style="width:20px;height:20px;border-radius:50%;background:${PINK};border:3px solid white;
-      box-shadow:0 0 12px ${PINK_GLOW},0 0 24px ${PINK_LIGHT};z-index:2;position:relative;"></div>
-    <div style="position:absolute;inset:-8px;border-radius:50%;
-      border:2px solid ${PINK_LIGHT};animation:userPulse 2s ease-in-out infinite;z-index:1;pointer-events:none;"></div>
+  html: `<div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">
+    <!-- outer slow pulse ring -->
+    <div style="position:absolute;inset:-10px;border-radius:50%;
+      border:2px solid ${PINK_LIGHT};animation:userHeartbeat 1.4s ease-in-out infinite;z-index:1;pointer-events:none;"></div>
+    <!-- mid pulse ring -->
+    <div style="position:absolute;inset:-4px;border-radius:50%;
+      border:2px solid ${PINK};opacity:0.5;animation:userHeartbeat 1.4s ease-in-out 0.2s infinite;z-index:1;pointer-events:none;"></div>
+    <!-- core dot with heart -->
+    <div style="width:22px;height:22px;border-radius:50%;background:${PINK};border:2.5px solid white;
+      box-shadow:0 0 14px ${PINK_GLOW},0 0 28px ${PINK_LIGHT};z-index:2;position:relative;
+      display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1;">❤️</div>
   </div>`,
   iconSize: [36, 36],
   iconAnchor: [18, 18],
@@ -704,14 +710,15 @@ const MapPage = () => {
         </button>
       </div>
 
-      {/* ── Stats pill (top-center) ── */}
+      {/* ── Stats pill (top-left, below back button) ── */}
       {!detailProfile && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
+          className="absolute z-20 pointer-events-none"
+          style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 3rem)`, left: "1rem" }}
         >
-          <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 flex items-center gap-3 whitespace-nowrap">
+          <div className="bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 whitespace-nowrap">
             <span className="flex items-center gap-1 text-[10px] text-white/70">
               <Users className="w-3 h-3 text-white/50" />
               <span className="font-semibold text-white">{stats.total}</span> nearby
@@ -738,7 +745,7 @@ const MapPage = () => {
             {showRadius && (
               <>
                 <span className="w-px h-3 bg-white/10" />
-                <span className="text-[10px] text-white/40">{zoomToRadiusKm(mapZoom)}km radius</span>
+                <span className="text-[10px] text-white/40">{zoomToRadiusKm(mapZoom)}km</span>
               </>
             )}
           </div>
@@ -800,7 +807,6 @@ const MapPage = () => {
 
       {/* ── Bottom UI ── */}
       <div className="absolute bottom-0 left-0 right-0 z-20" style={{ paddingBottom: `env(safe-area-inset-bottom, 0px)` }}>
-        <div className="h-20 bg-gradient-to-t from-black/85 to-transparent pointer-events-none" />
         <div className="px-4 pb-6">
 
           {/* Avatar strip */}
@@ -1044,6 +1050,14 @@ const MapPage = () => {
         .leaflet-interactive { outline: none; }
 
         /* Keyframe animations embedded in marker HTML */
+        @keyframes userHeartbeat {
+          0%   { opacity: 0.6; transform: scale(1);    }
+          14%  { opacity: 1;   transform: scale(1.2);  }
+          28%  { opacity: 0.7; transform: scale(1.05); }
+          42%  { opacity: 1;   transform: scale(1.25); }
+          70%  { opacity: 0.3; transform: scale(1);    }
+          100% { opacity: 0.6; transform: scale(1);    }
+        }
         @keyframes userPulse {
           0%,100% { opacity: 0.4; transform: scale(1); }
           50%      { opacity: 0.8; transform: scale(1.15); }

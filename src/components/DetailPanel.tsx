@@ -496,7 +496,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   <div className="flex items-center gap-3">
                     <img src={logoHeart} alt="2DateMe" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
                     <div>
-                      <p className="text-2xl">🎫</p>
+                      <p className="text-2xl">👑</p>
                       <h2 className="text-white font-display font-bold text-lg leading-tight">Plus One</h2>
                       <p className="text-white/50 text-xs mt-0.5">
                         <span className="text-white/80 font-medium">{profile.name}</span> is available to accompany you as a guest to any function or event without relationship ties.
