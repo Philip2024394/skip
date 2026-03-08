@@ -27,6 +27,13 @@ const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
 export const isNativePlatform = () =>
   Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android";
 
+/** True if the error is a network/edge-function unreachable error (e.g. "Failed to send request") */
+export function isNetworkError(err: unknown): boolean {
+  const msg = typeof err === "string" ? err : (err as { message?: string })?.message ?? "";
+  const s = String(msg).toLowerCase();
+  return s.includes("failed to send") || s.includes("fetch failed") || s.includes("network") || s.includes("connection");
+}
+
 /**
  * Purchase a feature.
  *

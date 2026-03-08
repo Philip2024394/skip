@@ -19,6 +19,7 @@ import GuestAuthPrompt from "@/components/GuestAuthPrompt";
 import TermsAcceptanceDialog from "@/components/TermsAcceptanceDialog";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/lib/constants";
+import { isNetworkError } from "@/utils/payments";
 import {
   Dialog,
   DialogContent,
@@ -492,16 +493,32 @@ const Index = () => {
   const confirmUnlock = async () => {
     if (!unlockDialog) return;
     setPaymentLoading(true);
+    const invokeCreatePayment = async () =>
+      supabase.functions.invoke("create-payment", { body: { targetUserId: unlockDialog!.id } });
     try {
-      const { data, error } = await supabase.functions.invoke("create-payment", {
-        body: { targetUserId: unlockDialog.id },
-      });
+      let result = await invokeCreatePayment();
+      if (result.error && isNetworkError(result.error)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        result = await invokeCreatePayment();
+      }
+      const { data, error } = result;
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
+        toast.success("Opening checkout… Complete payment in the new tab.");
+      } else {
+        toast.error("Could not start checkout. Please try again.");
       }
     } catch (err: any) {
-      toast.error(err.message || "Payment failed");
+      const msg = err?.message || "Payment failed";
+      if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
+        setGuestPrompt({ open: true, trigger: "purchase" });
+        toast.info("Please sign in or create an account to purchase.");
+      } else if (isNetworkError(err)) {
+        toast.error("Connection issue. Please check your internet and try again.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setPaymentLoading(false);
       setUnlockDialog(null);
@@ -518,10 +535,18 @@ const Index = () => {
 
   const handleConfirmPurchase = async (feature: PremiumFeature) => {
     setFeatureLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("purchase-feature", {
+    const invokePurchase = async (): Promise<{ data: any; error: any }> => {
+      return supabase.functions.invoke("purchase-feature", {
         body: { priceId: feature.priceId, featureId: feature.id },
       });
+    };
+    try {
+      let result = await invokePurchase();
+      if (result.error && isNetworkError(result.error)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        result = await invokePurchase();
+      }
+      const { data, error } = result;
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
@@ -536,6 +561,8 @@ const Index = () => {
         setFeatureDialog(null);
         setGuestPrompt({ open: true, trigger: "purchase" });
         toast.info("Please sign in or create an account to purchase.");
+      } else if (isNetworkError(err)) {
+        toast.error("Connection issue. Please check your internet and try again.");
       } else {
         toast.error(msg);
       }

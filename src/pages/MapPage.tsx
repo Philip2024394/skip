@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import GuestAuthPrompt from "@/components/GuestAuthPrompt";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
+import { isNetworkError } from "@/utils/payments";
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 const spreadOverlapping = (positions: Map<string, [number, number]>, minDistDeg = 0.003) => {
@@ -604,19 +605,25 @@ const MapPage = () => {
   const handleSuperLike = useCallback(async (profile: Profile) => {
     if (!user) { showGuestPrompt("purchase"); return; }
 
-    // Super Like requires payment — invoke purchase-feature Stripe checkout
     const superLikeFeature = PREMIUM_FEATURES.find(f => f.id === "superlike");
     if (!superLikeFeature) return;
 
+    const invokePurchase = () => supabase.functions.invoke("purchase-feature", {
+      body: {
+        priceId: superLikeFeature.priceId,
+        featureId: "superlike",
+        targetUserId: profile.id,
+        targetUserName: profile.name,
+      },
+    });
+
     try {
-      const { data, error } = await supabase.functions.invoke("purchase-feature", {
-        body: {
-          priceId: superLikeFeature.priceId,
-          featureId: "superlike",
-          targetUserId: profile.id,
-          targetUserName: profile.name,
-        },
-      });
+      let result = await invokePurchase();
+      if (result.error && isNetworkError(result.error)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        result = await invokePurchase();
+      }
+      const { data, error } = result;
       if (error) throw error;
       if (data?.url) {
         // Optimistically mark locally so UI updates
@@ -636,6 +643,8 @@ const MapPage = () => {
         setAttentionProfile(null);
         showGuestPrompt("purchase");
         toast.info("Please sign in or create an account to purchase.");
+      } else if (isNetworkError(err)) {
+        toast.error("Connection issue. Please check your internet and try again.");
       } else {
         toast.error(msg);
       }
@@ -645,12 +654,20 @@ const MapPage = () => {
   const handleUnlockMatch = async () => {
     if (!matchDialog) return;
     setPaymentLoading(true);
+    const invokeCreatePayment = () => supabase.functions.invoke("create-payment", { body: { targetUserId: matchDialog!.id } });
     try {
-      const { data, error } = await supabase.functions.invoke("create-payment", { body: { targetUserId: matchDialog.id } });
+      let result = await invokeCreatePayment();
+      if (result.error && isNetworkError(result.error)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        result = await invokeCreatePayment();
+      }
+      const { data, error } = result;
       if (error) throw error;
       if (data?.url) {
         window.open(data.url, "_blank");
         toast.success("Opening checkout… Complete payment in the new tab.");
+      } else {
+        toast.error("Could not start checkout. Please try again.");
       }
     } catch (err: any) {
       const msg = err?.message || "Payment failed";
@@ -658,6 +675,8 @@ const MapPage = () => {
         setMatchDialog(null);
         showGuestPrompt("purchase");
         toast.info("Please sign in or create an account to purchase.");
+      } else if (isNetworkError(err)) {
+        toast.error("Connection issue. Please check your internet and try again.");
       } else {
         toast.error(msg);
       }

@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ProfileEditor from "@/components/ProfileEditor";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { isNetworkError } from "@/utils/payments";
 
 const featureNameKeys: Record<string, string> = {
   vip: "premium.vip",
@@ -50,16 +51,31 @@ const DashboardPage = () => {
 
   const handlePurchase = async (feature: PremiumFeature) => {
     setLoadingId(feature.id);
+    const fnName = feature.id === "vip" ? "purchase-subscription" : "purchase-feature";
+    const invokeFn = () => supabase.functions.invoke(fnName, {
+      body: { priceId: feature.priceId, featureId: feature.id },
+    });
     try {
-      // VIP uses subscription mode via dedicated function
-      const fnName = feature.id === "vip" ? "purchase-subscription" : "purchase-feature";
-      const { data, error } = await supabase.functions.invoke(fnName, {
-        body: { priceId: feature.priceId, featureId: feature.id },
-      });
+      let result = await invokeFn();
+      if (result.error && isNetworkError(result.error)) {
+        await new Promise((r) => setTimeout(r, 1200));
+        result = await invokeFn();
+      }
+      const { data, error } = result;
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        toast.success("Opening checkout… Complete payment in the new tab.");
+      } else {
+        toast.error("Could not start checkout. Please try again.");
+      }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Purchase failed");
+      const msg = err instanceof Error ? err.message : "Purchase failed";
+      if (isNetworkError(err)) {
+        toast.error("Connection issue. Please check your internet and try again.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoadingId(null);
     }
