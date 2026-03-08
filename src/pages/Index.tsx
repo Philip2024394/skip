@@ -998,7 +998,7 @@ const Index = () => {
               likedMe={likedMe}
               newProfiles={libraryNewProfiles}
               filterCountry={filters.country}
-              receivedHighlightProfileId={butterflyTarget || superLikeRevealProfile?.id ?? null}
+              receivedHighlightProfileId={(butterflyTarget || superLikeRevealProfile?.id) ?? null}
               heartDropProfileId={heartDropProfileId}
               superLikeGlowProfileId={superLikeGlowProfileId}
               onUnlock={handleUnlock}
