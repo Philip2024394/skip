@@ -141,14 +141,17 @@ const LikesLibrary = ({
     return items;
   }, [currentList, activePromoIndex, promoPosition, tab]);
 
-  // ── Swipe/scroll tabs on horizontal drag ────────────────────────
-  const dragStart = useRef<{ x: number; tab: Tab } | null>(null);
-  const handleTouchStart = (e: React.TouchEvent) => {
-    dragStart.current = { x: e.touches[0].clientX, tab };
+  // ── Swipe/scroll tabs on horizontal drag — header area only ────────────────
+  const dragStart = useRef<{ x: number; y: number; tab: Tab } | null>(null);
+  const handleTabAreaTouchStart = (e: React.TouchEvent) => {
+    dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, tab };
   };
-  const handleTouchEnd = (e: React.TouchEvent) => {
+  const handleTabAreaTouchEnd = (e: React.TouchEvent) => {
     if (!dragStart.current) return;
     const dx = e.changedTouches[0].clientX - dragStart.current.x;
+    const dy = Math.abs(e.changedTouches[0].clientY - dragStart.current.y);
+    // Only switch tabs if horizontal swipe is dominant (not a vertical scroll attempt)
+    if (dy > Math.abs(dx)) { dragStart.current = null; return; }
     const idx = TABS.indexOf(dragStart.current.tab);
     if (dx < -50 && idx < TABS.length - 1) setTab(TABS[idx + 1]);
     if (dx > 50  && idx > 0)              setTab(TABS[idx - 1]);
@@ -162,13 +165,13 @@ const LikesLibrary = ({
     "No likes yet — keep swiping!";
 
   return (
-    <div
-      className="h-full flex flex-col"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-    >
-      {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-2 flex-shrink-0">
+    <div className="h-full flex flex-col">
+      {/* ── Header — tab swipe gesture lives here only ── */}
+      <div
+        className="flex items-center justify-between mb-2 flex-shrink-0"
+        onTouchStart={handleTabAreaTouchStart}
+        onTouchEnd={handleTabAreaTouchEnd}
+      >
         <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-1.5">
           <Heart className="w-4 h-4 text-primary" fill="currentColor" />
           Library
@@ -215,11 +218,17 @@ const LikesLibrary = ({
         )}
       </AnimatePresence>
 
-      {/* ── Scrollable card row ── */}
+      {/* ── Scrollable card row — native scroll, no tab-switch interference ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden scroll-touch"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch", overscrollBehaviorX: "contain" }}
+        className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
+          overscrollBehaviorX: "contain",
+          touchAction: "pan-x",
+        }}
       >
         <AnimatePresence mode="wait">
           <motion.div
