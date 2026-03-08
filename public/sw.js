@@ -31,8 +31,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
 
-  // Only handle GET requests
+  // Only handle GET requests; do not cache non-http(s) URLs (e.g. chrome-extension:)
   if (request.method !== "GET") return;
+  if (!request.url.startsWith("http")) return;
 
   // For navigation requests (HTML pages) — network first, fall back to cached index
   if (request.mode === "navigate") {
@@ -42,7 +43,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // For static assets — cache first
+  // For static assets — cache first (only cache http(s) responses)
   if (
     request.destination === "image" ||
     request.destination === "script" ||
@@ -53,9 +54,9 @@ self.addEventListener("fetch", (event) => {
       caches.match(request).then((cached) => {
         if (cached) return cached;
         return fetch(request).then((response) => {
-          if (response.ok) {
+          if (response.ok && response.url.startsWith("http")) {
             const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone)).catch(() => {});
           }
           return response;
         });

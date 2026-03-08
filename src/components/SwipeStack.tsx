@@ -335,16 +335,16 @@ const SwipeStack = ({
           </motion.div>
 
           {/* ── Buttons ───────────────────────────────────────── */}
-          {/* Fingerprint / next */}
+          {/* Fingerprint / next — glow */}
           <button
             onClick={handleNextBtn}
             aria-label="Next profile"
-            className={`absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform ${
+            className={`absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform shadow-[0_0_12px_rgba(255,255,255,0.25)] ${
               direction === "up" ? "bottom-3 right-3" : "top-3 right-3"
             }`}
             style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           >
-            <Fingerprint className="w-7 h-7 text-white/80" />
+            <Fingerprint className="w-7 h-7 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
           </button>
 
           {/* Like */}

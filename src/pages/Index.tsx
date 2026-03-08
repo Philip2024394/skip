@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence, PanInfo } from "framer-motion";
+import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
 import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import DetailPanel from "@/components/DetailPanel";
@@ -205,6 +205,8 @@ const Index = () => {
   const [selectedList, setSelectedList] = useState<Profile[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [detailProfile, setDetailProfile] = useState<Profile | null>(null);
+  const topCardX = useMotionValue(0);
+  const isAnimatingTopCardRef = useRef(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const welcomeBackName = useRef<string>("");
 
@@ -213,6 +215,11 @@ const Index = () => {
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
   const selectedProfile = selectedList.length > 0 ? selectedList[selectedIndex] : null;
+
+  // Reset top card position when selection changes so next card starts at 0
+  useEffect(() => {
+    topCardX.set(0);
+  }, [selectedIndex, selectedList.length, topCardX]);
 
   // New profiles for the library — all profiles (sorted by recency), optionally filtered by country
   const libraryNewProfiles = useMemo(() => {
@@ -591,8 +598,10 @@ const Index = () => {
     if (offset.y < -80) {
       if (selectedProfile) setDetailProfile(selectedProfile);
     } else if (offset.x > 100) {
+      topCardX.set(0);
       setSelectedIndex((i) => (i + 1) % selectedList.length);
     } else if (offset.x < -100) {
+      topCardX.set(0);
       setSelectedIndex((i) => (i - 1 + selectedList.length) % selectedList.length);
     }
   };
@@ -668,8 +677,8 @@ const Index = () => {
 
       {/* Main 3-container layout */}
       <div className="flex-1 grid grid-rows-[1fr_auto_1fr] gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))` }}>
-        {/* Top Card */}
-        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5">
+        {/* Top Card — isolation so transform doesn't affect bottom */}
+        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate">
           {selectedProfile ? (
             <motion.div
               key={`lib-${selectedProfile.id}`}
@@ -677,6 +686,7 @@ const Index = () => {
               dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
               dragElastic={0.9}
               onDragEnd={handleLibraryCardDrag}
+              style={{ x: topCardX }}
               className="absolute inset-0 cursor-grab active:cursor-grabbing"
             >
               <img
@@ -698,18 +708,25 @@ const Index = () => {
                 </div>
               ) : null}
 
-              {/* Fingerprint next button */}
+              {/* Fingerprint next — swipe this card only; stop propagation so bottom stack is not affected */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelectedIndex((i) => (i + 1) % selectedList.length);
+                  e.preventDefault();
+                  if (isAnimatingTopCardRef.current || selectedList.length === 0) return;
+                  isAnimatingTopCardRef.current = true;
+                  animate(topCardX, 700, { duration: 0.22, ease: "easeOut" }).then(() => {
+                    setSelectedIndex((i) => (i + 1) % selectedList.length);
+                    topCardX.set(0);
+                    isAnimatingTopCardRef.current = false;
+                  });
                 }}
                 aria-label="Next profile"
-                className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 right-3"
+                className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 right-3 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
                 style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
                 title="Next profile"
               >
-                <Fingerprint className="w-7 h-7 text-white/80" />
+                <Fingerprint className="w-7 h-7 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
               </button>
 
               {/* Like button — pink heart circle, top-right */}
@@ -808,10 +825,11 @@ const Index = () => {
           </div>
         </motion.div>
 
-        {/* Bottom Card */}
-        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5">
+        {/* Bottom Card — isolation so top transform cannot affect this */}
+        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate">
           {bottomProfiles.length > 0 ? (
             <SwipeStack
+              key="bottom-stack"
               profiles={bottomProfiles}
               direction="down"
               roseAvailable={roseAvailable}
