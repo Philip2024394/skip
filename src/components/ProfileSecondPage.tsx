@@ -37,6 +37,7 @@ interface ProfileSecondPageProps {
 export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPageProps) {
   const { t } = useLanguage();
   const images = (profile.images ?? [profile.image]).filter(Boolean).slice(0, 4);
+  const backgroundImage = images[0] || profile.image || "";
   const places = (profile.first_date_places ?? []).slice(0, 3) as DatePlace[];
   const [enlargedImageIndex, setEnlargedImageIndex] = useState<number | null>(null);
   const [enlargedPlaceIndex, setEnlargedPlaceIndex] = useState<number | null>(null);
@@ -56,10 +57,22 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
       transition={{ type: "spring", damping: 28, stiffness: 300 }}
-      className="fixed inset-0 z-[55] bg-black flex flex-col overflow-hidden"
+      className="fixed inset-0 z-[55] flex flex-col overflow-hidden"
     >
+      {/* Background: one of the profile images with dark overlay */}
+      {backgroundImage && (
+        <>
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${backgroundImage})` }}
+          />
+          <div className="absolute inset-0 bg-black/75" />
+        </>
+      )}
+      {!backgroundImage && <div className="absolute inset-0 bg-black" />}
+
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/80 backdrop-blur-xl shrink-0">
+      <div className="relative flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/50 backdrop-blur-xl shrink-0">
         <button
           onClick={onBack}
           aria-label="Back to profile"
@@ -77,7 +90,7 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="relative flex-1 overflow-y-auto overflow-x-hidden">
         {/* Hero name strip */}
         <div className="px-4 pt-6 pb-4">
           <h1 className="font-display font-bold text-2xl text-white">

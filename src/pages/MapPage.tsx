@@ -793,7 +793,7 @@ const MapPage = () => {
         </button>
       </div>
 
-      {/* ── Header container: name+km (or stats) + Available Tonight / +1 Plus One (one at a time) ── */}
+      {/* ── Header container: name+km or stats only (no badges inside) ── */}
       {!detailProfile && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
@@ -801,9 +801,9 @@ const MapPage = () => {
           className="absolute z-20 pointer-events-auto"
           style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 3rem)`, left: "1rem", right: "5rem" }}
         >
-          <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 flex items-center gap-2 min-h-0 overflow-hidden">
-            {/* Left: selected profile name+km or stats */}
-            <div className="flex items-center gap-2 flex-1 min-w-0 pointer-events-none">
+          <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 flex items-center min-h-0 overflow-hidden">
+            {/* Selected profile name+km or stats only */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               {selectedProfile ? (
                 <>
                   <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
@@ -855,103 +855,95 @@ const MapPage = () => {
                 </>
               )}
             </div>
-
-            {/* Right: filter buttons — only one selectable at a time */}
-            <span className="w-px h-4 bg-white/10 flex-shrink-0" />
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  if (filterTonight) setFilterTonight(false);
-                  else { setFilterTonight(true); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
-                }}
-                aria-label={filterTonight ? "Clear filter" : "Show free tonight only"}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
-                  filterTonight
-                    ? "bg-yellow-400/25 border border-yellow-400/60 text-yellow-400"
-                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-                }`}
-              >
-                <Moon className="w-3 h-3" fill={filterTonight ? "currentColor" : "none"} />
-                Tonight
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (filterPlusOne) setFilterPlusOne(false);
-                  else { setFilterPlusOne(true); setFilterTonight(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
-                }}
-                aria-label={filterPlusOne ? "Clear filter" : "Show +1 Plus One only"}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
-                  filterPlusOne
-                    ? "bg-yellow-400/25 border border-yellow-400/60 text-yellow-400"
-                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-                }`}
-              >
-                <UserPlus className="w-3 h-3" />
-                +1
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (filterGenerous) setFilterGenerous(false);
-                  else { setFilterGenerous(true); setFilterTonight(false); setFilterPlusOne(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
-                }}
-                aria-label={filterGenerous ? "Clear filter" : "Show Generous Lifestyle only"}
-                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold flex items-center gap-1 transition-colors ${
-                  filterGenerous
-                    ? "bg-amber-400/25 border border-amber-400/60 text-amber-400"
-                    : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-                }`}
-              >
-                <Gift className="w-3 h-3" />
-                Generous
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (filterWeekend) setFilterWeekend(false);
-                  else { setFilterWeekend(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterLateNight(false); setFilterNoDrama(false); }
-                }}
-                aria-label={filterWeekend ? "Clear filter" : "Show Weekend Plans only"}
-                className={`rounded-full px-2 py-1 text-[9px] font-semibold flex items-center gap-0.5 transition-colors ${
-                  filterWeekend ? "bg-primary/25 border border-primary/60 text-primary" : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-                }`}
-              >
-                <CalendarDays className="w-2.5 h-2.5" />
-                Weekend
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (filterLateNight) setFilterLateNight(false);
-                  else { setFilterLateNight(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterNoDrama(false); }
-                }}
-                aria-label={filterLateNight ? "Clear filter" : "Show Late Night Chat only"}
-                className={`rounded-full px-2 py-1 text-[9px] font-semibold flex items-center gap-0.5 transition-colors ${
-                  filterLateNight ? "bg-indigo-400/25 border border-indigo-400/60 text-indigo-300" : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-                }`}
-              >
-                <MoonStar className="w-2.5 h-2.5" />
-                Late
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (filterNoDrama) setFilterNoDrama(false);
-                  else { setFilterNoDrama(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); }
-                }}
-                aria-label={filterNoDrama ? "Clear filter" : "Show No Drama only"}
-                className={`rounded-full px-2 py-1 text-[9px] font-semibold flex items-center gap-0.5 transition-colors ${
-                  filterNoDrama ? "bg-teal-400/25 border border-teal-400/60 text-teal-300" : "bg-white/5 border border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-                }`}
-              >
-                <ShieldCheck className="w-2.5 h-2.5" />
-                No Drama
-              </button>
-            </div>
           </div>
         </motion.div>
+      )}
+
+      {/* ── Right side: badge filter circles (under Eye / view) ── */}
+      {!detailProfile && (
+        <div
+          className="absolute right-4 z-30 flex flex-col gap-2 pointer-events-auto"
+          style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 5.5rem)` }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              if (filterTonight) setFilterTonight(false);
+              else { setFilterTonight(true); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
+            }}
+            aria-label={filterTonight ? "Clear filter" : "Show free tonight only"}
+            className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              filterTonight ? "bg-yellow-400/25 border-yellow-400/60 text-yellow-400" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+            }`}
+          >
+            <Moon className="w-5 h-5" fill={filterTonight ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.5} />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (filterPlusOne) setFilterPlusOne(false);
+              else { setFilterPlusOne(true); setFilterTonight(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
+            }}
+            aria-label={filterPlusOne ? "Clear filter" : "Show +1 Plus One only"}
+            className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              filterPlusOne ? "bg-amber-400/25 border-amber-400/60 text-amber-400" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+            }`}
+          >
+            <UserPlus className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (filterGenerous) setFilterGenerous(false);
+              else { setFilterGenerous(true); setFilterTonight(false); setFilterPlusOne(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
+            }}
+            aria-label={filterGenerous ? "Clear filter" : "Show Generous Lifestyle only"}
+            className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              filterGenerous ? "bg-amber-400/25 border-amber-400/60 text-amber-400" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+            }`}
+          >
+            <Gift className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (filterWeekend) setFilterWeekend(false);
+              else { setFilterWeekend(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterLateNight(false); setFilterNoDrama(false); }
+            }}
+            aria-label={filterWeekend ? "Clear filter" : "Show Weekend Plans only"}
+            className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              filterWeekend ? "bg-primary/25 border-primary/60 text-primary" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+            }`}
+          >
+            <CalendarDays className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (filterLateNight) setFilterLateNight(false);
+              else { setFilterLateNight(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterNoDrama(false); }
+            }}
+            aria-label={filterLateNight ? "Clear filter" : "Show Late Night Chat only"}
+            className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              filterLateNight ? "bg-indigo-400/25 border-indigo-400/60 text-indigo-300" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+            }`}
+          >
+            <MoonStar className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              if (filterNoDrama) setFilterNoDrama(false);
+              else { setFilterNoDrama(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); }
+            }}
+            aria-label={filterNoDrama ? "Clear filter" : "Show No Drama only"}
+            className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              filterNoDrama ? "bg-teal-400/25 border-teal-400/60 text-teal-300" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
+            }`}
+          >
+            <ShieldCheck className="w-5 h-5" />
+          </button>
+        </div>
       )}
 
       {/* ── Radius slider (under badge / stats) ── */}

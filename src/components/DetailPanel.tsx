@@ -300,14 +300,12 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
               </div>
             )}
 
-            {/* See full profile — second page with photos, places, pro badges */}
             <button
               type="button"
               onClick={() => setShowSecondPage(true)}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-sm font-medium transition-colors"
+              className="mt-3 text-white/60 hover:text-white/90 text-xs font-medium transition-colors"
             >
-              <ChevronRight className="w-4 h-4" />
-              See full profile
+              Full profile →
             </button>
           </div>
 
