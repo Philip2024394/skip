@@ -188,7 +188,9 @@ const LikesLibrary = ({
           {TABS.map((t) => (
             <button
               key={t}
-              onClick={() => setTab(t)}
+              onClick={() => {
+                requestAnimationFrame(() => setTab(t));
+              }}
               className={`relative z-10 py-1 px-1.5 rounded-[10px] text-[9px] font-semibold transition-colors min-w-[56px] text-center ${
                 tab === t ? "text-white" : "text-white/40 hover:text-white/70"
               }`}

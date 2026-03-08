@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Shield } from "lucide-react";
-import logoHeart from "@/assets/logo-heart.png";
+import AppLogo from "./AppLogo";
 
 interface TermsAcceptanceDialogProps {
   onAccept: () => void;
@@ -28,7 +28,7 @@ const TermsAcceptanceDialog = ({ onAccept }: TermsAcceptanceDialogProps) => {
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-border">
-          <img src={logoHeart} alt="2DateMe" className="w-10 h-10 object-contain" />
+          <AppLogo className="w-10 h-10 object-contain" />
           <div>
             <h2 className="font-display font-bold text-lg text-foreground">Terms & Conditions</h2>
             <p className="text-muted-foreground text-xs">Please read and accept to continue</p>

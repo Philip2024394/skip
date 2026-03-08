@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint } from "lucide-react";
-import logoHeart from "@/assets/logo-heart.png";
+import AppLogo from "@/components/AppLogo";
 import DetailPanel from "@/components/DetailPanel";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
@@ -612,9 +612,7 @@ const Index = () => {
 
   if (loading) return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
-      <img
-        src={logoHeart}
-        alt="2DateMe"
+      <AppLogo
         className="w-24 h-24 object-contain"
         style={{ imageRendering: "crisp-edges", filter: "drop-shadow(0 0 24px rgba(220,80,150,0.6))" }}
       />
@@ -643,7 +641,7 @@ const Index = () => {
       {/* Header — padded for status bar safe area */}
       <header className="flex items-center justify-between px-4 py-2.5 relative z-10 pt-safe" style={{ paddingTop: `max(0.625rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-2">
-          <img src={logoHeart} alt={APP_NAME} className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,80,150,0.5)]" />
+          <AppLogo alt={APP_NAME} className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,80,150,0.5)]" />
           <span className="font-display font-bold text-white text-xl tracking-tight leading-none">{APP_NAME}</span>
         </div>
         <div className="flex items-center gap-2">

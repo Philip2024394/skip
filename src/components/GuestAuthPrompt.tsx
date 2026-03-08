@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Star, MapPin, MessageCircle, X, Sparkles, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import logoHeart from "@/assets/logo-heart.png";
+import AppLogo from "./AppLogo";
 
 interface GuestAuthPromptProps {
   open: boolean;
@@ -78,7 +78,7 @@ const GuestAuthPrompt = ({ open, onClose, trigger = "generic" }: GuestAuthPrompt
               <div className="p-6 space-y-5">
                 {/* Logo + headline */}
                 <div className="flex items-center gap-3">
-                  <img src={logoHeart} alt="2DateMe" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
+                  <AppLogo className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
                   <div>
                     <p className="text-2xl">{copy.icon}</p>
                     <h2 className="text-white font-display font-bold text-lg leading-tight">{copy.title}</h2>
@@ -96,11 +96,14 @@ const GuestAuthPrompt = ({ open, onClose, trigger = "generic" }: GuestAuthPrompt
                   ))}
                 </ul>
 
-                {/* Free badge */}
-                <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-2xl px-4 py-2.5">
-                  <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
-                  <div className="flex flex-col">
+                {/* Free badge — Sparkles + 100% Free to Join; Heart + No Credit Card Required */}
+                <div className="flex flex-col gap-2 bg-primary/10 border border-primary/20 rounded-2xl px-4 py-2.5">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
                     <span className="text-primary text-xs font-semibold">100% Free to Join</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-primary flex-shrink-0" fill="currentColor" />
                     <span className="text-primary text-xs font-semibold">No Credit Card Required</span>
                   </div>
                 </div>

@@ -10,7 +10,7 @@ import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import ReportDialog from "./ReportDialog";
 import DatePlacesDisplay from "./DatePlacesDisplay";
 import VoicePlayer from "./VoicePlayer";
-import logoHeart from "@/assets/logo-heart.png";
+import AppLogo from "./AppLogo";
 
 interface DetailPanelProps {
   profile: Profile;
@@ -471,16 +471,11 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 <div className="h-1.5 w-full gradient-love" />
 
                 <div className="p-6 space-y-5">
-                  {/* Logo + headline — same layout as GuestAuthPrompt */}
+                  {/* Logo + headline — no crown here; crown is in No Strings Attached badge below */}
                   <div className="flex items-center gap-3">
-                    <img src={logoHeart} alt="2DateMe" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
+                    <AppLogo className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 shadow-[0_0_14px_rgba(250,204,21,0.5)]">
-                          <Crown className="w-5 h-5 text-black" fill="currentColor" />
-                        </span>
-                        <h2 className="text-white font-display font-bold text-lg leading-tight">+1 Plus One</h2>
-                      </div>
+                      <h2 className="text-white font-display font-bold text-lg leading-tight">+1 Plus One</h2>
                       <p className="text-white/50 text-xs mt-0.5">
                         <span className="text-white/80 font-medium">{profile.name}</span> is available to accompany you as a guest to any function or event without relationship ties.
                       </p>
@@ -504,9 +499,11 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                     ))}
                   </ul>
 
-                  {/* Info badge — same style as GuestAuthPrompt free badge */}
+                  {/* Info badge — crown icon before No Strings Attached */}
                   <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-2xl px-4 py-2.5">
-                    <span className="text-primary text-base flex-shrink-0">✨</span>
+                    <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-br from-yellow-400 to-amber-500 shadow-[0_0_12px_rgba(250,204,21,0.5)] flex-shrink-0">
+                      <Crown className="w-4 h-4 text-black" fill="currentColor" />
+                    </span>
                     <p className="text-primary text-xs font-semibold">
                       No Strings Attached
                     </p>

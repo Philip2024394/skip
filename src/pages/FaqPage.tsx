@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import logoHeart from "@/assets/logo-heart.png";
+import AppLogo from "@/components/AppLogo";
 
 interface FaqItem {
   q: string;
@@ -219,7 +219,7 @@ const FaqPage = () => {
           <ChevronDown className="w-4 h-4 rotate-90" />
         </button>
         <div className="flex items-center gap-2">
-          <img src={logoHeart} alt="2DateMe" className="w-7 h-7" />
+          <AppLogo className="w-7 h-7 object-contain" />
           <div>
             <h1 className="font-display font-bold text-base leading-none">Help & FAQ</h1>
             <p className="text-white/40 text-[10px] mt-0.5">2DateMe Support</p>

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MessageCircle, Loader2, EyeOff, Star, Shield, Heart, ChevronDown, ChevronUp } from "lucide-react";
-import logoHeart from "@/assets/logo-heart.png";
+import AppLogo from "@/components/AppLogo";
 
 // ── Confetti particle ─────────────────────────────────────────────────────────
 interface Particle {
@@ -212,7 +212,7 @@ const PaymentSuccess = () => {
     return (
       <div className="h-screen-safe bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
-          <img src={logoHeart} alt="2DateMe" className="w-16 h-16 object-contain mx-auto animate-pulse" />
+          <AppLogo className="w-16 h-16 object-contain mx-auto animate-pulse" />
           <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
           <p className="text-white/50 text-sm">Verifying your payment...</p>
         </div>
@@ -280,7 +280,7 @@ const PaymentSuccess = () => {
           className="flex flex-col items-center gap-2"
         >
           <div className="relative">
-            <img src={logoHeart} alt="2DateMe" className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(220,80,150,0.6)]" />
+            <AppLogo className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(220,80,150,0.6)]" />
             {/* Pulsing ring */}
             <motion.div
               className="absolute inset-0 rounded-full border-2 border-primary/40"

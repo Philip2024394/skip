@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import logoHeart from "@/assets/logo-heart.png";
+import AppLogo from "./AppLogo";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
@@ -25,9 +25,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) return (
     <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
-      <img
-        src={logoHeart}
-        alt="2DateMe"
+      <AppLogo
         className="w-20 h-20 object-contain"
         style={{ filter: "drop-shadow(0 0 20px rgba(220,80,150,0.6))" }}
       />
