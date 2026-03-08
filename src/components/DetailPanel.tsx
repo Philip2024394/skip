@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "framer-motion";
 import { ChevronRight, MapPin, Map, X, MessageCircle, Star, Flag, Globe, Heart, Crown } from "lucide-react";
@@ -46,22 +46,11 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
   const [showPlusOneModal, setShowPlusOneModal] = useState(false);
   const [liked, setLiked] = useState(alreadyLiked);
   const images = profile.images ?? [profile.image];
-  const autoShownRef = useRef(false);
 
   const isPlusOne = !!profile.is_plusone;
 
-  // Auto-show Plus One modal once per profile per session
-  useEffect(() => {
-    if (!isPlusOne) return;
-    const key = `plusone_seen_${profile.id}`;
-    if (sessionStorage.getItem(key)) return;
-    if (autoShownRef.current) return;
-    autoShownRef.current = true;
-    const timer = setTimeout(() => {
-      setShowPlusOneModal(true);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [profile.id, isPlusOne]);
+  // Auto-show Plus One modal only when user taps the chat button (no auto-open)
+  // Removed auto-open so modal opens only on chat button tap
 
   const handleClosePlusOneModal = () => {
     setShowPlusOneModal(false);
@@ -314,19 +303,20 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
           <div className="absolute bottom-6 left-0 right-0 z-30 flex flex-col items-center gap-3 px-6" style={{ overflow: "visible" }}>
 
             {isPlusOne ? (
-              /* ── Plus-One profile: like heart + $19.99 connect ── */
+              /* ── Plus-One profile: round yellow chat (opens +1 modal) + heart + close ── */
               <>
-                <button
-                  onClick={() => {
-                    sessionStorage.removeItem(`plusone_seen_${profile.id}`);
-                    setShowPlusOneModal(true);
-                  }}
-                  className="flex items-center gap-2 px-5 py-3 rounded-full bg-primary/20 backdrop-blur-md border border-primary/40 text-primary font-semibold text-sm hover:bg-primary/30 hover:scale-105 transition-all"
-                >
-                  <MessageCircle className="w-5 h-5" fill="currentColor" />
-                  Connect on WhatsApp — $19.99
-                </button>
                 <div className="flex items-center justify-center gap-4">
+                  {/* Round yellow chat — opens +1 Plus One container with purchase button */}
+                  <button
+                    onClick={() => {
+                      sessionStorage.removeItem(`plusone_seen_${profile.id}`);
+                      setShowPlusOneModal(true);
+                    }}
+                    aria-label="Plus One — connect on WhatsApp"
+                    className="w-14 h-14 rounded-full bg-amber-400/90 hover:bg-amber-400 border-2 border-amber-300 shadow-[0_0_20px_rgba(251,191,36,0.5)] flex items-center justify-center text-black hover:scale-105 transition-all"
+                  >
+                    <MessageCircle className="w-6 h-6" fill="currentColor" />
+                  </button>
                   {/* Heart like button — always shown for +1 profiles */}
                   <button
                     onClick={handleLikeClick}
