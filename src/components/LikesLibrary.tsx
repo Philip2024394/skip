@@ -55,6 +55,8 @@ interface LikesLibraryProps {
   likedMe: Profile[];
   newProfiles: Profile[];       // new: all profiles from Index, pre-filtered
   filterCountry?: string;       // new: active country filter so we can label it
+  receivedHighlightProfileId?: string | null;  // when set, switch to "Likes Me" and butterfly is flying to this profile
+  heartDropProfileId?: string | null;          // when set, show dropped heart on this profile's card (Likes Me tab)
   onUnlock: (profile: Profile) => void;
   onSelectProfile: (profile: Profile, sourceList: Profile[]) => void;
   onPurchaseFeature: (feature: PremiumFeature) => void;
@@ -76,6 +78,7 @@ const TABS: Tab[] = ["new", "sent", "received"];
 // ── Component ─────────────────────────────────────────────────────────────────
 const LikesLibrary = ({
   iLiked, likedMe, newProfiles, filterCountry,
+  receivedHighlightProfileId, heartDropProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
 }: LikesLibraryProps) => {
   const [tab, setTab] = useState<Tab>("new");
@@ -111,6 +114,11 @@ const LikesLibrary = ({
   useEffect(() => {
     scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
   }, [tab]);
+
+  // When butterfly is flying to a profile, show "Likes Me" so the user sees who liked them
+  useEffect(() => {
+    if (receivedHighlightProfileId) setTab("received");
+  }, [receivedHighlightProfileId]);
 
   // ── Promo rotation ──────────────────────────────────────────────
   const pickNewPromo = useCallback(() => {
@@ -287,10 +295,21 @@ const LikesLibrary = ({
                     {/* Available tonight glow — shown as moon badge only, no ring */}
 
                     <div className="relative mt-1">
+                      {/* Dropped heart from butterfly — behind the profile who liked you */}
+                      {tab === "received" && heartDropProfileId === profile.id && (
+                        <motion.div
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
+                          initial={{ y: -24, opacity: 1, scale: 1.2 }}
+                          animate={{ y: 4, opacity: 0.85, scale: 1 }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                        >
+                          <Heart className="w-8 h-8 text-primary drop-shadow-lg" fill="currentColor" strokeWidth={1.5} />
+                        </motion.div>
+                      )}
                       <img
                         src={profile.avatar_url || profile.image}
                         alt={profile.name}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-white/10"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-white/10 relative z-10"
                       />
                       {/* Heart when I liked this profile */}
                       {iLikedThis && (

@@ -7,6 +7,7 @@ import DetailPanel from "@/components/DetailPanel";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
 import LikesLibrary from "@/components/LikesLibrary";
+import ButterflyLikeAnimation from "@/components/ButterflyLikeAnimation";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -209,6 +210,12 @@ const Index = () => {
   const isAnimatingTopCardRef = useRef(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const welcomeBackName = useRef<string>("");
+
+  // Butterfly: when a new like appears, fly to library and drop heart on that profile's card
+  const libraryRef = useRef<HTMLDivElement>(null);
+  const prevLikedMeIdsRef = useRef<Set<string>>(new Set());
+  const [butterflyTarget, setButterflyTarget] = useState<string | null>(null);
+  const [heartDropProfileId, setHeartDropProfileId] = useState<string | null>(null);
 
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" }>({ open: false, trigger: "generic" });
@@ -428,6 +435,71 @@ const Index = () => {
       window.removeEventListener("storage", handleStorage);
     };
   }, [navigate]);
+
+  // Detect new like: when likedMe gains an id we didn't have before (and we had a previous set), trigger butterfly
+  useEffect(() => {
+    const currentIds = new Set(likedMe.map((p) => p.id));
+    const prev = prevLikedMeIdsRef.current;
+    const newIds = likedMe.filter((p) => !prev.has(p.id)).map((p) => p.id);
+    if (prev.size > 0 && newIds.length > 0) {
+      setButterflyTarget(newIds[0]);
+    }
+    prevLikedMeIdsRef.current = currentIds;
+  }, [likedMe]);
+
+  // Realtime: when someone likes the current user, add them to likedMe (then butterfly effect will trigger)
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel("likes-received")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "likes",
+          filter: `liked_id=eq.${user.id}`,
+        },
+        async (payload: { new?: { liker_id: string; expires_at?: string } }) => {
+          const likerId = payload.new?.liker_id;
+          if (!likerId) return;
+          const { data: rows } = await supabase
+            .from("profiles_public")
+            .select("*")
+            .eq("id", likerId)
+            .eq("is_active", true)
+            .limit(1);
+          const p = rows?.[0] as any;
+          if (!p || !(p.avatar_url || (p.images && p.images.length > 0))) return;
+          const expiresAt = payload.new?.expires_at ?? new Date(Date.now() + LIKE_EXPIRY_MS).toISOString();
+          const profile: Profile = {
+            id: p.id,
+            name: p.name,
+            age: p.age,
+            city: p.city || "",
+            country: p.country || "",
+            bio: p.bio || "",
+            image: p.avatar_url || p.images?.[0] || "/placeholder.svg",
+            images: p.images?.length ? p.images : (p.avatar_url ? [p.avatar_url] : []),
+            gender: p.gender,
+            avatar_url: p.avatar_url,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            available_tonight: p.available_tonight,
+            voice_intro_url: p.voice_intro_url,
+            last_seen_at: p.last_seen_at,
+            expires_at: expiresAt,
+            is_plusone: p.is_plusone || false,
+          };
+          setLikedMe((prev) => (prev.some((x) => x.id === profile.id) ? prev : [...prev, profile]));
+          saveLocalLikedMeProfiles([...getLocalLikedMeProfiles().filter((x) => x.id !== profile.id), profile].slice(0, 100));
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
 
   const handleSelectProfile = useCallback((profile: Profile, list: Profile[]) => {
     const idx = list.findIndex((p) => p.id === profile.id);
@@ -810,12 +882,14 @@ const Index = () => {
               ♥
             </motion.span>
           ))}
-          <div className="relative z-10 h-full">
+          <div className="relative z-10 h-full" ref={libraryRef}>
             <LikesLibrary
               iLiked={iLiked}
               likedMe={likedMe}
               newProfiles={libraryNewProfiles}
               filterCountry={filters.country}
+              receivedHighlightProfileId={butterflyTarget}
+              heartDropProfileId={heartDropProfileId}
               onUnlock={handleUnlock}
               onSelectProfile={(profile, sourceList) => {
                 handleSelectProfile(profile, sourceList);
@@ -824,6 +898,18 @@ const Index = () => {
             />
           </div>
         </motion.div>
+
+        {butterflyTarget && (
+          <ButterflyLikeAnimation
+            libraryRef={libraryRef}
+            targetProfileId={butterflyTarget}
+            onReachLibrary={() => setHeartDropProfileId(butterflyTarget)}
+            onComplete={() => {
+              setButterflyTarget(null);
+              setHeartDropProfileId(null);
+            }}
+          />
+        )}
 
         {/* Bottom Card — isolation so top transform cannot affect this */}
         <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate">

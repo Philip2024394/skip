@@ -16,6 +16,10 @@ import { COUNTRIES_WITH_CODES, ALL_COUNTRIES } from "@/data/countries";
 const COUNTRY_CODES = COUNTRIES_WITH_CODES;
 const COUNTRIES = ALL_COUNTRIES;
 
+// Test account for local development (create with: npx tsx scripts/create-test-user.ts)
+const TEST_EMAIL = import.meta.env.VITE_TEST_EMAIL || "test@2dateme.demo";
+const TEST_PASSWORD = import.meta.env.VITE_TEST_PASSWORD || "TestPass123";
+
 const AuthPage = () => {
   const { t, locale, toggleLocale } = useLanguage();
   const [isLogin, setIsLogin] = useState(false);
@@ -212,6 +216,32 @@ const AuthPage = () => {
                 <button onClick={() => navigate("/reset-password")} className="text-white/40 hover:text-white/70 text-xs text-center w-full transition-colors">
                   {t("auth.forgotPassword")}
                 </button>
+                {import.meta.env.DEV && (
+                  <div className="pt-3 border-t border-white/10">
+                    <p className="text-white/40 text-[10px] mb-2">Test account (run: npx tsx scripts/create-test-user.ts)</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-white/20 text-white/70 hover:bg-white/10 hover:text-white text-xs"
+                      disabled={loading}
+                      onClick={async () => {
+                        setForm((f) => ({ ...f, email: TEST_EMAIL, password: TEST_PASSWORD }));
+                        setLoading(true);
+                        const { error: err } = await supabase.auth.signInWithPassword({ email: TEST_EMAIL, password: TEST_PASSWORD });
+                        setLoading(false);
+                        if (err) {
+                          toast.error(err.message);
+                          return;
+                        }
+                        toast.success(t("auth.welcomeBack"));
+                        navigate("/");
+                      }}
+                    >
+                      Sign in as test@2dateme.demo
+                    </Button>
+                  </div>
+                )}
               </motion.div>
             ) : (
               <motion.div key={`register-${step}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
