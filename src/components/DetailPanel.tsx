@@ -191,15 +191,18 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
             ))}
           </div>
 
+          {/* VIP Plus-One badge — under profile page bars; includes gender */}
+          {isPlusOne && (
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/20 to-amber-400/20 border border-yellow-400/50 backdrop-blur-md rounded-full px-3 py-1 shadow-[0_0_16px_rgba(250,204,21,0.4)]">
+              <span className="text-yellow-400 text-base leading-none">👑</span>
+              <span className="text-yellow-300 text-[11px] font-bold tracking-wider uppercase">
+                VIP {profile.gender ? `(${profile.gender}) ` : ""}Plus One
+              </span>
+            </div>
+          )}
+
           {/* Profile info — centered, raised */}
           <div className="absolute bottom-[140px] left-0 right-0 z-10 flex flex-col items-center text-center px-6">
-            {/* Single VIP Plus-One badge for Plus One members */}
-            {isPlusOne && (
-              <div className="mb-2 flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/20 to-amber-400/20 border border-yellow-400/50 backdrop-blur-md rounded-full px-3 py-1 shadow-[0_0_16px_rgba(250,204,21,0.4)]">
-                <span className="text-yellow-400 text-base leading-none">👑</span>
-                <span className="text-yellow-300 text-[11px] font-bold tracking-wider uppercase">VIP Plus-One</span>
-              </div>
-            )}
             <h2 className="font-display font-bold text-3xl text-white drop-shadow-lg flex items-center gap-2 justify-center">
               {profile.name}, <span className="font-normal text-white/80">{profile.age}</span>
               {isOnline(profile.last_seen_at) && (
@@ -212,6 +215,15 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
             <p className="text-white/70 text-sm flex items-center gap-1 mt-1.5">
               <MapPin className="w-3.5 h-3.5 text-primary" /> {profile.city}, {profile.country}
             </p>
+
+            {/* Bio container — under location */}
+            {profile.bio && (
+              <div className="mt-3 mx-4 px-4 py-3 rounded-xl bg-black/40 backdrop-blur-md border border-white/10">
+                <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                  {profile.bio}
+                </p>
+              </div>
+            )}
 
             {/* Activity badges */}
             <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
@@ -237,11 +249,6 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   <span className="text-yellow-400">🌙</span> Free Tonight
                 </span>
               ) : null}
-              {profile.bio && (
-                <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/70 text-[10px] px-3 py-1 rounded-full max-w-[200px] truncate">
-                  {profile.bio}
-                </span>
-              )}
               {profile.first_date_idea && (
                 <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-3 py-1 rounded-full">
                   💕 {profile.first_date_idea}
@@ -305,7 +312,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
           <div className="absolute bottom-6 left-0 right-0 z-30 flex flex-col items-center gap-3 px-6" style={{ overflow: "visible" }}>
 
             {isPlusOne ? (
-              /* ── Plus-One profile: round yellow chat (opens +1 modal) + heart + close ── */
+              /* ── Plus-One profile: round yellow chat (opens +1 modal) + heart + map + close ── */
               <>
                 <div className="flex items-center justify-center gap-4">
                   {/* Round yellow chat — opens +1 Plus One container with purchase button */}
@@ -331,6 +338,14 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   >
                     <Heart className="w-6 h-6" fill={liked ? "currentColor" : "none"} />
                   </button>
+                  {/* Map — open map with this profile */}
+                  <button
+                    onClick={() => navigate(`/map?profile=${profile.id}`)}
+                    aria-label={t("detail.viewMap")}
+                    className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                  >
+                    <Map className="w-6 h-6" />
+                  </button>
                   {/* Close */}
                   <button
                     onClick={onClose}
@@ -342,7 +357,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 </div>
               </>
             ) : (
-              /* ── Normal profile: mutual-match WhatsApp + super like + close ── */
+              /* ── Normal profile: mutual-match WhatsApp + super like + map + close ── */
               <>
                 {isMatch ? (
                   <button
@@ -376,6 +391,15 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                     style={{ color: hasSuperLike ? "hsl(45, 95%, 58%)" : "white" }}
                   >
                     <Star className="w-6 h-6" fill="currentColor" />
+                  </button>
+
+                  {/* Map — open map with this profile */}
+                  <button
+                    onClick={() => navigate(`/map?profile=${profile.id}`)}
+                    aria-label={t("detail.viewMap")}
+                    className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                  >
+                    <Map className="w-6 h-6" />
                   </button>
 
                   {/* Close */}
