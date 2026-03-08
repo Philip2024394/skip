@@ -19,6 +19,7 @@ import FilterPanel, { FilterState, defaultFilters } from "@/components/FilterPan
 import { isOnline } from "@/hooks/useOnlineStatus";
 import GuestAuthPrompt from "@/components/GuestAuthPrompt";
 import TermsAcceptanceDialog from "@/components/TermsAcceptanceDialog";
+import OnboardingTutorial, { ONBOARDING_STORAGE_KEY } from "@/components/OnboardingTutorial";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/lib/constants";
 import { isNetworkError } from "@/utils/payments";
@@ -232,6 +233,9 @@ const Index = () => {
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
+  // First-time onboarding tutorial — show once to non-logged-in visitors after 1s delay
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const selectedProfile = selectedList.length > 0 ? selectedList[selectedIndex] : null;
 
   // Reset top card position when selection changes so next card starts at 0
@@ -245,6 +249,20 @@ const Index = () => {
       setShowPostLoginLanding(true);
     }
   }, [loading, user]);
+
+  // First-time onboarding: show once to new visitors (no account), after 1s delay. Never show to logged-in users.
+  useEffect(() => {
+    if (loading || user) return;
+    const hasSeen = typeof localStorage !== "undefined" && localStorage.getItem(ONBOARDING_STORAGE_KEY) === "true";
+    if (hasSeen) return;
+    const t = setTimeout(() => setShowOnboarding(true), 1000);
+    return () => clearTimeout(t);
+  }, [loading, user]);
+
+  // If user logs in while tutorial is visible, dismiss it
+  useEffect(() => {
+    if (user && showOnboarding) setShowOnboarding(false);
+  }, [user, showOnboarding]);
 
   // New profiles for the library
   const libraryNewProfiles = useMemo(() => {
@@ -1219,6 +1237,19 @@ const Index = () => {
         open={guestPrompt.open}
         trigger={guestPrompt.trigger}
         onClose={() => setGuestPrompt(p => ({ ...p, open: false }))}
+      />
+
+      {/* First-time onboarding tutorial — overlay; never shows again after complete/skip or when logged in */}
+      <OnboardingTutorial
+        visible={showOnboarding}
+        onComplete={() => {
+          try {
+            localStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
+          } catch {
+            // ignore
+          }
+          setShowOnboarding(false);
+        }}
       />
 
       {/* ── Welcome Back modal ── */}
