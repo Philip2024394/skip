@@ -297,7 +297,7 @@ const MapPage = () => {
   const [mapZoom,         setMapZoom]         = useState(10);
   const [filterTonight,   setFilterTonight]   = useState(false);
   const [showRadius,      setShowRadius]      = useState(true);
-  const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" }>({ open: false, trigger: "generic" });
+  const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" | "purchase" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
   // ── Geolocation ────────────────────────────────────────────────────
@@ -602,14 +602,13 @@ const MapPage = () => {
   }, [user, likedIds, likedMeIds, navigate]);
 
   const handleSuperLike = useCallback(async (profile: Profile) => {
-    if (!user) { showGuestPrompt("superlike"); return; }
+    if (!user) { showGuestPrompt("purchase"); return; }
 
     // Super Like requires payment — invoke purchase-feature Stripe checkout
     const superLikeFeature = PREMIUM_FEATURES.find(f => f.id === "superlike");
     if (!superLikeFeature) return;
 
     try {
-      toast("⭐ Starting Super Like checkout…");
       const { data, error } = await supabase.functions.invoke("purchase-feature", {
         body: {
           priceId: superLikeFeature.priceId,
@@ -627,9 +626,19 @@ const MapPage = () => {
         window.dispatchEvent(new Event("storage"));
         setAttentionProfile(null);
         window.open(data.url, "_blank");
+        toast.success("Opening checkout… Complete payment in the new tab.");
+      } else {
+        toast.error("Could not start checkout. Please try again.");
       }
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Super Like failed. Please try again.");
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
+        setAttentionProfile(null);
+        showGuestPrompt("purchase");
+        toast.info("Please sign in or create an account to purchase.");
+      } else {
+        toast.error(msg);
+      }
     }
   }, [user, showGuestPrompt, likedIds, likedMeIds, navigate, upsertLocalLikedProfile]);
 
@@ -639,9 +648,19 @@ const MapPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke("create-payment", { body: { targetUserId: matchDialog.id } });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        toast.success("Opening checkout… Complete payment in the new tab.");
+      }
     } catch (err: any) {
-      toast.error(err.message || "Payment failed");
+      const msg = err?.message || "Payment failed";
+      if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
+        setMatchDialog(null);
+        showGuestPrompt("purchase");
+        toast.info("Please sign in or create an account to purchase.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setPaymentLoading(false);
       setMatchDialog(null);

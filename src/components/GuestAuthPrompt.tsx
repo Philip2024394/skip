@@ -8,7 +8,7 @@ interface GuestAuthPromptProps {
   open: boolean;
   onClose: () => void;
   /** What the guest tried to do — determines the headline copy */
-  trigger?: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic";
+  trigger?: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" | "purchase";
 }
 
 const TRIGGER_COPY: Record<NonNullable<GuestAuthPromptProps["trigger"]>, { icon: string; title: string; body: string }> = {
@@ -18,6 +18,7 @@ const TRIGGER_COPY: Record<NonNullable<GuestAuthPromptProps["trigger"]>, { icon:
   map:       { icon: "🗺️", title: "Explore the live map",        body: "Sign up free to interact with profiles you find on the map." },
   match:     { icon: "🔥", title: "You've got a match!",          body: "Create a free account to reveal your mutual match." },
   filter:    { icon: "🎛️", title: "Filter by your preferences",  body: "Sign up free to filter by age, city, gender and more." },
+  purchase:  { icon: "🔒", title: "Create account to proceed",    body: "Paid features require a free account. Sign up or sign in to continue." },
   generic:   { icon: "✨", title: "Join free — it only takes 30s", body: "Thousands of real profiles are waiting. No credit card needed." },
 };
 

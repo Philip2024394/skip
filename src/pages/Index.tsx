@@ -509,6 +509,10 @@ const Index = () => {
   };
 
   const handlePurchaseFeature = (feature: PremiumFeature) => {
+    if (!user) {
+      setGuestPrompt({ open: true, trigger: "purchase" });
+      return;
+    }
     setFeatureDialog(feature);
   };
 
@@ -519,10 +523,22 @@ const Index = () => {
         body: { priceId: feature.priceId, featureId: feature.id },
       });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-      setFeatureDialog(null);
+      if (data?.url) {
+        window.open(data.url, "_blank");
+        toast.success("Opening checkout… Complete payment in the new tab.");
+        setFeatureDialog(null);
+      } else {
+        toast.error("Could not start checkout. Please try again.");
+      }
     } catch (err: any) {
-      toast.error(err.message || "Purchase failed");
+      const msg = err?.message || "Purchase failed";
+      if (msg.toLowerCase().includes("not authenticated") || msg.toLowerCase().includes("not logged in")) {
+        setFeatureDialog(null);
+        setGuestPrompt({ open: true, trigger: "purchase" });
+        toast.info("Please sign in or create an account to purchase.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setFeatureLoading(false);
     }
