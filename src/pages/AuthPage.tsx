@@ -109,7 +109,7 @@ const AuthPage = () => {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6"
         >
-          <img src={logoHeart} alt="SkipTheApp" className="w-44 h-44 object-contain drop-shadow-xl mb-2" />
+          <img src={logoHeart} alt="2DateMe" className="w-44 h-44 object-contain drop-shadow-xl mb-2" />
           {/* 5-star rating */}
           <div className="flex items-center gap-0.5 mb-1">
             {[...Array(5)].map((_, i) => (
@@ -150,8 +150,8 @@ const AuthPage = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="text-center mb-4">
-          <img src={logoHeart} alt="SkipTheApp" className="w-20 h-20 mx-auto mb-2 object-contain drop-shadow-xl" />
-          <h1 className="text-xl font-display font-bold text-white">SkipTheApp</h1>
+          <img src={logoHeart} alt="2DateMe" className="w-20 h-20 mx-auto mb-2 object-contain drop-shadow-xl" />
+          <h1 className="text-xl font-display font-bold text-white">2DateMe</h1>
           <p className="text-white/60 text-xs mt-1">{t("app.realConnections")}</p>
         </div>
 

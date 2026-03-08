@@ -2,7 +2,7 @@ export type Locale = "id" | "en";
 
 export const translations = {
   // Common
-  "app.name": { en: "SkipTheApp", id: "SkipTheApp" },
+  "app.name": { en: "2DateMe", id: "2DateMe" },
   "app.tagline": { en: "WhatsApp Dating", id: "Kencan WhatsApp" },
   "app.subtitle": { en: "Start chatting instantly", id: "Mulai ngobrol sekarang" },
   "app.realConnections": { en: "WhatsApp Dating At Your Finger Tips ✨", id: "Kencan WhatsApp Di Ujung Jari Anda ✨" },

@@ -10,7 +10,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | null>(null);
 
-const STORAGE_KEY = "skiptheapp-locale";
+const STORAGE_KEY = "2dateme-locale";
 
 async function detectCountryByIP(): Promise<string | null> {
   try {

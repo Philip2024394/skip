@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share } from "lucide-react";
 
-const DISMISS_KEY = "skiptheapp_pwa_prompt_dismissed";
+const DISMISS_KEY = "2DateMe_pwa_prompt_dismissed";
 
 const isIOS = () =>
   /iphone|ipad|ipod/i.test(navigator.userAgent) ||
@@ -90,11 +90,11 @@ export const AddToHomeScreen = () => {
             <div className="p-4 flex items-start gap-3">
               <img
                 src="/icon-192.png"
-                alt="SkipTheApp"
+                alt="2DateMe"
                 className="w-12 h-12 rounded-2xl flex-shrink-0 shadow-lg"
               />
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm">Add SkipTheApp to your home screen</p>
+                <p className="text-white font-semibold text-sm">Add 2DateMe to your home screen</p>
                 <p className="text-white/50 text-xs mt-0.5 leading-snug">
                   {platform === "ios"
                     ? 'Tap the Share button below, then "Add to Home Screen" for the full app experience.'

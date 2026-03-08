@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.skiptheapp.app',
-  appName: 'SkipTheApp',
+  appId: 'com.2dateme.app',
+  appName: '2DateMe',
   webDir: 'dist',
   server: {
     androidScheme: 'https',

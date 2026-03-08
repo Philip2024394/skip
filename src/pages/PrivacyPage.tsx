@@ -20,11 +20,11 @@ const PrivacyPage = () => {
 
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold mb-2">Privacy Policy</h1>
-          <p className="text-white/40 text-xs">skiptheapp.com · Last updated: March 7, 2026</p>
+          <p className="text-white/40 text-xs">2DateMe.com · Last updated: March 7, 2026</p>
         </div>
 
         <p className="text-white/70 text-sm leading-relaxed">
-          SkipTheApp ("<strong className="text-white">we</strong>", "<strong className="text-white">us</strong>", or "<strong className="text-white">our</strong>") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have. By using skiptheapp.com or our mobile application ("<strong className="text-white">Service</strong>"), you agree to this policy.
+          2DateMe ("<strong className="text-white">we</strong>", "<strong className="text-white">us</strong>", or "<strong className="text-white">our</strong>") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have. By using 2DateMe.com or our mobile application ("<strong className="text-white">Service</strong>"), you agree to this policy.
         </p>
 
         <Section title="1. Information We Collect">
@@ -54,7 +54,7 @@ const PrivacyPage = () => {
         <Section title="3. How We Share Your Information">
           <p><strong className="text-white">Other users:</strong> Your public profile (name, age, photos, bio, city, first-date idea, badges) is visible to other members. Your WhatsApp number is <em>only</em> revealed to a matched user after a successful connection payment by one of the parties.</p>
           <p><strong className="text-white">Service providers:</strong> We share data with trusted third-party providers who help operate the Service (e.g. Supabase for database/authentication, Stripe for payments, cloud storage for photos). These providers are contractually bound to protect your data.</p>
-          <p><strong className="text-white">Legal requirements:</strong> We may disclose your data if required by law, court order, or to protect the rights and safety of SkipTheApp, its users, or the public.</p>
+          <p><strong className="text-white">Legal requirements:</strong> We may disclose your data if required by law, court order, or to protect the rights and safety of 2DateMe, its users, or the public.</p>
           <p><strong className="text-white">Business transfers:</strong> In the event of a merger, acquisition, or sale of assets, your data may be transferred to the new entity under the same privacy protections.</p>
           <p>We do <strong className="text-white">not</strong> sell, rent, or trade your personal data.</p>
         </Section>
@@ -73,7 +73,7 @@ const PrivacyPage = () => {
         </Section>
 
         <Section title="7. Children's Privacy">
-          <p>SkipTheApp is strictly for users aged 18 and over. We do not knowingly collect any personal data from minors. If we become aware that a user under 18 has registered, we will promptly delete their account and associated data. If you believe a minor has created an account, please contact us at <a href="mailto:privacy@skiptheapp.com" className="text-primary underline">privacy@skiptheapp.com</a>.</p>
+          <p>2DateMe is strictly for users aged 18 and over. We do not knowingly collect any personal data from minors. If we become aware that a user under 18 has registered, we will promptly delete their account and associated data. If you believe a minor has created an account, please contact us at <a href="mailto:privacy@2DateMe.com" className="text-primary underline">privacy@2DateMe.com</a>.</p>
         </Section>
 
         <Section title="8. Your Rights">
@@ -87,7 +87,7 @@ const PrivacyPage = () => {
             <li><strong className="text-white">Objection</strong> — object to processing based on legitimate interests</li>
             <li><strong className="text-white">Withdraw consent</strong> — opt out of any processing based on consent</li>
           </ul>
-          <p>To exercise any of these rights, contact us at <a href="mailto:privacy@skiptheapp.com" className="text-primary underline">privacy@skiptheapp.com</a>. We will respond within 30 days.</p>
+          <p>To exercise any of these rights, contact us at <a href="mailto:privacy@2DateMe.com" className="text-primary underline">privacy@2DateMe.com</a>. We will respond within 30 days.</p>
         </Section>
 
         <Section title="9. Data Retention">
@@ -109,9 +109,9 @@ const PrivacyPage = () => {
         <Section title="13. Contact Us">
           <p>If you have any questions, concerns, or requests regarding this Privacy Policy, please contact us:</p>
           <p className="mt-2">
-            <strong className="text-white">SkipTheApp Privacy Team</strong><br />
-            <a href="mailto:privacy@skiptheapp.com" className="text-primary underline">privacy@skiptheapp.com</a><br />
-            <a href="https://skiptheapp.com" className="text-primary underline" target="_blank" rel="noopener noreferrer">skiptheapp.com</a>
+            <strong className="text-white">2DateMe Privacy Team</strong><br />
+            <a href="mailto:privacy@2DateMe.com" className="text-primary underline">privacy@2DateMe.com</a><br />
+            <a href="https://2DateMe.com" className="text-primary underline" target="_blank" rel="noopener noreferrer">2DateMe.com</a>
           </p>
         </Section>
       </div>

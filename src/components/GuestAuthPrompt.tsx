@@ -77,7 +77,7 @@ const GuestAuthPrompt = ({ open, onClose, trigger = "generic" }: GuestAuthPrompt
               <div className="p-6 space-y-5">
                 {/* Logo + headline */}
                 <div className="flex items-center gap-3">
-                  <img src={logoHeart} alt="SkipTheApp" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
+                  <img src={logoHeart} alt="2DateMe" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
                   <div>
                     <p className="text-2xl">{copy.icon}</p>
                     <h2 className="text-white font-display font-bold text-lg leading-tight">{copy.title}</h2>

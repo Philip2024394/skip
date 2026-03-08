@@ -79,12 +79,12 @@ const Index = () => {
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
     try {
-      return !sessionStorage.getItem("skiptheapp_profiles_cache");
+      return !sessionStorage.getItem("2dateme_profiles_cache");
     } catch { return true; }
   });
   const [dbProfiles, setDbProfiles] = useState<Profile[]>(() => {
     try {
-      const cached = sessionStorage.getItem("skiptheapp_profiles_cache");
+      const cached = sessionStorage.getItem("2dateme_profiles_cache");
       return cached ? JSON.parse(cached) : [];
     } catch { return []; }
   });
@@ -330,7 +330,7 @@ const Index = () => {
           // Sort spotlight profiles to front
           mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
           setDbProfiles(mapped);
-          try { sessionStorage.setItem("skiptheapp_profiles_cache", JSON.stringify(mapped)); } catch { /* quota */ }
+          try { sessionStorage.setItem("2dateme_profiles_cache", JSON.stringify(mapped)); } catch { /* quota */ }
 
           // Fetch likes only if logged in
           if (session) {
@@ -566,7 +566,27 @@ const Index = () => {
     }
   };
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
+      <img
+        src={logoHeart}
+        alt="2DateMe"
+        className="w-24 h-24 object-contain"
+        style={{ imageRendering: "crisp-edges", filter: "drop-shadow(0 0 24px rgba(220,80,150,0.6))" }}
+      />
+      <p className="mt-5 text-white text-xl font-bold tracking-widest" style={{ fontFamily: "inherit" }}>2DateMe</p>
+      <p className="mt-1 text-white/40 text-xs tracking-wider">Connect Instantly</p>
+      <div className="mt-8 flex gap-1.5">
+        {[0,1,2].map(i => (
+          <div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-primary"
+            style={{ animation: `pulse 1.2s ease-in-out ${i * 0.2}s infinite` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 
   // Image preloading now handled inside SwipeStack
 

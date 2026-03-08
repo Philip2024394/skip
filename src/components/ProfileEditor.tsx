@@ -896,7 +896,7 @@ const ProfileEditor = () => {
                     We'll be here whenever you're ready — just log back in and you're all set. No fuss, no re-setup, just straight back into it.
                   </p>
                   <p className="text-primary text-xs mt-3 font-semibold">
-                    The whole team at SkipTheApp thanks you for being part of our community. We hope to see you back soon! 🙏
+                    The whole team at 2DateMe thanks you for being part of our community. We hope to see you back soon! 🙏
                   </p>
                 </div>
 

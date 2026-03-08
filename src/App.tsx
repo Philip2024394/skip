@@ -41,7 +41,7 @@ const AndroidBackHandler = () => {
           navigate(-1);
         } else {
           // On home screen — show exit confirmation
-          if (window.confirm("Exit SkipTheApp?")) {
+          if (window.confirm("Exit 2DateMe?")) {
             App.exitApp();
           }
         }

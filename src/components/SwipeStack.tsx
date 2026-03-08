@@ -315,6 +315,14 @@ const SwipeStack = ({
             </div>
           ) : null}
 
+          {/* VIP crown for Plus One — top right of swipe card */}
+          {profile.is_plusone && (
+            <div className="absolute top-3 right-3 z-10 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl px-2 py-1.5 shadow-[0_0_14px_rgba(250,204,21,0.6)] flex flex-col items-center pointer-events-none">
+              <span className="text-black text-base leading-none">👑</span>
+              <span className="text-black text-[8px] font-black tracking-widest uppercase">VIP</span>
+            </div>
+          )}
+
           {/* ── Swipe stamps ──────────────────────────────────── */}
           <motion.div
             style={{ opacity: likeOpacity }}

@@ -1,4 +1,4 @@
-export const APP_NAME = "SkipTheApp";
+export const APP_NAME = "2DateMe";
 
 /** 48 hours in milliseconds — how long a like stays active */
 export const LIKE_EXPIRY_MS = 48 * 60 * 60 * 1000;

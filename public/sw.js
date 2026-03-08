@@ -1,7 +1,7 @@
-// SkipTheApp Service Worker
+// 2DateMe Service Worker
 // Enables PWA install prompt and offline capability
 
-const CACHE_NAME = "skiptheapp-v1";
+const CACHE_NAME = "2dateme-v1";
 
 // Assets to cache on install for offline use
 const PRECACHE_ASSETS = [

@@ -123,10 +123,10 @@ const SafetyAdvisory = ({ name }: { name: string }) => {
 
               <div className="pt-2 border-t border-white/10 text-center space-y-1">
                 <p className="text-white/50 text-[10px]">
-                  From all of us at <span className="text-primary font-semibold">SkipTheApp</span> — we're genuinely excited for this connection. Bringing people together is what we do best, and your trust means everything to us.
+                  From all of us at <span className="text-primary font-semibold">2DateMe</span> — we're genuinely excited for this connection. Bringing people together is what we do best, and your trust means everything to us.
                 </p>
                 <p className="text-white/40 text-[10px]">
-                  We wish you many wonderful conversations and hope this is the beginning of something truly special. Thank you for being a valued member of <span className="text-primary">skiptheapp.com</span> 💕
+                  We wish you many wonderful conversations and hope this is the beginning of something truly special. Thank you for being a valued member of <span className="text-primary">2DateMe.com</span> 💕
                 </p>
               </div>
             </div>
@@ -202,7 +202,7 @@ const PaymentSuccess = () => {
     if (!result?.whatsapp) return;
     const cleaned = result.whatsapp.replace(/\D/g, "");
     const message = encodeURIComponent(
-      `Hi ${result.name}! 👋 I just unlocked your contact on SkipTheApp — the dating app where real connections start with a real conversation. I'd love to get to know you! 😊`
+      `Hi ${result.name}! 👋 I just unlocked your contact on 2DateMe — the dating app where real connections start with a real conversation. I'd love to get to know you! 😊`
     );
     window.open(`https://wa.me/${cleaned}?text=${message}`, "_blank");
   };
@@ -212,7 +212,7 @@ const PaymentSuccess = () => {
     return (
       <div className="h-screen-safe bg-black flex items-center justify-center">
         <div className="text-center space-y-4">
-          <img src={logoHeart} alt="SkipTheApp" className="w-16 h-16 object-contain mx-auto animate-pulse" />
+          <img src={logoHeart} alt="2DateMe" className="w-16 h-16 object-contain mx-auto animate-pulse" />
           <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
           <p className="text-white/50 text-sm">Verifying your payment...</p>
         </div>
@@ -280,7 +280,7 @@ const PaymentSuccess = () => {
           className="flex flex-col items-center gap-2"
         >
           <div className="relative">
-            <img src={logoHeart} alt="SkipTheApp" className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(220,80,150,0.6)]" />
+            <img src={logoHeart} alt="2DateMe" className="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(220,80,150,0.6)]" />
             {/* Pulsing ring */}
             <motion.div
               className="absolute inset-0 rounded-full border-2 border-primary/40"
@@ -288,7 +288,7 @@ const PaymentSuccess = () => {
               transition={{ duration: 2, repeat: Infinity }}
             />
           </div>
-          <span className="font-display font-bold text-white text-lg tracking-tight">SkipTheApp</span>
+          <span className="font-display font-bold text-white text-lg tracking-tight">2DateMe</span>
         </motion.div>
 
         {/* Main card */}
@@ -428,7 +428,7 @@ const PaymentSuccess = () => {
           transition={{ delay: 1.5 }}
           className="text-white/20 text-[10px] text-center pb-6"
         >
-          skiptheapp.com · Real connections, real conversations
+          2DateMe.com · Real connections, real conversations
         </motion.p>
 
       </div>

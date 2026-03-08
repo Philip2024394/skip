@@ -23,8 +23,8 @@ const FAQ_SECTIONS: FaqSection[] = [
     color: "text-pink-400",
     items: [
       {
-        q: "What is SkipTheApp?",
-        a: "SkipTheApp is a dating app that cuts straight to the point — instead of endless in-app chatting, we connect you directly via WhatsApp so real conversations can happen. No gimmicks, just genuine connections.",
+        q: "What is 2DateMe?",
+        a: "2DateMe is a dating app that cuts straight to the point — instead of endless in-app chatting, we connect you directly via WhatsApp so real conversations can happen. No gimmicks, just genuine connections.",
       },
       {
         q: "Is it free to join?",
@@ -78,7 +78,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "What does the pre-filled message say?",
-        a: "We send a warm, friendly intro: \"Hi [Name]! 👋 I just unlocked your contact on SkipTheApp — the dating app where real connections start with a real conversation. I'd love to get to know you! 😊\" You can of course edit it before sending.",
+        a: "We send a warm, friendly intro: \"Hi [Name]! 👋 I just unlocked your contact on 2DateMe — the dating app where real connections start with a real conversation. I'd love to get to know you! 😊\" You can of course edit it before sending.",
       },
       {
         q: "Is my WhatsApp number safe?",
@@ -139,7 +139,7 @@ const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "How do I block someone?",
-        a: "On WhatsApp, open the chat → tap the three-dot menu → Block. You can also report the profile to us directly from within the app. On SkipTheApp, a blocked profile will no longer appear in your browsing.",
+        a: "On WhatsApp, open the chat → tap the three-dot menu → Block. You can also report the profile to us directly from within the app. On 2DateMe, a blocked profile will no longer appear in your browsing.",
       },
       {
         q: "Can I deactivate my account temporarily?",
@@ -157,12 +157,12 @@ const FAQ_SECTIONS: FaqSection[] = [
         a: "All major credit and debit cards are accepted through our secure Stripe payment gateway. Apple Pay and Google Pay are also supported where available.",
       },
       {
-        q: "Is my payment information stored on SkipTheApp?",
-        a: "No. All payment processing is handled by Stripe, a certified PCI-compliant payment provider. SkipTheApp never stores your card details.",
+        q: "Is my payment information stored on 2DateMe?",
+        a: "No. All payment processing is handled by Stripe, a certified PCI-compliant payment provider. 2DateMe never stores your card details.",
       },
       {
         q: "What is the refund policy?",
-        a: "WhatsApp unlocks are non-refundable once the number has been revealed. VIP subscriptions can be cancelled before the next billing cycle for a prorated refund. Please contact us at support@skiptheapp.com for any billing issues.",
+        a: "WhatsApp unlocks are non-refundable once the number has been revealed. VIP subscriptions can be cancelled before the next billing cycle for a prorated refund. Please contact us at support@2DateMe.com for any billing issues.",
       },
     ],
   },
@@ -219,10 +219,10 @@ const FaqPage = () => {
           <ChevronDown className="w-4 h-4 rotate-90" />
         </button>
         <div className="flex items-center gap-2">
-          <img src={logoHeart} alt="SkipTheApp" className="w-7 h-7" />
+          <img src={logoHeart} alt="2DateMe" className="w-7 h-7" />
           <div>
             <h1 className="font-display font-bold text-base leading-none">Help & FAQ</h1>
-            <p className="text-white/40 text-[10px] mt-0.5">SkipTheApp Support</p>
+            <p className="text-white/40 text-[10px] mt-0.5">2DateMe Support</p>
           </div>
         </div>
       </div>
@@ -234,7 +234,7 @@ const FaqPage = () => {
             <Heart className="w-7 h-7 text-white" fill="white" />
           </div>
           <h2 className="font-display font-bold text-xl text-white">How can we help?</h2>
-          <p className="text-white/50 text-sm">Everything you need to know about SkipTheApp.</p>
+          <p className="text-white/50 text-sm">Everything you need to know about 2DateMe.</p>
         </div>
 
         {/* Sections */}
@@ -270,11 +270,11 @@ const FaqPage = () => {
             Our support team is here for you. Drop us an email and we'll get back to you within 24 hours.
           </p>
           <a
-            href="mailto:support@skiptheapp.com"
+            href="mailto:support@2DateMe.com"
             className="inline-flex items-center gap-2 bg-primary/20 border border-primary/40 text-primary font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-primary/30 transition-colors"
           >
             <Mail className="w-4 h-4" />
-            support@skiptheapp.com
+            support@2DateMe.com
           </a>
           <p className="text-white/30 text-[11px]">
             For urgent safety concerns please include "URGENT" in the subject line.
@@ -283,7 +283,7 @@ const FaqPage = () => {
 
         {/* Footer */}
         <div className="text-center space-y-1 pt-2">
-          <p className="text-white/25 text-[11px]">© 2025 SkipTheApp.com · All rights reserved</p>
+          <p className="text-white/25 text-[11px]">© 2025 2DateMe.com · All rights reserved</p>
           <div className="flex items-center justify-center gap-3 text-[11px]">
             <button onClick={() => navigate("/terms")} className="text-white/30 hover:text-white/60 transition-colors">Terms</button>
             <span className="text-white/20">·</span>

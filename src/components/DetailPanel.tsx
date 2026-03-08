@@ -188,6 +188,16 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/60 to-transparent pointer-events-none" />
 
+          {/* VIP corner badge on photo */}
+          {isPlusOne && (
+            <div className="absolute top-16 right-4 z-20 flex flex-col items-center gap-0.5 pointer-events-none">
+              <div className="bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl px-2.5 py-1.5 shadow-[0_0_20px_rgba(250,204,21,0.6)] flex flex-col items-center">
+                <span className="text-black text-xl leading-none">👑</span>
+                <span className="text-black text-[9px] font-black tracking-widest mt-0.5 uppercase">VIP</span>
+              </div>
+            </div>
+          )}
+
           {/* Image indicators */}
           <div className="absolute top-16 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
             {images.map((_, i) => (
@@ -202,6 +212,14 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
 
           {/* Profile info — centered, raised */}
           <div className="absolute bottom-[140px] left-0 right-0 z-10 flex flex-col items-center text-center px-6">
+            {/* VIP badge for Plus One members */}
+            {isPlusOne && (
+              <div className="mb-2 flex items-center gap-1.5 bg-gradient-to-r from-yellow-500/20 to-amber-400/20 border border-yellow-400/50 backdrop-blur-md rounded-full px-3 py-1 shadow-[0_0_16px_rgba(250,204,21,0.4)]">
+                <span className="text-yellow-400 text-base leading-none">👑</span>
+                <span className="text-yellow-300 text-[11px] font-bold tracking-wider uppercase">VIP Plus-One</span>
+                <span className="text-yellow-400 text-base leading-none">👑</span>
+              </div>
+            )}
             <h2 className="font-display font-bold text-3xl text-white drop-shadow-lg flex items-center gap-2 justify-center">
               {profile.name}, <span className="font-normal text-white/80">{profile.age}</span>
               {isOnline(profile.last_seen_at) && (
@@ -476,7 +494,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 <div className="p-6 space-y-5">
                   {/* Logo + headline — same layout as GuestAuthPrompt */}
                   <div className="flex items-center gap-3">
-                    <img src={logoHeart} alt="SkipTheApp" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
+                    <img src={logoHeart} alt="2DateMe" className="w-12 h-12 object-contain drop-shadow-xl flex-shrink-0" />
                     <div>
                       <p className="text-2xl">🎫</p>
                       <h2 className="text-white font-display font-bold text-lg leading-tight">Plus One</h2>
