@@ -1454,30 +1454,43 @@ const Index = () => {
                         <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
                           {selectedUnlockItemKey === "unlock:single" ? (
                             <>
-                              <p className="text-white text-sm font-black">1 Match Unlock</p>
-                              <p className="text-white/70 text-xs mt-1">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
+                              <div className="relative overflow-hidden rounded-2xl border border-white/10">
+                                <img
+                                  src="https://ik.imagekit.io/7grri5v7d/match%20unlock.png?v=1"
+                                  alt=""
+                                  className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+                                  draggable={false}
+                                  loading="eager"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/75" />
 
-                              <div className="mt-3 flex items-center justify-between">
-                                <p className="text-white/90 font-black text-xl">$1.99</p>
-                                <Button
-                                  onClick={() => {
-                                    if (!selectedProfile) return;
-                                    setUnlockDialog(selectedProfile);
-                                  }}
-                                  className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
-                                >
-                                  Unlock now
-                                </Button>
-                              </div>
+                                <div className="relative z-10 px-4 py-4 flex flex-col items-center justify-center text-center">
+                                  <p className="text-white text-sm font-black">1 Match Unlock</p>
+                                  <p className="text-white/80 text-xs mt-1">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
 
-                              <div className="mt-3 rounded-xl bg-white/5 border border-white/10 p-3">
-                                <p className="text-white/60 text-[11px] font-semibold text-center">Requires a mutual match ✅</p>
+                                  <div className="mt-4 w-full flex items-center justify-between">
+                                    <p className="text-white/95 font-black text-xl">$1.99</p>
+                                    <Button
+                                      onClick={() => {
+                                        if (!selectedProfile) return;
+                                        setUnlockDialog(selectedProfile);
+                                      }}
+                                      className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
+                                    >
+                                      Unlock now
+                                    </Button>
+                                  </div>
+
+                                  <div className="mt-3 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+                                    <p className="text-white/70 text-[11px] font-semibold">Requires a mutual match ✅</p>
+                                  </div>
+                                </div>
                               </div>
                             </>
                           ) : selectedUnlockItemKey === "unlock:pack3" ? (
                             <>
-                              <p className="text-white text-sm font-black">3 Unlock Pack</p>
-                              <p className="text-white/70 text-xs mt-1">Perfect for a week of real connections. Save vs singles.</p>
+                              <p className="text-white text-sm font-black text-center">3 Unlock Pack</p>
+                              <p className="text-white/70 text-xs mt-1 text-center">Perfect for a week of real connections. Save vs singles.</p>
                               <div className="mt-3 flex items-center justify-between">
                                 <p className="text-white/90 font-black text-xl">$4.99</p>
                                 <Button
@@ -1487,12 +1500,12 @@ const Index = () => {
                                   Choose pack
                                 </Button>
                               </div>
-                              <p className="text-white/45 text-[10px] mt-2">Best for casual + active users.</p>
+                              <p className="text-white/45 text-[10px] mt-2 text-center">Best for casual + active users.</p>
                             </>
                           ) : selectedUnlockItemKey === "unlock:pack10" ? (
                             <>
-                              <p className="text-white text-sm font-black">10 Unlock Pack</p>
-                              <p className="text-white/70 text-xs mt-1">Best value for heavy matching. Lowest cost per unlock.</p>
+                              <p className="text-white text-sm font-black text-center">10 Unlock Pack</p>
+                              <p className="text-white/70 text-xs mt-1 text-center">Best value for heavy matching. Lowest cost per unlock.</p>
                               <div className="mt-3 flex items-center justify-between">
                                 <p className="text-white/90 font-black text-xl">$12.99</p>
                                 <Button
@@ -1502,12 +1515,12 @@ const Index = () => {
                                   Choose pack
                                 </Button>
                               </div>
-                              <p className="text-white/45 text-[10px] mt-2">Best value package.</p>
+                              <p className="text-white/45 text-[10px] mt-2 text-center">Best value package.</p>
                             </>
                           ) : selectedUnlockItemKey === "unlock:vip" ? (
                             <>
-                              <p className="text-white text-sm font-black">VIP Monthly</p>
-                              <p className="text-white/70 text-xs mt-1">10 Match Unlocks / month + VIP badge + priority.</p>
+                              <p className="text-white text-sm font-black text-center">VIP Monthly</p>
+                              <p className="text-white/70 text-xs mt-1 text-center">10 Match Unlocks / month + VIP badge + priority.</p>
                               <div className="mt-3 flex items-center justify-between">
                                 <p className="text-white/90 font-black text-xl">$9.99/mo</p>
                                 <Button
@@ -1517,7 +1530,7 @@ const Index = () => {
                                   Go VIP
                                 </Button>
                               </div>
-                              <p className="text-white/45 text-[10px] mt-2">Includes 10 unlocks every month.</p>
+                              <p className="text-white/45 text-[10px] mt-2 text-center">Includes 10 unlocks every month.</p>
                             </>
                           ) : selectedUnlockItemKey.startsWith("feature:") ? (
                             (() => {
@@ -1526,8 +1539,8 @@ const Index = () => {
                               if (!feature) return <p className="text-white/60 text-xs">Select a feature above</p>;
                               return (
                                 <>
-                                  <p className="text-white text-sm font-black">{feature.emoji} {feature.name}</p>
-                                  <p className="text-white/70 text-xs mt-1">{feature.description}</p>
+                                  <p className="text-white text-sm font-black text-center">{feature.emoji} {feature.name}</p>
+                                  <p className="text-white/70 text-xs mt-1 text-center">{feature.description}</p>
                                   <div className="mt-3 flex items-center justify-between">
                                     <p className="text-white/90 font-black text-xl">{feature.price}</p>
                                     <Button

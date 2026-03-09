@@ -20,6 +20,14 @@ const COUNTRIES = ALL_COUNTRIES;
 const TEST_EMAIL = import.meta.env.VITE_TEST_EMAIL || "test@2dateme.demo";
 const TEST_PASSWORD = import.meta.env.VITE_TEST_PASSWORD || "TestPass123";
 
+const LANDING_BG_URL = (import.meta.env.VITE_LANDING_BG_URL as string | undefined) || "https://ik.imagekit.io/7grri5v7d/sddfffaaa.png";
+const LANDING_BG_URL_VERSION = (import.meta.env.VITE_LANDING_BG_URL_VERSION as string | undefined) || "v2";
+
+const buildLandingBgSrc = (url: string, version: string) => {
+  const hasQuery = url.includes("?");
+  return `${url}${hasQuery ? "&" : "?"}v=${encodeURIComponent(version)}`;
+};
+
 const AuthPage = () => {
   const { t, locale, toggleLocale } = useLanguage();
   const [isLogin, setIsLogin] = useState(false);
@@ -186,7 +194,7 @@ const AuthPage = () => {
     return (
       <div className="h-screen-safe relative overflow-hidden">
         <img
-          src="https://ik.imagekit.io/7grri5v7d/sddfffaaa.png"
+          src={buildLandingBgSrc(LANDING_BG_URL, LANDING_BG_URL_VERSION)}
           alt=""
           className="fixed inset-0 w-full h-full object-cover pointer-events-none select-none"
           draggable={false}

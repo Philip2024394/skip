@@ -263,7 +263,7 @@ const LikesLibrary = ({
 
       {/* ── New profiles label ── */}
       <AnimatePresence>
-        {tab === "new" && (
+        {tab === "new" && !isProfileInfoTab && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -283,13 +283,18 @@ const LikesLibrary = ({
       {/* ── Scrollable card row — native scroll, no tab-switch interference ── */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:hidden"
+        className={`flex-1 [&::-webkit-scrollbar]:hidden ${
+          isUnlockTab || isDateIdeasTab || isProfileInfoTab
+            ? "overflow-y-auto overflow-x-hidden"
+            : "overflow-x-auto overflow-y-hidden"
+        }`}
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          overscrollBehaviorX: "contain",
-          touchAction: "pan-x",
+          ...(isUnlockTab || isDateIdeasTab || isProfileInfoTab
+            ? { overscrollBehaviorY: "contain", touchAction: "pan-y" }
+            : { overscrollBehaviorX: "contain", touchAction: "pan-x" }),
         }}
       >
         <AnimatePresence mode="wait">
@@ -299,10 +304,10 @@ const LikesLibrary = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.18 }}
-            className={isDateIdeasTab ? "h-full py-1" : "flex gap-2 h-full py-1"}
+            className={(isUnlockTab || isDateIdeasTab || isProfileInfoTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
             {isProfileInfoTab ? (
-              <div className="grid grid-cols-3 gap-2 h-full">
+              <div className="grid grid-cols-3 gap-2 h-full pb-2">
                 {(
                   [
                     { key: "basic" as const, label: "Basic Info" },
@@ -332,8 +337,8 @@ const LikesLibrary = ({
                 ))}
               </div>
             ) : isUnlockTab ? (
-              <div className="h-full overflow-y-auto pr-1">
-                <div className="grid grid-cols-2 gap-2">
+              <div className="h-full pr-1">
+                <div className="grid grid-cols-2 gap-2 pb-2 place-items-center">
                   {(
                     [
                       { key: "unlock:single", title: "1 Unlock", price: "$1.99", sub: "Match unlock" },
@@ -360,8 +365,8 @@ const LikesLibrary = ({
                         e.stopPropagation();
                         onSelectUnlockItem?.(p.key);
                       }}
-                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${selectedUnlockItemKey === p.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
-                      style={{ height: 124 }}
+                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative ${selectedUnlockItemKey === p.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
+                      style={{ height: 124, width: 124 }}
                       aria-label={p.title}
                     >
                       <p className="text-white text-[10px] font-black text-center leading-tight line-clamp-2">{p.title}</p>
