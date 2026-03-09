@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
-import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home } from "lucide-react";
+import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home, ChevronLeft, ChevronRight } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
@@ -215,6 +215,7 @@ const Index = () => {
   const [lastRoseAt, setLastRoseAt] = useState<string | null>(null);
   const [selectedList, setSelectedList] = useState<Profile[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [profileImageIndex, setProfileImageIndex] = useState(0);
   const topCardX = useMotionValue(0);
   const isAnimatingTopCardRef = useRef(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
@@ -238,9 +239,15 @@ const Index = () => {
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
-  const selectedProfile = selectedList.length > 0 ? selectedList[selectedIndex] : null;
+  const selectedProfile = useMemo(() => {
+    return selectedList[selectedIndex] ?? null;
+  }, [selectedList, selectedIndex]);
 
-  // Reset top card position when selection changes so next card starts at 0
+  useEffect(() => {
+    if (!isProfileRoute) return;
+    setProfileImageIndex(0);
+  }, [isProfileRoute, selectedProfile?.id]);
+
   useEffect(() => {
     topCardX.set(0);
   }, [selectedIndex, selectedList.length, topCardX]);
@@ -912,7 +919,18 @@ const Index = () => {
               className="absolute inset-0 cursor-grab active:cursor-grabbing"
             >
               <img
-                src={selectedProfile.image}
+                src={(() => {
+                  if (!isProfileRoute) return selectedProfile.image;
+                  const imgs = (
+                    (Array.isArray((selectedProfile as any).images) ? (selectedProfile as any).images : []) as string[]
+                  )
+                    .filter(Boolean)
+                    .slice(0, 5);
+                  const fallback = selectedProfile.avatar_url ? [selectedProfile.avatar_url] : [selectedProfile.image];
+                  const list = imgs.length > 0 ? imgs : fallback;
+                  const idx = ((profileImageIndex % list.length) + list.length) % list.length;
+                  return list[idx];
+                })()}
                 alt={selectedProfile.name}
                 className="w-full h-full object-cover"
                 style={{
@@ -980,26 +998,73 @@ const Index = () => {
                 return null;
               })()}
 
-              {/* Fingerprint next — swipe this card only; stop propagation so bottom stack is not affected */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  if (isAnimatingTopCardRef.current || selectedList.length === 0) return;
-                  isAnimatingTopCardRef.current = true;
-                  animate(topCardX, 700, { duration: 0.22, ease: "easeOut" }).then(() => {
-                    setSelectedIndex((i) => (i + 1) % selectedList.length);
-                    topCardX.set(0);
-                    isAnimatingTopCardRef.current = false;
-                  });
-                }}
-                aria-label="Next profile"
-                className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 right-3 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
-                style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
-                title="Next profile"
-              >
-                <Fingerprint className="w-7 h-7 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
-              </button>
+              {!isProfileRoute ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (isAnimatingTopCardRef.current || selectedList.length === 0) return;
+                    isAnimatingTopCardRef.current = true;
+                    animate(topCardX, 700, { duration: 0.22, ease: "easeOut" }).then(() => {
+                      setSelectedIndex((i) => (i + 1) % selectedList.length);
+                      topCardX.set(0);
+                      isAnimatingTopCardRef.current = false;
+                    });
+                  }}
+                  aria-label="Next profile"
+                  className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 right-3 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
+                  style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+                  title="Next profile"
+                >
+                  <Fingerprint className="w-7 h-7 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const imgs = (
+                        (Array.isArray((selectedProfile as any).images) ? (selectedProfile as any).images : []) as string[]
+                      )
+                        .filter(Boolean)
+                        .slice(0, 5);
+                      const fallback = selectedProfile.avatar_url ? [selectedProfile.avatar_url] : [selectedProfile.image];
+                      const list = imgs.length > 0 ? imgs : fallback;
+                      if (list.length <= 1) return;
+                      setProfileImageIndex((v) => (v - 1 + list.length) % list.length);
+                    }}
+                    aria-label="Previous image"
+                    className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 left-3 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
+                    style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+                    title="Previous image"
+                  >
+                    <ChevronLeft className="w-8 h-8 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      const imgs = (
+                        (Array.isArray((selectedProfile as any).images) ? (selectedProfile as any).images : []) as string[]
+                      )
+                        .filter(Boolean)
+                        .slice(0, 5);
+                      const fallback = selectedProfile.avatar_url ? [selectedProfile.avatar_url] : [selectedProfile.image];
+                      const list = imgs.length > 0 ? imgs : fallback;
+                      if (list.length <= 1) return;
+                      setProfileImageIndex((v) => (v + 1) % list.length);
+                    }}
+                    aria-label="Next image"
+                    className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 right-3 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
+                    style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+                    title="Next image"
+                  >
+                    <ChevronRight className="w-8 h-8 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                  </button>
+                </>
+              )}
 
               {/* Like button — pink heart circle, top-right */}
               <button
@@ -1084,6 +1149,18 @@ const Index = () => {
           ))}
           <div className="relative z-10 h-full" ref={libraryRef}>
             <LikesLibrary
+              title={isProfileRoute ? "About Me" : undefined}
+              tabLabelOverrides={
+                isProfileRoute
+                  ? {
+                      new: "Profile",
+                      sent: "Date Ideas",
+                      received: "Reviews",
+                    }
+                  : undefined
+              }
+              profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
+              profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
               iLiked={iLiked}
               likedMe={likedMe}
               newProfiles={libraryNewProfiles}

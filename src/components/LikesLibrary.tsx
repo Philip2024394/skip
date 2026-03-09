@@ -52,6 +52,10 @@ const isNewProfile = (p: Profile) => {
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 interface LikesLibraryProps {
+  title?: string;
+  tabLabelOverrides?: Partial<Record<Tab, string>>;
+  profileFirstDateIdea?: string | null;
+  profileDatePlaces?: Profile["first_date_places"];
   iLiked: Profile[];
   likedMe: Profile[];
   newProfiles: Profile[];       // new: all profiles from Index, pre-filtered
@@ -79,6 +83,10 @@ const TABS: Tab[] = ["new", "sent", "received"];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 const LikesLibrary = ({
+  title,
+  tabLabelOverrides,
+  profileFirstDateIdea,
+  profileDatePlaces,
   iLiked, likedMe, newProfiles, filterCountry,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
@@ -174,6 +182,22 @@ const LikesLibrary = ({
     tab === "sent"     ? "Swipe up or down to like!" :
     "No likes yet — keep swiping!";
 
+  const isDateIdeasTab =
+    tab === "sent" &&
+    tabLabelOverrides?.sent === "Date Ideas" &&
+    (!!profileFirstDateIdea || (profileDatePlaces?.length ?? 0) > 0);
+
+  const dateIdeas = (
+    (profileDatePlaces || [])
+      .filter((p): p is NonNullable<typeof p> => !!p)
+      .slice(0, 3)
+  ) as NonNullable<Profile["first_date_places"]>;
+
+  const openUrl = (url: string) => {
+    if (!url) return;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* ── Header — tab swipe gesture lives here only ── */}
@@ -184,7 +208,7 @@ const LikesLibrary = ({
       >
         <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-1.5">
           <Heart className="w-4 h-4 text-primary" fill="currentColor" />
-          Match
+          {title ?? "Match"}
         </h2>
 
         {/* 3-tab pill */}
@@ -205,7 +229,7 @@ const LikesLibrary = ({
                 tab === t ? "text-white" : "text-white/40 hover:text-white/70"
               }`}
             >
-              {TAB_LABELS[t](counts)}
+              {tabLabelOverrides?.[t] ?? TAB_LABELS[t](counts)}
             </button>
           ))}
         </div>
@@ -249,9 +273,62 @@ const LikesLibrary = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.18 }}
-            className="flex gap-2 h-full py-1"
+            className={isDateIdeasTab ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
-            {displayItems.length === 0 ? (
+            {isDateIdeasTab ? (
+              dateIdeas.length === 0 && !profileFirstDateIdea ? (
+                <div className="flex items-center justify-center h-full px-4">
+                  <p className="text-white/40 text-xs text-center">No date ideas yet</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 h-full">
+                  {dateIdeas.map((place, idx) => (
+                    <motion.button
+                      key={`date-idea-${idx}`}
+                      type="button"
+                      initial={{ opacity: 0, scale: 0.92 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.92 }}
+                      transition={{ delay: Math.min(idx * 0.04, 0.12) }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (place.url) openUrl(place.url);
+                      }}
+                      className="flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border border-white/10 relative w-full"
+                      style={{ height: 124 }}
+                      aria-label={place.idea || "Date idea"}
+                    >
+                      <div className="relative w-full flex-1 rounded-lg overflow-hidden">
+                        <img
+                          src={place.image_url || "/placeholder.svg"}
+                          alt={place.idea}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+                      </div>
+
+                      <p className="text-white text-[9px] font-semibold leading-tight line-clamp-2 text-center w-full">
+                        {place.idea || "Date idea"}
+                      </p>
+
+                      <p className="text-white/50 text-[8px] truncate w-full text-center">
+                        {place.title || (place.url ? "Open" : "")}
+                      </p>
+                    </motion.button>
+                  ))}
+
+                  {dateIdeas.length === 0 && profileFirstDateIdea ? (
+                    <div className="col-span-3 flex items-center justify-center px-4">
+                      <div className="w-full rounded-xl bg-black/50 backdrop-blur-md border border-white/10 p-3">
+                        <p className="text-white/70 text-[10px] font-semibold text-center">{profileFirstDateIdea}</p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )
+            ) : displayItems.length === 0 ? (
               <div className="flex items-center justify-center flex-1 px-4">
                 <p className="text-white/40 text-xs text-center">{emptyText}</p>
               </div>
