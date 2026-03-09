@@ -1450,44 +1450,43 @@ const Index = () => {
                     <div className="h-full w-full flex flex-col">
                       <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Unlock</p>
 
-                      <div className="flex-1 flex flex-col items-center justify-center px-1">
-                        <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
-                          {selectedUnlockItemKey === "unlock:single" ? (
-                            <>
-                              <div className="relative overflow-hidden rounded-2xl border border-white/10">
-                                <img
-                                  src="https://ik.imagekit.io/7grri5v7d/match%20unlock.png?v=1"
-                                  alt=""
-                                  className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
-                                  draggable={false}
-                                  loading="eager"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/75" />
+                      {selectedUnlockItemKey === "unlock:single" ? (
+                        <div className="flex-1 w-full relative overflow-hidden rounded-2xl border border-white/10">
+                          <img
+                            src="https://ik.imagekit.io/7grri5v7d/match%20unlock.png?v=1"
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+                            draggable={false}
+                            loading="eager"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/75" />
 
-                                <div className="relative z-10 px-4 py-4 flex flex-col items-center justify-center text-center">
-                                  <p className="text-white text-sm font-black">1 Match Unlock</p>
-                                  <p className="text-white/80 text-xs mt-1">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
+                          <div className="relative z-10 h-full w-full p-4 flex flex-col items-center justify-center text-center">
+                            <p className="text-white text-base font-black">1 Match Unlock</p>
+                            <p className="text-white/85 text-xs mt-1 max-w-sm">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
 
-                                  <div className="mt-4 w-full flex items-center justify-between">
-                                    <p className="text-white/95 font-black text-xl">$1.99</p>
-                                    <Button
-                                      onClick={() => {
-                                        if (!selectedProfile) return;
-                                        setUnlockDialog(selectedProfile);
-                                      }}
-                                      className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
-                                    >
-                                      Unlock now
-                                    </Button>
-                                  </div>
+                            <div className="mt-5 w-full max-w-sm flex items-center justify-between">
+                              <p className="text-white/95 font-black text-2xl">$1.99</p>
+                              <Button
+                                onClick={() => {
+                                  if (!selectedProfile) return;
+                                  setUnlockDialog(selectedProfile);
+                                }}
+                                className="gradient-love text-primary-foreground border-0 h-11 rounded-xl font-black"
+                              >
+                                Unlock now
+                              </Button>
+                            </div>
 
-                                  <div className="mt-3 w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2">
-                                    <p className="text-white/70 text-[11px] font-semibold">Requires a mutual match ✅</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </>
-                          ) : selectedUnlockItemKey === "unlock:pack3" ? (
+                            <div className="mt-4 w-full max-w-sm rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+                              <p className="text-white/70 text-[11px] font-semibold">Requires a mutual match ✅</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center px-1">
+                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                            {selectedUnlockItemKey === "unlock:pack3" ? (
                             <>
                               <p className="text-white text-sm font-black text-center">3 Unlock Pack</p>
                               <p className="text-white/70 text-xs mt-1 text-center">Perfect for a week of real connections. Save vs singles.</p>
@@ -1556,8 +1555,9 @@ const Index = () => {
                           ) : (
                             <p className="text-white/60 text-xs">Select a package above</p>
                           )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   ) : aboutMeTab === "sent" ? (
                     <div className="h-full w-full flex flex-col">

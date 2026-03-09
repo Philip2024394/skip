@@ -23,9 +23,43 @@ const TEST_PASSWORD = import.meta.env.VITE_TEST_PASSWORD || "TestPass123";
 const LANDING_BG_URL = (import.meta.env.VITE_LANDING_BG_URL as string | undefined) || "https://ik.imagekit.io/7grri5v7d/sddfffaaa.png";
 const LANDING_BG_URL_VERSION = (import.meta.env.VITE_LANDING_BG_URL_VERSION as string | undefined) || "v2";
 
-const buildLandingBgSrc = (url: string, version: string) => {
+const FLAG_BY_COUNTRY: Record<string, string> = {
+  Indonesia: "🇮🇩",
+  "United States": "🇺🇸",
+  "United Kingdom": "🇬🇧",
+  Singapore: "🇸🇬",
+  Malaysia: "🇲🇾",
+  Thailand: "🇹🇭",
+  Philippines: "🇵🇭",
+  Vietnam: "🇻🇳",
+  India: "🇮🇳",
+  Australia: "🇦🇺",
+  Japan: "🇯🇵",
+  "South Korea": "🇰🇷",
+  Canada: "🇨🇦",
+  Germany: "🇩🇪",
+  France: "🇫🇷",
+  Netherlands: "🇳🇱",
+  Italy: "🇮🇹",
+  Spain: "🇪🇸",
+  Portugal: "🇵🇹",
+  UAE: "🇦🇪",
+  "Saudi Arabia": "🇸🇦",
+};
+
+const getFlagForCountry = (country: string) => FLAG_BY_COUNTRY[country] || "🏳️";
+
+const appendQueryParams = (url: string, params: Record<string, string>) => {
   const hasQuery = url.includes("?");
-  return `${url}${hasQuery ? "&" : "?"}v=${encodeURIComponent(version)}`;
+  const base = `${url}${hasQuery ? "&" : "?"}`;
+  const query = Object.entries(params)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+  return `${base}${query}`;
+};
+
+const buildLandingBgSrc = (url: string, version: string, extra?: Record<string, string>) => {
+  return appendQueryParams(url, { v: version, ...(extra || {}) });
 };
 
 const AuthPage = () => {
@@ -140,6 +174,10 @@ const AuthPage = () => {
 
   // Landing screen
   if (!showAuth) {
+    const selectedCountryForPrefix =
+      Object.entries(COUNTRY_CODES).find(([, code]) => code === landingPrefix)?.[0] || "Indonesia";
+    const selectedFlag = getFlagForCountry(selectedCountryForPrefix);
+
     const buildE164 = (prefix: string, national: string) => {
       const p = String(prefix || "").trim();
       const pDigits = p.replace(/\D/g, "");
@@ -194,7 +232,20 @@ const AuthPage = () => {
     return (
       <div className="h-screen-safe relative overflow-hidden">
         <img
-          src={buildLandingBgSrc(LANDING_BG_URL, LANDING_BG_URL_VERSION)}
+          src={buildLandingBgSrc(
+            LANDING_BG_URL,
+            LANDING_BG_URL_VERSION,
+            LANDING_BG_URL.includes("imagekit.io") ? { tr: "q-100,fo-auto,w-2160" } : undefined
+          )}
+          srcSet={
+            LANDING_BG_URL.includes("imagekit.io")
+              ? [
+                  `${buildLandingBgSrc(LANDING_BG_URL, LANDING_BG_URL_VERSION, { tr: "q-100,fo-auto,w-1080" })} 1080w`,
+                  `${buildLandingBgSrc(LANDING_BG_URL, LANDING_BG_URL_VERSION, { tr: "q-100,fo-auto,w-2160" })} 2160w`,
+                ].join(", ")
+              : undefined
+          }
+          sizes={LANDING_BG_URL.includes("imagekit.io") ? "100vw" : undefined}
           alt=""
           className="fixed inset-0 w-full h-full object-cover pointer-events-none select-none"
           draggable={false}
@@ -211,12 +262,12 @@ const AuthPage = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15, duration: 0.4 }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-[min(92vw,22rem)]"
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-[min(86vw,13.25rem)] sm:w-[min(92vw,18rem)]"
           style={{ paddingTop: `max(0px, env(safe-area-inset-top, 0px))` }}
         >
-          <div className="rounded-3xl bg-yellow-400 p-4 shadow-[0_0_30px_rgba(250,204,21,0.25)] border border-yellow-300/60">
-            <div className="flex items-center justify-center mb-2">
-              <AppLogo className="w-20 h-20 object-contain" />
+          <div className="rounded-3xl bg-yellow-400 p-3 shadow-[0_0_30px_rgba(250,204,21,0.25)] border border-yellow-300/60">
+            <div className="flex items-center justify-center mb-1.5">
+              <AppLogo className="w-14 h-14 object-contain" />
             </div>
 
             <p className="text-black/80 text-xs font-semibold text-center">
@@ -224,15 +275,22 @@ const AuthPage = () => {
             </p>
 
             <div className="mt-3 space-y-2">
-              <div className="grid grid-cols-[120px_1fr] gap-2">
+              <div className="grid grid-cols-[96px_1fr] gap-2">
                 <Select value={landingPrefix} onValueChange={setLandingPrefix}>
-                  <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
-                    <SelectValue placeholder="+62" />
+                  <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-10">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-sm leading-none">{selectedFlag}</span>
+                      <span className="text-[12px] font-semibold">{landingPrefix}</span>
+                    </span>
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
                     {Object.entries(COUNTRY_CODES).map(([country, code]) => (
                       <SelectItem key={country} value={code} className="text-black">
-                        {country} ({code})
+                        <span className="flex items-center gap-2">
+                          <span className="text-sm leading-none">{getFlagForCountry(country)}</span>
+                          <span className="text-black/90">{country}</span>
+                          <span className="text-black/60">{code}</span>
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -242,7 +300,7 @@ const AuthPage = () => {
                   value={landingNumber}
                   onChange={(e) => setLandingNumber(e.target.value)}
                   placeholder="WhatsApp number"
-                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11"
+                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-10"
                   inputMode="tel"
                 />
               </div>
@@ -250,7 +308,7 @@ const AuthPage = () => {
               <Button
                 onClick={handleLandingEnter}
                 disabled={landingSubmitting}
-                className="w-full h-12 rounded-2xl bg-black text-white hover:bg-black/90 font-bold"
+                className="w-full h-11 rounded-2xl bg-black text-white hover:bg-black/90 font-bold"
               >
                 {landingSubmitting ? "Entering..." : "Enter App"}
               </Button>
