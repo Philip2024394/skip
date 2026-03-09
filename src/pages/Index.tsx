@@ -281,7 +281,7 @@ const Index = () => {
         // Check rose availability, terms acceptance, and gender
         const { data: myProfile } = await supabase
           .from("profiles")
-          .select("last_rose_at, terms_accepted_at, gender, is_active, display_name, username")
+          .select("last_rose_at, terms_accepted_at, gender, is_active, name")
           .eq("id", session.user.id)
           .single();
         if (myProfile) {
@@ -303,7 +303,7 @@ const Index = () => {
               .from("profiles")
               .update({ is_active: true, hidden_until: null } as any)
               .eq("id", session.user.id);
-            const name = (myProfile as any).display_name || (myProfile as any).username || "friend";
+            const name = (myProfile as any).name || "friend";
             welcomeBackName.current = name;
             setShowWelcomeBack(true);
           }

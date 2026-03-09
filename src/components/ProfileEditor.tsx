@@ -99,8 +99,8 @@ const ProfileEditor = () => {
       if (!user) return;
       setUserId(user.id);
 
-      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone, generous_lifestyle, weekend_plans, late_night_chat, no_drama";
-      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, is_plusone, generous_lifestyle";
+      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages";
+      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages";
 
       let data: Record<string, unknown> | null = null;
       let useBadgeColumns = true;
@@ -150,11 +150,11 @@ const ProfileEditor = () => {
           first_date_idea: (data.first_date_idea as string | null) || null,
           first_date_places: ((data.first_date_places as DatePlace[]) || []),
           languages: ((data.languages as string[]) || []),
-          is_plusone: (data.is_plusone as boolean) || false,
-          generous_lifestyle: (data.generous_lifestyle as boolean) || false,
-          weekend_plans: useBadgeColumns ? ((data.weekend_plans as boolean) || false) : false,
-          late_night_chat: useBadgeColumns ? ((data.late_night_chat as boolean) || false) : false,
-          no_drama: useBadgeColumns ? ((data.no_drama as boolean) || false) : false,
+          is_plusone: false,
+          generous_lifestyle: false,
+          weekend_plans: false,
+          late_night_chat: false,
+          no_drama: false,
         });
         setSchemaHasBadgeColumns(useBadgeColumns);
       }

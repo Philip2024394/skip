@@ -13,7 +13,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, readdirSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 
@@ -72,18 +72,115 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
+const MOCK_FEMALE_DIR = process.env.MOCK_FEMALE_DIR || scriptEnv.MOCK_FEMALE_DIR || "";
+const MOCK_MALE_DIR = process.env.MOCK_MALE_DIR || scriptEnv.MOCK_MALE_DIR || "";
+
 // ── 2. Mock profile data (Unsplash URLs — no bundler needed) ──────────────────
 
 const FEMALE_NAMES = [
-  "Putri", "Dewi", "Sari", "Ayu", "Rina", "Wulan", "Indah", "Ratna", "Mega", "Dian",
-  "Lestari", "Anisa", "Fitri", "Nurul", "Sinta", "Kartika", "Melati", "Citra", "Bunga", "Kirana",
-  "Dinda", "Nadia", "Laras", "Tari", "Widya",
+  "Aulia",
+  "Ayu",
+  "Putri",
+  "Sari",
+  "Nisa",
+  "Rani",
+  "Dwi",
+  "Indah",
+  "Intan",
+  "Fitri",
+  "Rina",
+  "Wulan",
+  "Cahya",
+  "Devi",
+  "Lestari",
+  "Kartika",
+  "Nadya",
+  "Fitria",
+  "Dian",
+  "Maya",
+  "Anggun",
+  "Anisa",
+  "Ratna",
+  "Shinta",
+  "Eka",
+  "Vina",
+  "Tiara",
+  "Melati",
+  "Citra",
+  "Fadila",
+  "Putriani",
+  "Arum",
+  "Febri",
+  "Ayuningtyas",
+  "Restu",
+  "Amara",
+  "Pratiwi",
+  "Nurul",
+  "Sekar",
+  "Yuni",
+  "Alifa",
+  "Hana",
+  "Nadine",
+  "Sabrina",
+  "Safira",
+  "Laras",
+  "Nabila",
+  "Shafira",
+  "Kirana",
+  "Dinda",
+  "Hesti",
+  "Rahayu",
+  "Melinda",
+  "Nindya",
+  "Syifa",
+  "Aisyah",
+  "Rima",
+  "Ika",
+  "Indri",
+  "Tika",
+  "Dewi",
+  "Anjani",
+  "Ayunda",
+  "Lintang",
+  "Arini",
+  "Zahra",
+  "Intania",
+  "Nadira",
+  "Rara",
+  "Safira",
+  "Adelia",
+  "Naila",
+  "Qonita",
+  "Aurelia",
+  "Laila",
+  "Fani",
+  "Virna",
+  "Putriella",
+  "Shakila",
+  "Kiranti",
 ];
 
 const MALE_NAMES = [
-  "Budi", "Rizky", "Dimas", "Arief", "Bayu", "Dwi", "Eko", "Gilang",
-  "Hendra", "Irfan", "Joko", "Kevin", "Made", "Naufal", "Oka",
-  "Teguh", "Umar",
+  "Aditya",
+  "Bayu",
+  "Rizky",
+  "Dawn",
+  "Andi",
+  "Dimas",
+  "Arief",
+  "Period",
+  "Nugroho",
+  "Revelation",
+  "Budi",
+  "Iqbal",
+  "Hendra",
+  "Yoga",
+  "Rian",
+  "On",
+  "Akbar",
+  "Jaya",
+  "Rafli",
+  "Taufik",
 ];
 
 const CITIES = [
@@ -123,39 +220,109 @@ const MALE_IMAGES = [
 ];
 
 const FEMALE_BIOS = [
-  "Marketing exec by day, home chef by night 🍳 Love trying new warungs around the city",
-  "Freelance designer based in Bali 🎨 Looking for someone to watch sunsets with",
-  "Med student, coffee addict ☕ Let's grab nasi goreng sometime?",
-  "Teaching English to kids 📚 Weekend hiker, love Bromo & Rinjani",
-  "Working in fintech 💼 Obsessed with matcha lattes and bookstores",
-  "Fashion buyer ✨ Always planning my next trip, love Komodo Island",
-  "Nurse at RS Siloam 🏥 Enjoy cooking for friends and karaoke nights",
-  "Content creator 📱 Cat mom to 3 rescue babies 🐱",
-  "Accountant who dreams of opening a bakery 🧁 Swipe right if you love dessert",
-  "Environmental scientist 🌿 Beach cleanups on weekends",
-  "Graphic designer & part-time DJ 🎧 Always discovering new music",
-  "Hotel management graduate 🏨 Love meeting people from different cultures",
-  "Psychology student 🧠 Good listener, better cook. Try me!",
-  "Software engineer 💻 Yoga every morning, gaming every night",
-  "Dance teacher 💃 Salsa, contemporary, traditional — I do it all",
+  "Always looking for happiness in simple things while enjoying coffee and sunset on the beach.",
+  "Lover of books and music, likes to take leisurely walks to calm his mind.",
+  "Live a simple but colorful life, always trying new experiences.",
+  "Laughter is my best medicine, accompanied by a cup of tea and my favorite song.",
+  "Dare to try new things, learn from mistakes, keep smiling.",
+  "Love sharing stories, enjoying little moments, always being grateful.",
+  "Nature and travel lover, always want to explore beautiful places.",
+  "Life is about dreams, music, and friends who make me happy.",
+  "Likes sweet things, but the heart remains strong and does not give up easily.",
+  "Enjoy every second of life, learn from experience, always be optimistic.",
+  "Coffee and sunset lover, always looking for simple happiness.",
+  "Life is short, so I choose to smile and chase my dreams.",
+  "Always want to learn new things, meet new people, discover new stories.",
+  "Laughing, walking, and dreaming — the way I live my life.",
+  "Live a life full of curiosity, try new things, share happiness.",
+  "Enjoying simple moments, from morning coffee to sunset on the beach.",
+  "Warm heart, creative mind, always looking for inspiration around.",
+  "Enjoy talking, listening, finding little things that make you happy.",
+  "Life is a mix of dreams, adventures, and laughter with friends.",
+  "Love challenges, love nature, believe every day has miracles.",
+  "Enjoying music and travel, while learning to appreciate the little moments.",
+  "Lover of coffee, sunsets, and books that can make me lose myself in the story.",
+  "My life is about big dreams and simple happiness every day.",
+  "Dare to take risks, keep smiling even when facing challenges.",
+  "Enjoying laughter, travel, and being with good people.",
+  "Love photography and nature, always want to capture beautiful moments.",
+  "Live a simple but colorful life, always learn from experience.",
+  "Always look for inspiration, try new things, and stay optimistic.",
+  "Enjoy every second, from morning coffee to beautiful sunset.",
+  "Lover of nature and new cities, love to meet new friends.",
+  "Love to laugh and share stories, live with gratitude.",
+  "Life is full of curiosity, always looking for new experiences.",
+  "Enjoying the little moments, while learning from life experiences.",
+  "Lover of music, coffee, and sunsets that soothe the heart.",
+  "My life is about dreams, laughter, and people who make me happy.",
+  "Enjoy sharing stories, learning new things, and chasing dreams.",
+  "Love traveling, exploring new places, and trying local food.",
+  "Life is simple but always colored with laughter and happiness.",
+  "Lover of coffee, books, and a soothing afternoon atmosphere.",
+  "Enjoying music, travel, and memorable little experiences.",
+  "Life is full of adventures, dreams, and laughter with friends.",
+  "Always try new things, learn from experience, and keep smiling.",
+  "Lover of nature and new cities, always looking for things that make her happy.",
+  "My life is about dreams, music, laughter, and simple happiness.",
+  "Likes reading, listening to music, and sharing stories with friends.",
+  "Enjoying the little moments, while pursuing big dreams in life.",
+  "Lovers of coffee, sunsets, and an atmosphere that calms the heart.",
+  "Life is simple but full of colors and new adventures every day.",
+  "Always looking for inspiration, trying new things, and sharing happiness.",
+  "Enjoy the journey, meet new people, and learn from the experience.",
+  "Life is about dreams, laughter, and happiness in simple things.",
+  "Enjoys walking, enjoying music, and collecting beautiful stories.",
+  "Lover of coffee, books, and an atmosphere that makes the heart peaceful.",
+  "Enjoy every second of life, learn, and stay optimistic.",
+  "My life is a mix of dreams, adventures, and laughter from friends.",
+  "Always want to learn new things, meet friends, and try new experiences.",
+  "Lover of nature and new cities, loves to capture beautiful moments.",
+  "Life is simple but always colorful, full of laughter and happiness.",
+  "Love music, coffee, and a comfortable atmosphere.",
+  "Enjoying trips and small memorable experiences.",
+  "Life is full of dreams, laughter, and happiness from simple things.",
+  "Always looking for new things, trying new experiences, keep smiling.",
+  "Lover of nature, new cities, and precious little moments.",
+  "My life is about dreams, music, and simple everyday happiness.",
+  "Loves reading, coffee, and sharing stories with close friends.",
+  "Enjoy every second of life, learn, and pursue dreams.",
+  "Life is a mix of dreams, laughter, and new adventures.",
+  "Always want to learn new things and meet inspiring people.",
+  "Nature and travel lover, always looking to discover new things.",
+  "Live a simple but colorful life, always smile every day.",
+  "Enjoying music, coffee, and small moments that soothe the heart.",
+  "My life is about dreams, happiness, and valuable experiences.",
+  "Loves traveling, trying new things, and collecting beautiful stories.",
+  "Lover of nature, books, and simple things that make me happy.",
+  "Enjoy every second of life, laughter, and small joys.",
+  "Life is full of adventures, dreams, and laughter with friends.",
+  "Always try new things, learn from experience, stay optimistic.",
+  "Lover of coffee, new cities, and little moments that make you happy.",
+  "My life is about dreams, music, laughter, and beautiful simple things.",
+  "Enjoy the journey, the experiences, and the people who make you happy.",
 ];
 
 const MALE_BIOS = [
-  "Software developer 💻 Weekend surfer in Kuta, coffee snob",
-  "Running a small coffee roastery in Bandung ☕ Let's talk beans",
-  "Civil engineer building bridges — literally 🌉 Love hiking on weekends",
-  "Photographer 📸 Chasing golden hours across Java",
-  "Chef at a fusion restaurant 🍜 I'll cook you something amazing",
-  "Startup founder in edtech 🚀 Passionate about education access",
-  "Music producer 🎵 Guitar player, vinyl collector",
-  "Doctor at a community clinic 🩺 Believe in giving back",
-  "Architect designing sustainable homes 🏡 Nature lover",
-  "Marine tour guide in Raja Ampat 🤿 Best job in the world",
-  "Teacher and part-time soccer coach ⚽ Kids call me Pak Cool",
-  "Import-export business 📦 Traveled to 20+ countries for work",
-  "Mechanical engineer 🔧 Weekend motorbike adventures",
-  "Graphic designer & street art enthusiast 🎨 Know every mural in Jogja",
-  "Personal trainer 💪 Help you get fit, one rep at a time",
+  "I am a coffee and nature lover, love exploring new places, trying local food, and learning from every experience to make life more colorful every day.",
+  "My life is about chasing big dreams, meeting new people, laughing with friends, and enjoying every moment that makes me grateful and continues to grow.",
+  "I like traveling, reading books, listening to music.",
+  "Enjoying simple moments like sunset on the beach, warm morning coffee, and laughter with those closest to you always makes your heart calm and happy.",
+  "I love to travel, seek inspiration, share stories, and learn from every experience that broadens my horizons and makes life more meaningful.",
+  "My life is a mix of dreams, laughter, and new experiences, I always try to be the best version of myself.",
+  "I am a nature and sports lover, always trying new things, appreciating small moments, and trying to make every day more meaningful.",
+  "Enjoy every journey, meet new people, try unique foods, and gather valuable experiences.",
+  "Hidupku tentang mimpi, musik, dan tawa, aku selalu belajar dari pengalaman, menghadapi tantangan, dan tetap optimis sambil menikmati setiap momen kecil.",
+  "I like reading, listening to music, and enjoying the calming afternoon atmosphere while thinking about things.",
+  "Selalu ingin belajar hal baru, mencoba pengalaman yang menantang, dan bertemu orang-orang inspiratif yang membuat hidup lebih berwarna dan penuh cerita.",
+  "I love coffee, new cities, and simple things that make me happy, while constantly seeking new experiences.",
+  "My life is simple but full of adventure, I love sharing laughter with friends, trying new things, and making every day a memorable moment.",
+  "I enjoy music, sports, and challenging activities, while always learning from every mistake and life experience.",
+  "Menikmati perjalanan, mencoba hal baru, bertemu orang baru, dan menghargai setiap momen kecil yang memberi kebahagiaan dan inspirasi setiap hari.",
+  "My life is about big dreams, valuable experiences, and laughter with the people closest to me.",
+  "I am a lover of nature, traveling, and local food, always trying to find beautiful things that make life more meaningful and colorful every day.",
+  "Always looking for inspiration, trying new things, learning from experience, and sharing stories that can encourage others to explore life with curiosity.",
+  "My life is a mix of dreams, music, travel, and meaningful conversations — I enjoy new places and small moments that make each day feel special.",
+  "I enjoy every second of life, learn from experience, meet new people, and keep moving forward with optimism and gratitude.",
 ];
 
 const LOOKING_FOR = ["Dating", "Relationship", "Friendship", "Dating", "Relationship"];
@@ -180,25 +347,65 @@ interface MockProfile {
   available_tonight: boolean;
   last_seen_at: string;
   languages: string[];
-  is_plusone: boolean;
   is_active: boolean;
 }
 
-function buildProfiles(count = 50): MockProfile[] {
+function listImages(dir: string): string[] {
+  if (!dir) return [];
+  if (!existsSync(dir)) return [];
+  const files = readdirSync(dir)
+    .filter((f) => /\.(png|jpg|jpeg|webp)$/i.test(f))
+    .map((f) => resolve(dir, f));
+  return files;
+}
+
+async function uploadImageIfLocal(localPathOrUrl: string, userId: string): Promise<string> {
+  if (!localPathOrUrl) return localPathOrUrl;
+  const isRemote = /^https?:\/\//i.test(localPathOrUrl);
+  if (isRemote) return localPathOrUrl;
+
+  const bytes = readFileSync(localPathOrUrl);
+  const extMatch = localPathOrUrl.match(/\.(png|jpg|jpeg|webp)$/i);
+  const ext = (extMatch?.[1] || "png").toLowerCase();
+  const contentType = ext === "jpg" || ext === "jpeg" ? "image/jpeg" : ext === "webp" ? "image/webp" : "image/png";
+
+  const objectPath = `mock-profiles/${userId}/${Date.now()}-${Math.random().toString(16).slice(2)}.${ext}`;
+  const { error: uploadErr } = await supabase.storage
+    .from("profile-images")
+    .upload(objectPath, bytes, { upsert: true, contentType });
+  if (uploadErr) throw uploadErr;
+
+  const { data } = supabase.storage.from("profile-images").getPublicUrl(objectPath);
+  return data.publicUrl;
+}
+
+function buildProfiles(opts: { femaleCount: number; maleCount: number }): MockProfile[] {
+  const { femaleCount, maleCount } = opts;
   const profiles: MockProfile[] = [];
-  for (let i = 0; i < count; i++) {
-    const isFemale = i % 2 === 0;
+
+  const femaleLocalImages = listImages(MOCK_FEMALE_DIR);
+  const maleLocalImages = listImages(MOCK_MALE_DIR);
+
+  const total = femaleCount + maleCount;
+  for (let i = 0; i < total; i++) {
+    const isFemale = i < femaleCount;
     const nameList = isFemale ? FEMALE_NAMES : MALE_NAMES;
     const imageList = isFemale ? FEMALE_IMAGES : MALE_IMAGES;
     const name = nameList[i % nameList.length];
     const cityIdx = i % CITIES.length;
     const [lat, lng] = COORDS[cityIdx];
     const bioList = isFemale ? FEMALE_BIOS : MALE_BIOS;
-    const profileIdx = Math.floor(i / 2);
+
+    const genderIdx = isFemale ? i : i - femaleCount;
+    const profileIdx = genderIdx;
+
+    const localList = isFemale ? femaleLocalImages : maleLocalImages;
+
     const imageCount = 2 + (i % 2);
     const images: string[] = [];
     for (let j = 0; j < imageCount; j++) {
-      images.push(imageList[(profileIdx + j) % imageList.length]);
+      const local = localList.length > 0 ? localList[(profileIdx + j) % localList.length] : "";
+      images.push(local || imageList[(profileIdx + j) % imageList.length]);
     }
     const now = Date.now();
     const isOnline = Math.random() > 0.4;
@@ -225,7 +432,6 @@ function buildProfiles(count = 50): MockProfile[] {
       available_tonight: Math.random() > 0.65,
       last_seen_at,
       languages: ["Indonesian", ...extraLangs],
-      is_plusone: i % 4 === 1,
       is_active: true,
     });
   }
@@ -235,9 +441,14 @@ function buildProfiles(count = 50): MockProfile[] {
 // ── 3. Main upload logic ──────────────────────────────────────────────────────
 
 async function main() {
-  const profiles = buildProfiles(50);
+  const profiles = buildProfiles({ femaleCount: 80, maleCount: 20 });
   console.log(`\n📦  Preparing to upload ${profiles.length} mock profiles to production Supabase...\n`);
   console.log(`    URL: ${SUPABASE_URL}\n`);
+  if (MOCK_FEMALE_DIR || MOCK_MALE_DIR) {
+    console.log(`    Local female images dir: ${MOCK_FEMALE_DIR || "(not set)"}`);
+    console.log(`    Local male images dir:   ${MOCK_MALE_DIR || "(not set)"}`);
+    console.log("    Images will be uploaded into Supabase Storage bucket: profile-images\n");
+  }
 
   let created = 0;
   let skipped = 0;
@@ -247,7 +458,6 @@ async function main() {
     try {
       // Step A: Try to create the auth user
       const { data: createData, error: authErr } = await supabase.auth.admin.createUser({
-        user_id: p.id,
         email: p.email,
         email_confirm: true,
         password: "demo-account-not-for-login",
@@ -273,19 +483,20 @@ async function main() {
         continue;
       }
 
-      // Step B: Resolve the actual UUID Supabase assigned
-      // (may differ from our requested id if it was ignored)
-      let resolvedId = p.id;
-      if (createData?.user?.id) {
-        resolvedId = createData.user.id;
-      } else {
-        // Look up by email to get the real UUID
-        const { data: { users } } = await supabase.auth.admin.listUsers();
-        const match = users.find((u) => u.email === p.email);
-        if (match) resolvedId = match.id;
+      // Step B: Use the created user's UUID (required for profiles.id FK)
+      // If the user already exists and the API didn't return the user object,
+      // we can't reliably determine the UUID without listing users. In that case,
+      // skip updating this profile to avoid mismatched IDs.
+      const resolvedId = createData?.user?.id;
+      if (!resolvedId) {
+        console.log(`  ♻️   Skipped   ${p.name} (auth user already exists)`);
+        skipped++;
+        continue;
       }
 
       // Step C: Upsert the profile row using the resolved UUID
+      const uploadedImages = await Promise.all(p.images.map((img) => uploadImageIfLocal(img, resolvedId)));
+      const avatarUrl = uploadedImages[0] || p.avatar_url;
       const { error: profileErr } = await supabase.from("profiles").upsert(
         {
           id: resolvedId,
@@ -297,14 +508,13 @@ async function main() {
           city: p.city,
           bio: p.bio,
           whatsapp: p.whatsapp,
-          avatar_url: p.avatar_url,
-          images: p.images,
+          avatar_url: avatarUrl,
+          images: uploadedImages,
           latitude: p.latitude,
           longitude: p.longitude,
           available_tonight: p.available_tonight,
           last_seen_at: p.last_seen_at,
           languages: p.languages,
-          is_plusone: p.is_plusone,
           is_active: true,
           is_banned: false,
         },
@@ -314,9 +524,6 @@ async function main() {
       if (profileErr) {
         console.error(`  ❌  [profile] ${p.name}: ${profileErr.message}`);
         failed++;
-      } else if (alreadyExists && authErr) {
-        console.log(`  ♻️   Upserted  ${p.name} (${p.city})`);
-        skipped++;
       } else {
         console.log(`  ✅  Created   ${p.name} (${p.city})`);
         created++;
