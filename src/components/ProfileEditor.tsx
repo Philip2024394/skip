@@ -1223,7 +1223,7 @@ const ProfileEditor = () => {
                 <button
                   onClick={async () => {
                     await supabase.auth.signOut();
-                    window.location.href = "/auth";
+                    window.location.href = "/";
                   }}
                   className="w-full py-3 rounded-2xl gradient-love text-white font-bold text-sm"
                 >

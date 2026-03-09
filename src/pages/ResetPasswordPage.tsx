@@ -97,7 +97,7 @@ const ResetPasswordPage = () => {
             </>
           )}
 
-          <Button variant="outline" onClick={() => navigate("/auth")} className="w-full border-white/10 text-white/70 hover:bg-white/10 hover:text-white rounded-xl">
+          <Button variant="outline" onClick={() => navigate("/?signin=1")} className="w-full border-white/10 text-white/70 hover:bg-white/10 hover:text-white rounded-xl">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Sign In
           </Button>
         </div>

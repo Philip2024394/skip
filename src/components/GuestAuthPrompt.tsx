@@ -20,8 +20,8 @@ const GuestAuthPrompt = ({ open, onClose, trigger = "generic" }: GuestAuthPrompt
   const title = t(titleKey as any);
   const body = t(bodyKey as any);
 
-  const goSignUp  = () => { onClose(); navigate("/auth?register=1"); };
-  const goSignIn  = () => { onClose(); navigate("/auth?signin=1"); };
+  const goSignUp  = () => { onClose(); navigate("/?register=1"); };
+  const goSignIn  = () => { onClose(); navigate("/?signin=1"); };
 
   const perks = [
     { icon: <Heart className="w-4 h-4 text-primary" fill="currentColor" />, textKey: "guest.perk1" },

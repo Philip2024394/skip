@@ -924,7 +924,7 @@ const Index = () => {
       // ignore
     }
     await supabase.auth.signOut();
-    navigate("/auth");
+    navigate("/");
   };
 
   const handleLibraryCardDrag = (_: any, info: PanInfo) => {
