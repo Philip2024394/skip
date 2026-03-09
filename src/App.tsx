@@ -10,6 +10,14 @@ import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import DashboardPage from "./pages/DashboardPage";
+import AdminPage from "./pages/AdminPage";
+import MapPage from "./pages/MapPage";
+import TermsPage from "./pages/TermsPage";
+import PrivacyPage from "./pages/PrivacyPage";
+import FaqPage from "./pages/FaqPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useServiceWorkerUpdate } from "./hooks/useServiceWorkerUpdate";
@@ -57,12 +65,19 @@ const AppContent = () => {
       <ErrorBoundary>
         <AndroidBackHandler />
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<AuthPage />} />
           <Route path="/home" element={<Index />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/profile/:id" element={<Index />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/faq" element={<FaqPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>
     </BrowserRouter>
