@@ -401,11 +401,12 @@ function buildProfiles(opts: { femaleCount: number; maleCount: number }): MockPr
 
     const localList = isFemale ? femaleLocalImages : maleLocalImages;
 
-    const imageCount = 2 + (i % 2);
+    const imageCount = 2;
     const images: string[] = [];
     for (let j = 0; j < imageCount; j++) {
-      const local = localList.length > 0 ? localList[(profileIdx + j) % localList.length] : "";
-      images.push(local || imageList[(profileIdx + j) % imageList.length]);
+      const baseIdx = profileIdx * imageCount;
+      const local = localList.length > 0 ? localList[(baseIdx + j) % localList.length] : "";
+      images.push(local || imageList[(baseIdx + j) % imageList.length]);
     }
     const now = Date.now();
     const isOnline = Math.random() > 0.4;

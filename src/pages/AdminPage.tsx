@@ -96,6 +96,7 @@ const UserDrawer = ({
   onDelete,
   onSpotlight,
   onReactivate,
+  onUploadImages,
   actionLoading,
 }: {
   profile: AdminProfile;
@@ -104,8 +105,13 @@ const UserDrawer = ({
   onDelete: (id: string) => void;
   onSpotlight: (id: string, on: boolean) => void;
   onReactivate: (id: string) => void;
+  onUploadImages: (id: string, files: File[]) => Promise<void>;
   actionLoading: string | null;
-}) => (
+}) => {
+  const [files, setFiles] = useState<File[]>([]);
+  const uploading = actionLoading === `upload-images:${profile.id}`;
+
+  return (
   <>
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
@@ -203,11 +209,43 @@ const UserDrawer = ({
               <Trash2 className="w-4 h-4" /> Delete Account
             </button>
           </div>
+
+          <div className="space-y-2">
+            <p className="text-white/60 text-xs font-semibold">Profile images</p>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(e) => {
+                const list = Array.from(e.target.files || []);
+                setFiles(list.slice(0, 2));
+              }}
+              className="block w-full text-xs text-white/70 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:bg-white/10 file:text-white/80 hover:file:bg-white/15"
+            />
+            <button
+              onClick={async () => {
+                if (files.length !== 2) {
+                  alert("Please choose exactly 2 images.");
+                  return;
+                }
+                await onUploadImages(profile.id, files);
+                setFiles([]);
+              }}
+              disabled={uploading}
+              className="h-11 w-full rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 bg-white/10 border border-white/10 text-white/80 transition-all active:scale-95 disabled:opacity-60"
+            >
+              {uploading ? "Uploading..." : "Upload 2 images"}
+            </button>
+            <p className="text-white/30 text-[10px]">
+              This uploads via a secure Supabase Edge Function and updates the user's profile.
+            </p>
+          </div>
         </div>
       </div>
     </motion.div>
   </>
-);
+  );
+};
 
 // ── Main component ────────────────────────────────────────────────────────────
 const AdminPage = () => {
@@ -381,6 +419,46 @@ const AdminPage = () => {
       setProfiles(p => p.map(u => u.id === userId ? { ...u, hidden_until: null, is_active: true } : u));
     }
     setActionLoading(null);
+  };
+
+  const handleUploadImages = async (userId: string, files: File[]) => {
+    setActionLoading(`upload-images:${userId}`);
+    try {
+      if (files.length !== 2) throw new Error("Please select exactly 2 images");
+
+      const toPayload = async (file: File) => {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.onload = () => {
+            const res = String(reader.result || "");
+            const comma = res.indexOf(",");
+            resolve(comma >= 0 ? res.slice(comma + 1) : res);
+          };
+          reader.readAsDataURL(file);
+        });
+
+        const extFromName = file.name.split(".").pop()?.toLowerCase();
+        const ext = extFromName && /^[a-z0-9]+$/.test(extFromName) ? extFromName : "png";
+        return { base64, contentType: file.type || "image/png", ext };
+      };
+
+      const images = await Promise.all(files.map(toPayload));
+      const { data, error } = await supabase.functions.invoke("admin-upload-profile-images", {
+        body: { targetUserId: userId, images },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error("Upload failed");
+
+      toast.success("Images uploaded");
+      setProfiles((p) => p.map((u) => (u.id === userId ? { ...u, avatar_url: data.avatar_url } : u)));
+      setSelectedUser((u) => (u && u.id === userId ? { ...u, avatar_url: data.avatar_url } : u));
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   // ── CSV Export ───────────────────────────────────────────────────
@@ -737,6 +815,7 @@ const AdminPage = () => {
             onDelete={handleDelete}
             onSpotlight={handleSpotlight}
             onReactivate={handleReactivate}
+            onUploadImages={handleUploadImages}
             actionLoading={actionLoading}
           />
         )}
