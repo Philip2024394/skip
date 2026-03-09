@@ -230,28 +230,19 @@ const AuthPage = () => {
     };
 
     return (
-      <div className="h-screen-safe relative overflow-hidden">
-        <img
-          src={buildLandingBgSrc(
+      <div
+        className="h-screen-safe relative overflow-hidden"
+        style={{
+          backgroundImage: `url('${buildLandingBgSrc(
             LANDING_BG_URL,
             LANDING_BG_URL_VERSION,
             LANDING_BG_URL.includes("imagekit.io") ? { tr: "q-100,fo-auto,w-2160" } : undefined
-          )}
-          srcSet={
-            LANDING_BG_URL.includes("imagekit.io")
-              ? [
-                  `${buildLandingBgSrc(LANDING_BG_URL, LANDING_BG_URL_VERSION, { tr: "q-100,fo-auto,w-1080" })} 1080w`,
-                  `${buildLandingBgSrc(LANDING_BG_URL, LANDING_BG_URL_VERSION, { tr: "q-100,fo-auto,w-2160" })} 2160w`,
-                ].join(", ")
-              : undefined
-          }
-          sizes={LANDING_BG_URL.includes("imagekit.io") ? "100vw" : undefined}
-          alt=""
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black object-contain w-[max(240px,calc(100vw-300px))] h-[max(240px,calc(100svh-300px))] sm:inset-0 sm:left-0 sm:top-0 sm:translate-x-0 sm:translate-y-0 sm:w-full sm:h-full sm:bg-transparent sm:object-cover sm:object-center pointer-events-none select-none"
-          draggable={false}
-          loading="eager"
-          fetchPriority="high"
-        />
+          )}')`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
         <div className="absolute inset-0 bg-black/20 pointer-events-none" />
         {/* Language toggle */}
         <button onClick={toggleLocale} className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">
