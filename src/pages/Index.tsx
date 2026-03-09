@@ -31,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FlaskConical, Sparkles, Star, X } from "lucide-react";
+import { FlaskConical, Sparkles, X } from "lucide-react";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -250,6 +250,9 @@ const Index = () => {
   const [reviewerAvatarById, setReviewerAvatarById] = useState<Record<string, string>>({});
   const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
   const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests">("basic");
+  const [selectedUnlockPackageId, setSelectedUnlockPackageId] = useState<"single" | "pack3" | "pack10" | "vip">("single");
+
+  const PROFILE_THIRD_TAB_MODE: "unlock" | "reviews" = "unlock";
 
   const getDateIdeaDescription = useCallback((idea?: string, title?: string) => {
     const text = `${idea || ""} ${title || ""}`.toLowerCase();
@@ -288,6 +291,7 @@ const Index = () => {
     setAboutMeTab("new");
     setSelectedDateIdeaIndex(0);
     setSelectedProfileSection("basic");
+    setSelectedUnlockPackageId("single");
   }, [isProfileRoute, selectedProfile?.id]);
 
   useEffect(() => {
@@ -1304,7 +1308,7 @@ const Index = () => {
                   ? {
                       new: "Profile",
                       sent: "Date Ideas",
-                      received: "Reviews",
+                      received: "Unlock",
                     }
                   : undefined
               }
@@ -1312,11 +1316,17 @@ const Index = () => {
                 if (!isProfileRoute) return;
                 setAboutMeTab(t);
                 if (t === "new") setSelectedProfileSection("basic");
+                if (t === "received") setSelectedUnlockPackageId("single");
               }}
               selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
               onSelectProfileSection={(s) => {
                 if (!isProfileRoute) return;
                 setSelectedProfileSection(s);
+              }}
+              selectedUnlockPackageId={isProfileRoute ? selectedUnlockPackageId : undefined}
+              onSelectUnlockPackage={(id) => {
+                if (!isProfileRoute) return;
+                setSelectedUnlockPackageId(id);
               }}
               selectedDateIdeaIndex={isProfileRoute ? selectedDateIdeaIndex : undefined}
               onSelectDateIdea={(idx) => {
@@ -1438,69 +1448,80 @@ const Index = () => {
                 <div className="h-full w-full rounded-2xl bg-gradient-to-br from-fuchsia-900/25 via-black/35 to-purple-900/25 backdrop-blur-md border-2 border-fuchsia-300/25 ring-1 ring-fuchsia-300/15 shadow-[0_8px_24px_rgba(0,0,0,0.55)] px-5 py-4 flex items-center justify-center">
                   {aboutMeTab === "received" ? (
                     <div className="h-full w-full flex flex-col">
-                      {!user ? (
-                        <div className="flex-1 flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={() => showGuestPrompt("profile")}
-                            className="text-white/70 text-xs font-semibold underline underline-offset-4"
-                          >
-                            Sign in to view reviews
-                          </button>
-                        </div>
-                      ) : profileReviewsLoading ? (
-                        <div className="flex-1 flex items-center justify-center">
-                          <p className="text-white/50 text-xs">Loading reviews...</p>
-                        </div>
-                      ) : (profileReviews?.length ?? 0) === 0 ? (
-                        <div className="flex-1 flex items-center justify-center">
-                          <p className="text-white/50 text-xs">No reviews yet</p>
-                        </div>
-                      ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center">
-                          {(() => {
-                            const r = (profileReviews || [])[Math.min(activeReviewIndex, (profileReviews || []).length - 1)];
-                            if (!r) return null;
-                            const avatarUrl = reviewerAvatarById[r.reviewer_id];
-                            return (
-                              <div className="w-full max-w-md rounded-2xl bg-black/40 border border-white/10 px-4 py-4">
-                                <div className="flex items-start gap-3">
-                                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 bg-white/5 flex-shrink-0">
-                                    {avatarUrl ? (
-                                      <img src={avatarUrl} alt="Reviewer" className="w-full h-full object-cover" />
-                                    ) : (
-                                      <div className="w-full h-full" />
-                                    )}
-                                  </div>
+                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Unlock</p>
 
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-start gap-2">
-                                      <Star className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" />
-                                      <p className="text-white/75 text-[12px] leading-relaxed whitespace-pre-wrap break-words">
-                                        {r.text}
-                                      </p>
-                                    </div>
+                      <div className="flex-1 flex flex-col items-center justify-center px-1">
+                        <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                          {selectedUnlockPackageId === "single" ? (
+                            <>
+                              <p className="text-white text-sm font-black">1 Match Unlock</p>
+                              <p className="text-white/70 text-xs mt-1">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
 
-                                    <p className="mt-2 text-white/40 text-[9px] font-semibold">
-                                      {new Date(r.created_at).toLocaleDateString()}
-                                    </p>
-                                  </div>
-                                </div>
+                              <div className="mt-3 flex items-center justify-between">
+                                <p className="text-white/90 font-black text-xl">$1.99</p>
+                                <Button
+                                  onClick={() => {
+                                    if (!selectedProfile) return;
+                                    setUnlockDialog(selectedProfile);
+                                  }}
+                                  className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
+                                >
+                                  Unlock now
+                                </Button>
                               </div>
-                            );
-                          })()}
 
-                          <div className="pt-4">
-                            <p className="text-white/60 text-[11px] font-semibold text-center">
-                              Connections: {(selectedProfile as any)?.whatsapp_connections_count ?? 0}
-                            </p>
-                            <div className="mx-auto my-2 h-px w-24 bg-white/10" />
-                            <p className="text-white/60 text-[11px] font-semibold text-center">
-                              Dates canceled: {(selectedProfile as any)?.date_canceled_count ?? 0}
-                            </p>
-                          </div>
+                              <div className="mt-3 rounded-xl bg-white/5 border border-white/10 p-3">
+                                <p className="text-white/60 text-[11px] font-semibold text-center">Requires a mutual match ✅</p>
+                              </div>
+                            </>
+                          ) : selectedUnlockPackageId === "pack3" ? (
+                            <>
+                              <p className="text-white text-sm font-black">3 Unlock Pack</p>
+                              <p className="text-white/70 text-xs mt-1">Perfect for a week of real connections. Save vs singles.</p>
+                              <div className="mt-3 flex items-center justify-between">
+                                <p className="text-white/90 font-black text-xl">$4.99</p>
+                                <Button
+                                  onClick={() => toast.info("3-pack checkout coming next")}
+                                  className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
+                                >
+                                  Choose pack
+                                </Button>
+                              </div>
+                              <p className="text-white/45 text-[10px] mt-2">Best for casual + active users.</p>
+                            </>
+                          ) : selectedUnlockPackageId === "pack10" ? (
+                            <>
+                              <p className="text-white text-sm font-black">10 Unlock Pack</p>
+                              <p className="text-white/70 text-xs mt-1">Best value for heavy matching. Lowest cost per unlock.</p>
+                              <div className="mt-3 flex items-center justify-between">
+                                <p className="text-white/90 font-black text-xl">$12.99</p>
+                                <Button
+                                  onClick={() => toast.info("10-pack checkout coming next")}
+                                  className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
+                                >
+                                  Choose pack
+                                </Button>
+                              </div>
+                              <p className="text-white/45 text-[10px] mt-2">Best value package.</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-white text-sm font-black">VIP Monthly</p>
+                              <p className="text-white/70 text-xs mt-1">10 Match Unlocks / month + VIP badge + priority.</p>
+                              <div className="mt-3 flex items-center justify-between">
+                                <p className="text-white/90 font-black text-xl">$9.99/mo</p>
+                                <Button
+                                  onClick={() => navigate("/dashboard?purchase=vip")}
+                                  className="gradient-gold text-white border-0 h-10 rounded-xl font-black"
+                                >
+                                  Go VIP
+                                </Button>
+                              </div>
+                              <p className="text-white/45 text-[10px] mt-2">Includes 10 unlocks every month.</p>
+                            </>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   ) : aboutMeTab === "sent" ? (
                     <div className="h-full w-full flex flex-col">

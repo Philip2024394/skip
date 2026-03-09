@@ -59,6 +59,8 @@ interface LikesLibraryProps {
   onTabChange?: (tab: Tab) => void;
   selectedProfileSection?: "basic" | "lifestyle" | "interests";
   onSelectProfileSection?: (section: "basic" | "lifestyle" | "interests") => void;
+  selectedUnlockPackageId?: "single" | "pack3" | "pack10" | "vip";
+  onSelectUnlockPackage?: (id: "single" | "pack3" | "pack10" | "vip") => void;
   selectedDateIdeaIndex?: number;
   onSelectDateIdea?: (index: number) => void;
   iLiked: Profile[];
@@ -95,6 +97,8 @@ const LikesLibrary = ({
   onTabChange,
   selectedProfileSection,
   onSelectProfileSection,
+  selectedUnlockPackageId,
+  onSelectUnlockPackage,
   selectedDateIdeaIndex,
   onSelectDateIdea,
   iLiked, likedMe, newProfiles, filterCountry,
@@ -209,6 +213,10 @@ const LikesLibrary = ({
     tab === "new" &&
     tabLabelOverrides?.new === "Profile";
 
+  const isUnlockTab =
+    tab === "received" &&
+    tabLabelOverrides?.received === "Unlock";
+
   const dateIdeas = (
     (profileDatePlaces || [])
       .filter((p): p is NonNullable<typeof p> => !!p)
@@ -320,6 +328,38 @@ const LikesLibrary = ({
                   >
                     <p className="text-white text-[11px] font-bold text-center leading-tight">{s.label}</p>
                     <p className="text-white/45 text-[9px] font-semibold text-center">Tap to view</p>
+                  </motion.button>
+                ))}
+              </div>
+            ) : isUnlockTab ? (
+              <div className="grid grid-cols-2 gap-2 h-full">
+                {(
+                  [
+                    { id: "single" as const, title: "1 Unlock", price: "$1.99", sub: "Best for casual" },
+                    { id: "pack3" as const, title: "3 Pack", price: "$4.99", sub: "Popular" },
+                    { id: "pack10" as const, title: "10 Pack", price: "$12.99", sub: "Best value" },
+                    { id: "vip" as const, title: "VIP", price: "$9.99/mo", sub: "10 / month" },
+                  ]
+                ).map((p, idx) => (
+                  <motion.button
+                    key={p.id}
+                    type="button"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ delay: Math.min(idx * 0.04, 0.12) }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSelectUnlockPackage?.(p.id);
+                    }}
+                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${selectedUnlockPackageId === p.id ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
+                    style={{ height: 124 }}
+                    aria-label={p.title}
+                  >
+                    <p className="text-white text-[11px] font-black text-center leading-tight">{p.title}</p>
+                    <p className="text-white/80 text-[13px] font-black">{p.price}</p>
+                    <p className="text-white/45 text-[9px] font-semibold text-center">{p.sub}</p>
                   </motion.button>
                 ))}
               </div>
