@@ -28,6 +28,10 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const [landingPrefix, setLandingPrefix] = useState<string>(COUNTRY_CODES["Indonesia"] || "+62");
+  const [landingNumber, setLandingNumber] = useState<string>("");
+  const [landingSubmitting, setLandingSubmitting] = useState(false);
+
   // If a session already exists (user navigated here while logged in), send them home
   // Also listens for SIGNED_IN event so the header on Index updates immediately
   useEffect(() => {
@@ -128,37 +132,132 @@ const AuthPage = () => {
 
   // Landing screen
   if (!showAuth) {
+    const buildE164 = (prefix: string, national: string) => {
+      const p = String(prefix || "").trim();
+      const pDigits = p.replace(/\D/g, "");
+      const nDigits = String(national || "").trim().replace(/\D/g, "");
+      return `+${pDigits}${nDigits}`;
+    };
+
+    const handleLandingEnter = async () => {
+      const digits = landingNumber.replace(/\D/g, "");
+      if (digits.length <= 1) {
+        toast.error("Please enter a valid WhatsApp number");
+        return;
+      }
+
+      const e164 = buildE164(landingPrefix, landingNumber);
+      const saved = typeof localStorage !== "undefined" ? localStorage.getItem("landing_whatsapp_e164") : null;
+      if (saved === e164) {
+        navigate("/");
+        return;
+      }
+
+      setLandingSubmitting(true);
+      try {
+        const prefixDigits = String(landingPrefix || "").trim().replace(/\D/g, "");
+        const nationalDigits = String(landingNumber || "").trim().replace(/\D/g, "");
+
+        const { error } = await (supabase as any)
+          .from("whatsapp_leads")
+          .upsert(
+            {
+              whatsapp_e164: e164,
+              country_prefix: `+${prefixDigits}`,
+              national_number: nationalDigits,
+              source: "landing",
+              last_seen_at: new Date().toISOString(),
+            },
+            { onConflict: "whatsapp_e164" }
+          );
+        if (error) throw error;
+
+        if (typeof localStorage !== "undefined") {
+          localStorage.setItem("landing_whatsapp_e164", e164);
+        }
+      } catch {
+        // Always allow entry even if lead capture fails
+      } finally {
+        setLandingSubmitting(false);
+        navigate("/");
+      }
+    };
+
     return (
-      <div className="h-screen-safe relative overflow-hidden" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+      <div
+        className="h-screen-safe relative overflow-hidden"
+        style={{
+          backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/2dateme%20orginal%20landing%20screen.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
         {/* Language toggle */}
         <button onClick={toggleLocale} className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">
           {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
         </button>
+
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-          className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-6"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15, duration: 0.4 }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-[min(92vw,22rem)]"
+          style={{ paddingTop: `max(0px, env(safe-area-inset-top, 0px))` }}
         >
-          <AppLogo className="w-44 h-44 object-contain drop-shadow-xl mb-2" />
-          {/* 5-star rating */}
-          <div className="flex items-center gap-0.5 mb-1">
-            {[...Array(5)].map((_, i) => (
-              <svg key={i} className="w-5 h-5 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.7)]" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-              </svg>
-            ))}
-          </div>
-          <h1 className="text-2xl font-display font-bold text-white drop-shadow-lg">{t("app.tagline")}</h1>
-          <p className="text-white/70 text-sm drop-shadow-md">{t("app.subtitle")}</p>
-          <div className="mt-6 w-full flex flex-col items-center gap-3">
-          <Button
-            onClick={() => navigate("/")}
-            className="w-full max-w-sm h-14 text-base font-bold gradient-love text-primary-foreground border-0 rounded-2xl shadow-glow"
-          >
-            <MessageCircle className="w-5 h-5 mr-2" /> {t("landing.getStarted")}
-          </Button>
+          <div className="rounded-3xl bg-yellow-400 p-4 shadow-[0_0_30px_rgba(250,204,21,0.25)] border border-yellow-300/60">
+            <div className="flex items-center justify-center mb-2">
+              <AppLogo className="w-20 h-20 object-contain" />
+            </div>
+
+            <p className="text-black/80 text-xs font-semibold text-center">
+              Enter WhatsApp to continue
+            </p>
+
+            <div className="mt-3 space-y-2">
+              <div className="grid grid-cols-[120px_1fr] gap-2">
+                <Select value={landingPrefix} onValueChange={setLandingPrefix}>
+                  <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
+                    <SelectValue placeholder="+62" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
+                    {Object.entries(COUNTRY_CODES).map(([country, code]) => (
+                      <SelectItem key={country} value={code} className="text-black">
+                        {country} ({code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Input
+                  value={landingNumber}
+                  onChange={(e) => setLandingNumber(e.target.value)}
+                  placeholder="WhatsApp number"
+                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11"
+                  inputMode="tel"
+                />
+              </div>
+
+              <Button
+                onClick={handleLandingEnter}
+                disabled={landingSubmitting}
+                className="w-full h-12 rounded-2xl bg-black text-white hover:bg-black/90 font-bold"
+              >
+                {landingSubmitting ? "Entering..." : "Enter App"}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => setShowAuth(true)}
+                className="w-full text-center text-black/70 text-[11px] font-semibold underline underline-offset-2"
+              >
+                Sign in / Register
+              </button>
+
+              <p className="text-black/60 text-[10px] text-center">
+                No verification required.
+              </p>
+            </div>
           </div>
         </motion.div>
       </div>
