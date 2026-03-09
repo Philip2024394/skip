@@ -20,7 +20,7 @@ const COUNTRIES = ALL_COUNTRIES;
 const TEST_EMAIL = import.meta.env.VITE_TEST_EMAIL || "test@2dateme.demo";
 const TEST_PASSWORD = import.meta.env.VITE_TEST_PASSWORD || "TestPass123";
 
-const LANDING_BG_URL = (import.meta.env.VITE_LANDING_BG_URL as string | undefined) || "https://ik.imagekit.io/7grri5v7d/sddfffaaa.png";
+const LANDING_BG_URL = (import.meta.env.VITE_LANDING_BG_URL as string | undefined) || "https://ik.imagekit.io/7grri5v7d/uytg.png";
 const LANDING_BG_URL_VERSION = (import.meta.env.VITE_LANDING_BG_URL_VERSION as string | undefined) || "v2";
 
 const FLAG_BY_COUNTRY: Record<string, string> = {
