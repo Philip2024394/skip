@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
-import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint } from "lucide-react";
+import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
-import DetailPanel from "@/components/DetailPanel";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
 import LikesLibrary from "@/components/LikesLibrary";
@@ -82,6 +81,8 @@ const saveLocalLikedMeProfiles = (profiles: Profile[]) => {
 const Index = () => {
   const { t, toggleLocale, locale } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isProfileRoute = location.pathname.startsWith("/profile/");
   const [user, setUser] = useState<any>(null);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
@@ -214,7 +215,6 @@ const Index = () => {
   const [lastRoseAt, setLastRoseAt] = useState<string | null>(null);
   const [selectedList, setSelectedList] = useState<Profile[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [detailProfile, setDetailProfile] = useState<Profile | null>(null);
   const topCardX = useMotionValue(0);
   const isAnimatingTopCardRef = useRef(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
@@ -555,7 +555,6 @@ const Index = () => {
     const idx = list.findIndex((p) => p.id === profile.id);
     setSelectedList(list);
     setSelectedIndex(idx >= 0 ? idx : 0);
-    setDetailProfile(null);
   }, []);
 
   const createDevProfile = useCallback(
@@ -769,7 +768,7 @@ const Index = () => {
   const handleLibraryCardDrag = (_: any, info: PanInfo) => {
     const { offset } = info;
     if (offset.y < -80) {
-      if (selectedProfile) setDetailProfile(selectedProfile);
+      if (selectedProfile) navigate(`/profile/${selectedProfile.id}`);
     } else if (offset.x > 100) {
       topCardX.set(0);
       setSelectedIndex((i) => (i + 1) % selectedList.length);
@@ -782,13 +781,12 @@ const Index = () => {
   const clearSelection = () => {
     setSelectedList([]);
     setSelectedIndex(0);
-    setDetailProfile(null);
   };
 
   const handleMapSelectUser = (userId: string) => {
     const profile = allProfiles.find((p) => p.id === userId);
     if (profile) {
-      setDetailProfile(profile);
+      navigate(`/profile/${profile.id}`);
     }
   };
 
@@ -864,23 +862,37 @@ const Index = () => {
           <span className="font-display font-bold text-white text-xl tracking-tight leading-none">{APP_NAME}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={toggleLocale} className="px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">
-            {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
-          </button>
-          {user ? (
-            <>
-              <button onClick={() => { if (!user) { showGuestPrompt("filter"); return; } setShowFilters(true); }} aria-label={t("nav.filters")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.filters")}>
-                <SlidersHorizontal className="w-4 h-4" />
-              </button>
-              <button onClick={() => navigate("/dashboard")} aria-label={t("nav.powerups")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.powerups")}>
-                <Zap className="w-4 h-4" />
-              </button>
-            </>
-          ) : (
-            <button onClick={() => navigate("/auth?signin=1")} className="bg-black/50 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-white/80 hover:text-white transition-colors flex items-center gap-1" title={t("nav.signIn")}>
-              <LogIn className="w-4 h-4" />
-              <span className="text-xs font-medium">{t("nav.signIn")}</span>
+          {isProfileRoute ? (
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              aria-label="Home"
+              className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+              title="Home"
+            >
+              <Home className="w-4.5 h-4.5" />
             </button>
+          ) : (
+            <>
+              <button onClick={toggleLocale} className="px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">
+                {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
+              </button>
+              {user ? (
+                <>
+                  <button onClick={() => { if (!user) { showGuestPrompt("filter"); return; } setShowFilters(true); }} aria-label={t("nav.filters")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.filters")}>
+                    <SlidersHorizontal className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => navigate("/dashboard")} aria-label={t("nav.powerups")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.powerups")}>
+                    <Zap className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => navigate("/auth?signin=1")} className="bg-black/50 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-white/80 hover:text-white transition-colors flex items-center gap-1" title={t("nav.signIn")}>
+                  <LogIn className="w-4 h-4" />
+                  <span className="text-xs font-medium">{t("nav.signIn")}</span>
+                </button>
+              )}
+            </>
           )}
         </div>
       </header>
@@ -1033,7 +1045,7 @@ const Index = () => {
               onLike={(p) => {
                 handleLike(p);
                 advanceQueue(p.id);
-                if (user) setDetailProfile(p);
+                if (user) navigate(`/profile/${p.id}`);
               }}
               onPass={(p) => advanceQueue(p.id)}
             />
@@ -1178,7 +1190,16 @@ const Index = () => {
 
         {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
         <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate" style={{ contain: "layout" }}>
-          {bottomProfiles.length > 0 ? (
+          {isProfileRoute ? (
+            <>
+              <div className="absolute inset-0 bg-black" />
+              <div className="relative z-10 h-full w-full flex items-center justify-center px-6">
+                <p className="text-white/70 text-sm font-medium text-center">
+                  Text container
+                </p>
+              </div>
+            </>
+          ) : bottomProfiles.length > 0 ? (
             <SwipeStack
               key="bottom-stack"
               profiles={bottomProfiles}
@@ -1188,7 +1209,7 @@ const Index = () => {
               onLike={(p) => {
                 handleLike(p);
                 advanceQueue(p.id);
-                if (user) setDetailProfile(p);
+                if (user) navigate(`/profile/${p.id}`);
               }}
               onPass={(p) => advanceQueue(p.id)}
             />
@@ -1200,23 +1221,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Full Detail Bottom Slide-Up Panel */}
-      <AnimatePresence>
-        {detailProfile && (
-          <DetailPanel
-            profile={detailProfile}
-            isMatch={iLiked.some((p) => p.id === detailProfile.id) && likedMe.some((p) => p.id === detailProfile.id)}
-            onClose={() => setDetailProfile(null)}
-            onUnlock={handleUnlock}
-            onLike={handleLike}
-            alreadyLiked={iLiked.some((p) => p.id === detailProfile.id)}
-            nearbyUsers={allProfiles}
-            onSelectUser={handleMapSelectUser}
-            likedMeProfiles={likedMe}
-            onPurchaseFeature={handlePurchaseFeature}
-          />
-        )}
-      </AnimatePresence>
+      {/* Profile page is now routed to /profile/:id and clones Home layout */}
 
       {/* Match Dialog */}
       <Dialog open={!!matchDialog} onOpenChange={() => setMatchDialog(null)}>

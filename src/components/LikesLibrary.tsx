@@ -184,7 +184,7 @@ const LikesLibrary = ({
       >
         <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-1.5">
           <Heart className="w-4 h-4 text-primary" fill="currentColor" />
-          Library
+          Match
         </h2>
 
         {/* 3-tab pill */}

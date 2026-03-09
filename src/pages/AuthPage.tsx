@@ -184,14 +184,15 @@ const AuthPage = () => {
     };
 
     return (
-      <div
-        className="h-screen-safe relative overflow-hidden"
-        style={{
-          backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/2dateme%20orginal%20landing%20screen.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
+      <div className="h-screen-safe relative overflow-hidden">
+        <img
+          src="https://ik.imagekit.io/7grri5v7d/sddfffaaa.png"
+          alt=""
+          className="fixed inset-0 w-full h-full object-cover pointer-events-none select-none"
+          draggable={false}
+          loading="eager"
+          fetchPriority="high"
+        />
         <div className="absolute inset-0 bg-black/20 pointer-events-none" />
         {/* Language toggle */}
         <button onClick={toggleLocale} className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">

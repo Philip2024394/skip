@@ -11,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { getPrimaryBadgeKey } from "@/utils/profileBadges";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 import { Profile } from "@/components/SwipeCard";
-import DetailPanel from "@/components/DetailPanel";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -288,7 +287,6 @@ const MapPage = () => {
 
   const [profiles,        setProfiles]        = useState<Profile[]>([]);
   const [selectedIndex,   setSelectedIndex]   = useState(0);
-  const [detailProfile,   setDetailProfile]   = useState<Profile | null>(null);
   const [attentionProfile,setAttentionProfile] = useState<Profile | null>(null);
   const [user,            setUser]            = useState<any>(null);
   const [userLocation,    setUserLocation]    = useState<{ lat: number; lng: number } | null>(null);
@@ -442,6 +440,14 @@ const MapPage = () => {
   }, [selectedFromMapId, nearestProfiles, profiles, mapCenter, userLocation]);
 
   const selectedProfile = footerProfiles[selectedIndex] ?? null;
+
+  // Keep selection valid when filters/radius change and the footer list shrinks
+  useEffect(() => {
+    if (footerProfiles.length === 0) return;
+    if (selectedIndex < 0 || selectedIndex >= footerProfiles.length) {
+      setSelectedIndex(0);
+    }
+  }, [footerProfiles.length, selectedIndex]);
 
   // ── Map stats (within user radius) ────────────────────────────────
   const stats = useMemo(() => {
@@ -793,130 +799,127 @@ const MapPage = () => {
       </div>
 
       {/* ── Header container: name+km or stats only (no badges inside) ── */}
-      {!detailProfile && (
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute z-20 pointer-events-auto"
-          style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 3rem)`, left: "1rem", right: "5rem" }}
-        >
-          <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 flex items-center min-h-0 overflow-hidden">
-            {/* Selected profile name+km or stats only */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              {selectedProfile ? (
-                <>
-                  <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
-                  <span className="text-white text-xs font-medium truncate">{selectedProfile.name}, {selectedProfile.age}</span>
-                  {selectedProfile.distanceKm !== undefined ? (
-                    <span className="text-primary text-[10px] font-semibold flex-shrink-0">
-                      {fmtDist(selectedProfile.distanceKm)}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="absolute z-20 pointer-events-auto"
+        style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 3rem)`, left: "1rem", right: "5rem" }}
+      >
+        <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 flex items-center min-h-0 overflow-hidden">
+          {/* Selected profile name+km or stats only */}
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            {selectedProfile ? (
+              <>
+                <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
+                <span className="text-white text-xs font-medium truncate">{selectedProfile.name}, {selectedProfile.age}</span>
+                {selectedProfile.distanceKm !== undefined ? (
+                  <span className="text-primary text-[10px] font-semibold flex-shrink-0">
+                    {fmtDist(selectedProfile.distanceKm)}
+                  </span>
+                ) : (
+                  <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
+                )}
+                {(() => {
+                  const key = getPrimaryBadgeKey(selectedProfile as any);
+                  if (!key) return null;
+                  if (key === "available_tonight") {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
+                        <Moon className="w-3 h-3" fill="currentColor" />
+                        Available Tonight
+                      </span>
+                    );
+                  }
+                  if (key === "is_plusone") {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
+                        <UserPlus className="w-3 h-3" />
+                        +1 Plus One
+                      </span>
+                    );
+                  }
+                  if (key === "generous_lifestyle") {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
+                        <Gift className="w-3 h-3" />
+                        Generous Lifestyle
+                      </span>
+                    );
+                  }
+                  if (key === "weekend_plans") {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
+                        <CalendarDays className="w-3 h-3" />
+                        Weekend Plans
+                      </span>
+                    );
+                  }
+                  if (key === "late_night_chat") {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
+                        <MoonStar className="w-3 h-3" />
+                        Late Night Chat
+                      </span>
+                    );
+                  }
+                  if (key === "no_drama") {
+                    return (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
+                        <ShieldCheck className="w-3 h-3" />
+                        No Drama
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
+                <span className="text-white/40 text-[10px] flex-shrink-0 hidden sm:inline truncate">{selectedProfile.city}</span>
+              </>
+            ) : (
+              <>
+                <span className="flex items-center gap-1 text-[10px] text-white/70">
+                  <Users className="w-3 h-3 text-white/50" />
+                  <span className="font-semibold text-white">{stats.total}</span> nearby
+                </span>
+                <span className="w-px h-3 bg-white/10" />
+                <span className="flex items-center gap-1 text-[10px] text-white/70">
+                  <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+                  <span className="font-semibold text-green-400">{stats.online}</span> online
+                </span>
+                {stats.liked > 0 && (
+                  <>
+                    <span className="w-px h-3 bg-white/10" />
+                    <span className="flex items-center gap-1 text-[10px] text-white/70">
+                      <Heart className="w-3 h-3 text-primary" fill="currentColor" />
+                      <span className="font-semibold text-primary">{stats.liked}</span>
                     </span>
-                  ) : (
-                    <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
-                  )}
-                  {(() => {
-                    const key = getPrimaryBadgeKey(selectedProfile as any);
-                    if (!key) return null;
-                    if (key === "available_tonight") {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                          <Moon className="w-3 h-3" fill="currentColor" />
-                          Available Tonight
-                        </span>
-                      );
-                    }
-                    if (key === "is_plusone") {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                          <UserPlus className="w-3 h-3" />
-                          +1 Plus One
-                        </span>
-                      );
-                    }
-                    if (key === "generous_lifestyle") {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-amber-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                          <Gift className="w-3 h-3" />
-                          Generous Lifestyle
-                        </span>
-                      );
-                    }
-                    if (key === "weekend_plans") {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-primary border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                          <CalendarDays className="w-3 h-3" />
-                          Weekend Plans
-                        </span>
-                      );
-                    }
-                    if (key === "late_night_chat") {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-indigo-300 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                          <MoonStar className="w-3 h-3" />
-                          Late Night Chat
-                        </span>
-                      );
-                    }
-                    if (key === "no_drama") {
-                      return (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-teal-300 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                          <ShieldCheck className="w-3 h-3" />
-                          No Drama
-                        </span>
-                      );
-                    }
-                    return null;
-                  })()}
-                  <span className="text-white/40 text-[10px] flex-shrink-0 hidden sm:inline truncate">{selectedProfile.city}</span>
-                </>
-              ) : (
-                <>
-                  <span className="flex items-center gap-1 text-[10px] text-white/70">
-                    <Users className="w-3 h-3 text-white/50" />
-                    <span className="font-semibold text-white">{stats.total}</span> nearby
-                  </span>
-                  <span className="w-px h-3 bg-white/10" />
-                  <span className="flex items-center gap-1 text-[10px] text-white/70">
-                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
-                    <span className="font-semibold text-green-400">{stats.online}</span> online
-                  </span>
-                  {stats.liked > 0 && (
-                    <>
-                      <span className="w-px h-3 bg-white/10" />
-                      <span className="flex items-center gap-1 text-[10px] text-white/70">
-                        <Heart className="w-3 h-3 text-primary" fill="currentColor" />
-                        <span className="font-semibold text-primary">{stats.liked}</span>
-                      </span>
-                    </>
-                  )}
-                  {stats.matches > 0 && (
-                    <>
-                      <span className="w-px h-3 bg-white/10" />
-                      <span className="flex items-center gap-1 text-[10px] text-amber-400">
-                        <Star className="w-3 h-3" fill="currentColor" />
-                        <span className="font-semibold">{stats.matches} match{stats.matches > 1 ? "es" : ""}</span>
-                      </span>
-                    </>
-                  )}
-                  {showRadius && (
-                    <>
-                      <span className="w-px h-3 bg-white/10" />
-                      <span className="text-[10px] text-white/40">{radiusKm}km</span>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
+                  </>
+                )}
+                {stats.matches > 0 && (
+                  <>
+                    <span className="w-px h-3 bg-white/10" />
+                    <span className="flex items-center gap-1 text-[10px] text-amber-400">
+                      <Star className="w-3 h-3" fill="currentColor" />
+                      <span className="font-semibold">{stats.matches} match{stats.matches > 1 ? "es" : ""}</span>
+                    </span>
+                  </>
+                )}
+                {showRadius && (
+                  <>
+                    <span className="w-px h-3 bg-white/10" />
+                    <span className="text-[10px] text-white/40">{radiusKm}km</span>
+                  </>
+                )}
+              </>
+            )}
           </div>
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
 
       {/* ── Right side: badge filter circles (under Eye / view) ── */}
-      {!detailProfile && (
-        <div
-          className="absolute right-4 z-30 flex flex-col gap-2 pointer-events-auto"
-          style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 5.5rem)` }}
-        >
+      <div
+        className="absolute right-4 z-30 flex flex-col gap-2 pointer-events-auto"
+        style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 5.5rem)` }}
+      >
           <button
             type="button"
             onClick={() => {
@@ -995,15 +998,14 @@ const MapPage = () => {
           >
             <ShieldCheck className="w-5 h-5" />
           </button>
-        </div>
-      )}
+      </div>
 
       {/* ── Radius slider (under badge / stats) ── */}
       {userLocation && showRadius && (
         <div
           className="absolute left-4 right-16 z-20 pointer-events-auto flex flex-col gap-2"
           style={{
-            top: selectedProfile && !detailProfile
+            top: selectedProfile
               ? "6.25rem"
               : "calc(max(1rem, env(safe-area-inset-top, 0px)) + 5.5rem)",
           }}
@@ -1043,7 +1045,7 @@ const MapPage = () => {
                     if (isActive) {
                       if (!user) { showGuestPrompt("profile"); return; }
                       if (noMatchBack) setAttentionProfile(profile);
-                      else setDetailProfile(profile);
+                      else navigate(`/profile/${profile.id}`);
                     } else {
                       setSelectedIndex(idx);
                     }
@@ -1138,7 +1140,7 @@ const MapPage = () => {
                   if (likedIds.has(selectedProfile.id) && !likedMeIds.has(selectedProfile.id)) {
                     setAttentionProfile(selectedProfile);
                   } else {
-                    setDetailProfile(selectedProfile);
+                    navigate(`/profile/${selectedProfile.id}`);
                   }
                 }}
                 aria-label={`View ${selectedProfile.name}'s profile`}
@@ -1229,27 +1231,7 @@ const MapPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── Detail panel ── */}
-      <AnimatePresence>
-        {detailProfile && (
-          <DetailPanel
-            profile={detailProfile}
-            isMatch={likedIds.has(detailProfile.id) && likedMeIds.has(detailProfile.id)}
-            onClose={() => setDetailProfile(null)}
-            onUnlock={() => setMatchDialog(detailProfile)}
-            nearbyUsers={profiles}
-            onSelectUser={(userId) => {
-              const p = profiles.find(pr => pr.id === userId);
-              if (p) {
-                setDetailProfile(p);
-                const idx = footerProfiles.findIndex(pr => pr.id === userId);
-                if (idx >= 0) setSelectedIndex(idx);
-              }
-            }}
-            likedMeProfiles={profiles.filter(p => likedMeIds.has(p.id))}
-          />
-        )}
-      </AnimatePresence>
+      {/* Profile page is now routed to /profile/:id and clones Home layout */}
 
       {/* ── Guest auth prompt ── */}
       <GuestAuthPrompt

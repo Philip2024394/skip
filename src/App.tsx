@@ -66,6 +66,7 @@ const AppContent = () => {
         <AndroidBackHandler />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/profile/:id" element={<Index />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
