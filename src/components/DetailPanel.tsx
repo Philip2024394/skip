@@ -317,6 +317,29 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap break-words">
                     {sanitizeBio(profile.bio)}
                   </p>
+
+                  {profile.country && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <p className="text-white/70 text-[11px] font-semibold mb-2">Languages</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {(() => {
+                          const native = getNativeLanguage(profile.country);
+                          const langs = [native, ...(profile.languages || [])].filter(Boolean).slice(0, 3);
+                          return langs.map((lang) => (
+                            <span
+                              key={lang}
+                              className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-2.5 py-1 rounded-full inline-flex items-center gap-1.5"
+                            >
+                              <span className="text-[12px] leading-none">
+                                {lang === native ? getCountryFlag(profile.country) : getLanguageFlag(lang)}
+                              </span>
+                              {lang}
+                            </span>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -326,21 +349,6 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 <span className="inline-flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 text-white/90 text-xs px-3 py-1.5 rounded-full">
                   💕 {profile.first_date_idea}
                 </span>
-              )}
-              {profile.country && (
-                <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
-                  <Globe className="w-3.5 h-3.5 text-white/60 flex-shrink-0" />
-                  {(() => {
-                    const native = getNativeLanguage(profile.country);
-                    const langs = [native, ...(profile.languages || [])].filter(Boolean).slice(0, 3);
-                    return langs.map((lang) => (
-                      <span key={lang} className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
-                        <span className="text-[12px] leading-none">{lang === native ? getCountryFlag(profile.country) : getLanguageFlag(lang)}</span>
-                        {lang}
-                      </span>
-                    ));
-                  })()}
-                </div>
               )}
             </div>
 
