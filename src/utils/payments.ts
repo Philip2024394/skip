@@ -89,7 +89,10 @@ async function purchaseNative(
 
   try {
     // Dynamically import so web builds don't fail if the plugin isn't installed
-    const { Purchases } = await import("@revenuecat/purchases-capacitor");
+    const moduleName = "@revenuecat/purchases-capacitor";
+    const { Purchases } = await import(
+      /* @vite-ignore */ moduleName
+    );
 
     const offerings = await Purchases.getOfferings();
     const pkg = offerings.current?.availablePackages.find(
