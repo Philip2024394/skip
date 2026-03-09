@@ -263,7 +263,7 @@ const buildFirstDatePlaces = (city: string, lat: number, lng: number): DatePlace
     ? [...candidates, instagramCandidates[Math.floor(Math.random() * instagramCandidates.length)]]
     : candidates;
 
-  const desiredCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
+  const desiredCount = 3;
   const picks: Array<{ idea: string; title: string; url: string }> = [];
   const used = new Set<number>();
   while (picks.length < desiredCount && used.size < pool.length) {
