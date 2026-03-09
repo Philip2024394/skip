@@ -31,7 +31,7 @@ function loadEnvFile(filepath: string): Record<string, string> {
     if (!trimmed || trimmed.startsWith("#")) continue;
     const eqIdx = trimmed.indexOf("=");
     if (eqIdx === -1) continue;
-    const key = trimmed.slice(0, eqIdx).trim();
+    const key = trimmed.slice(0, eqIdx).trim().replace(/^\uFEFF/, "");
     let val = trimmed.slice(eqIdx + 1).trim();
     if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
       val = val.slice(1, -1);
@@ -42,8 +42,15 @@ function loadEnvFile(filepath: string): Record<string, string> {
 }
 
 const root = resolve(__dirname, "..");
-const prodEnv = loadEnvFile(resolve(root, ".env.production"));
-const scriptEnv = loadEnvFile(resolve(root, "scripts", ".env.script"));
+const prodEnvPath = resolve(root, ".env.production");
+const scriptEnvPath = resolve(root, "scripts", ".env.script");
+const scriptEnvExamplePath = resolve(root, "scripts", ".env.script.example");
+
+const prodEnv = loadEnvFile(prodEnvPath);
+const scriptEnv = {
+  ...loadEnvFile(scriptEnvExamplePath),
+  ...loadEnvFile(scriptEnvPath),
+};
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
@@ -60,6 +67,10 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error("\n❌  Missing credentials.\n");
   console.error("  SUPABASE_URL     =", SUPABASE_URL || "(not set)");
   console.error("  SUPABASE_SERVICE_KEY =", SUPABASE_SERVICE_KEY ? "***set***" : "(not set)");
+  console.error("\nChecked env files:");
+  console.error(`  ${prodEnvPath} ${existsSync(prodEnvPath) ? "(found)" : "(missing)"}`);
+  console.error(`  ${scriptEnvPath} ${existsSync(scriptEnvPath) ? "(found)" : "(missing)"}`);
+  console.error(`  ${scriptEnvExamplePath} ${existsSync(scriptEnvExamplePath) ? "(found)" : "(missing)"}`);
   console.error("\nCreate  scripts/.env.script  with:");
   console.error("  SUPABASE_URL=https://grxaajpzwsmtpuewquag.supabase.co");
   console.error("  SUPABASE_SERVICE_KEY=<your service_role key from Supabase dashboard>");
@@ -334,7 +345,7 @@ interface MockProfile {
   email: string;
   name: string;
   age: number;
-  gender: string;
+  gender: "Female" | "Male";
   looking_for: string;
   country: string;
   city: string;
@@ -342,12 +353,76 @@ interface MockProfile {
   whatsapp: string;
   avatar_url: string;
   images: string[];
+  first_date_idea?: string | null;
+  first_date_places?: any[];
+  generous_lifestyle?: boolean;
+  weekend_plans?: boolean;
+  late_night_chat?: boolean;
+  no_drama?: boolean;
   latitude: number;
   longitude: number;
   available_tonight: boolean;
   last_seen_at: string;
   languages: string[];
   is_active: boolean;
+}
+
+function buildBadgeMix(idx: number): { generous_lifestyle: boolean; weekend_plans: boolean; late_night_chat: boolean; no_drama: boolean } {
+  const generous_lifestyle = idx % 2 === 0;
+  const weekend_plans = idx % 3 === 0;
+  const late_night_chat = idx % 4 === 0;
+  const no_drama = idx % 5 === 0;
+
+  if (generous_lifestyle || weekend_plans || late_night_chat || no_drama) {
+    return { generous_lifestyle, weekend_plans, late_night_chat, no_drama };
+  }
+  return { generous_lifestyle: false, weekend_plans: true, late_night_chat: false, no_drama: true };
+}
+
+function buildFirstDatePlaces(city: string): Array<{ idea: string; url: string; image_url: null; title: string }> {
+  const maps = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+
+  const byCity: Record<string, Array<{ idea: string; title: string; query: string }>> = {
+    Jakarta: [
+      { idea: "Coffee At A Cozy Café ☕", title: "Tugu Kunstkring Paleis", query: "Tugu Kunstkring Paleis Jakarta" },
+      { idea: "Dinner At A Nice Restaurant 🍝", title: "Plataran Menteng", query: "Plataran Menteng Jakarta" },
+      { idea: "Walk In The Park 🌳", title: "Taman Suropati", query: "Taman Suropati Jakarta" },
+    ],
+    Bali: [
+      { idea: "Sunset Dinner By The Beach 🌅", title: "Jimbaran Bay Seafood", query: "Jimbaran Bay seafood dinner" },
+      { idea: "Beach Sunset Walk 🌅", title: "Sanur Beach", query: "Sanur Beach Bali" },
+      { idea: "Coffee At A Cozy Café ☕", title: "Revolver Espresso (Seminyak)", query: "Revolver Espresso Seminyak" },
+    ],
+    Bandung: [
+      { idea: "Coffee And Deep Conversation ☕", title: "Two Hands Full", query: "Two Hands Full Bandung" },
+      { idea: "Quiet Garden Stroll 🌸", title: "Taman Hutan Raya Ir. H. Djuanda", query: "Taman Hutan Raya Ir. H. Djuanda Bandung" },
+      { idea: "Dinner With A View 🏙️", title: "The Valley Bistro Café", query: "The Valley Bistro Cafe Bandung" },
+    ],
+    Surabaya: [
+      { idea: "Coffee At A Cozy Café ☕", title: "Titik Koma Coffee Surabaya", query: "Titik Koma Coffee Surabaya" },
+      { idea: "Slow Walk Through The Old Town 🏛️", title: "Kota Tua Surabaya", query: "Kota Tua Surabaya" },
+      { idea: "Dinner At A Nice Restaurant 🍝", title: "Layar Seafood", query: "Layar Seafood Surabaya" },
+    ],
+    Yogyakarta: [
+      { idea: "Art Gallery Visit 🎨", title: "Affandi Museum", query: "Affandi Museum Yogyakarta" },
+      { idea: "Coffee At A Cozy Café ☕", title: "Ekologi Desk & Coffee", query: "Ekologi Desk & Coffee Yogyakarta" },
+      { idea: "Slow Walk Through The Old Town 🏛️", title: "Malioboro", query: "Malioboro Yogyakarta" },
+    ],
+  };
+
+  const fallback: Array<{ idea: string; title: string; query: string }> = [
+    { idea: "Coffee At A Cozy Café ☕", title: "Local Specialty Coffee", query: `Specialty coffee ${city} Indonesia` },
+    { idea: "Dinner At A Nice Restaurant 🍝", title: "Popular Dinner Spot", query: `Best restaurant ${city} Indonesia` },
+    { idea: "Walk In The Park 🌳", title: "City Park", query: `Park ${city} Indonesia` },
+  ];
+
+  const picks = (byCity[city] || fallback).slice(0, 3);
+  return picks.map((p) => ({
+    idea: p.idea,
+    title: p.title,
+    url: maps(p.query),
+    image_url: null,
+  }));
 }
 
 function listImages(dir: string): string[] {
@@ -399,6 +474,11 @@ function buildProfiles(opts: { femaleCount: number; maleCount: number }): MockPr
     const genderIdx = isFemale ? i : i - femaleCount;
     const profileIdx = genderIdx;
 
+    const shouldHaveBadges = isFemale && profileIdx % 5 === 0;
+    const badges = shouldHaveBadges
+      ? buildBadgeMix(profileIdx)
+      : { generous_lifestyle: false, weekend_plans: false, late_night_chat: false, no_drama: false };
+
     const localList = isFemale ? femaleLocalImages : maleLocalImages;
 
     const imageCount = 2;
@@ -428,6 +508,12 @@ function buildProfiles(opts: { femaleCount: number; maleCount: number }): MockPr
       whatsapp: "",  // demo profiles don't expose real WhatsApp
       avatar_url: images[0],
       images,
+      first_date_idea: null,
+      first_date_places: isFemale ? buildFirstDatePlaces(CITIES[cityIdx]) : [],
+      generous_lifestyle: badges.generous_lifestyle,
+      weekend_plans: badges.weekend_plans,
+      late_night_chat: badges.late_night_chat,
+      no_drama: badges.no_drama,
       latitude: lat + randOffset(),
       longitude: lng + randOffset(),
       available_tonight: Math.random() > 0.65,
@@ -511,6 +597,12 @@ async function main() {
           whatsapp: p.whatsapp,
           avatar_url: avatarUrl,
           images: uploadedImages,
+          first_date_idea: p.first_date_idea ?? null,
+          first_date_places: p.first_date_places ?? [],
+          generous_lifestyle: p.generous_lifestyle ?? false,
+          weekend_plans: p.weekend_plans ?? false,
+          late_night_chat: p.late_night_chat ?? false,
+          no_drama: p.no_drama ?? false,
           latitude: p.latitude,
           longitude: p.longitude,
           available_tonight: p.available_tonight,

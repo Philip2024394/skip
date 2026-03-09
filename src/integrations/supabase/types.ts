@@ -136,6 +136,45 @@ export type Database = {
           },
         ]
       }
+      personality_reviews: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          reviewer_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          reviewer_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          reviewer_id?: string
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_reviews_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personality_reviews_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           age: number
@@ -147,6 +186,7 @@ export type Database = {
           created_at: string
           first_date_idea: string | null
           first_date_places: Json | null
+          generous_lifestyle: boolean
           gender: string
           hidden_until: string | null
           id: string
@@ -156,7 +196,10 @@ export type Database = {
           is_active: boolean
           is_banned: boolean
           is_incognito: boolean
+          is_plusone: boolean
           is_spotlight: boolean
+          is_verified: boolean
+          late_night_chat: boolean
           languages: Json | null
           last_rose_at: string | null
           last_seen_at: string | null
@@ -168,6 +211,8 @@ export type Database = {
           spotlight_until: string | null
           terms_accepted_at: string | null
           updated_at: string
+          weekend_plans: boolean
+          no_drama: boolean
           voice_intro_url: string | null
           whatsapp: string
         }
@@ -181,6 +226,7 @@ export type Database = {
           created_at?: string
           first_date_idea?: string | null
           first_date_places?: Json | null
+          generous_lifestyle?: boolean
           gender: string
           hidden_until?: string | null
           id: string
@@ -190,7 +236,10 @@ export type Database = {
           is_active?: boolean
           is_banned?: boolean
           is_incognito?: boolean
+          is_plusone?: boolean
           is_spotlight?: boolean
+          is_verified?: boolean
+          late_night_chat?: boolean
           languages?: Json | null
           last_rose_at?: string | null
           last_seen_at?: string | null
@@ -202,6 +251,8 @@ export type Database = {
           spotlight_until?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
+          weekend_plans?: boolean
+          no_drama?: boolean
           voice_intro_url?: string | null
           whatsapp: string
         }
@@ -215,6 +266,7 @@ export type Database = {
           created_at?: string
           first_date_idea?: string | null
           first_date_places?: Json | null
+          generous_lifestyle?: boolean
           gender?: string
           hidden_until?: string | null
           id?: string
@@ -224,7 +276,10 @@ export type Database = {
           is_active?: boolean
           is_banned?: boolean
           is_incognito?: boolean
+          is_plusone?: boolean
           is_spotlight?: boolean
+          is_verified?: boolean
+          late_night_chat?: boolean
           languages?: Json | null
           last_rose_at?: string | null
           last_seen_at?: string | null
@@ -236,6 +291,8 @@ export type Database = {
           spotlight_until?: string | null
           terms_accepted_at?: string | null
           updated_at?: string
+          weekend_plans?: boolean
+          no_drama?: boolean
           voice_intro_url?: string | null
           whatsapp?: string
         }
@@ -302,17 +359,26 @@ export type Database = {
           created_at: string | null
           first_date_idea: string | null
           first_date_places: Json | null
+          generous_lifestyle: boolean | null
           gender: string | null
           hidden_until: string | null
           id: string | null
           images: string[] | null
           is_active: boolean | null
           is_banned: boolean | null
+          is_plusone: boolean | null
+          is_spotlight: boolean | null
+          is_verified: boolean | null
           last_seen_at: string | null
+          late_night_chat: boolean | null
           latitude: number | null
           longitude: number | null
           looking_for: string | null
+          languages: Json | null
           name: string | null
+          no_drama: boolean | null
+          spotlight_until: string | null
+          weekend_plans: boolean | null
           voice_intro_url: string | null
         }
         Insert: {
@@ -325,17 +391,26 @@ export type Database = {
           created_at?: string | null
           first_date_idea?: string | null
           first_date_places?: Json | null
+          generous_lifestyle?: boolean | null
           gender?: string | null
           hidden_until?: string | null
           id?: string | null
           images?: string[] | null
           is_active?: boolean | null
           is_banned?: boolean | null
+          is_plusone?: boolean | null
+          is_spotlight?: boolean | null
+          is_verified?: boolean | null
           last_seen_at?: string | null
+          late_night_chat?: boolean | null
           latitude?: number | null
           longitude?: number | null
           looking_for?: string | null
+          languages?: Json | null
           name?: string | null
+          no_drama?: boolean | null
+          spotlight_until?: string | null
+          weekend_plans?: boolean | null
           voice_intro_url?: string | null
         }
         Update: {
@@ -348,17 +423,26 @@ export type Database = {
           created_at?: string | null
           first_date_idea?: string | null
           first_date_places?: Json | null
+          generous_lifestyle?: boolean | null
           gender?: string | null
           hidden_until?: string | null
           id?: string | null
           images?: string[] | null
           is_active?: boolean | null
           is_banned?: boolean | null
+          is_plusone?: boolean | null
+          is_spotlight?: boolean | null
+          is_verified?: boolean | null
           last_seen_at?: string | null
+          late_night_chat?: boolean | null
           latitude?: number | null
           longitude?: number | null
           looking_for?: string | null
+          languages?: Json | null
           name?: string | null
+          no_drama?: boolean | null
+          spotlight_until?: string | null
+          weekend_plans?: boolean | null
           voice_intro_url?: string | null
         }
         Relationships: []

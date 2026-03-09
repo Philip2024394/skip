@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, X, MapPin, ExternalLink, Sparkles, ShieldCheck,
@@ -8,6 +8,7 @@ import { Profile } from "./SwipeCard";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { DatePlace } from "./DatePlacesEditor";
+import { supabase } from "@/integrations/supabase/client";
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "☕": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400&h=300&fit=crop",
@@ -42,7 +43,137 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
   const [enlargedImageIndex, setEnlargedImageIndex] = useState<number | null>(null);
   const [enlargedPlaceIndex, setEnlargedPlaceIndex] = useState<number | null>(null);
 
+  const [connectionsCount, setConnectionsCount] = useState<number | null>(null);
+  const [likedMeCount, setLikedMeCount] = useState<number | null>(null);
+
+  const [reviewText, setReviewText] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviews, setReviews] = useState<
+    Array<{
+      id: string;
+      reviewer_id: string;
+      profile_id: string;
+      text: string;
+      created_at: string;
+      reviewer_avatar_url?: string | null;
+      reviewer_name?: string | null;
+    }>
+  >([]);
+  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
+  const [hasSession, setHasSession] = useState(false);
+
   const activeOn2DateMe = isOnline(profile.last_seen_at);
+  const activityPercent = activeOn2DateMe ? 85 : 60;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!cancelled) setHasSession(Boolean(sessionData.session));
+
+      const [{ count: connections }, { count: likesReceived }] = await Promise.all([
+        (supabase as any)
+          .from("connections")
+          .select("id", { count: "exact", head: true })
+          .or(`user_a.eq.${profile.id},user_b.eq.${profile.id}`),
+        (supabase as any)
+          .from("likes")
+          .select("id", { count: "exact", head: true })
+          .eq("liked_id", profile.id),
+      ]);
+
+      if (!cancelled) {
+        setConnectionsCount(typeof connections === "number" ? connections : 0);
+        setLikedMeCount(typeof likesReceived === "number" ? likesReceived : 0);
+      }
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [profile.id]);
+
+  const loadReviews = async () => {
+    const { data: rows } = await (supabase as any)
+      .from("personality_reviews")
+      .select("id, reviewer_id, profile_id, text, created_at")
+      .eq("profile_id", profile.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    const base = (rows ?? []) as Array<{
+      id: string;
+      reviewer_id: string;
+      profile_id: string;
+      text: string;
+      created_at: string;
+    }>;
+
+    const reviewerIds = Array.from(new Set(base.map((r) => r.reviewer_id).filter(Boolean)));
+    let reviewerMap = new Map<string, { avatar_url: string | null; name: string | null }>();
+    if (reviewerIds.length > 0) {
+      const { data: reviewers } = await (supabase as any)
+        .from("profiles_public")
+        .select("id, avatar_url, name")
+        .in("id", reviewerIds);
+      (reviewers ?? []).forEach((p: any) => {
+        reviewerMap.set(p.id, { avatar_url: p.avatar_url ?? null, name: p.name ?? null });
+      });
+    }
+
+    const enriched = base.map((r) => {
+      const info = reviewerMap.get(r.reviewer_id);
+      return {
+        ...r,
+        reviewer_avatar_url: info?.avatar_url ?? null,
+        reviewer_name: info?.name ?? null,
+      };
+    });
+
+    setReviews(enriched);
+    setActiveReviewIndex(0);
+  };
+
+  useEffect(() => {
+    void loadReviews();
+  }, [profile.id]);
+
+  useEffect(() => {
+    if (reviews.length <= 1) return;
+    const id = window.setInterval(() => {
+      setActiveReviewIndex((prev) => (prev + 1) % reviews.length);
+    }, 10000);
+    return () => window.clearInterval(id);
+  }, [reviews.length]);
+
+  const activeReview = useMemo(() => {
+    if (reviews.length === 0) return null;
+    return reviews[Math.min(activeReviewIndex, reviews.length - 1)] ?? null;
+  }, [activeReviewIndex, reviews]);
+
+  const submitReview = async () => {
+    const trimmed = reviewText.trim();
+    if (!trimmed) return;
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user?.id;
+    if (!userId) return;
+
+    setIsSubmittingReview(true);
+    try {
+      await (supabase as any).from("personality_reviews").insert({
+        profile_id: profile.id,
+        reviewer_id: userId,
+        text: trimmed,
+      });
+      setReviewText("");
+      await loadReviews();
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   const shareProfileViaWhatsApp = () => {
     const appUrl = window.location.origin;
@@ -153,16 +284,93 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
             <div className="h-2 rounded-full bg-white/10 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: activeOn2DateMe ? "85%" : "60%" }}
+                animate={{ width: `${activityPercent}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 className="h-full rounded-full bg-gradient-to-r from-primary/80 to-primary"
               />
             </div>
-            <p className="text-white/50 text-[10px] mt-1.5">
-              {activeOn2DateMe ? "Highly active profile" : "Active profile"}
-            </p>
+            <div className="flex items-center justify-between mt-1.5">
+              <p className="text-white/50 text-[10px]">
+                {activeOn2DateMe ? "Highly active profile" : "Active profile"}
+              </p>
+              <p className="text-white/60 text-[10px] font-semibold">{activityPercent}%</p>
+            </div>
+
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                <p className="text-white/50 text-[9px]">WhatsApp Connections</p>
+                <p className="text-white/90 text-xs font-semibold">
+                  {connectionsCount === null ? "—" : connectionsCount}
+                </p>
+              </div>
+              <div className="rounded-lg bg-white/5 border border-white/10 px-2.5 py-2">
+                <p className="text-white/50 text-[9px]">Liked Me</p>
+                <p className="text-white/90 text-xs font-semibold">
+                  {likedMeCount === null ? "—" : likedMeCount}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
+
+        <section className="px-4 mb-8">
+          <h2 className="text-white/90 text-sm font-semibold mb-3 flex items-center gap-2">
+            <Heart className="w-4 h-4 text-primary" />
+            Personality review
+          </h2>
+
+          <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
+            {activeReview ? (
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 border border-white/10 shrink-0">
+                  {activeReview.reviewer_avatar_url ? (
+                    <img
+                      src={activeReview.reviewer_avatar_url}
+                      alt={activeReview.reviewer_name || "Reviewer"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-white/80 text-xs font-semibold">
+                    {activeReview.reviewer_name || "Member"}
+                  </p>
+                  <p className="text-white/70 text-xs mt-1 leading-relaxed">{activeReview.text}</p>
+                  {reviews.length > 1 && (
+                    <p className="text-white/40 text-[10px] mt-2">
+                      {activeReviewIndex + 1}/{reviews.length}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-white/50 text-xs">No reviews yet.</p>
+            )}
+
+            {hasSession && (
+              <div className="mt-4">
+                <textarea
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  placeholder="Leave a quick personality review…"
+                  className="w-full min-h-[80px] rounded-xl bg-black/30 border border-white/10 text-white/90 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  maxLength={240}
+                />
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={submitReview}
+                    disabled={isSubmittingReview || !reviewText.trim()}
+                    className="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmittingReview ? "Posting…" : "Post review"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
 
         {/* Photos — up to 4, 2x2 grid, tap to enlarge */}
         <section className="px-4 mb-8">
