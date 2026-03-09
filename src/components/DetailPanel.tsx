@@ -16,6 +16,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { sanitizeBio } from "@/utils/bio";
 import { getPrimaryBadgeKey } from "@/utils/profileBadges";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
+import { getCountryFlag, getLanguageFlag, getNativeLanguage } from "@/data/languages";
 
 interface DetailPanelProps {
   profile: Profile;
@@ -292,18 +293,23 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 return null;
               })()}
               {profile.first_date_idea && (
-                <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-3 py-1 rounded-full">
+                <span className="inline-flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 text-white/90 text-xs px-3 py-1.5 rounded-full">
                   💕 {profile.first_date_idea}
                 </span>
               )}
-              {profile.languages && profile.languages.length > 0 && (
+              {profile.country && (
                 <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
                   <Globe className="w-3.5 h-3.5 text-white/60 flex-shrink-0" />
-                  {profile.languages.map((lang) => (
-                    <span key={lang} className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-2.5 py-1 rounded-full">
-                      {lang}
-                    </span>
-                  ))}
+                  {(() => {
+                    const native = getNativeLanguage(profile.country);
+                    const langs = [native, ...(profile.languages || [])].filter(Boolean).slice(0, 3);
+                    return langs.map((lang) => (
+                      <span key={lang} className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
+                        <span className="text-[12px] leading-none">{lang === native ? getCountryFlag(profile.country) : getLanguageFlag(lang)}</span>
+                        {lang}
+                      </span>
+                    ));
+                  })()}
                 </div>
               )}
             </div>

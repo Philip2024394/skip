@@ -9,6 +9,7 @@ import { isOnline } from "@/hooks/useOnlineStatus";
 import { useLanguage } from "@/i18n/LanguageContext";
 import type { DatePlace } from "./DatePlacesEditor";
 import { supabase } from "@/integrations/supabase/client";
+import { getCountryFlag, getLanguageFlag, getNativeLanguage } from "@/data/languages";
 
 const CATEGORY_IMAGES: Record<string, string> = {
   "☕": "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400&h=300&fit=crop",
@@ -502,18 +503,23 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
         )}
 
         {/* Languages */}
-        {profile.languages && profile.languages.length > 0 && (
+        {profile.country && (
           <section className="px-4 mb-10">
             <h2 className="text-white/90 text-sm font-semibold mb-2">Languages</h2>
             <div className="flex flex-wrap gap-2">
-              {profile.languages.map((lang) => (
-                <span
-                  key={lang}
-                  className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 text-xs"
-                >
-                  {lang}
-                </span>
-              ))}
+              {(() => {
+                const native = getNativeLanguage(profile.country);
+                const langs = [native, ...((profile.languages || []) as string[])].filter(Boolean).slice(0, 3);
+                return langs.map((lang) => (
+                  <span
+                    key={lang}
+                    className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/80 text-xs inline-flex items-center gap-1.5"
+                  >
+                    <span className="text-[14px] leading-none">{lang === native ? getCountryFlag(profile.country) : getLanguageFlag(lang)}</span>
+                    {lang}
+                  </span>
+                ));
+              })()}
             </div>
           </section>
         )}

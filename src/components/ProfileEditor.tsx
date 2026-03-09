@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import VoiceRecorder from "./VoiceRecorder";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import DatePlacesEditor, { DatePlace } from "./DatePlacesEditor";
-import { LANGUAGES, getNativeLanguage } from "@/data/languages";
+import { LANGUAGES, getCountryFlag, getLanguageFlag, getNativeLanguage } from "@/data/languages";
 import { HelpCircle, Languages, Plus, X as XIcon } from "lucide-react";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { BIO_MAX_LENGTH } from "@/lib/constants";
@@ -183,7 +183,7 @@ const ProfileEditor = () => {
           image_positions: positions,
           first_date_idea: (data.first_date_idea as string | null) || null,
           first_date_places: ((data.first_date_places as DatePlace[]) || []),
-          languages: ((data.languages as string[]) || []),
+          languages: (((data.languages as string[]) || []).slice(0, 2)),
           ...normalizedBadges,
         });
         setSchemaHasBadgeColumns(useBadgeColumns);
@@ -522,8 +522,8 @@ const ProfileEditor = () => {
           </div>
 
           {/* Preview frame */}
-          <div className={`relative w-full rounded-2xl overflow-hidden border border-border ${
-            isMainImage(editingImageIdx) ? "aspect-[4/5] max-h-[50vh]" : "aspect-square max-h-[40vh]"
+          <div className={`relative w-full rounded-2xl overflow-hidden shadow-card ${
+            isMainImage(editingImageIdx) ? "aspect-[4/5] max-h-[70vh]" : "aspect-square max-h-[40vh]"
           }`}>
             <div className="absolute inset-0 overflow-hidden">
               <img
@@ -663,14 +663,20 @@ const ProfileEditor = () => {
         <div className="space-y-2">
           {/* Native language (auto from country) */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 border border-border">
-            <span className="text-sm text-foreground flex-1">{getNativeLanguage(profile.country)}</span>
+            <span className="text-sm text-foreground flex-1 flex items-center gap-2">
+              <span className="text-base leading-none">{getCountryFlag(profile.country)}</span>
+              {getNativeLanguage(profile.country)}
+            </span>
             <span className="text-[10px] text-muted-foreground bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Native</span>
           </div>
           
           {/* Extra languages */}
           {profile.languages.map((lang, idx) => (
             <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 border border-border">
-              <span className="text-sm text-foreground flex-1">{lang}</span>
+              <span className="text-sm text-foreground flex-1 flex items-center gap-2">
+                <span className="text-base leading-none">{getLanguageFlag(lang)}</span>
+                {lang}
+              </span>
               <button
                 onClick={() => {
                   const updated = profile.languages.filter((_, i) => i !== idx);
@@ -684,19 +690,19 @@ const ProfileEditor = () => {
           ))}
           
           {/* Add language dropdown */}
-          {profile.languages.length < 3 && (
+          {profile.languages.length < 2 && (
             <Select
               value=""
               onValueChange={(v) => {
                 if (v && !profile.languages.includes(v) && v !== getNativeLanguage(profile.country)) {
-                  update("languages", [...profile.languages, v]);
+                  update("languages", [...profile.languages, v].slice(0, 2));
                 }
               }}
             >
               <SelectTrigger className="bg-muted border-border h-9 text-sm border-dashed">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add a language ({3 - profile.languages.length} remaining)</span>
+                  <span>Add a language ({2 - profile.languages.length} remaining)</span>
                 </div>
               </SelectTrigger>
               <SelectContent className="max-h-[200px]">

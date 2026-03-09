@@ -80,3 +80,88 @@ export const COUNTRY_LANGUAGE_MAP: Record<string, string> = {
 export function getNativeLanguage(country: string): string {
   return COUNTRY_LANGUAGE_MAP[country] || "English";
 }
+
+const COUNTRY_FLAG_MAP: Record<string, string> = {
+  Indonesia: "🇮🇩",
+  "United States": "🇺🇸",
+  "United Kingdom": "🇬🇧",
+  Australia: "🇦🇺",
+  Canada: "🇨🇦",
+  Singapore: "🇸🇬",
+  Malaysia: "🇲🇾",
+  Philippines: "🇵🇭",
+  Thailand: "🇹🇭",
+  Vietnam: "🇻🇳",
+  Japan: "🇯🇵",
+  "South Korea": "🇰🇷",
+  China: "🇨🇳",
+  Taiwan: "🇹🇼",
+  India: "🇮🇳",
+  France: "🇫🇷",
+  Germany: "🇩🇪",
+  Spain: "🇪🇸",
+  Italy: "🇮🇹",
+  Portugal: "🇵🇹",
+  Brazil: "🇧🇷",
+  Netherlands: "🇳🇱",
+  Turkey: "🇹🇷",
+  Russia: "🇷🇺",
+  Mexico: "🇲🇽",
+  Argentina: "🇦🇷",
+  Colombia: "🇨🇴",
+  Sweden: "🇸🇪",
+  Norway: "🇳🇴",
+  Denmark: "🇩🇰",
+  Finland: "🇫🇮",
+  Poland: "🇵🇱",
+  Greece: "🇬🇷",
+  "Czech Republic": "🇨🇿",
+  Romania: "🇷🇴",
+  Hungary: "🇭🇺",
+  Israel: "🇮🇱",
+  Ukraine: "🇺🇦",
+  "Saudi Arabia": "🇸🇦",
+  "United Arab Emirates": "🇦🇪",
+  Egypt: "🇪🇬",
+};
+
+const LANGUAGE_FLAG_MAP: Record<string, string> = {
+  English: "🇬🇧",
+  Indonesian: "🇮🇩",
+  Mandarin: "🇨🇳",
+  Spanish: "🇪🇸",
+  French: "🇫🇷",
+  Arabic: "🇸🇦",
+  Hindi: "🇮🇳",
+  Portuguese: "🇵🇹",
+  Russian: "🇷🇺",
+  Japanese: "🇯🇵",
+  Korean: "🇰🇷",
+  German: "🇩🇪",
+  Italian: "🇮🇹",
+  Dutch: "🇳🇱",
+  Turkish: "🇹🇷",
+  Thai: "🇹🇭",
+  Vietnamese: "🇻🇳",
+  Malay: "🇲🇾",
+  Tagalog: "🇵🇭",
+  Swedish: "🇸🇪",
+  Polish: "🇵🇱",
+  Danish: "🇩🇰",
+  Norwegian: "🇳🇴",
+  Finnish: "🇫🇮",
+  Greek: "🇬🇷",
+  Czech: "🇨🇿",
+  Romanian: "🇷🇴",
+  Hungarian: "🇭🇺",
+  Hebrew: "🇮🇱",
+  Ukrainian: "🇺🇦",
+};
+
+export function getCountryFlag(country: string): string {
+  return COUNTRY_FLAG_MAP[country] || "🏳️";
+}
+
+export function getLanguageFlag(language: string): string {
+  return LANGUAGE_FLAG_MAP[language] || "🌐";
+}
