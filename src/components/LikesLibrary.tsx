@@ -126,7 +126,7 @@ const LikesLibrary = ({
   useEffect(() => {
     scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
     onTabChange?.(tab);
-  }, [tab]);
+  }, [onTabChange, tab]);
 
   // When butterfly is flying to a profile, show "Likes Me" so the user sees who liked them
   useEffect(() => {
@@ -174,8 +174,16 @@ const LikesLibrary = ({
     // Only switch tabs if horizontal swipe is dominant (not a vertical scroll attempt)
     if (dy > Math.abs(dx)) { dragStart.current = null; return; }
     const idx = TABS.indexOf(dragStart.current.tab);
-    if (dx < -50 && idx < TABS.length - 1) setTab(TABS[idx + 1]);
-    if (dx > 50  && idx > 0)              setTab(TABS[idx - 1]);
+    if (dx < -50 && idx < TABS.length - 1) {
+      const next = TABS[idx + 1];
+      setTab(next);
+      onTabChange?.(next);
+    }
+    if (dx > 50  && idx > 0) {
+      const next = TABS[idx - 1];
+      setTab(next);
+      onTabChange?.(next);
+    }
     dragStart.current = null;
   };
 
@@ -226,6 +234,7 @@ const LikesLibrary = ({
             <button
               key={t}
               onClick={() => {
+                onTabChange?.(t);
                 requestAnimationFrame(() => setTab(t));
               }}
               className={`relative z-10 py-1 px-1.5 rounded-[10px] text-[9px] font-semibold transition-colors min-w-[56px] text-center ${

@@ -248,6 +248,31 @@ const Index = () => {
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [reviewerAvatarById, setReviewerAvatarById] = useState<Record<string, string>>({});
 
+  const getDateIdeaDescription = useCallback((idea?: string, title?: string) => {
+    const text = `${idea || ""} ${title || ""}`.toLowerCase();
+
+    if (text.includes("coffee") || text.includes("café") || text.includes("cafe")) {
+      return "A cozy café vibe with great drinks, comfy seating, and an easy conversation flow — perfect for a first meet.";
+    }
+    if (text.includes("dinner") || text.includes("restaurant") || text.includes("pasta") || text.includes("food")) {
+      return "A relaxed dinner setting with good service and a warm atmosphere — ideal for getting to know each other without rushing.";
+    }
+    if (text.includes("park") || text.includes("walk") || text.includes("sunset") || text.includes("nature")) {
+      return "A calm outdoor walk with fresh air and space to talk — simple, romantic, and naturally fun.";
+    }
+    if (text.includes("rooftop") || text.includes("drinks") || text.includes("bar") || text.includes("cocktail")) {
+      return "A stylish rooftop/drinks spot with a great view and music — a confident, fun vibe for flirting and laughs.";
+    }
+    if (text.includes("dessert") || text.includes("ice") || text.includes("cake") || text.includes("sweet")) {
+      return "A sweet dessert stop with cute photo moments and a light vibe — perfect for ending the night on a high note.";
+    }
+    if (text.includes("instagram") || text.includes("tag")) {
+      return "A trending local idea with lots of options — you can pick the best spot together based on the vibe you both like.";
+    }
+
+    return "A fun, low-pressure date idea with a good atmosphere — great for conversation, comfort, and a positive first impression.";
+  }, []);
+
   const selectedProfile = useMemo(() => {
     if (isProfileRoute && profileRouteId) {
       return allProfiles.find((p) => p.id === profileRouteId) ?? null;
@@ -1436,6 +1461,7 @@ const Index = () => {
                             <p className="text-white/60 text-[11px] font-semibold text-center">
                               Connections: {(selectedProfile as any)?.whatsapp_connections_count ?? 0}
                             </p>
+                            <div className="mx-auto my-2 h-px w-24 bg-white/10" />
                             <p className="text-white/60 text-[11px] font-semibold text-center">
                               Dates canceled: {(selectedProfile as any)?.date_canceled_count ?? 0}
                             </p>
@@ -1453,6 +1479,7 @@ const Index = () => {
                           const title = place?.title || place?.idea || "Date idea";
                           const imageUrl = place?.image_url || null;
                           const url = place?.url || null;
+                          const desc = getDateIdeaDescription(place?.idea, place?.title);
 
                           return (
                             <a
@@ -1474,6 +1501,7 @@ const Index = () => {
                               </div>
                               <div className="px-3 py-3">
                                 <p className="text-white/80 text-[11px] font-semibold leading-snug line-clamp-2">{title}</p>
+                                <p className="mt-2 text-white/55 text-[9px] leading-snug line-clamp-3">{desc}</p>
                                 <p className="mt-2 text-white/45 text-[9px] font-semibold truncate">
                                   {url ? url.replace(/^https?:\/\//, "") : "No link"}
                                 </p>
