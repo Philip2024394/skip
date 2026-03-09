@@ -248,22 +248,12 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
       transition={{ type: "spring", damping: 28, stiffness: 300 }}
       className="fixed inset-0 z-[55] flex flex-col overflow-hidden"
     >
-      {/* Background: one of the profile images with dark overlay */}
-      {backgroundImage && (
-        <>
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${backgroundImage})` }}
-          />
-          <div className="absolute inset-0 bg-black/75" />
-        </>
-      )}
-      {!backgroundImage && <div className="absolute inset-0 bg-black" />}
+      <div className="absolute inset-0 bg-black" />
 
       <button
         onClick={onBack}
         aria-label="Back to profile"
-        className="absolute top-4 left-4 z-[60] w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 hover:bg-black/70 transition-colors"
+        className="absolute top-4 right-4 z-[60] w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 hover:bg-black/70 transition-colors"
       >
         <ChevronLeft className="w-5 h-5" />
       </button>
