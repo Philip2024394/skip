@@ -260,26 +260,15 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
       )}
       {!backgroundImage && <div className="absolute inset-0 bg-black" />}
 
-      {/* Header */}
-      <div className="relative flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/50 backdrop-blur-xl shrink-0">
-        <button
-          onClick={onBack}
-          aria-label="Back to profile"
-          className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <span className="text-white/80 text-sm font-medium">Full profile</span>
-        <button
-          onClick={shareProfileViaWhatsApp}
-          aria-label={t("detail.shareProfile")}
-          className="w-10 h-10 rounded-full bg-green-500/20 hover:bg-green-500/30 border border-green-400/40 flex items-center justify-center text-green-400 transition-colors"
-        >
-          <Share2 className="w-5 h-5" />
-        </button>
-      </div>
+      <button
+        onClick={onBack}
+        aria-label="Back to profile"
+        className="absolute top-4 left-4 z-[60] w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/90 hover:bg-black/70 transition-colors"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
 
-      <div className="relative flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="relative flex-1 overflow-y-auto overflow-x-hidden pt-2">
         {/* Hero name strip */}
         <div className="px-4 pt-6 pb-4">
           <h1 className="font-display font-bold text-2xl text-white">
