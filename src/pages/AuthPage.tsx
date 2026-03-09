@@ -247,7 +247,7 @@ const AuthPage = () => {
           }
           sizes={LANDING_BG_URL.includes("imagekit.io") ? "100vw" : undefined}
           alt=""
-          className="fixed inset-0 w-full h-full object-cover pointer-events-none select-none"
+          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-black object-contain w-[max(240px,calc(100vw-300px))] h-[max(240px,calc(100svh-300px))] sm:inset-0 sm:left-0 sm:top-0 sm:translate-x-0 sm:translate-y-0 sm:w-full sm:h-full sm:bg-transparent sm:object-cover sm:object-center pointer-events-none select-none"
           draggable={false}
           loading="eager"
           fetchPriority="high"
