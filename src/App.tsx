@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
 import Index from "./pages/Index";
@@ -66,7 +66,7 @@ const AppContent = () => {
         <AndroidBackHandler />
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/home" element={<Index />} />
+          <Route path="/home" element={<Navigate to="/" replace />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/profile/:id" element={<Index />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
