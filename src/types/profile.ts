@@ -27,4 +27,5 @@ export interface Profile {
   weekend_plans?: boolean;
   late_night_chat?: boolean;
   no_drama?: boolean;
+  whatsapp_connections_count?: number;
 }

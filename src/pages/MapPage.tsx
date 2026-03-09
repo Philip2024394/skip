@@ -8,6 +8,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
+import { getPrimaryBadgeKey } from "@/utils/profileBadges";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 import { Profile } from "@/components/SwipeCard";
 import DetailPanel from "@/components/DetailPanel";
@@ -371,6 +372,7 @@ const MapPage = () => {
             weekend_plans: !!(p as any).weekend_plans,
             late_night_chat: !!(p as any).late_night_chat,
             no_drama: !!(p as any).no_drama,
+            whatsapp_connections_count: (p as any).whatsapp_connections_count ?? 0,
             voice_intro_url: p.voice_intro_url,
             last_seen_at: p.last_seen_at,
             main_image_pos: p.main_image_pos,
@@ -495,8 +497,6 @@ const MapPage = () => {
       attributionControl: false,
       // Smooth scroll with mouse wheel on desktop
       scrollWheelZoom: true,
-      // Double-tap zoom on mobile
-      tap: true,
     });
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
@@ -970,10 +970,87 @@ const MapPage = () => {
             <span className="text-primary text-[10px] font-semibold w-8 text-right">{radiusKm} km</span>
           </div>
 
-          {/* Available Tonight / +1 / Generous / Weekend / Late Night / No Drama badges — under km bar */}
-          {selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone || (selectedProfile as any).generous_lifestyle || (selectedProfile as any).weekend_plans || (selectedProfile as any).late_night_chat || (selectedProfile as any).no_drama) && (
+          {/* Single badge display — under km bar */}
+          {selectedProfile && !detailProfile && getPrimaryBadgeKey(selectedProfile as any) && (
             <div className="flex flex-wrap items-center justify-center gap-2">
-              {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
+              {(() => {
+                const key = getPrimaryBadgeKey(selectedProfile as any);
+                if (!key) return null;
+                if (key === "available_tonight") {
+                  return (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
+                      style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
+                    >
+                      <Moon className="w-3 h-3" fill="currentColor" />
+                      Available Tonight
+                    </span>
+                  );
+                }
+                if (key === "is_plusone") {
+                  return (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
+                      style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
+                    >
+                      <UserPlus className="w-3 h-3" />
+                      +1 Plus One
+                    </span>
+                  );
+                }
+                if (key === "generous_lifestyle") {
+                  return (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-amber-400 border border-white/10 bg-black/60 backdrop-blur-md"
+                      style={{ boxShadow: "0 0 12px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.12)" }}
+                    >
+                      <Gift className="w-3 h-3" />
+                      Generous Lifestyle
+                    </span>
+                  );
+                }
+                if (key === "weekend_plans") {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-primary border border-white/10 bg-black/60 backdrop-blur-md">
+                      <CalendarDays className="w-3 h-3" />
+                      Weekend Plans
+                    </span>
+                  );
+                }
+                if (key === "late_night_chat") {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-indigo-300 border border-white/10 bg-black/60 backdrop-blur-md">
+                      <MoonStar className="w-3 h-3" />
+                      Late Night Chat
+                    </span>
+                  );
+                }
+                if (key === "no_drama") {
+                  return (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-teal-300 border border-white/10 bg-black/60 backdrop-blur-md">
+                      <ShieldCheck className="w-3 h-3" />
+                      No Drama
+                    </span>
+                  );
+                }
+                return null;
+              })()}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Single badge when radius slider hidden ── */}
+      {userLocation && !showRadius && selectedProfile && !detailProfile && getPrimaryBadgeKey(selectedProfile as any) && (
+        <div
+          className="absolute left-4 right-16 z-20 pointer-events-none flex flex-wrap items-center justify-center gap-2"
+          style={{ top: "6.25rem" }}
+        >
+          {(() => {
+            const key = getPrimaryBadgeKey(selectedProfile as any);
+            if (!key) return null;
+            if (key === "available_tonight") {
+              return (
                 <span
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
                   style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
@@ -981,8 +1058,10 @@ const MapPage = () => {
                   <Moon className="w-3 h-3" fill="currentColor" />
                   Available Tonight
                 </span>
-              )}
-              {(selectedProfile as any).is_plusone && (
+              );
+            }
+            if (key === "is_plusone") {
+              return (
                 <span
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
                   style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
@@ -990,8 +1069,10 @@ const MapPage = () => {
                   <UserPlus className="w-3 h-3" />
                   +1 Plus One
                 </span>
-              )}
-              {(selectedProfile as any).generous_lifestyle && (
+              );
+            }
+            if (key === "generous_lifestyle") {
+              return (
                 <span
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-amber-400 border border-white/10 bg-black/60 backdrop-blur-md"
                   style={{ boxShadow: "0 0 12px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.12)" }}
@@ -999,78 +1080,31 @@ const MapPage = () => {
                   <Gift className="w-3 h-3" />
                   Generous Lifestyle
                 </span>
-              )}
-              {(selectedProfile as any).weekend_plans && (
+              );
+            }
+            if (key === "weekend_plans") {
+              return (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-primary border border-white/10 bg-black/60 backdrop-blur-md">
-                  <CalendarDays className="w-3 h-3" />
-                  Weekend Plans
+                  <CalendarDays className="w-3 h-3" /> Weekend Plans
                 </span>
-              )}
-              {(selectedProfile as any).late_night_chat && (
+              );
+            }
+            if (key === "late_night_chat") {
+              return (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-indigo-300 border border-white/10 bg-black/60 backdrop-blur-md">
-                  <MoonStar className="w-3 h-3" />
-                  Late Night Chat
+                  <MoonStar className="w-3 h-3" /> Late Night Chat
                 </span>
-              )}
-              {(selectedProfile as any).no_drama && (
+              );
+            }
+            if (key === "no_drama") {
+              return (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-teal-300 border border-white/10 bg-black/60 backdrop-blur-md">
-                  <ShieldCheck className="w-3 h-3" />
-                  No Drama
+                  <ShieldCheck className="w-3 h-3" /> No Drama
                 </span>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Available Tonight / +1 / Generous / Weekend / Late / No Drama badges when radius slider hidden ── */}
-      {userLocation && !showRadius && selectedProfile && !detailProfile && (selectedProfile.available_tonight || (selectedProfile as any).is_plusone || (selectedProfile as any).generous_lifestyle || (selectedProfile as any).weekend_plans || (selectedProfile as any).late_night_chat || (selectedProfile as any).no_drama) && (
-        <div
-          className="absolute left-4 right-16 z-20 pointer-events-none flex flex-wrap items-center justify-center gap-2"
-          style={{ top: "6.25rem" }}
-        >
-          {selectedProfile.available_tonight && !(selectedProfile as any).is_plusone && (
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
-              style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
-            >
-              <Moon className="w-3 h-3" fill="currentColor" />
-              Available Tonight
-            </span>
-          )}
-          {(selectedProfile as any).is_plusone && (
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md"
-              style={{ boxShadow: "0 0 12px rgba(250, 204, 21, 0.25), 0 0 24px rgba(250, 204, 21, 0.12)" }}
-            >
-              <UserPlus className="w-3 h-3" />
-              +1 Plus One
-            </span>
-          )}
-          {(selectedProfile as any).generous_lifestyle && (
-            <span
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-amber-400 border border-white/10 bg-black/60 backdrop-blur-md"
-              style={{ boxShadow: "0 0 12px rgba(245, 158, 11, 0.25), 0 0 24px rgba(245, 158, 11, 0.12)" }}
-            >
-              <Gift className="w-3 h-3" />
-              Generous Lifestyle
-            </span>
-          )}
-          {(selectedProfile as any).weekend_plans && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-primary border border-white/10 bg-black/60 backdrop-blur-md">
-              <CalendarDays className="w-3 h-3" /> Weekend Plans
-            </span>
-          )}
-          {(selectedProfile as any).late_night_chat && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-indigo-300 border border-white/10 bg-black/60 backdrop-blur-md">
-              <MoonStar className="w-3 h-3" /> Late Night Chat
-            </span>
-          )}
-          {(selectedProfile as any).no_drama && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-teal-300 border border-white/10 bg-black/60 backdrop-blur-md">
-              <ShieldCheck className="w-3 h-3" /> No Drama
-            </span>
-          )}
+              );
+            }
+            return null;
+          })()}
         </div>
       )}
 

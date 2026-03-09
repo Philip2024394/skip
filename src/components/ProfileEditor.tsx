@@ -9,13 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import VoiceRecorder from "./VoiceRecorder";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import DatePlacesEditor, { DatePlace } from "./DatePlacesEditor";
 import { LANGUAGES, getNativeLanguage } from "@/data/languages";
-import { Languages, Plus, X as XIcon } from "lucide-react";
+import { HelpCircle, Languages, Plus, X as XIcon } from "lucide-react";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { BIO_MAX_LENGTH } from "@/lib/constants";
 import { sanitizeBio } from "@/utils/bio";
@@ -72,6 +73,7 @@ const ProfileEditor = () => {
   const [freeTonightUntil, setFreeTonightUntil] = useState<Date | null>(null);
   const [userId, setUserId] = useState<string>("");
   const [schemaHasBadgeColumns, setSchemaHasBadgeColumns] = useState(true);
+  const [showBadgesHelp, setShowBadgesHelp] = useState(false);
 
   // Check if Free Tonight has expired and auto-clear it (runs whenever userId is set)
   useEffect(() => {
@@ -131,6 +133,38 @@ const ProfileEditor = () => {
         const positions: ImagePosition[] = ((data.image_positions as ImagePosition[]) || []);
         while (positions.length < imgs.length) positions.push({ ...defaultPos });
 
+        const available_tonight = (data.available_tonight as boolean) || false;
+        const is_plusone = (data.is_plusone as boolean) || false;
+        const generous_lifestyle = (data.generous_lifestyle as boolean) || false;
+        const weekend_plans = (data.weekend_plans as boolean) || false;
+        const late_night_chat = (data.late_night_chat as boolean) || false;
+        const no_drama = (data.no_drama as boolean) || false;
+
+        const badgePriority: Array<keyof Pick<ProfileData,
+          "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
+        >> = ["available_tonight", "is_plusone", "generous_lifestyle", "weekend_plans", "late_night_chat", "no_drama"];
+
+        const badgeState = {
+          available_tonight,
+          is_plusone,
+          generous_lifestyle,
+          weekend_plans,
+          late_night_chat,
+          no_drama,
+        };
+
+        const activeBadges = badgePriority.filter((k) => badgeState[k]);
+        const keepBadge = activeBadges.length > 0 ? activeBadges[0] : null;
+
+        const normalizedBadges = {
+          available_tonight: keepBadge === "available_tonight" ? available_tonight : false,
+          is_plusone: keepBadge === "is_plusone" ? is_plusone : false,
+          generous_lifestyle: keepBadge === "generous_lifestyle" ? generous_lifestyle : false,
+          weekend_plans: keepBadge === "weekend_plans" ? weekend_plans : false,
+          late_night_chat: keepBadge === "late_night_chat" ? late_night_chat : false,
+          no_drama: keepBadge === "no_drama" ? no_drama : false,
+        };
+
         setProfile({
           name: data.name as string,
           age: data.age as number,
@@ -150,11 +184,7 @@ const ProfileEditor = () => {
           first_date_idea: (data.first_date_idea as string | null) || null,
           first_date_places: ((data.first_date_places as DatePlace[]) || []),
           languages: ((data.languages as string[]) || []),
-          is_plusone: false,
-          generous_lifestyle: false,
-          weekend_plans: false,
-          late_night_chat: false,
-          no_drama: false,
+          ...normalizedBadges,
         });
         setSchemaHasBadgeColumns(useBadgeColumns);
       }
@@ -165,6 +195,17 @@ const ProfileEditor = () => {
 
   const update = (key: keyof ProfileData, value: ProfileData[keyof ProfileData]) => {
     setProfile((p) => p ? { ...p, [key]: value } : p);
+  };
+
+  const clearOtherBadges = (keep: keyof Pick<ProfileData,
+    "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
+  >) => {
+    const keys: Array<keyof Pick<ProfileData,
+      "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
+    >> = ["available_tonight", "is_plusone", "generous_lifestyle", "weekend_plans", "late_night_chat", "no_drama"];
+    for (const k of keys) {
+      if (k !== keep) update(k, false);
+    }
   };
 
   const updateImagePos = (idx: number, field: keyof ImagePosition, value: number) => {
@@ -708,6 +749,55 @@ const ProfileEditor = () => {
         )}
       </div>
 
+      <div className="flex items-center justify-between">
+        <p className="text-muted-foreground text-xs font-semibold">Badges</p>
+        <button
+          type="button"
+          onClick={() => setShowBadgesHelp(true)}
+          className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <HelpCircle className="w-4 h-4" /> Help
+        </button>
+      </div>
+
+      <Dialog open={showBadgesHelp} onOpenChange={setShowBadgesHelp}>
+        <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-gray-900">Badge meanings</DialogTitle>
+            <DialogDescription className="text-gray-500">
+              You can select 1 badge at a time (or none). Badges help others understand your vibe.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="font-semibold text-gray-900">Free Tonight</p>
+              <p className="text-gray-600 text-xs mt-0.5">Shows you're available tonight. Auto-clears at midnight.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Plus-One Premium</p>
+              <p className="text-gray-600 text-xs mt-0.5">Signals you're open to events and social outings.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Generous Lifestyle</p>
+              <p className="text-gray-600 text-xs mt-0.5">You enjoy treating companions to dinners, events, or experiences.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Weekend Plans</p>
+              <p className="text-gray-600 text-xs mt-0.5">Usually available on weekends for meetups and social plans.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Late Night Chat</p>
+              <p className="text-gray-600 text-xs mt-0.5">Prefer nighttime conversations and late evening activity.</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">No Drama</p>
+              <p className="text-gray-600 text-xs mt-0.5">Prefer calm, positive, and respectful connections.</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Free Tonight */}
       <div className="glass rounded-xl p-3 space-y-2">
         <div className="flex items-center justify-between">
@@ -726,8 +816,7 @@ const ProfileEditor = () => {
             checked={profile.available_tonight}
             onCheckedChange={(checked) => {
               update("available_tonight", checked);
-              // Turning on Free Tonight clears Plus-One
-              if (checked) update("is_plusone", false);
+              if (checked) clearOtherBadges("available_tonight");
               if (checked) {
                 // Set expiry to end of today (midnight local time)
                 const midnight = new Date();
@@ -813,7 +902,10 @@ const ProfileEditor = () => {
           </div>
           <Switch
             checked={profile.generous_lifestyle}
-            onCheckedChange={(checked) => update("generous_lifestyle", checked)}
+            onCheckedChange={(checked) => {
+              update("generous_lifestyle", checked);
+              if (checked) clearOtherBadges("generous_lifestyle");
+            }}
           />
         </div>
         {profile.generous_lifestyle && (
@@ -836,7 +928,13 @@ const ProfileEditor = () => {
               <p className="text-muted-foreground text-[10px]">Usually available on weekends for meetups & social plans</p>
             </div>
           </div>
-          <Switch checked={profile.weekend_plans} onCheckedChange={(c) => update("weekend_plans", c)} />
+          <Switch
+            checked={profile.weekend_plans}
+            onCheckedChange={(checked) => {
+              update("weekend_plans", checked);
+              if (checked) clearOtherBadges("weekend_plans");
+            }}
+          />
         </div>
       </div>
 
@@ -850,7 +948,13 @@ const ProfileEditor = () => {
               <p className="text-muted-foreground text-[10px]">Typically active later in the evening; prefer nighttime conversations</p>
             </div>
           </div>
-          <Switch checked={profile.late_night_chat} onCheckedChange={(c) => update("late_night_chat", c)} />
+          <Switch
+            checked={profile.late_night_chat}
+            onCheckedChange={(checked) => {
+              update("late_night_chat", checked);
+              if (checked) clearOtherBadges("late_night_chat");
+            }}
+          />
         </div>
       </div>
 
@@ -864,7 +968,13 @@ const ProfileEditor = () => {
               <p className="text-muted-foreground text-[10px]">Prefer relaxed, positive & respectful connections</p>
             </div>
           </div>
-          <Switch checked={profile.no_drama} onCheckedChange={(c) => update("no_drama", c)} />
+          <Switch
+            checked={profile.no_drama}
+            onCheckedChange={(checked) => {
+              update("no_drama", checked);
+              if (checked) clearOtherBadges("no_drama");
+            }}
+          />
         </div>
       </div>
 

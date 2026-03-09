@@ -11,6 +11,7 @@ import ButterflyLikeAnimation from "@/components/ButterflyLikeAnimation";
 import SuperLikeRevealModal from "@/components/SuperLikeRevealModal";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 import { toast } from "sonner";
+import { getPrimaryBadgeKey } from "@/utils/profileBadges";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { PremiumFeature } from "@/data/premiumFeatures";
@@ -234,7 +235,7 @@ const Index = () => {
   const [showPostLoginLanding, setShowPostLoginLanding] = useState(false);
 
   // Guest auth prompt
-  const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "generic" }>({ open: false, trigger: "generic" });
+  const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
   const selectedProfile = selectedList.length > 0 ? selectedList[selectedIndex] : null;
@@ -369,6 +370,7 @@ const Index = () => {
               weekend_plans: (p as any).weekend_plans || false,
               late_night_chat: (p as any).late_night_chat || false,
               no_drama: (p as any).no_drama || false,
+              whatsapp_connections_count: (p as any).whatsapp_connections_count ?? 0,
             }));
           // Sort spotlight profiles to front
           mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
@@ -908,33 +910,63 @@ const Index = () => {
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
 
-              {/* ── Status badge — Free Tonight only (+1 no longer on image) ── */}
-              {!(selectedProfile as any).is_plusone && selectedProfile.available_tonight ? (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
-                  <span className="text-yellow-400">🌙</span>
-                  {t("popup.freeTonight")}
-                </div>
-              ) : null}
-              {(selectedProfile as any).generous_lifestyle && (
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.45)]">
-                  <span className="text-amber-400">🎁</span> Generous
-                </div>
-              )}
-              {(selectedProfile as any).weekend_plans && (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-primary/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  <span className="text-primary">📅</span> Weekend
-                </div>
-              )}
-              {(selectedProfile as any).late_night_chat && (
-                <div className="absolute top-10 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  <span className="text-indigo-400">🌙</span> Late Night
-                </div>
-              )}
-              {(selectedProfile as any).no_drama && (
-                <div className="absolute top-10 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  <span className="text-teal-400">✨</span> No Drama
-                </div>
-              )}
+              {/* ── Single badge display ─────────────────────────── */}
+              {(() => {
+                const key = getPrimaryBadgeKey(selectedProfile as any);
+                if (!key) return null;
+
+                if (key === "available_tonight") {
+                  return (
+                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
+                      <span className="text-yellow-400">🌙</span>
+                      {t("popup.freeTonight")}
+                    </div>
+                  );
+                }
+
+                if (key === "is_plusone") {
+                  return (
+                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
+                      <span className="text-yellow-300 font-black">+1</span>
+                      Plus One
+                    </div>
+                  );
+                }
+
+                if (key === "generous_lifestyle") {
+                  return (
+                    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.45)]">
+                      <span className="text-amber-400">🎁</span> Generous
+                    </div>
+                  );
+                }
+
+                if (key === "weekend_plans") {
+                  return (
+                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-primary/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                      <span className="text-primary">📅</span> Weekend
+                    </div>
+                  );
+                }
+
+                if (key === "late_night_chat") {
+                  return (
+                    <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                      <span className="text-indigo-400">🌙</span> Late Night
+                    </div>
+                  );
+                }
+
+                if (key === "no_drama") {
+                  return (
+                    <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                      <span className="text-teal-400">✨</span> No Drama
+                    </div>
+                  );
+                }
+
+                return null;
+              })()}
 
               {/* Fingerprint next — swipe this card only; stop propagation so bottom stack is not affected */}
               <button

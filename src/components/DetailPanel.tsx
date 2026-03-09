@@ -14,6 +14,7 @@ import VoicePlayer from "./VoicePlayer";
 import AppLogo from "./AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { sanitizeBio } from "@/utils/bio";
+import { getPrimaryBadgeKey } from "@/utils/profileBadges";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 
 interface DetailPanelProps {
@@ -237,36 +238,59 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
             )}
 
             {/* Activity badges — no gender, +1, or View Map here */}
-            <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
-              {profile.available_tonight && !profile.is_plusone ? (
-                <span className="bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
-                  <span className="text-yellow-400">🌙</span> Free Tonight
-                </span>
-              ) : null}
-              {profile.generous_lifestyle && (
-                <span className="bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(245,158,11,0.4)]">
-                  <Gift className="w-3 h-3 text-amber-400" />
-                  Generous Lifestyle
-                </span>
-              )}
-              {profile.weekend_plans && (
-                <span className="bg-black/80 backdrop-blur-md border border-primary/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(180,80,150,0.4)]">
-                  <CalendarDays className="w-3 h-3 text-primary" />
-                  Weekend Plans
-                </span>
-              )}
-              {profile.late_night_chat && (
-                <span className="bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(99,102,241,0.4)]">
-                  <MoonStar className="w-3 h-3 text-indigo-400" />
-                  Late Night Chat
-                </span>
-              )}
-              {profile.no_drama && (
-                <span className="bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(45,212,191,0.4)]">
-                  <ShieldCheck className="w-3 h-3 text-teal-400" />
-                  No Drama
-                </span>
-              )}
+          <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+              {(() => {
+                const key = getPrimaryBadgeKey(profile);
+                if (!key) return null;
+                if (key === "available_tonight") {
+                  return (
+                    <span className="bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
+                      <span className="text-yellow-400">🌙</span> Free Tonight
+                    </span>
+                  );
+                }
+                if (key === "is_plusone") {
+                  return (
+                    <span className="bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(250,204,21,0.4)]">
+                      <Crown className="w-3 h-3 text-amber-400" />
+                      +1 Plus One
+                    </span>
+                  );
+                }
+                if (key === "generous_lifestyle") {
+                  return (
+                    <span className="bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(245,158,11,0.4)]">
+                      <Gift className="w-3 h-3 text-amber-400" />
+                      Generous Lifestyle
+                    </span>
+                  );
+                }
+                if (key === "weekend_plans") {
+                  return (
+                    <span className="bg-black/80 backdrop-blur-md border border-primary/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(180,80,150,0.4)]">
+                      <CalendarDays className="w-3 h-3 text-primary" />
+                      Weekend Plans
+                    </span>
+                  );
+                }
+                if (key === "late_night_chat") {
+                  return (
+                    <span className="bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(99,102,241,0.4)]">
+                      <MoonStar className="w-3 h-3 text-indigo-400" />
+                      Late Night Chat
+                    </span>
+                  );
+                }
+                if (key === "no_drama") {
+                  return (
+                    <span className="bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[10px] font-semibold px-3 py-1 rounded-full flex items-center gap-1 shadow-[0_0_8px_rgba(45,212,191,0.4)]">
+                      <ShieldCheck className="w-3 h-3 text-teal-400" />
+                      No Drama
+                    </span>
+                  );
+                }
+                return null;
+              })()}
               {profile.first_date_idea && (
                 <span className="bg-black/50 backdrop-blur-md border border-white/10 text-white/80 text-[10px] px-3 py-1 rounded-full">
                   💕 {profile.first_date_idea}

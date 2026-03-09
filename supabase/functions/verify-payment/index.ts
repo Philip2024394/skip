@@ -74,7 +74,14 @@ async function activateFeature(session: Stripe.Checkout.Session) {
   // Premium feature activation
   switch (featureId) {
     case "plusone":
-      await supabaseAdmin.from("profiles").update({ is_plusone: true }).eq("id", userId);
+      await supabaseAdmin.from("profiles").update({
+        is_plusone: true,
+        available_tonight: false,
+        generous_lifestyle: false,
+        weekend_plans: false,
+        late_night_chat: false,
+        no_drama: false,
+      }).eq("id", userId);
       break;
 
     case "vip":

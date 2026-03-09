@@ -231,6 +231,7 @@ export type Database = {
           no_drama: boolean
           voice_intro_url: string | null
           whatsapp: string
+          whatsapp_connections_count: number
         }
         Insert: {
           age: number
@@ -271,6 +272,7 @@ export type Database = {
           no_drama?: boolean
           voice_intro_url?: string | null
           whatsapp: string
+          whatsapp_connections_count?: number
         }
         Update: {
           age?: number
@@ -311,6 +313,7 @@ export type Database = {
           no_drama?: boolean
           voice_intro_url?: string | null
           whatsapp?: string
+          whatsapp_connections_count?: number
         }
         Relationships: []
       }
@@ -394,6 +397,7 @@ export type Database = {
           name: string | null
           no_drama: boolean | null
           spotlight_until: string | null
+          whatsapp_connections_count: number | null
           weekend_plans: boolean | null
           voice_intro_url: string | null
         }
@@ -426,6 +430,7 @@ export type Database = {
           name?: string | null
           no_drama?: boolean | null
           spotlight_until?: string | null
+          whatsapp_connections_count?: number | null
           weekend_plans?: boolean | null
           voice_intro_url?: string | null
         }
@@ -458,6 +463,7 @@ export type Database = {
           name?: string | null
           no_drama?: boolean | null
           spotlight_until?: string | null
+          whatsapp_connections_count?: number | null
           weekend_plans?: boolean | null
           voice_intro_url?: string | null
         }

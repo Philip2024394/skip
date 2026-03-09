@@ -77,11 +77,7 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
       const userId = sessionData.session?.user?.id ?? null;
       if (!cancelled) setHasSession(Boolean(userId));
 
-      const [{ count: connections }, { count: likesReceived }] = await Promise.all([
-        (supabase as any)
-          .from("connections")
-          .select("id", { count: "exact", head: true })
-          .or(`user_a.eq.${profile.id},user_b.eq.${profile.id}`),
+      const [{ count: likesReceived }] = await Promise.all([
         (supabase as any)
           .from("likes")
           .select("id", { count: "exact", head: true })
@@ -89,7 +85,7 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
       ]);
 
       if (!cancelled) {
-        setConnectionsCount(typeof connections === "number" ? connections : 0);
+        setConnectionsCount(typeof profile.whatsapp_connections_count === "number" ? profile.whatsapp_connections_count : 0);
         setLikedMeCount(typeof likesReceived === "number" ? likesReceived : 0);
       }
 
@@ -198,9 +194,9 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
   }, [profile.id]);
 
   useEffect(() => {
-    if (reviews.length <= 3) return;
+    if (reviews.length <= 1) return;
     const id = window.setInterval(() => {
-      setActiveReviewIndex((prev) => (prev + 3) % reviews.length);
+      setActiveReviewIndex((prev) => (prev + 1) % reviews.length);
     }, 10000);
     return () => window.clearInterval(id);
   }, [reviews.length]);
@@ -208,11 +204,6 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
   const activeReview = useMemo(() => {
     if (reviews.length === 0) return null;
     return reviews[Math.min(activeReviewIndex, reviews.length - 1)] ?? null;
-  }, [activeReviewIndex, reviews]);
-
-  const activeReviews = useMemo(() => {
-    if (reviews.length === 0) return [];
-    return reviews.slice(activeReviewIndex, activeReviewIndex + 3);
   }, [activeReviewIndex, reviews]);
 
   const submitReview = async () => {
@@ -300,52 +291,8 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
 
         {/* Pro / trust badges — safe, positive only */}
         <div className="px-4 mb-6">
-          <div className="flex flex-wrap gap-2">
-            {activeOn2DateMe && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-medium">
-                <Zap className="w-3.5 h-3.5" />
-                Active on 2DateMe
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-medium">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Verified profile
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/25 text-amber-300 text-xs font-medium">
-              <Heart className="w-3.5 h-3.5" />
-              Clean dating record
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/60 text-xs font-medium">
-              <Calendar className="w-3.5 h-3.5" />
-              Has dated on 2DateMe
-            </span>
-            {profile.generous_lifestyle && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/25 text-amber-300 text-xs font-medium">
-                <Gift className="w-3.5 h-3.5" />
-                Generous Lifestyle
-              </span>
-            )}
-            {profile.weekend_plans && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/25 text-primary text-xs font-medium">
-                <CalendarDays className="w-3.5 h-3.5" />
-                Weekend Plans
-              </span>
-            )}
-            {profile.late_night_chat && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-400/25 text-indigo-300 text-xs font-medium">
-                <MoonStar className="w-3.5 h-3.5" />
-                Late Night Chat
-              </span>
-            )}
-            {profile.no_drama && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/10 border border-teal-400/25 text-teal-300 text-xs font-medium">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                No Drama
-              </span>
-            )}
-          </div>
           {/* Activity / profile strength — visual only, pro look */}
-          <div className="mt-4 rounded-xl bg-white/5 border border-white/10 px-4 py-3">
+          <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
             <p className="text-white/70 text-xs font-medium mb-2">2DateMe activity</p>
             <div className="h-2 rounded-full bg-white/10 overflow-hidden">
               <motion.div
@@ -360,6 +307,17 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
                 {activeOn2DateMe ? "Highly active profile" : "Active profile"}
               </p>
               <p className="text-white/60 text-[10px] font-semibold">{activityPercent}%</p>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-400/25 text-amber-300 text-[11px] font-medium">
+                <Heart className="w-3.5 h-3.5" />
+                Clean dating record
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/70 text-[11px] font-medium">
+                <Calendar className="w-3.5 h-3.5" />
+                Has dated on 2DateMe
+              </span>
             </div>
 
             <div className="mt-2 grid grid-cols-2 gap-2">
@@ -398,40 +356,36 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
           </div>
 
           <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-            {activeReviews.length > 0 ? (
-              <div className="space-y-3">
-                {activeReviews.map((r) => (
-                  <div key={r.id} className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 border border-white/10 shrink-0">
-                      {r.reviewer_avatar_url ? (
-                        <img
-                          src={r.reviewer_avatar_url}
-                          alt={r.reviewer_name || "Reviewer"}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-white/80 text-xs font-semibold">
-                          {r.reviewer_name || "Member"}
-                        </p>
-                        <p className="text-white/40 text-[10px]">
-                          {new Date(r.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <p className="text-white/70 text-xs mt-1 leading-relaxed">{r.text}</p>
-                    </div>
+            {activeReview ? (
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 border border-white/10 shrink-0">
+                  {activeReview.reviewer_avatar_url ? (
+                    <img
+                      src={activeReview.reviewer_avatar_url}
+                      alt={activeReview.reviewer_name || "Reviewer"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-white/80 text-xs font-semibold">
+                      {activeReview.reviewer_name || "Member"}
+                    </p>
+                    <p className="text-white/40 text-[10px]">
+                      {new Date(activeReview.created_at).toLocaleDateString()}
+                    </p>
                   </div>
-                ))}
+                  <p className="text-white/70 text-xs mt-1 leading-relaxed">{activeReview.text}</p>
 
-                {reviews.length > 3 && (
-                  <p className="text-white/40 text-[10px] pt-1">
-                    Showing {Math.min(activeReviewIndex + 1, reviews.length)}-{Math.min(activeReviewIndex + activeReviews.length, reviews.length)} of {reviews.length}
-                  </p>
-                )}
+                  {reviews.length > 1 && (
+                    <p className="text-white/40 text-[10px] pt-2">
+                      {activeReviewIndex + 1}/{reviews.length}
+                    </p>
+                  )}
+                </div>
               </div>
             ) : (
               <p className="text-white/50 text-xs">No reviews yet.</p>
