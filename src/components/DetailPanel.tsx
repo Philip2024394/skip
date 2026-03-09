@@ -1,7 +1,24 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from "framer-motion";
-import { ChevronRight, MapPin, Map, X, MessageCircle, Star, Flag, Globe, Heart, Crown, Gift, Share2 } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Flag,
+  Gift,
+  Globe,
+  Heart,
+  Crown,
+  Map,
+  MapPin,
+  MessageCircle,
+  MoonStar,
+  Share2,
+  ShieldCheck,
+  Star,
+  X,
+} from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { isOnline } from "@/hooks/useOnlineStatus";
@@ -129,13 +146,23 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
       >
         {/* Header: prev/next buttons + liked-me avatars */}
         <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-4 pb-2">
-          <button
-            onClick={() => setShowReportDialog(true)}
-            aria-label="Report this profile"
-            className="w-10 h-10 rounded-full bg-red-500/10 backdrop-blur-md border border-red-400/20 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/15 transition-all"
-          >
-            <Flag className="w-5 h-5" />
-          </button>
+          {showSecondPage ? (
+            <button
+              onClick={() => setShowSecondPage(false)}
+              aria-label="Back"
+              className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/70 transition-all"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowReportDialog(true)}
+              aria-label="Report this profile"
+              className="w-10 h-10 rounded-full bg-red-500/10 backdrop-blur-md border border-red-400/20 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/15 transition-all"
+            >
+              <Flag className="w-5 h-5" />
+            </button>
+          )}
 
           <div className="flex items-center -space-x-2">
             {likedMeProfiles.slice(0, 5).map((p) => (
@@ -208,38 +235,8 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
 
           {/* Profile info — centered, raised; crown before name for +1 only */}
           <div className="absolute bottom-[140px] left-0 right-0 z-10 flex flex-col items-center text-center px-6">
-            <h2 className="font-display font-bold text-3xl text-white drop-shadow-lg flex items-center gap-2 justify-center">
-              {isPlusOne && <Crown className="w-7 h-7 text-amber-400 flex-shrink-0" aria-hidden />}
-              {profile.name}, <span className="font-normal text-white/80">{profile.age}</span>
-              {isOnline(profile.last_seen_at) && (
-                <span className="relative flex h-3 w-3 ml-1">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                </span>
-              )}
-            </h2>
-            <p className="text-white/70 text-sm flex items-center gap-1 mt-1.5">
-              <MapPin className="w-3.5 h-3.5 text-primary" /> {profile.city}, {profile.country}
-            </p>
-
-            {/* Bio container — under location; header "+1 Plus One" for +1 members */}
-            {profile.bio && (
-              <div className="mt-3 mx-4 w-[calc(100%-2rem)] max-w-md">
-                {isPlusOne && (
-                  <h3 className="text-amber-400/95 text-xs font-bold tracking-wider uppercase mb-2 text-center">
-                    +1 Plus One
-                  </h3>
-                )}
-                <div className="px-4 py-3 rounded-xl bg-black/40 backdrop-blur-md border border-white/10">
-                  <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap break-words">
-                    {sanitizeBio(profile.bio)}
-                  </p>
-                </div>
-              </div>
-            )}
-
             {/* Activity badges — no gender, +1, or View Map here */}
-          <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+            <div className="flex items-center gap-2 mb-3 flex-wrap justify-center">
               {(() => {
                 const key = getPrimaryBadgeKey(profile);
                 if (!key) return null;
@@ -292,6 +289,39 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 }
                 return null;
               })()}
+            </div>
+
+            <h2 className="font-display font-bold text-3xl text-white drop-shadow-lg flex items-center gap-2 justify-center">
+              {isPlusOne && <Crown className="w-7 h-7 text-amber-400 flex-shrink-0" aria-hidden />}
+              {profile.name}, <span className="font-normal text-white/80">{profile.age}</span>
+              {isOnline(profile.last_seen_at) && (
+                <span className="relative flex h-3 w-3 ml-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                </span>
+              )}
+            </h2>
+            <p className="text-white/70 text-sm flex items-center gap-1 mt-1.5">
+              <MapPin className="w-3.5 h-3.5 text-primary" /> {profile.city}, {profile.country}
+            </p>
+
+            {/* Bio container — under location; header "+1 Plus One" for +1 members */}
+            {profile.bio && (
+              <div className="mt-3 mx-4 w-[calc(100%-2rem)] max-w-md">
+                {isPlusOne && (
+                  <h3 className="text-amber-400/95 text-xs font-bold tracking-wider uppercase mb-2 text-center">
+                    +1 Plus One
+                  </h3>
+                )}
+                <div className="px-4 py-3 rounded-xl bg-black/40 backdrop-blur-md border border-white/10">
+                  <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    {sanitizeBio(profile.bio)}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
               {profile.first_date_idea && (
                 <span className="inline-flex items-center gap-2 bg-black/50 backdrop-blur-md border border-white/10 text-white/90 text-xs px-3 py-1.5 rounded-full">
                   💕 {profile.first_date_idea}
