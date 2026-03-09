@@ -1203,17 +1203,70 @@ const MapPage = () => {
 
       {/* ── Match dialog ── */}
       <Dialog open={!!matchDialog} onOpenChange={(open) => !open && setMatchDialog(null)}>
-        <DialogContent className="bg-black/90 backdrop-blur-xl border border-white/10 text-white max-w-sm rounded-3xl">
+        <DialogContent className="bg-black/90 backdrop-blur-xl border border-white/10 text-white max-w-sm rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute -inset-24 bg-[radial-gradient(circle_at_center,rgba(34,197,94,0.25),rgba(0,0,0,0)_55%)]"
+            />
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0.4 }}
+              animate={{ scale: 1.06, opacity: 0.8 }}
+              transition={{ repeat: Infinity, repeatType: "mirror", duration: 1.6, ease: "easeInOut" }}
+              className="absolute -inset-10 bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.22),rgba(0,0,0,0)_60%)]"
+            />
+          </div>
           <DialogHeader className="text-center">
-            <DialogTitle className="text-2xl font-display font-bold text-center">It's a Match! 🎉</DialogTitle>
+            <DialogTitle className="text-2xl font-display font-bold text-center">
+              <motion.span
+                initial={{ scale: 0.85, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 16 }}
+                className="inline-block"
+              >
+                It's a Match! 🎉
+              </motion.span>
+            </DialogTitle>
             <DialogDescription className="text-white/60 text-center">
               You and {matchDialog?.name} liked each other!
             </DialogDescription>
           </DialogHeader>
           {matchDialog && (
             <div className="flex flex-col items-center gap-4 py-4">
-              <img src={matchDialog.avatar_url || matchDialog.image} alt={matchDialog.name}
-                className="w-24 h-24 rounded-full object-cover ring-2 ring-primary" />
+              <div className="flex items-center justify-center gap-4">
+                <motion.img
+                  key={`me-${user?.id || "guest"}`}
+                  src={user?.user_metadata?.avatar_url || "/placeholder.svg"}
+                  alt="You"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-white/15"
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                />
+                <motion.div
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.05 }}
+                  className="w-12 h-12 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center"
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.12, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+                  >
+                    <Heart className="w-6 h-6 text-primary" fill="currentColor" />
+                  </motion.div>
+                </motion.div>
+                <motion.img
+                  key={`them-${matchDialog.id}`}
+                  src={matchDialog.avatar_url || matchDialog.image}
+                  alt={matchDialog.name}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-white/15"
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                />
+              </div>
               <p className="text-white font-semibold">{matchDialog.name}, {matchDialog.age}</p>
               <p className="text-white/50 text-sm flex items-center gap-1">
                 <MapPin className="w-3 h-3" /> {matchDialog.city}, {matchDialog.country}

@@ -814,6 +814,12 @@ const Index = () => {
 
   const confirmUnlock = async () => {
     if (!unlockDialog) return;
+    const hasMutualMatch = iLiked.some((p) => p.id === unlockDialog.id) && likedMe.some((p) => p.id === unlockDialog.id);
+    if (!hasMutualMatch) {
+      toast.error("WhatsApp unlock requires a mutual match");
+      setUnlockDialog(null);
+      return;
+    }
     setPaymentLoading(true);
     const invokeCreatePayment = async () =>
       supabase.functions.invoke("create-payment", {
@@ -1629,18 +1635,96 @@ const Index = () => {
 
       {/* Match Dialog */}
       <Dialog open={!!matchDialog} onOpenChange={() => setMatchDialog(null)}>
-        <DialogContent className="bg-black/90 backdrop-blur-xl border border-white/10 text-white max-w-xs mx-auto rounded-3xl">
+        <DialogContent className="bg-black/90 backdrop-blur-xl border border-white/10 text-white max-w-xs mx-auto rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute -inset-24 bg-[radial-gradient(circle_at_center,rgba(236,72,153,0.35),rgba(0,0,0,0)_55%)]"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0.4 }}
+              animate={{ scale: 1.05, opacity: 0.8 }}
+              transition={{ repeat: Infinity, repeatType: "mirror", duration: 1.6, ease: "easeInOut" }}
+              className="absolute -inset-10 bg-[radial-gradient(circle_at_center,rgba(168,85,247,0.25),rgba(0,0,0,0)_60%)]"
+            />
+          </div>
           <DialogHeader>
             <DialogTitle className="font-display text-center text-white">
-               <span className="text-3xl">🔥</span><br />{t("match.title")}
+              <motion.span
+                initial={{ scale: 0.8, rotate: -8, opacity: 0 }}
+                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 16 }}
+                className="block text-3xl"
+              >
+                🔥
+              </motion.span>
+              <motion.span
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.08, duration: 0.25 }}
+                className="block"
+              >
+                {t("match.title")}
+              </motion.span>
             </DialogTitle>
             <DialogDescription className="text-center text-white/60">
               <span className="text-primary font-semibold">{matchDialog?.name}</span> {t("match.desc")}
             </DialogDescription>
           </DialogHeader>
+
+          {matchDialog ? (
+            <div className="mt-3 flex items-center justify-center gap-4">
+              <motion.img
+                key={`me-${user?.id || "guest"}`}
+                src={user?.user_metadata?.avatar_url || "/placeholder.svg"}
+                alt="You"
+                className="w-16 h-16 rounded-full object-cover border-2 border-white/15"
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              />
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 16, delay: 0.05 }}
+                className="w-12 h-12 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.12, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+                >
+                  <Heart className="w-6 h-6 text-primary" fill="currentColor" />
+                </motion.div>
+              </motion.div>
+              <motion.img
+                key={`them-${matchDialog.id}`}
+                src={matchDialog.avatar_url || matchDialog.image}
+                alt={matchDialog.name}
+                className="w-16 h-16 rounded-full object-cover border-2 border-white/15"
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+              />
+            </div>
+          ) : null}
+
           <div className="flex gap-3 mt-2">
             <Button variant="outline" onClick={() => setMatchDialog(null)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("match.later")}</Button>
-            <Button onClick={() => { setMatchDialog(null); if (matchDialog) handleUnlock(matchDialog); }} className="flex-1 gradient-love text-primary-foreground border-0">
+            <Button
+              onClick={() => {
+                if (!matchDialog) return;
+                const hasMutualMatch = iLiked.some((p) => p.id === matchDialog.id) && likedMe.some((p) => p.id === matchDialog.id);
+                if (!hasMutualMatch) {
+                  toast.error("WhatsApp unlock requires a mutual match");
+                  setMatchDialog(null);
+                  return;
+                }
+                setMatchDialog(null);
+                handleUnlock(matchDialog);
+              }}
+              className="flex-1 gradient-love text-primary-foreground border-0"
+            >
               <Heart className="w-4 h-4 mr-1" /> {matchDialog && hasUnlockBadges(matchDialog) ? t("match.unlock299") : t("match.unlock")}
             </Button>
           </div>

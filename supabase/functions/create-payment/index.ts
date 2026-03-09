@@ -19,6 +19,11 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -54,6 +59,44 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
+    }
+
+    const isUuid = (v: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+
+    if (isUuid(targetUserId)) {
+      const nowIso = new Date().toISOString();
+      const [{ data: iLike, error: iLikeErr }, { data: theyLike, error: theyLikeErr }] = await Promise.all([
+        supabaseAdmin
+          .from("likes")
+          .select("id")
+          .eq("liker_id", user.id)
+          .eq("liked_id", targetUserId)
+          .gte("expires_at", nowIso)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("likes")
+          .select("id")
+          .eq("liker_id", targetUserId)
+          .eq("liked_id", user.id)
+          .gte("expires_at", nowIso)
+          .maybeSingle(),
+      ]);
+
+      if (iLikeErr || theyLikeErr) {
+        const msg = (iLikeErr || theyLikeErr)?.message || "Failed to verify match";
+        return new Response(JSON.stringify({ error: msg }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 500,
+        });
+      }
+
+      if (!iLike?.id || !theyLike?.id) {
+        return new Response(JSON.stringify({ error: "WhatsApp unlock requires a mutual match" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+        });
+      }
     }
 
     const priceId = targetHasBadges
