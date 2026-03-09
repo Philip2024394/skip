@@ -603,8 +603,7 @@ const MapPage = () => {
       ));
       const el = marker.getElement();
       if (el) {
-        const inRadius = !withinRadiusIds || withinRadiusIds.has(id);
-        el.style.opacity = inRadius ? "1" : "0.4";
+        el.style.opacity = "1";
         el.style.pointerEvents = "auto";
       }
     });
