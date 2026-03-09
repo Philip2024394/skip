@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { getPrimaryBadgeKey } from "@/utils/profileBadges";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { PremiumFeature } from "@/data/premiumFeatures";
+import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import FeaturePurchaseDialog from "@/components/FeaturePurchaseDialog";
 import FilterPanel, { FilterState, defaultFilters } from "@/components/FilterPanel";
 import { isOnline } from "@/hooks/useOnlineStatus";
@@ -250,7 +250,7 @@ const Index = () => {
   const [reviewerAvatarById, setReviewerAvatarById] = useState<Record<string, string>>({});
   const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
   const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests">("basic");
-  const [selectedUnlockPackageId, setSelectedUnlockPackageId] = useState<"single" | "pack3" | "pack10" | "vip">("single");
+  const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
 
   const PROFILE_THIRD_TAB_MODE: "unlock" | "reviews" = "unlock";
 
@@ -291,7 +291,7 @@ const Index = () => {
     setAboutMeTab("new");
     setSelectedDateIdeaIndex(0);
     setSelectedProfileSection("basic");
-    setSelectedUnlockPackageId("single");
+    setSelectedUnlockItemKey("unlock:single");
   }, [isProfileRoute, selectedProfile?.id]);
 
   useEffect(() => {
@@ -1316,17 +1316,17 @@ const Index = () => {
                 if (!isProfileRoute) return;
                 setAboutMeTab(t);
                 if (t === "new") setSelectedProfileSection("basic");
-                if (t === "received") setSelectedUnlockPackageId("single");
+                if (t === "received") setSelectedUnlockItemKey("unlock:single");
               }}
               selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
               onSelectProfileSection={(s) => {
                 if (!isProfileRoute) return;
                 setSelectedProfileSection(s);
               }}
-              selectedUnlockPackageId={isProfileRoute ? selectedUnlockPackageId : undefined}
-              onSelectUnlockPackage={(id) => {
+              selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : undefined}
+              onSelectUnlockItem={(key) => {
                 if (!isProfileRoute) return;
-                setSelectedUnlockPackageId(id);
+                setSelectedUnlockItemKey(key);
               }}
               selectedDateIdeaIndex={isProfileRoute ? selectedDateIdeaIndex : undefined}
               onSelectDateIdea={(idx) => {
@@ -1452,7 +1452,7 @@ const Index = () => {
 
                       <div className="flex-1 flex flex-col items-center justify-center px-1">
                         <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
-                          {selectedUnlockPackageId === "single" ? (
+                          {selectedUnlockItemKey === "unlock:single" ? (
                             <>
                               <p className="text-white text-sm font-black">1 Match Unlock</p>
                               <p className="text-white/70 text-xs mt-1">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
@@ -1474,7 +1474,7 @@ const Index = () => {
                                 <p className="text-white/60 text-[11px] font-semibold text-center">Requires a mutual match ✅</p>
                               </div>
                             </>
-                          ) : selectedUnlockPackageId === "pack3" ? (
+                          ) : selectedUnlockItemKey === "unlock:pack3" ? (
                             <>
                               <p className="text-white text-sm font-black">3 Unlock Pack</p>
                               <p className="text-white/70 text-xs mt-1">Perfect for a week of real connections. Save vs singles.</p>
@@ -1489,7 +1489,7 @@ const Index = () => {
                               </div>
                               <p className="text-white/45 text-[10px] mt-2">Best for casual + active users.</p>
                             </>
-                          ) : selectedUnlockPackageId === "pack10" ? (
+                          ) : selectedUnlockItemKey === "unlock:pack10" ? (
                             <>
                               <p className="text-white text-sm font-black">10 Unlock Pack</p>
                               <p className="text-white/70 text-xs mt-1">Best value for heavy matching. Lowest cost per unlock.</p>
@@ -1504,7 +1504,7 @@ const Index = () => {
                               </div>
                               <p className="text-white/45 text-[10px] mt-2">Best value package.</p>
                             </>
-                          ) : (
+                          ) : selectedUnlockItemKey === "unlock:vip" ? (
                             <>
                               <p className="text-white text-sm font-black">VIP Monthly</p>
                               <p className="text-white/70 text-xs mt-1">10 Match Unlocks / month + VIP badge + priority.</p>
@@ -1519,6 +1519,29 @@ const Index = () => {
                               </div>
                               <p className="text-white/45 text-[10px] mt-2">Includes 10 unlocks every month.</p>
                             </>
+                          ) : selectedUnlockItemKey.startsWith("feature:") ? (
+                            (() => {
+                              const featureId = selectedUnlockItemKey.replace("feature:", "");
+                              const feature = PREMIUM_FEATURES.find((f) => f.id === featureId);
+                              if (!feature) return <p className="text-white/60 text-xs">Select a feature above</p>;
+                              return (
+                                <>
+                                  <p className="text-white text-sm font-black">{feature.emoji} {feature.name}</p>
+                                  <p className="text-white/70 text-xs mt-1">{feature.description}</p>
+                                  <div className="mt-3 flex items-center justify-between">
+                                    <p className="text-white/90 font-black text-xl">{feature.price}</p>
+                                    <Button
+                                      onClick={() => navigate(`/dashboard?purchase=${feature.id}`)}
+                                      className="gradient-gold text-white border-0 h-10 rounded-xl font-black"
+                                    >
+                                      Get
+                                    </Button>
+                                  </div>
+                                </>
+                              );
+                            })()
+                          ) : (
+                            <p className="text-white/60 text-xs">Select a package above</p>
                           )}
                         </div>
                       </div>
