@@ -379,48 +379,51 @@ function buildBadgeMix(idx: number): { generous_lifestyle: boolean; weekend_plan
   return { generous_lifestyle: false, weekend_plans: true, late_night_chat: false, no_drama: true };
 }
 
-function buildFirstDatePlaces(city: string): Array<{ idea: string; url: string; image_url: null; title: string }> {
-  const maps = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
-
-  const byCity: Record<string, Array<{ idea: string; title: string; query: string }>> = {
-    Jakarta: [
-      { idea: "Coffee At A Cozy Café ☕", title: "Tugu Kunstkring Paleis", query: "Tugu Kunstkring Paleis Jakarta" },
-      { idea: "Dinner At A Nice Restaurant 🍝", title: "Plataran Menteng", query: "Plataran Menteng Jakarta" },
-      { idea: "Walk In The Park 🌳", title: "Taman Suropati", query: "Taman Suropati Jakarta" },
-    ],
-    Bali: [
-      { idea: "Sunset Dinner By The Beach 🌅", title: "Jimbaran Bay Seafood", query: "Jimbaran Bay seafood dinner" },
-      { idea: "Beach Sunset Walk 🌅", title: "Sanur Beach", query: "Sanur Beach Bali" },
-      { idea: "Coffee At A Cozy Café ☕", title: "Revolver Espresso (Seminyak)", query: "Revolver Espresso Seminyak" },
-    ],
-    Bandung: [
-      { idea: "Coffee And Deep Conversation ☕", title: "Two Hands Full", query: "Two Hands Full Bandung" },
-      { idea: "Quiet Garden Stroll 🌸", title: "Taman Hutan Raya Ir. H. Djuanda", query: "Taman Hutan Raya Ir. H. Djuanda Bandung" },
-      { idea: "Dinner With A View 🏙️", title: "The Valley Bistro Café", query: "The Valley Bistro Cafe Bandung" },
-    ],
-    Surabaya: [
-      { idea: "Coffee At A Cozy Café ☕", title: "Titik Koma Coffee Surabaya", query: "Titik Koma Coffee Surabaya" },
-      { idea: "Slow Walk Through The Old Town 🏛️", title: "Kota Tua Surabaya", query: "Kota Tua Surabaya" },
-      { idea: "Dinner At A Nice Restaurant 🍝", title: "Layar Seafood", query: "Layar Seafood Surabaya" },
-    ],
-    Yogyakarta: [
-      { idea: "Art Gallery Visit 🎨", title: "Affandi Museum", query: "Affandi Museum Yogyakarta" },
-      { idea: "Coffee At A Cozy Café ☕", title: "Ekologi Desk & Coffee", query: "Ekologi Desk & Coffee Yogyakarta" },
-      { idea: "Slow Walk Through The Old Town 🏛️", title: "Malioboro", query: "Malioboro Yogyakarta" },
-    ],
+function buildFirstDatePlaces(
+  city: string,
+  latitude: number,
+  longitude: number
+): Array<{ idea: string; url: string; image_url: null; title: string }> {
+  const maps = (q: string) => {
+    const query = `${q} near ${latitude.toFixed(4)},${longitude.toFixed(4)}`;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   };
 
-  const fallback: Array<{ idea: string; title: string; query: string }> = [
-    { idea: "Coffee At A Cozy Café ☕", title: "Local Specialty Coffee", query: `Specialty coffee ${city} Indonesia` },
-    { idea: "Dinner At A Nice Restaurant 🍝", title: "Popular Dinner Spot", query: `Best restaurant ${city} Indonesia` },
-    { idea: "Walk In The Park 🌳", title: "City Park", query: `Park ${city} Indonesia` },
+  const cityTag = city.toLowerCase().replace(/\s+/g, "");
+  const instagramTagUrl = (tag: string) => `https://www.instagram.com/explore/tags/${encodeURIComponent(tag)}/`;
+
+  const candidates: Array<{ idea: string; title: string; url: string }> = [
+    { idea: "Coffee At A Cozy Café ☕", title: `Cafés in ${city}`, url: maps("cafe") },
+    { idea: "Dinner At A Nice Restaurant 🍝", title: `Restaurants in ${city}`, url: maps("restaurant") },
+    { idea: "Walk In The Park 🌳", title: `Parks in ${city}`, url: maps("park") },
+    { idea: "Drinks At A Rooftop Bar �", title: `Rooftop bars in ${city}`, url: maps("rooftop bar") },
+    { idea: "Ice Cream And A Stroll 🍦", title: `Dessert & ice cream in ${city}`, url: maps("ice cream") },
+    { idea: "Art Gallery Visit �", title: `Galleries & museums in ${city}`, url: maps("museum") },
   ];
 
-  const picks = (byCity[city] || fallback).slice(0, 3);
+  if (Math.random() > 0.55) {
+    const tag = Math.random() > 0.5 ? `${cityTag}cafe` : `kuliner${cityTag}`;
+    candidates.push({
+      idea: "Street Food Adventure 🌮",
+      title: `Instagram: #${tag}`,
+      url: instagramTagUrl(tag),
+    });
+  }
+
+  const desiredCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
+  const picks: Array<{ idea: string; title: string; url: string }> = [];
+  const used = new Set<number>();
+  while (picks.length < desiredCount && used.size < candidates.length) {
+    const idx = Math.floor(Math.random() * candidates.length);
+    if (used.has(idx)) continue;
+    used.add(idx);
+    picks.push(candidates[idx]);
+  }
+
   return picks.map((p) => ({
     idea: p.idea,
     title: p.title,
-    url: maps(p.query),
+    url: p.url,
     image_url: null,
   }));
 }
@@ -509,7 +512,7 @@ function buildProfiles(opts: { femaleCount: number; maleCount: number }): MockPr
       avatar_url: images[0],
       images,
       first_date_idea: null,
-      first_date_places: isFemale ? buildFirstDatePlaces(CITIES[cityIdx]) : [],
+      first_date_places: buildFirstDatePlaces(CITIES[cityIdx], lat + randOffset(), lng + randOffset()),
       generous_lifestyle: badges.generous_lifestyle,
       weekend_plans: badges.weekend_plans,
       late_night_chat: badges.late_night_chat,

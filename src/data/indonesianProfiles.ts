@@ -43,6 +43,13 @@ import indoGuy7 from "@/assets/indo-guy-7.png";
 import indoGuy8 from "@/assets/indo-guy-8.png";
 import indoGuy9 from "@/assets/indo-guy-9.png";
 
+type DatePlace = {
+  idea: string;
+  url: string;
+  image_url: string | null;
+  title: string | null;
+};
+
 const FEMALE_NAMES = [
   "Putri", "Dewi", "Sari", "Ayu", "Rina", "Wulan", "Indah", "Ratna", "Mega", "Dian",
   "Lestari", "Anisa", "Fitri", "Nurul", "Sinta", "Kartika", "Melati", "Citra", "Bunga", "Kirana",
@@ -203,6 +210,77 @@ const EXTRA_LANGS_POOL: (string[] | undefined)[] = [
   ["English"],
 ];
 
+const buildGoogleMapsSearchUrl = (query: string, lat: number, lng: number) => {
+  const q = `${query} near ${lat.toFixed(4)},${lng.toFixed(4)}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+};
+
+const buildFirstDatePlaces = (city: string, lat: number, lng: number): DatePlace[] => {
+  const candidates: Array<{ idea: string; title: string; url: string }> = [
+    {
+      idea: "Coffee At A Cozy Café ☕",
+      title: `Best coffee spots in ${city}`,
+      url: buildGoogleMapsSearchUrl("cafe", lat, lng),
+    },
+    {
+      idea: "Dinner At A Nice Restaurant 🍝",
+      title: `Dinner spots in ${city}`,
+      url: buildGoogleMapsSearchUrl("restaurant", lat, lng),
+    },
+    {
+      idea: "Walk In The Park 🌳",
+      title: `Parks in ${city}`,
+      url: buildGoogleMapsSearchUrl("park", lat, lng),
+    },
+    {
+      idea: "Drinks At A Rooftop Bar 🍸",
+      title: `Rooftop bars in ${city}`,
+      url: buildGoogleMapsSearchUrl("rooftop bar", lat, lng),
+    },
+    {
+      idea: "Dessert And Late Night Walk 🍰",
+      title: `Dessert places in ${city}`,
+      url: buildGoogleMapsSearchUrl("dessert", lat, lng),
+    },
+  ];
+
+  const cityTag = city.toLowerCase().replace(/\s+/g, "");
+  const instagramCandidates: Array<{ idea: string; title: string; url: string }> = [
+    {
+      idea: "Coffee At A Cozy Café ☕",
+      title: `Instagram: #${cityTag}cafe`,
+      url: `https://www.instagram.com/explore/tags/${encodeURIComponent(`${cityTag}cafe`)}/`,
+    },
+    {
+      idea: "Street Food Adventure 🌮",
+      title: `Instagram: #kuliner${cityTag}`,
+      url: `https://www.instagram.com/explore/tags/${encodeURIComponent(`kuliner${cityTag}`)}/`,
+    },
+  ];
+
+  const includeInstagram = Math.random() > 0.55;
+  const pool = includeInstagram
+    ? [...candidates, instagramCandidates[Math.floor(Math.random() * instagramCandidates.length)]]
+    : candidates;
+
+  const desiredCount = 2 + Math.floor(Math.random() * 2); // 2 or 3
+  const picks: Array<{ idea: string; title: string; url: string }> = [];
+  const used = new Set<number>();
+  while (picks.length < desiredCount && used.size < pool.length) {
+    const idx = Math.floor(Math.random() * pool.length);
+    if (used.has(idx)) continue;
+    used.add(idx);
+    picks.push(pool[idx]);
+  }
+
+  return picks.map((p) => ({
+    idea: p.idea,
+    url: p.url,
+    image_url: null,
+    title: p.title,
+  }));
+};
+
 export const generateIndonesianProfiles = (count: number = 50): Profile[] => {
   const profiles: Profile[] = [];
 
@@ -233,6 +311,10 @@ export const generateIndonesianProfiles = (count: number = 50): Profile[] => {
     const extraLangs = EXTRA_LANGS_POOL[profileIdx % EXTRA_LANGS_POOL.length];
     const langs: string[] = ["Indonesian", ...(extraLangs || [])];
 
+    const latitude = lat + offset();
+    const longitude = lng + offset();
+    const first_date_places = buildFirstDatePlaces(CITIES[cityIdx], latitude, longitude);
+
     profiles.push({
       id: `indo-${i}`,
       name,
@@ -243,12 +325,13 @@ export const generateIndonesianProfiles = (count: number = 50): Profile[] => {
       image: images[0],
       images,
       gender: isFemale ? "Female" : "Male",
-      latitude: lat + offset(),
-      longitude: lng + offset(),
+      latitude,
+      longitude,
       available_tonight: Math.random() > 0.65,
       looking_for: lookingForList[profileIdx % lookingForList.length],
       last_seen_at,
       languages: langs,
+      first_date_places,
       is_plusone: i % 4 === 1,   // every 4th profile shows the +1 badge
       generous_lifestyle: i % 5 === 2,
       weekend_plans: i % 5 === 1,
