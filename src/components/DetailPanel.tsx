@@ -132,7 +132,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
           <button
             onClick={() => setShowReportDialog(true)}
             aria-label="Report this profile"
-            className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/50 hover:text-red-400 hover:bg-black/70 transition-all"
+            className="w-10 h-10 rounded-full bg-red-500/10 backdrop-blur-md border border-red-400/20 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/15 transition-all"
           >
             <Flag className="w-5 h-5" />
           </button>
@@ -406,7 +406,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   <button
                     onClick={onClose}
                     aria-label="Close profile"
-                    className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                    className="w-14 h-14 rounded-full bg-red-500/10 backdrop-blur-md border border-red-400/20 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/15 hover:scale-105 transition-all"
                   >
                     <X className="w-6 h-6" />
                   </button>
@@ -471,7 +471,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                   <button
                     onClick={onClose}
                     aria-label="Close profile"
-                    className="w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white hover:bg-black/70 hover:scale-105 transition-all"
+                    className="w-14 h-14 rounded-full bg-red-500/10 backdrop-blur-md border border-red-400/20 flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/15 hover:scale-105 transition-all"
                   >
                     <X className="w-6 h-6" />
                   </button>
@@ -559,7 +559,7 @@ const DetailPanel = ({ profile, isMatch, onClose, onUnlock, onLike, nearbyUsers 
                 <button
                   onClick={handleClosePlusOneModal}
                   aria-label="Close"
-                  className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white/50 hover:text-white z-10"
+                  className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-red-500/10 hover:bg-red-500/15 transition-colors text-red-400 hover:text-red-300 z-10 border border-red-400/20"
                 >
                   <X className="w-5 h-5" />
                 </button>
