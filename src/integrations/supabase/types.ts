@@ -40,6 +40,7 @@ export type Database = {
           amount_cents: number
           created_at: string
           id: string
+          last_paid_at: string
           stripe_session_id: string | null
           user_a: string
           user_b: string
@@ -48,6 +49,7 @@ export type Database = {
           amount_cents?: number
           created_at?: string
           id?: string
+          last_paid_at?: string
           stripe_session_id?: string | null
           user_a: string
           user_b: string
@@ -56,6 +58,7 @@ export type Database = {
           amount_cents?: number
           created_at?: string
           id?: string
+          last_paid_at?: string
           stripe_session_id?: string | null
           user_a?: string
           user_b?: string
@@ -138,24 +141,30 @@ export type Database = {
       }
       personality_reviews: {
         Row: {
+          connection_id: string | null
           created_at: string
           id: string
           profile_id: string
           reviewer_id: string
+          reviewer_whatsapp_last4: string | null
           text: string
         }
         Insert: {
+          connection_id?: string | null
           created_at?: string
           id?: string
           profile_id: string
           reviewer_id: string
+          reviewer_whatsapp_last4?: string | null
           text: string
         }
         Update: {
+          connection_id?: string | null
           created_at?: string
           id?: string
           profile_id?: string
           reviewer_id?: string
+          reviewer_whatsapp_last4?: string | null
           text?: string
         }
         Relationships: [
@@ -171,6 +180,13 @@ export type Database = {
             columns: ["reviewer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personality_reviews_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "connections"
             referencedColumns: ["id"]
           },
         ]

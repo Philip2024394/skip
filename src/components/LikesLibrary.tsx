@@ -282,6 +282,7 @@ const LikesLibrary = ({
                     exit={{ opacity: 0, scale: 0.88 }}
                     transition={{ delay: Math.min(idx * 0.04, 0.3) }}
                     onClick={() => onSelectProfile(profile, currentList)}
+                    data-likes-library-profile-id={profile.id}
                     className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border relative ${tab === "received" && superLikeGlowProfileId === profile.id ? "border-amber-400/60 shadow-[0_0_16px_rgba(251,191,36,0.4)] ring-2 ring-amber-400/30" : "border-white/10"}`}
                     style={{ width: 80 }}
                   >

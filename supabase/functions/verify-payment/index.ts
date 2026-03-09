@@ -61,6 +61,12 @@ async function activateFeature(session: Stripe.Checkout.Session) {
 
       await supabaseAdmin.from("profiles").update({ hidden_until: hiddenUntil }).eq("id", userId);
       await supabaseAdmin.from("profiles").update({ hidden_until: hiddenUntil }).eq("id", targetUserId);
+    } else {
+      // Repurchase: refresh window (used for review eligibility)
+      await supabaseAdmin
+        .from("connections")
+        .update({ stripe_session_id: session.id, last_paid_at: new Date().toISOString() })
+        .eq("id", existing.data.id);
     }
     return;
   }

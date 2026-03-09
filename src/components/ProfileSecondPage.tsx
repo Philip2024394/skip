@@ -55,12 +55,16 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
       profile_id: string;
       text: string;
       created_at: string;
+      connection_id?: string | null;
       reviewer_avatar_url?: string | null;
       reviewer_name?: string | null;
     }>
   >([]);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [hasSession, setHasSession] = useState(false);
+  const [canLeaveReview, setCanLeaveReview] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [whatsAppConfirm, setWhatsAppConfirm] = useState("");
 
   const activeOn2DateMe = isOnline(profile.last_seen_at);
   const activityPercent = activeOn2DateMe ? 85 : 60;
@@ -70,7 +74,8 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
 
     const run = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
-      if (!cancelled) setHasSession(Boolean(sessionData.session));
+      const userId = sessionData.session?.user?.id ?? null;
+      if (!cancelled) setHasSession(Boolean(userId));
 
       const [{ count: connections }, { count: likesReceived }] = await Promise.all([
         (supabase as any)
@@ -87,6 +92,57 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
         setConnectionsCount(typeof connections === "number" ? connections : 0);
         setLikedMeCount(typeof likesReceived === "number" ? likesReceived : 0);
       }
+
+      if (!userId) {
+        if (!cancelled) setCanLeaveReview(false);
+        return;
+      }
+
+      const [{ data: connA }, { data: connB }] = await Promise.all([
+        (supabase as any)
+          .from("connections")
+          .select("id,last_paid_at")
+          .eq("user_a", userId)
+          .eq("user_b", profile.id)
+          .order("last_paid_at", { ascending: false })
+          .limit(1),
+        (supabase as any)
+          .from("connections")
+          .select("id,last_paid_at")
+          .eq("user_a", profile.id)
+          .eq("user_b", userId)
+          .order("last_paid_at", { ascending: false })
+          .limit(1),
+      ]);
+
+      const best = [connA?.[0], connB?.[0]]
+        .filter(Boolean)
+        .sort((x: any, y: any) => new Date(y.last_paid_at).getTime() - new Date(x.last_paid_at).getTime())[0] as
+          | { id: string; last_paid_at: string }
+          | undefined;
+
+      if (!best) {
+        if (!cancelled) setCanLeaveReview(false);
+        return;
+      }
+
+      const withinWindow = Date.now() - new Date(best.last_paid_at).getTime() <= 5 * 24 * 60 * 60 * 1000;
+      if (!withinWindow) {
+        if (!cancelled) setCanLeaveReview(false);
+        return;
+      }
+
+      const { data: existingReview } = await (supabase as any)
+        .from("personality_reviews")
+        .select("id")
+        .eq("profile_id", profile.id)
+        .eq("reviewer_id", userId)
+        .eq("connection_id", best.id)
+        .limit(1);
+
+      if (!cancelled) {
+        setCanLeaveReview(!(existingReview && existingReview.length > 0));
+      }
     };
 
     run();
@@ -98,7 +154,7 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
   const loadReviews = async () => {
     const { data: rows } = await (supabase as any)
       .from("personality_reviews")
-      .select("id, reviewer_id, profile_id, text, created_at")
+      .select("id, reviewer_id, profile_id, connection_id, text, created_at")
       .eq("profile_id", profile.id)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -107,6 +163,7 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
       id: string;
       reviewer_id: string;
       profile_id: string;
+      connection_id?: string | null;
       text: string;
       created_at: string;
     }>;
@@ -141,9 +198,9 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
   }, [profile.id]);
 
   useEffect(() => {
-    if (reviews.length <= 1) return;
+    if (reviews.length <= 3) return;
     const id = window.setInterval(() => {
-      setActiveReviewIndex((prev) => (prev + 1) % reviews.length);
+      setActiveReviewIndex((prev) => (prev + 3) % reviews.length);
     }, 10000);
     return () => window.clearInterval(id);
   }, [reviews.length]);
@@ -151,6 +208,11 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
   const activeReview = useMemo(() => {
     if (reviews.length === 0) return null;
     return reviews[Math.min(activeReviewIndex, reviews.length - 1)] ?? null;
+  }, [activeReviewIndex, reviews]);
+
+  const activeReviews = useMemo(() => {
+    if (reviews.length === 0) return [];
+    return reviews.slice(activeReviewIndex, activeReviewIndex + 3);
   }, [activeReviewIndex, reviews]);
 
   const submitReview = async () => {
@@ -163,12 +225,16 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
 
     setIsSubmittingReview(true);
     try {
-      await (supabase as any).from("personality_reviews").insert({
-        profile_id: profile.id,
-        reviewer_id: userId,
-        text: trimmed,
+      const { error } = await (supabase as any).rpc("create_personality_review", {
+        _profile_id: profile.id,
+        _text: trimmed,
+        _whatsapp: whatsAppConfirm,
       });
+      if (error) throw error;
       setReviewText("");
+      setWhatsAppConfirm("");
+      setShowReviewForm(false);
+      setCanLeaveReview(false);
       await loadReviews();
     } finally {
       setIsSubmittingReview(false);
@@ -314,54 +380,86 @@ export default function ProfileSecondPage({ profile, onBack }: ProfileSecondPage
         </div>
 
         <section className="px-4 mb-8">
-          <h2 className="text-white/90 text-sm font-semibold mb-3 flex items-center gap-2">
-            <Heart className="w-4 h-4 text-primary" />
-            Personality review
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-white/90 text-sm font-semibold flex items-center gap-2">
+              <Heart className="w-4 h-4 text-primary" />
+              Personality review
+              <span className="text-white/40 text-[10px] font-semibold">({reviews.length})</span>
+            </h2>
+
+            {hasSession && canLeaveReview && (
+              <button
+                onClick={() => setShowReviewForm((v) => !v)}
+                className="px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 text-white/80 text-[11px] font-semibold"
+              >
+                {showReviewForm ? "Close" : "Review"}
+              </button>
+            )}
+          </div>
 
           <div className="rounded-2xl bg-white/5 border border-white/10 px-4 py-3">
-            {activeReview ? (
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 border border-white/10 shrink-0">
-                  {activeReview.reviewer_avatar_url ? (
-                    <img
-                      src={activeReview.reviewer_avatar_url}
-                      alt={activeReview.reviewer_name || "Reviewer"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <p className="text-white/80 text-xs font-semibold">
-                    {activeReview.reviewer_name || "Member"}
+            {activeReviews.length > 0 ? (
+              <div className="space-y-3">
+                {activeReviews.map((r) => (
+                  <div key={r.id} className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 border border-white/10 shrink-0">
+                      {r.reviewer_avatar_url ? (
+                        <img
+                          src={r.reviewer_avatar_url}
+                          alt={r.reviewer_name || "Reviewer"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-white/80 text-xs font-semibold">
+                          {r.reviewer_name || "Member"}
+                        </p>
+                        <p className="text-white/40 text-[10px]">
+                          {new Date(r.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <p className="text-white/70 text-xs mt-1 leading-relaxed">{r.text}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {reviews.length > 3 && (
+                  <p className="text-white/40 text-[10px] pt-1">
+                    Showing {Math.min(activeReviewIndex + 1, reviews.length)}-{Math.min(activeReviewIndex + activeReviews.length, reviews.length)} of {reviews.length}
                   </p>
-                  <p className="text-white/70 text-xs mt-1 leading-relaxed">{activeReview.text}</p>
-                  {reviews.length > 1 && (
-                    <p className="text-white/40 text-[10px] mt-2">
-                      {activeReviewIndex + 1}/{reviews.length}
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
             ) : (
               <p className="text-white/50 text-xs">No reviews yet.</p>
             )}
 
-            {hasSession && (
+            {hasSession && showReviewForm && canLeaveReview && (
               <div className="mt-4">
-                <textarea
-                  value={reviewText}
-                  onChange={(e) => setReviewText(e.target.value)}
-                  placeholder="Leave a quick personality review…"
-                  className="w-full min-h-[80px] rounded-xl bg-black/30 border border-white/10 text-white/90 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  maxLength={240}
-                />
-                <div className="mt-2 flex justify-end">
+                <div className="grid grid-cols-1 gap-2">
+                  <input
+                    value={whatsAppConfirm}
+                    onChange={(e) => setWhatsAppConfirm(e.target.value)}
+                    placeholder="Enter your WhatsApp number to confirm"
+                    className="w-full rounded-xl bg-black/30 border border-white/10 text-white/90 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    inputMode="tel"
+                  />
+                  <textarea
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Write a personality review…"
+                    className="w-full min-h-[90px] rounded-xl bg-black/30 border border-white/10 text-white/90 text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    maxLength={350}
+                  />
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <p className="text-white/40 text-[10px]">{reviewText.length}/350</p>
                   <button
                     onClick={submitReview}
-                    disabled={isSubmittingReview || !reviewText.trim()}
+                    disabled={isSubmittingReview || !reviewText.trim() || !whatsAppConfirm.trim()}
                     className="px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isSubmittingReview ? "Posting…" : "Post review"}
