@@ -65,9 +65,9 @@ const AppContent = () => {
       <ErrorBoundary>
         <AndroidBackHandler />
         <Routes>
-          <Route path="/" element={<AuthPage />} />
-          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/" element={<Index />} />
           <Route path="/home" element={<Index />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/profile/:id" element={<Index />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />

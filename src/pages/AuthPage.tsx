@@ -78,11 +78,11 @@ const AuthPage = () => {
   // Also listens for SIGNED_IN event so the header on Index updates immediately
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/home", { replace: true });
+      if (session) navigate("/", { replace: true });
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Only redirect on sign-in from the login form — signup is handled in handleRegisterStep
-      if (event === "SIGNED_IN" && session && isLogin) navigate("/home", { replace: true });
+      if (event === "SIGNED_IN" && session && isLogin) navigate("/", { replace: true });
     });
     return () => subscription.unsubscribe();
   }, [navigate, isLogin]);
@@ -133,7 +133,7 @@ const AuthPage = () => {
     setLoading(false);
     if (error) { toast.error(getLoginErrorMessage(error)); return; }
     toast.success(t("auth.welcomeBack"));
-    navigate("/home");
+    navigate("/");
   };
 
   const handleRegisterStep = async () => {
@@ -195,7 +195,7 @@ const AuthPage = () => {
       const e164 = buildE164(landingPrefix, landingNumber);
       const saved = typeof localStorage !== "undefined" ? localStorage.getItem("landing_whatsapp_e164") : null;
       if (saved === e164) {
-        navigate("/home");
+        navigate("/");
         return;
       }
 
@@ -225,7 +225,7 @@ const AuthPage = () => {
         // Always allow entry even if lead capture fails
       } finally {
         setLandingSubmitting(false);
-        navigate("/home");
+        navigate("/");
       }
     };
 
