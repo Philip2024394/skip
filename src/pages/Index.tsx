@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
 import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home, ChevronLeft, ChevronRight } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
@@ -82,10 +82,13 @@ const Index = () => {
   const { t, toggleLocale, locale } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const isProfileRoute = location.pathname.startsWith("/profile/");
+  const profileRouteId = isProfileRoute ? (params as any).id : undefined;
   const [user, setUser] = useState<any>(null);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
+    if (import.meta.env.DEV) return false;
     try {
       return !sessionStorage.getItem("2dateme_profiles_cache");
     } catch { return true; }
@@ -239,9 +242,48 @@ const Index = () => {
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received">("new");
+  const [profileReviews, setProfileReviews] = useState<Array<{ id: string; text: string; created_at: string; reviewer_id: string }> | null>(null);
+  const [profileReviewsLoading, setProfileReviewsLoading] = useState(false);
+
   const selectedProfile = useMemo(() => {
+    if (isProfileRoute && profileRouteId) {
+      return allProfiles.find((p) => p.id === profileRouteId) ?? null;
+    }
     return selectedList[selectedIndex] ?? null;
-  }, [selectedList, selectedIndex]);
+  }, [allProfiles, isProfileRoute, profileRouteId, selectedList, selectedIndex]);
+
+  useEffect(() => {
+    if (!isProfileRoute) return;
+    setAboutMeTab("new");
+  }, [isProfileRoute, selectedProfile?.id]);
+
+  useEffect(() => {
+    if (!isProfileRoute) return;
+    if (aboutMeTab !== "received") return;
+    if (!selectedProfile?.id) return;
+
+    if (!user) {
+      setProfileReviews(null);
+      return;
+    }
+
+    setProfileReviewsLoading(true);
+    supabase
+      .from("personality_reviews")
+      .select("id, text, created_at, reviewer_id")
+      .eq("profile_id", selectedProfile.id)
+      .order("created_at", { ascending: false })
+      .limit(30)
+      .then(({ data, error }) => {
+        if (error) {
+          setProfileReviews([]);
+          return;
+        }
+        setProfileReviews((data as any) ?? []);
+      })
+      .finally(() => setProfileReviewsLoading(false));
+  }, [aboutMeTab, isProfileRoute, selectedProfile?.id, user]);
 
   useEffect(() => {
     if (!isProfileRoute) return;
@@ -378,6 +420,7 @@ const Index = () => {
               late_night_chat: (p as any).late_night_chat || false,
               no_drama: (p as any).no_drama || false,
               whatsapp_connections_count: (p as any).whatsapp_connections_count ?? 0,
+              date_canceled_count: (p as any).date_canceled_count ?? 0,
             }));
           // Sort spotlight profiles to front
           mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
@@ -1159,6 +1202,10 @@ const Index = () => {
                     }
                   : undefined
               }
+              onTabChange={(t) => {
+                if (!isProfileRoute) return;
+                setAboutMeTab(t);
+              }}
               profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
               profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
               iLiked={iLiked}
@@ -1270,10 +1317,59 @@ const Index = () => {
           {isProfileRoute ? (
             <>
               <div className="absolute inset-0 bg-black" />
-              <div className="relative z-10 h-full w-full flex items-center justify-center px-6">
-                <p className="text-white/70 text-sm font-medium text-center">
-                  Text container
-                </p>
+              <div className="relative z-10 h-full w-full px-6 py-6">
+                <div className="h-full w-full rounded-2xl bg-black/40 backdrop-blur-md border-2 border-white/20 ring-1 ring-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.55)] px-5 py-4 flex items-center justify-center">
+                  {aboutMeTab === "received" ? (
+                    <div className="h-full w-full flex flex-col">
+                      <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
+                        <p className="text-white/80 text-xs font-semibold">Reviews</p>
+                        <div className="flex items-center gap-3">
+                          <p className="text-white/60 text-[10px] font-semibold">
+                            Connections: {(selectedProfile as any)?.whatsapp_connections_count ?? 0}
+                          </p>
+                          <p className="text-white/60 text-[10px] font-semibold">
+                            Dates canceled: {(selectedProfile as any)?.date_canceled_count ?? 0}
+                          </p>
+                        </div>
+                      </div>
+
+                      {!user ? (
+                        <div className="flex-1 flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => showGuestPrompt("profile")}
+                            className="text-white/70 text-xs font-semibold underline underline-offset-4"
+                          >
+                            Sign in to view reviews
+                          </button>
+                        </div>
+                      ) : profileReviewsLoading ? (
+                        <div className="flex-1 flex items-center justify-center">
+                          <p className="text-white/50 text-xs">Loading reviews...</p>
+                        </div>
+                      ) : (profileReviews?.length ?? 0) === 0 ? (
+                        <div className="flex-1 flex items-center justify-center">
+                          <p className="text-white/50 text-xs">No reviews yet</p>
+                        </div>
+                      ) : (
+                        <div className="flex-1 overflow-y-auto pr-1 space-y-3 scroll-touch">
+                          {(profileReviews || []).map((r) => (
+                            <div key={r.id} className="rounded-xl bg-black/40 border border-white/10 px-4 py-3">
+                              <p className="text-white/75 text-[11px] leading-relaxed whitespace-pre-wrap break-words">{r.text}</p>
+                              <p className="mt-2 text-white/40 text-[9px] font-semibold">
+                                {new Date(r.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-white/75 text-sm font-medium text-center leading-relaxed whitespace-pre-wrap break-words">
+                      {selectedProfile?.bio?.trim() ? selectedProfile.bio : ""}
+                    </p>
+                  )}
+                </div>
               </div>
             </>
           ) : bottomProfiles.length > 0 ? (

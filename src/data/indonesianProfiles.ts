@@ -258,10 +258,7 @@ const buildFirstDatePlaces = (city: string, lat: number, lng: number): DatePlace
     },
   ];
 
-  const includeInstagram = Math.random() > 0.55;
-  const pool = includeInstagram
-    ? [...candidates, instagramCandidates[Math.floor(Math.random() * instagramCandidates.length)]]
-    : candidates;
+  const pool = [...candidates, ...instagramCandidates];
 
   const desiredCount = 3;
   const picks: Array<{ idea: string; title: string; url: string }> = [];
@@ -271,6 +268,10 @@ const buildFirstDatePlaces = (city: string, lat: number, lng: number): DatePlace
     if (used.has(idx)) continue;
     used.add(idx);
     picks.push(pool[idx]);
+  }
+
+  while (picks.length < desiredCount && pool.length > 0) {
+    picks.push(pool[picks.length % pool.length]);
   }
 
   return picks.map((p) => ({

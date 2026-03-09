@@ -56,6 +56,7 @@ interface LikesLibraryProps {
   tabLabelOverrides?: Partial<Record<Tab, string>>;
   profileFirstDateIdea?: string | null;
   profileDatePlaces?: Profile["first_date_places"];
+  onTabChange?: (tab: Tab) => void;
   iLiked: Profile[];
   likedMe: Profile[];
   newProfiles: Profile[];       // new: all profiles from Index, pre-filtered
@@ -87,6 +88,7 @@ const LikesLibrary = ({
   tabLabelOverrides,
   profileFirstDateIdea,
   profileDatePlaces,
+  onTabChange,
   iLiked, likedMe, newProfiles, filterCountry,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
@@ -123,6 +125,7 @@ const LikesLibrary = ({
   // Scroll back to left whenever tab changes
   useEffect(() => {
     scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+    onTabChange?.(tab);
   }, [tab]);
 
   // When butterfly is flying to a profile, show "Likes Me" so the user sees who liked them

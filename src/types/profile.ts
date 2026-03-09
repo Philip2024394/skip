@@ -28,4 +28,5 @@ export interface Profile {
   late_night_chat?: boolean;
   no_drama?: boolean;
   whatsapp_connections_count?: number;
+  date_canceled_count?: number;
 }
