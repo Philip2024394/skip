@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
-import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home, ChevronLeft, ChevronRight, Star } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
@@ -245,6 +245,8 @@ const Index = () => {
   const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received">("new");
   const [profileReviews, setProfileReviews] = useState<Array<{ id: string; text: string; created_at: string; reviewer_id: string }> | null>(null);
   const [profileReviewsLoading, setProfileReviewsLoading] = useState(false);
+  const [activeReviewIndex, setActiveReviewIndex] = useState(0);
+  const [reviewerAvatarById, setReviewerAvatarById] = useState<Record<string, string>>({});
 
   const selectedProfile = useMemo(() => {
     if (isProfileRoute && profileRouteId) {
@@ -268,22 +270,79 @@ const Index = () => {
       return;
     }
 
-    setProfileReviewsLoading(true);
-    supabase
-      .from("personality_reviews")
-      .select("id, text, created_at, reviewer_id")
-      .eq("profile_id", selectedProfile.id)
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data, error }) => {
+    let cancelled = false;
+
+    const run = async () => {
+      setProfileReviewsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("personality_reviews")
+          .select("id, text, created_at, reviewer_id")
+          .eq("profile_id", selectedProfile.id)
+          .order("created_at", { ascending: false })
+          .limit(30);
+
+        if (cancelled) return;
+
         if (error) {
           setProfileReviews([]);
           return;
         }
         setProfileReviews((data as any) ?? []);
-      })
-      .finally(() => setProfileReviewsLoading(false));
+      } finally {
+        if (!cancelled) setProfileReviewsLoading(false);
+      }
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
   }, [aboutMeTab, isProfileRoute, selectedProfile?.id, user]);
+
+  useEffect(() => {
+    setActiveReviewIndex(0);
+  }, [selectedProfile?.id, aboutMeTab]);
+
+  useEffect(() => {
+    if (!isProfileRoute) return;
+    if (aboutMeTab !== "received") return;
+    if (!user) return;
+
+    const len = profileReviews?.length ?? 0;
+    if (len <= 1) return;
+
+    const id = window.setInterval(() => {
+      setActiveReviewIndex((i) => (i + 1) % len);
+    }, 5000);
+
+    return () => window.clearInterval(id);
+  }, [aboutMeTab, isProfileRoute, profileReviews?.length, user]);
+
+  useEffect(() => {
+    if (!isProfileRoute) return;
+    if (aboutMeTab !== "received") return;
+    if (!user) return;
+
+    const reviewerIds = Array.from(new Set((profileReviews || []).map((r) => r.reviewer_id).filter(Boolean)));
+    const missing = reviewerIds.filter((id) => !reviewerAvatarById[id]);
+    if (missing.length === 0) return;
+
+    supabase
+      .from("profiles_public")
+      .select("id, avatar_url")
+      .in("id", missing)
+      .then(({ data, error }) => {
+        if (error || !data) return;
+        const next: Record<string, string> = {};
+        for (const row of data as any[]) {
+          if (row?.id && row?.avatar_url) next[row.id] = row.avatar_url;
+        }
+        if (Object.keys(next).length === 0) return;
+        setReviewerAvatarById((prev) => ({ ...prev, ...next }));
+      });
+  }, [aboutMeTab, isProfileRoute, profileReviews, reviewerAvatarById, user]);
 
   useEffect(() => {
     if (!isProfileRoute) return;
@@ -1313,26 +1372,14 @@ const Index = () => {
         )}
 
         {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
-        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate" style={{ contain: "layout" }}>
+        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
           {isProfileRoute ? (
             <>
-              <div className="absolute inset-0 bg-black" />
+              <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
               <div className="relative z-10 h-full w-full px-6 py-6">
-                <div className="h-full w-full rounded-2xl bg-black/40 backdrop-blur-md border-2 border-white/20 ring-1 ring-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.55)] px-5 py-4 flex items-center justify-center">
+                <div className="h-full w-full rounded-2xl bg-gradient-to-br from-fuchsia-900/25 via-black/35 to-purple-900/25 backdrop-blur-md border-2 border-fuchsia-300/25 ring-1 ring-fuchsia-300/15 shadow-[0_8px_24px_rgba(0,0,0,0.55)] px-5 py-4 flex items-center justify-center">
                   {aboutMeTab === "received" ? (
                     <div className="h-full w-full flex flex-col">
-                      <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10">
-                        <p className="text-white/80 text-xs font-semibold">Reviews</p>
-                        <div className="flex items-center gap-3">
-                          <p className="text-white/60 text-[10px] font-semibold">
-                            Connections: {(selectedProfile as any)?.whatsapp_connections_count ?? 0}
-                          </p>
-                          <p className="text-white/60 text-[10px] font-semibold">
-                            Dates canceled: {(selectedProfile as any)?.date_canceled_count ?? 0}
-                          </p>
-                        </div>
-                      </div>
-
                       {!user ? (
                         <div className="flex-1 flex items-center justify-center">
                           <button
@@ -1352,17 +1399,89 @@ const Index = () => {
                           <p className="text-white/50 text-xs">No reviews yet</p>
                         </div>
                       ) : (
-                        <div className="flex-1 overflow-y-auto pr-1 space-y-3 scroll-touch">
-                          {(profileReviews || []).map((r) => (
-                            <div key={r.id} className="rounded-xl bg-black/40 border border-white/10 px-4 py-3">
-                              <p className="text-white/75 text-[11px] leading-relaxed whitespace-pre-wrap break-words">{r.text}</p>
-                              <p className="mt-2 text-white/40 text-[9px] font-semibold">
-                                {new Date(r.created_at).toLocaleDateString()}
-                              </p>
-                            </div>
-                          ))}
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                          {(() => {
+                            const r = (profileReviews || [])[Math.min(activeReviewIndex, (profileReviews || []).length - 1)];
+                            if (!r) return null;
+                            const avatarUrl = reviewerAvatarById[r.reviewer_id];
+                            return (
+                              <div className="w-full max-w-md rounded-2xl bg-black/40 border border-white/10 px-4 py-4">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 bg-white/5 flex-shrink-0">
+                                    {avatarUrl ? (
+                                      <img src={avatarUrl} alt="Reviewer" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full" />
+                                    )}
+                                  </div>
+
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-start gap-2">
+                                      <Star className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" fill="currentColor" />
+                                      <p className="text-white/75 text-[12px] leading-relaxed whitespace-pre-wrap break-words">
+                                        {r.text}
+                                      </p>
+                                    </div>
+
+                                    <p className="mt-2 text-white/40 text-[9px] font-semibold">
+                                      {new Date(r.created_at).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+
+                          <div className="pt-4">
+                            <p className="text-white/60 text-[11px] font-semibold text-center">
+                              Connections: {(selectedProfile as any)?.whatsapp_connections_count ?? 0}
+                            </p>
+                            <p className="text-white/60 text-[11px] font-semibold text-center">
+                              Dates canceled: {(selectedProfile as any)?.date_canceled_count ?? 0}
+                            </p>
+                          </div>
                         </div>
                       )}
+                    </div>
+                  ) : aboutMeTab === "sent" ? (
+                    <div className="h-full w-full flex flex-col">
+                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Date Ideas</p>
+
+                      <div className="flex-1 w-full pt-4 grid grid-cols-3 gap-3">
+                        {Array.from({ length: 3 }).map((_, idx) => {
+                          const place = (selectedProfile?.first_date_places || [])[idx];
+                          const title = place?.title || place?.idea || "Date idea";
+                          const imageUrl = place?.image_url || null;
+                          const url = place?.url || null;
+
+                          return (
+                            <a
+                              key={idx}
+                              href={url || "#"}
+                              target={url ? "_blank" : undefined}
+                              rel={url ? "noreferrer" : undefined}
+                              onClick={(e) => {
+                                if (!url) e.preventDefault();
+                              }}
+                              className={`rounded-2xl overflow-hidden border bg-black/40 backdrop-blur-md transition-transform ${url ? "border-white/10 hover:scale-[1.02]" : "border-white/5 opacity-70"}`}
+                            >
+                              <div className="h-20 w-full bg-black/30">
+                                {imageUrl ? (
+                                  <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full" />
+                                )}
+                              </div>
+                              <div className="px-3 py-3">
+                                <p className="text-white/80 text-[11px] font-semibold leading-snug line-clamp-2">{title}</p>
+                                <p className="mt-2 text-white/45 text-[9px] font-semibold truncate">
+                                  {url ? url.replace(/^https?:\/\//, "") : "No link"}
+                                </p>
+                              </div>
+                            </a>
+                          );
+                        })}
+                      </div>
                     </div>
                   ) : (
                     <p className="text-white/75 text-sm font-medium text-center leading-relaxed whitespace-pre-wrap break-words">
