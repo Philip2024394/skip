@@ -57,6 +57,10 @@ interface LikesLibraryProps {
   profileFirstDateIdea?: string | null;
   profileDatePlaces?: Profile["first_date_places"];
   onTabChange?: (tab: Tab) => void;
+  selectedProfileSection?: "basic" | "lifestyle" | "interests";
+  onSelectProfileSection?: (section: "basic" | "lifestyle" | "interests") => void;
+  selectedDateIdeaIndex?: number;
+  onSelectDateIdea?: (index: number) => void;
   iLiked: Profile[];
   likedMe: Profile[];
   newProfiles: Profile[];       // new: all profiles from Index, pre-filtered
@@ -89,6 +93,10 @@ const LikesLibrary = ({
   profileFirstDateIdea,
   profileDatePlaces,
   onTabChange,
+  selectedProfileSection,
+  onSelectProfileSection,
+  selectedDateIdeaIndex,
+  onSelectDateIdea,
   iLiked, likedMe, newProfiles, filterCountry,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
@@ -195,19 +203,17 @@ const LikesLibrary = ({
 
   const isDateIdeasTab =
     tab === "sent" &&
-    tabLabelOverrides?.sent === "Date Ideas" &&
-    (!!profileFirstDateIdea || (profileDatePlaces?.length ?? 0) > 0);
+    tabLabelOverrides?.sent === "Date Ideas";
+
+  const isProfileInfoTab =
+    tab === "new" &&
+    tabLabelOverrides?.new === "Profile";
 
   const dateIdeas = (
     (profileDatePlaces || [])
       .filter((p): p is NonNullable<typeof p> => !!p)
       .slice(0, 3)
   ) as NonNullable<Profile["first_date_places"]>;
-
-  const openUrl = (url: string) => {
-    if (!url) return;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
 
   return (
     <div className="h-full flex flex-col">
@@ -287,7 +293,37 @@ const LikesLibrary = ({
             transition={{ duration: 0.18 }}
             className={isDateIdeasTab ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
-            {isDateIdeasTab ? (
+            {isProfileInfoTab ? (
+              <div className="grid grid-cols-3 gap-2 h-full">
+                {(
+                  [
+                    { key: "basic" as const, label: "Basic Info" },
+                    { key: "lifestyle" as const, label: "Lifestyle" },
+                    { key: "interests" as const, label: "Interests" },
+                  ]
+                ).map((s, idx) => (
+                  <motion.button
+                    key={s.key}
+                    type="button"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ delay: Math.min(idx * 0.04, 0.12) }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSelectProfileSection?.(s.key);
+                    }}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${selectedProfileSection === s.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
+                    style={{ height: 124 }}
+                    aria-label={s.label}
+                  >
+                    <p className="text-white text-[11px] font-bold text-center leading-tight">{s.label}</p>
+                    <p className="text-white/45 text-[9px] font-semibold text-center">Tap to view</p>
+                  </motion.button>
+                ))}
+              </div>
+            ) : isDateIdeasTab ? (
               dateIdeas.length === 0 && !profileFirstDateIdea ? (
                 <div className="flex items-center justify-center h-full px-4">
                   <p className="text-white/40 text-xs text-center">No date ideas yet</p>
@@ -305,9 +341,9 @@ const LikesLibrary = ({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (place.url) openUrl(place.url);
+                        onSelectDateIdea?.(idx);
                       }}
-                      className="flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border border-white/10 relative w-full"
+                      className={`flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${selectedDateIdeaIndex === idx ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
                       style={{ height: 124 }}
                       aria-label={place.idea || "Date idea"}
                     >

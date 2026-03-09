@@ -219,6 +219,7 @@ const Index = () => {
   const [selectedList, setSelectedList] = useState<Profile[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [profileImageIndex, setProfileImageIndex] = useState(0);
+  const [profileImageDirection, setProfileImageDirection] = useState<1 | -1>(1);
   const topCardX = useMotionValue(0);
   const isAnimatingTopCardRef = useRef(false);
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
@@ -247,6 +248,8 @@ const Index = () => {
   const [profileReviewsLoading, setProfileReviewsLoading] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [reviewerAvatarById, setReviewerAvatarById] = useState<Record<string, string>>({});
+  const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
+  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests">("basic");
 
   const getDateIdeaDescription = useCallback((idea?: string, title?: string) => {
     const text = `${idea || ""} ${title || ""}`.toLowerCase();
@@ -283,7 +286,15 @@ const Index = () => {
   useEffect(() => {
     if (!isProfileRoute) return;
     setAboutMeTab("new");
+    setSelectedDateIdeaIndex(0);
+    setSelectedProfileSection("basic");
   }, [isProfileRoute, selectedProfile?.id]);
+
+  useEffect(() => {
+    if (!isProfileRoute) return;
+    if (aboutMeTab !== "sent") return;
+    setSelectedDateIdeaIndex(0);
+  }, [aboutMeTab, isProfileRoute, selectedProfile?.id]);
 
   useEffect(() => {
     if (!isProfileRoute) return;
@@ -372,6 +383,7 @@ const Index = () => {
   useEffect(() => {
     if (!isProfileRoute) return;
     setProfileImageIndex(0);
+    setProfileImageDirection(1);
   }, [isProfileRoute, selectedProfile?.id]);
 
   useEffect(() => {
@@ -505,6 +517,12 @@ const Index = () => {
               no_drama: (p as any).no_drama || false,
               whatsapp_connections_count: (p as any).whatsapp_connections_count ?? 0,
               date_canceled_count: (p as any).date_canceled_count ?? 0,
+              height_cm: (p as any).height_cm ?? null,
+              drinking: (p as any).drinking ?? null,
+              smoking: (p as any).smoking ?? null,
+              fitness: (p as any).fitness ?? null,
+              pets: (p as any).pets ?? null,
+              interests: (p as any).interests ?? null,
             }));
           // Sort spotlight profiles to front
           mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
@@ -1159,36 +1177,34 @@ const Index = () => {
                       const fallback = selectedProfile.avatar_url ? [selectedProfile.avatar_url] : [selectedProfile.image];
                       const list = imgs.length > 0 ? imgs : fallback;
                       if (list.length <= 1) return;
-                      setProfileImageIndex((v) => (v - 1 + list.length) % list.length);
-                    }}
-                    aria-label="Previous image"
-                    className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 left-3 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
-                    style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
-                    title="Previous image"
-                  >
-                    <ChevronLeft className="w-8 h-8 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
-                  </button>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      const imgs = (
-                        (Array.isArray((selectedProfile as any).images) ? (selectedProfile as any).images : []) as string[]
-                      )
-                        .filter(Boolean)
-                        .slice(0, 5);
-                      const fallback = selectedProfile.avatar_url ? [selectedProfile.avatar_url] : [selectedProfile.image];
-                      const list = imgs.length > 0 ? imgs : fallback;
-                      if (list.length <= 1) return;
-                      setProfileImageIndex((v) => (v + 1) % list.length);
+                      setProfileImageIndex((v) => {
+                        const last = list.length - 1;
+                        if (profileImageDirection === 1) {
+                          if (v >= last) {
+                            setProfileImageDirection(-1);
+                            return Math.max(0, last - 1);
+                          }
+                          return v + 1;
+                        }
+
+                        if (v <= 0) {
+                          setProfileImageDirection(1);
+                          return Math.min(last, 1);
+                        }
+                        return v - 1;
+                      });
                     }}
-                    aria-label="Next image"
+                    aria-label={profileImageDirection === 1 ? "Next image" : "Previous image"}
                     className="absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform bottom-3 right-3 shadow-[0_0_12px_rgba(255,255,255,0.25)]"
                     style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
-                    title="Next image"
+                    title={profileImageDirection === 1 ? "Next image" : "Previous image"}
                   >
-                    <ChevronRight className="w-8 h-8 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                    {profileImageDirection === 1 ? (
+                      <ChevronRight className="w-8 h-8 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                    ) : (
+                      <ChevronLeft className="w-8 h-8 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                    )}
                   </button>
                 </>
               )}
@@ -1289,6 +1305,17 @@ const Index = () => {
               onTabChange={(t) => {
                 if (!isProfileRoute) return;
                 setAboutMeTab(t);
+                if (t === "new") setSelectedProfileSection("basic");
+              }}
+              selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
+              onSelectProfileSection={(s) => {
+                if (!isProfileRoute) return;
+                setSelectedProfileSection(s);
+              }}
+              selectedDateIdeaIndex={isProfileRoute ? selectedDateIdeaIndex : undefined}
+              onSelectDateIdea={(idx) => {
+                if (!isProfileRoute) return;
+                setSelectedDateIdeaIndex(idx);
               }}
               profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
               profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
@@ -1472,49 +1499,106 @@ const Index = () => {
                   ) : aboutMeTab === "sent" ? (
                     <div className="h-full w-full flex flex-col">
                       <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Date Ideas</p>
-
-                      <div className="flex-1 w-full pt-4 grid grid-cols-3 gap-3">
-                        {Array.from({ length: 3 }).map((_, idx) => {
-                          const place = (selectedProfile?.first_date_places || [])[idx];
-                          const title = place?.title || place?.idea || "Date idea";
-                          const imageUrl = place?.image_url || null;
-                          const url = place?.url || null;
-                          const desc = getDateIdeaDescription(place?.idea, place?.title);
-
+                      {(() => {
+                        const places = selectedProfile?.first_date_places || [];
+                        const place = places[selectedDateIdeaIndex];
+                        if (!place) {
                           return (
-                            <a
-                              key={idx}
-                              href={url || "#"}
-                              target={url ? "_blank" : undefined}
-                              rel={url ? "noreferrer" : undefined}
-                              onClick={(e) => {
-                                if (!url) e.preventDefault();
-                              }}
-                              className={`rounded-2xl overflow-hidden border bg-black/40 backdrop-blur-md transition-transform ${url ? "border-white/10 hover:scale-[1.02]" : "border-white/5 opacity-70"}`}
-                            >
-                              <div className="h-20 w-full bg-black/30">
-                                {imageUrl ? (
-                                  <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="w-full h-full" />
-                                )}
-                              </div>
-                              <div className="px-3 py-3">
-                                <p className="text-white/80 text-[11px] font-semibold leading-snug line-clamp-2">{title}</p>
-                                <p className="mt-2 text-white/55 text-[9px] leading-snug line-clamp-3">{desc}</p>
-                                <p className="mt-2 text-white/45 text-[9px] font-semibold truncate">
-                                  {url ? url.replace(/^https?:\/\//, "") : "No link"}
-                                </p>
-                              </div>
-                            </a>
+                            <div className="flex-1 flex items-center justify-center">
+                              <p className="text-white/50 text-xs">Select a date idea above</p>
+                            </div>
                           );
-                        })}
-                      </div>
+                        }
+
+                        const title = place.title || place.idea || "Date idea";
+                        const desc = getDateIdeaDescription(place.idea, place.title);
+                        const url = place.url || "";
+
+                        return (
+                          <div className="flex-1 flex flex-col items-center justify-center px-1">
+                            <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                              <p className="text-white/85 text-sm font-semibold text-center">{title}</p>
+                              <p className="mt-3 text-white/65 text-xs leading-relaxed text-center">{desc}</p>
+
+                              <div className="mt-4 flex items-center justify-center">
+                                <Button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!url) return;
+                                    window.open(url, "_blank", "noopener,noreferrer");
+                                  }}
+                                  className="bg-fuchsia-500/80 hover:bg-fuchsia-500 text-white"
+                                >
+                                  View place
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   ) : (
-                    <p className="text-white/75 text-sm font-medium text-center leading-relaxed whitespace-pre-wrap break-words">
-                      {selectedProfile?.bio?.trim() ? selectedProfile.bio : ""}
-                    </p>
+                    <div className="h-full w-full flex flex-col">
+                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">
+                        {selectedProfileSection === "basic" ? "Basic Info" : selectedProfileSection === "lifestyle" ? "Lifestyle" : "Interests"}
+                      </p>
+
+                      {selectedProfileSection === "basic" ? (
+                        <div className="flex-1 flex flex-col items-center justify-center px-1">
+                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Age: {selectedProfile?.age ?? ""}
+                            </p>
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Location: {selectedProfile?.city || selectedProfile?.country || ""}
+                            </p>
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Height: {(selectedProfile as any)?.height_cm ? `${(selectedProfile as any).height_cm} cm` : "Not specified"}
+                            </p>
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Gender: {(selectedProfile as any)?.gender || ""}
+                            </p>
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Looking for: {(selectedProfile as any)?.looking_for || ""}
+                            </p>
+                          </div>
+                        </div>
+                      ) : selectedProfileSection === "lifestyle" ? (
+                        <div className="flex-1 flex flex-col items-center justify-center px-1">
+                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Drinking: {(selectedProfile as any)?.drinking || "Not specified"}
+                            </p>
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Smoking: {(selectedProfile as any)?.smoking || "Not specified"}
+                            </p>
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Fitness: {(selectedProfile as any)?.fitness || "Not specified"}
+                            </p>
+                            <p className="text-white/70 text-xs leading-relaxed">
+                              Pets: {(selectedProfile as any)?.pets || "Not specified"}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center px-1">
+                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                            <div className="flex flex-wrap gap-2 justify-center">
+                              {(((selectedProfile as any)?.interests as string[] | null) || (selectedProfile?.languages || []) || [])
+                                .slice(0, 8)
+                                .map((t: string, idx: number) => (
+                                  <span key={`${t}-${idx}`} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[11px] font-semibold">
+                                    {t}
+                                  </span>
+                                ))}
+                              {((((selectedProfile as any)?.interests as string[] | null) || (selectedProfile?.languages || []) || []).length === 0) ? (
+                                <p className="text-white/50 text-xs">No interests yet</p>
+                              ) : null}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

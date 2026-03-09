@@ -56,6 +56,12 @@ interface ProfileData {
   weekend_plans: boolean;
   late_night_chat: boolean;
   no_drama: boolean;
+  height_cm: number | null;
+  drinking: string;
+  smoking: string;
+  fitness: string;
+  pets: string;
+  interests: string[];
 }
 
 const ProfileEditor = () => {
@@ -101,8 +107,8 @@ const ProfileEditor = () => {
       if (!user) return;
       setUserId(user.id);
 
-      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages";
-      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages";
+      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests";
+      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests";
 
       let data: Record<string, unknown> | null = null;
       let useBadgeColumns = true;
@@ -184,6 +190,12 @@ const ProfileEditor = () => {
           first_date_idea: (data.first_date_idea as string | null) || null,
           first_date_places: ((data.first_date_places as DatePlace[]) || []),
           languages: (((data.languages as string[]) || []).slice(0, 2)),
+          height_cm: (data.height_cm as number | null) ?? null,
+          drinking: (data.drinking as string) || "",
+          smoking: (data.smoking as string) || "",
+          fitness: (data.fitness as string) || "",
+          pets: (data.pets as string) || "",
+          interests: ((data.interests as string[]) || []).slice(0, 8),
           ...normalizedBadges,
         });
         setSchemaHasBadgeColumns(useBadgeColumns);
@@ -342,6 +354,12 @@ const ProfileEditor = () => {
         first_date_idea: profile.first_date_idea,
         first_date_places: profile.first_date_places as unknown as import("@/integrations/supabase/types").Json,
         languages: profile.languages as unknown as import("@/integrations/supabase/types").Json,
+        height_cm: profile.height_cm,
+        drinking: profile.drinking || null,
+        smoking: profile.smoking || null,
+        fitness: profile.fitness || null,
+        pets: profile.pets || null,
+        interests: profile.interests as unknown as import("@/integrations/supabase/types").Json,
         is_plusone: profile.is_plusone,
         generous_lifestyle: profile.generous_lifestyle,
         ...(schemaHasBadgeColumns && {
@@ -648,6 +666,78 @@ const ProfileEditor = () => {
           <Label className="text-muted-foreground text-xs mb-1 block">City</Label>
           <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="bg-muted border-border h-9 text-sm" />
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="text-muted-foreground text-xs mb-1 block">Height (cm)</Label>
+          <Input
+            type="number"
+            min={120}
+            max={230}
+            value={profile.height_cm ?? ""}
+            onChange={(e) => update("height_cm", e.target.value ? parseInt(e.target.value) : null)}
+            className="bg-muted border-border h-9 text-sm"
+          />
+        </div>
+        <div>
+          <Label className="text-muted-foreground text-xs mb-1 block">Drinking</Label>
+          <Select value={profile.drinking} onValueChange={(v) => update("drinking", v)}>
+            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
+            <SelectContent>
+              {["", "Socially", "No"].map((v) => (
+                <SelectItem key={v || "none"} value={v}>{v || "Not specified"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="text-muted-foreground text-xs mb-1 block">Smoking</Label>
+          <Select value={profile.smoking} onValueChange={(v) => update("smoking", v)}>
+            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
+            <SelectContent>
+              {["", "Yes", "No"].map((v) => (
+                <SelectItem key={v || "none"} value={v}>{v || "Not specified"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-muted-foreground text-xs mb-1 block">Fitness</Label>
+          <Select value={profile.fitness} onValueChange={(v) => update("fitness", v)}>
+            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
+            <SelectContent>
+              {["", "Active", "Casual"].map((v) => (
+                <SelectItem key={v || "none"} value={v}>{v || "Not specified"}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div>
+        <Label className="text-muted-foreground text-xs mb-1 block">Pets</Label>
+        <Input value={profile.pets} onChange={(e) => update("pets", e.target.value)} className="bg-muted border-border h-9 text-sm" placeholder="Dog lover 🐶" />
+      </div>
+
+      <div>
+        <Label className="text-muted-foreground text-xs mb-1 block">Interests (comma separated, max 8)</Label>
+        <Input
+          value={(profile.interests || []).join(", ")}
+          onChange={(e) => {
+            const items = e.target.value
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
+              .slice(0, 8);
+            update("interests", items);
+          }}
+          className="bg-muted border-border h-9 text-sm"
+          placeholder="Movies, Beach, Travel, Sushi"
+        />
       </div>
 
       <div>

@@ -17,6 +17,12 @@ export interface Profile {
   is_rose?: boolean;
   last_seen_at?: string | null;
   looking_for?: string;
+  height_cm?: number | null;
+  drinking?: string | null;
+  smoking?: string | null;
+  fitness?: string | null;
+  pets?: string | null;
+  interests?: string[] | null;
   main_image_pos?: string;
   main_image_zoom?: number;
   first_date_idea?: string | null;
