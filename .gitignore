@@ -31,6 +31,10 @@ generate-android-assets.mjs
 
 # Supabase Edge Function secrets — never commit
 supabase/functions/.env
+supabase/functions/.env*
+
+# Supabase CLI temp metadata — never commit
+supabase/.temp/
 
 # Script secrets — never commit
 scripts/.env.script
