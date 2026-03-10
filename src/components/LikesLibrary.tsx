@@ -681,9 +681,12 @@ const LikesLibrary = ({
                   loading="lazy"
                 />
                 <span className="-mt-6">Daily love reading</span>
+                {dailyTarot?.cardName ? (
+                  <span className="mt-1 text-white text-sm font-black tracking-wide">{dailyTarot.cardName}</span>
+                ) : null}
               </span>
             </DrawerTitle>
-            <DrawerDescription className="text-white/60">{dailyTarot?.cardName || ""}</DrawerDescription>
+            <DrawerDescription className="text-white/60"></DrawerDescription>
           </DrawerHeader>
 
           {dailyTarot ? (
@@ -697,7 +700,7 @@ const LikesLibrary = ({
                   className="w-full flex items-center justify-center"
                 >
                   {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
-                    <div className="w-full max-w-[320px] h-[360px] rounded-3xl bg-black/40 border border-white/10 overflow-hidden">
+                    <div className="w-full max-w-[180px] h-[200px] rounded-3xl bg-black/40 border border-white/10 overflow-hidden">
                       <img
                         src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
                         alt={dailyTarot.cardName}
@@ -706,13 +709,16 @@ const LikesLibrary = ({
                       />
                     </div>
                   ) : (
-                    <div className="w-full max-w-[320px] h-[360px] rounded-3xl bg-black/40 border border-white/10 flex items-center justify-center">
+                    <div className="w-full max-w-[180px] h-[200px] rounded-3xl bg-black/40 border border-white/10 flex items-center justify-center">
                       <span className="text-6xl">{dailyTarot.cardEmoji}</span>
                     </div>
                   )}
                 </motion.div>
 
                 <div className="mt-4 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
+                  {dailyTarot.cardName ? (
+                    <p className="text-white font-black text-xs text-center tracking-wide mb-2">{dailyTarot.cardName}</p>
+                  ) : null}
                   <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
                 </div>
               </div>
