@@ -143,9 +143,49 @@ const LikesLibrary = ({
   const [promoPosition, setPromoPosition] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTarotDrawer, setShowTarotDrawer] = useState(false);
+  const [showPremiumReading, setShowPremiumReading] = useState(false);
+  const [premiumReadingType, setPremiumReadingType] = useState<string | null>(null);
+  const [premiumReadingResult, setPremiumReadingResult] = useState<any | null>(null);
+  const [premiumReadingLoading, setPremiumReadingLoading] = useState(false);
+  const [selectedCards, setSelectedCards] = useState<number[]>([]);
+  const [revealedCards, setRevealedCards] = useState<number[]>([]);
   const [tarotReaderSrc, setTarotReaderSrc] = useState(TAROT_READER_IMAGE_URL);
   const [showDailyTarotFront, setShowDailyTarotFront] = useState(false);
   const tarotSequenceTimeoutsRef = useRef<number[]>([]);
+
+  const generateMadamZofeeReward = () => {
+    const roll = Math.random();
+    if (roll < 0.40) return {
+      type: "superlike",
+      amount: 1,
+      claimed: false,
+      message: "The stars have looked upon thy journey with great favour this day, dear seeker. As thy cards speak of patience and an open heart — so too shall the cosmos reward thy faith. Madam Zofee grants thee ONE Super Like from the ancient vault of love. Use it not in haste, but with intention deep as the ocean floor. For the soul who receives this blessing... may already feel thy presence drawing near. Go forth, brave heart. The universe conspires in thy favour.",
+    };
+    if (roll < 0.60) return {
+      type: "superlike",
+      amount: 3,
+      claimed: false,
+      message: "Rare indeed is the seeker who draws such fortune from the cosmic well. The ancient ones have whispered thy name three times this evening — and three times the stars answered. Madam Zofee bestows upon thee THREE Super Likes, drawn from the celestial reserve kept only for those whose hearts are pure of intention. Wield these blessings as an archer wields arrows — with patience, with stillness, with certainty. One who is worthy of thy heart already walks this earth. These gifts shall help thy paths align.",
+    };
+    if (roll < 0.75) return {
+      type: "boost",
+      amount: 1,
+      claimed: false,
+      message: "The veil between worlds grows thin this hour, dear seeker, and through it Madam Zofee sees thy light — a light that others have yet to fully witness. Today the ancient ones lift this light higher. Thy presence shall shine with greater radiance upon those who seek what only thou can offer. A Boost has been granted unto thee — thy profile shall rise like the morning star above the horizon. Go. Be seen. For the one who is meant for thee needs only to lay eyes upon thy face.",
+    };
+    if (roll < 0.90) return {
+      type: "discount",
+      amount: 50,
+      claimed: false,
+      message: "The cosmos rewards the faithful seeker not only with wisdom but with earthly gifts. Madam Zofee has consulted the ancient scrolls and finds thy name written among those deserving of favour. A sacred discount of fifty parts in a hundred has been inscribed in thy name. Present this blessing upon thy next reading or premium offering — for the path of love is long and the wise traveller accepts provisions wherever they are offered. Thou art not alone on this journey, dear soul.",
+    };
+    return {
+      type: "wisdom",
+      amount: 0,
+      claimed: false,
+      message: "Not all gifts arrive as gold or stars, dear seeker. Some arrive as knowing. Today Madam Zofee offers thee the rarest gift of all — clarity. The cards have spoken with unusual precision about thy love path. Carry their words not merely in thy mind but in the marrow of thy bones. Thy reward today is not a thing that can be held — it is a truth that shall guide every choice thy heart makes from this moment forward. The greatest treasure was always the wisdom. Go. Love fearlessly.",
+    };
+  };
 
   const matches = iLiked.filter((p) => likedMe.some((l) => l.id === p.id));
 
@@ -760,6 +800,88 @@ const LikesLibrary = ({
                 zIndex: 1,
               }}
             />
+
+            {/* Right side vertical buttons */}
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 44,
+                zIndex: 99999,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                padding: "60px 0 24px",
+                background: "linear-gradient(to left, rgba(10,0,20,0.8), transparent)",
+              }}
+            >
+              {/* WhatsApp Share */}
+              <button
+                onClick={() => {
+                  const text = `🔮 My Daily Love Reading:\n\n"${dailyTarot?.reading}"\n\n✨ Get your free reading at 2dateme.com`;
+                  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                }}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "rgba(37,211,102,0.2)",
+                  border: "1px solid rgba(37,211,102,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontSize: 18,
+                }}
+                title="Share on WhatsApp"
+              >
+                💚
+              </button>
+
+              {/* Close */}
+              <button
+                onClick={() => setShowTarotDrawer(false)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "rgba(180,80,180,0.2)",
+                  border: "1px solid rgba(180,80,180,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  color: "white",
+                }}
+              >
+                ✕
+              </button>
+
+              {/* Premium Reading */}
+              <button
+                onClick={() => setShowPremiumReading(true)}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: "50%",
+                  background: "rgba(255,215,0,0.15)",
+                  border: "1px solid rgba(255,215,0,0.5)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontSize: 18,
+                }}
+                title="Premium Reading"
+              >
+                🔮
+              </button>
+            </div>
 
             {/* Close button — small circle top right */}
             <button
