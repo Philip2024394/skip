@@ -18,6 +18,9 @@ import { isOnline } from "@/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 
 const TAROT_CARD_BACK_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png";
+const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
+  1: "https://ik.imagekit.io/7grri5v7d/fool-removebg-preview.png",
+};
 
 // ── Countdown hook ────────────────────────────────────────────────────────────
 const useCountdown = (expiresAt: string | null | undefined) => {
@@ -499,7 +502,7 @@ const LikesLibrary = ({
                         <img
                           src={TAROT_CARD_BACK_URL}
                           alt="Tarot card"
-                          className="absolute inset-0 w-full h-full object-contain"
+                          className="absolute inset-0 w-full h-full object-cover"
                           loading="lazy"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
@@ -672,9 +675,20 @@ const LikesLibrary = ({
             <div className="px-4 pb-2">
               <div className="mx-auto w-full max-w-md rounded-2xl bg-white/5 border border-white/10 p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-14 h-20 rounded-xl bg-black/40 border border-yellow-300/25 flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl">{dailyTarot.cardEmoji}</span>
-                  </div>
+                  {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
+                    <div className="w-14 h-20 rounded-xl bg-black/40 border border-yellow-300/25 overflow-hidden flex-shrink-0">
+                      <img
+                        src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
+                        alt={dailyTarot.cardName}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-20 rounded-xl bg-black/40 border border-yellow-300/25 flex items-center justify-center flex-shrink-0">
+                      <span className="text-3xl">{dailyTarot.cardEmoji}</span>
+                    </div>
+                  )}
                   <div className="flex-1">
                     <p className="text-yellow-200 font-black text-sm leading-tight">{dailyTarot.cardName}</p>
                     <p className="mt-2 text-white/85 text-[13px] leading-relaxed">{dailyTarot.reading}</p>
