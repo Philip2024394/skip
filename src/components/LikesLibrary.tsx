@@ -503,21 +503,17 @@ const LikesLibrary = ({
                         onRevealDailyTarot?.();
                         setShowTarotDrawer(true);
                       }}
-                      className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border border-yellow-300/30 relative"
-                      style={{ width: 80 }}
+                      className="flex-shrink-0 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border border-white/10 relative overflow-hidden"
+                      style={{ width: 80, height: 80 }}
                       aria-label="Open your Daily Love Reading"
                     >
-                      <div className="relative w-full flex-1 rounded-lg overflow-hidden" style={{ height: 124 }}>
-                        <img
-                          src={TAROT_CARD_BACK_URL}
-                          alt="Tarot card"
-                          className="absolute inset-0 w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                      </div>
-                      <p className="text-white text-[10px] font-black text-center leading-tight">Daily Tarot</p>
-                      <p className="text-white/55 text-[8px] font-semibold text-center">Tap to open</p>
+                      <img
+                        src={TAROT_CARD_BACK_URL}
+                        alt="Tarot card"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
                     </motion.button>
                   );
                 }
@@ -677,17 +673,17 @@ const LikesLibrary = ({
         <DrawerContent className="bg-[#050505] text-white border-0 overflow-hidden">
           <DrawerHeader className="text-center">
             <DrawerTitle className="text-yellow-200 font-black">
-              <span className="inline-flex items-center justify-center gap-2">
+              <span className="inline-flex items-center justify-center gap-3">
                 <img
                   src={TAROT_READER_IMAGE_URL}
                   alt="Tarot reader"
-                  className="w-7 h-7 object-contain opacity-95 select-none pointer-events-none"
+                  className="w-11 h-11 object-contain opacity-95 select-none pointer-events-none"
                   loading="lazy"
                 />
                 <span>Daily love reading</span>
               </span>
             </DrawerTitle>
-            <DrawerDescription className="text-white/60">2DateMe Daily Tarot</DrawerDescription>
+            <DrawerDescription className="text-white/60">{dailyTarot?.cardName || ""}</DrawerDescription>
           </DrawerHeader>
 
           {dailyTarot ? (
@@ -708,10 +704,10 @@ const LikesLibrary = ({
                   </div>
                 )}
 
-                <p className="mt-3 text-yellow-200 font-black text-sm text-center">{dailyTarot.cardName}</p>
-
-                <div className="mt-3 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-md p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
-                  <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
+                <div className="mt-3 w-full rounded-2xl p-[1.5px] bg-[conic-gradient(from_180deg,rgba(236,72,153,0.55),rgba(168,85,247,0.55),rgba(59,130,246,0.45),rgba(236,72,153,0.55))] animate-[spin_6s_linear_infinite]">
+                  <div className="relative rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
+                    <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
+                  </div>
                 </div>
               </div>
             </div>
