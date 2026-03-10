@@ -11,6 +11,48 @@ import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 const TAROT_CARD_BACK_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png";
 const TAROT_DRAWER_CARD_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards_new-removebg-preview.png";
 const TAROT_READER_IMAGE_URL = "https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png";
+const PREMIUM_READINGS = [
+  {
+    id: "love_3card",
+    title: "3 Card Love Reading",
+    subtitle: "Past • Present • Future",
+    emoji: "💕",
+    price: "$1.99",
+    description: "Discover where your love has been, where it stands today, and where it is destined to go",
+    cardCount: 3,
+    cardLabels: ["Your Past in Love", "Your Present Energy", "Your Love Future"],
+  },
+  {
+    id: "soulmate",
+    title: "Soulmate Reading",
+    subtitle: "Who • When • Where",
+    emoji: "💫",
+    price: "$2.99",
+    description: "The universe knows exactly who is coming for you — let the cards reveal the truth",
+    cardCount: 3,
+    cardLabels: ["Who They Are", "When They Arrive", "Where You Will Meet"],
+  },
+  {
+    id: "family_future",
+    title: "Future Family Reading",
+    subtitle: "Love • Home • Legacy",
+    emoji: "🏡",
+    price: "$2.99",
+    description: "See the beautiful family life that awaits you — home, children, and lasting love",
+    cardCount: 3,
+    cardLabels: ["Your Love Foundation", "Your Future Home", "Your Legacy Together"],
+  },
+  {
+    id: "yearly_forecast",
+    title: "2026 Love Forecast",
+    subtitle: "Your full year ahead",
+    emoji: "🌟",
+    price: "$3.99",
+    description: "A complete love forecast for the year — every season holds a message for your heart",
+    cardCount: 3,
+    cardLabels: ["First Half of 2026", "Second Half of 2026", "Your Greatest Opportunity"],
+  },
+];
 const TAROT_READER_SEQUENCE: Array<{ src: string; durationMs: number }> = [
   { src: "https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png?updatedAt=1773149993777", durationMs: 4000 },
   { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_2-removebg-preview.png", durationMs: 3000 },
