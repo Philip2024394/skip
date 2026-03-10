@@ -201,6 +201,13 @@ const LikesLibrary = ({
       return;
     }
 
+    // Preload woman sequence frames so swaps don't flash blank while images load.
+    TAROT_READER_SEQUENCE.forEach((step) => {
+      const img = new Image();
+      img.decoding = "async";
+      img.src = step.src;
+    });
+
     setShowDailyTarotFront(false);
     setTarotReaderSrc(TAROT_READER_SEQUENCE[0]?.src || TAROT_READER_IMAGE_URL);
 
@@ -256,18 +263,12 @@ const LikesLibrary = ({
     if (!dailyTarot) return displayItems;
     if (dailyTarot.shown) return displayItems;
     if (tab !== "new") return displayItems;
-    if (displayItems.length < 3) return displayItems;
 
-    // Insert tarot card after every 4 profiles while scrolling
-    const items: DisplayItem[] = [];
-    let profileCount = 0;
-    for (const it of displayItems) {
-      items.push(it);
-      if (it.type === "profile") profileCount += 1;
-      if (profileCount > 0 && profileCount % 4 === 0) {
-        items.push({ type: "promo" as const, profile: null } as any);
-      }
-    }
+    // Always show exactly 1 tarot tile in the New carousel until the user reveals it.
+    // Insert it near the start so new identities see it immediately.
+    const items: DisplayItem[] = [...displayItems];
+    const insertAt = Math.min(1, items.length);
+    items.splice(insertAt, 0, { type: "promo" as const, profile: null } as any);
     return items;
   }, [dailyTarot, displayItems, tab]);
 
@@ -718,7 +719,7 @@ const LikesLibrary = ({
           <DrawerHeader className="text-center">
             <DrawerTitle className="text-yellow-200 font-black">
               <span className="inline-flex flex-col items-center justify-center">
-                <AnimatePresence mode="wait">
+                <AnimatePresence initial={false}>
                   <motion.img
                     key={tarotReaderSrc}
                     src={tarotReaderSrc}
@@ -728,7 +729,7 @@ const LikesLibrary = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
+                    transition={{ duration: 0.18 }}
                   />
                 </AnimatePresence>
                 <span className="-mt-6">Daily love reading</span>
