@@ -18,6 +18,7 @@ import { isOnline } from "@/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 
 const TAROT_CARD_BACK_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png";
+const TAROT_DRAWER_CARD_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards_new-removebg-preview.png";
 const TAROT_READER_IMAGE_URL = "https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png";
 const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   1: "https://ik.imagekit.io/7grri5v7d/fool-removebg-preview.png",
@@ -510,7 +511,7 @@ const LikesLibrary = ({
                       <img
                         src={TAROT_CARD_BACK_URL}
                         alt="Tarot card"
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-contain bg-black"
                         decoding="async"
                         loading="lazy"
                       />
@@ -681,9 +682,6 @@ const LikesLibrary = ({
                   loading="lazy"
                 />
                 <span className="-mt-6">Daily love reading</span>
-                {dailyTarot?.cardName ? (
-                  <span className="mt-1 text-white text-sm font-black tracking-wide">{dailyTarot.cardName}</span>
-                ) : null}
               </span>
             </DrawerTitle>
             <DrawerDescription className="text-white/60"></DrawerDescription>
@@ -699,20 +697,23 @@ const LikesLibrary = ({
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className="w-full flex items-center justify-center"
                 >
-                  {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
-                    <div className="w-full max-w-[180px] h-[200px] rounded-3xl bg-black/40 border border-white/10 overflow-hidden">
-                      <img
-                        src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
-                        alt={dailyTarot.cardName}
-                        className="w-full h-full object-contain"
-                        loading="lazy"
-                      />
+                  <motion.div
+                    key={`tarot-drawer-card-${dailyTarot.cardId}`}
+                    className="relative"
+                    animate={{ scale: [1, 1.03, 1] }}
+                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <div className="absolute inset-0 -z-10 blur-2xl opacity-70">
+                      <div className="w-full h-full rounded-[32px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.65),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
                     </div>
-                  ) : (
-                    <div className="w-full max-w-[180px] h-[200px] rounded-3xl bg-black/40 border border-white/10 flex items-center justify-center">
-                      <span className="text-6xl">{dailyTarot.cardEmoji}</span>
-                    </div>
-                  )}
+                    <img
+                      src={TAROT_DRAWER_CARD_URL}
+                      alt={dailyTarot.cardName}
+                      className="w-[160px] h-[210px] object-contain drop-shadow-[0_14px_28px_rgba(250,204,21,0.35)]"
+                      decoding="async"
+                      loading="lazy"
+                    />
+                  </motion.div>
                 </motion.div>
 
                 <div className="mt-4 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
