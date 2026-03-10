@@ -239,7 +239,7 @@ const AuthPage = () => {
             LANDING_BG_URL_VERSION,
             LANDING_BG_URL.includes("imagekit.io") ? { tr: "q-100,fo-auto,w-2160" } : undefined
           )}')`,
-          backgroundSize: "auto 100%",
+          backgroundSize: "auto calc(100% - 100px)",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
@@ -254,7 +254,7 @@ const AuthPage = () => {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.15, duration: 0.4 }}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-[min(86vw,13.25rem)] sm:w-[min(92vw,18rem)]"
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-[min(94vw,22rem)] sm:w-[min(92vw,24rem)]"
           style={{ paddingTop: `max(0px, env(safe-area-inset-top, 0px))` }}
         >
           <div className="rounded-3xl bg-yellow-400 p-3 shadow-[0_0_30px_rgba(250,204,21,0.25)] border border-yellow-300/60">
@@ -267,7 +267,7 @@ const AuthPage = () => {
             </p>
 
             <div className="mt-3 space-y-2">
-              <div className="grid grid-cols-[96px_1fr] gap-2">
+              <div className="grid grid-cols-[112px_1fr] gap-2">
                 <Select value={landingPrefix} onValueChange={setLandingPrefix}>
                   <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-10">
                     <span className="flex items-center gap-1.5">
@@ -292,7 +292,7 @@ const AuthPage = () => {
                   value={landingNumber}
                   onChange={(e) => setLandingNumber(e.target.value)}
                   placeholder="WhatsApp number"
-                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-10"
+                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-10 w-full"
                   inputMode="tel"
                 />
               </div>
