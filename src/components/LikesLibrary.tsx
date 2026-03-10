@@ -724,7 +724,7 @@ const LikesLibrary = ({
           className="relative text-white border-0 overflow-hidden"
           style={{
             position: "relative",
-            zIndex: 9999,
+            zIndex: 10,
             color: "white",
             background: "linear-gradient(135deg, #1a0533 0%, #2d1b4e 50%, #1a0533 100%)",
           }}
