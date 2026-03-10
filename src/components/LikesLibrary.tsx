@@ -191,6 +191,13 @@ const LikesLibrary = ({
   const [premiumReadingLoading, setPremiumReadingLoading] = useState(false);
   const [selectedCards, setSelectedCards] = useState<number[]>([]);
   const [revealedCards, setRevealedCards] = useState<number[]>([]);
+  const [madamZofeeReward, setMadamZofeeReward] = useState<{
+    type: string;
+    amount: number;
+    message: string;
+    claimed: boolean;
+  } | null>(null);
+  const [showMadamZofee, setShowMadamZofee] = useState(false);
   const [tarotReaderSrc, setTarotReaderSrc] = useState(TAROT_READER_IMAGE_URL);
   const [showDailyTarotFront, setShowDailyTarotFront] = useState(false);
   const tarotSequenceTimeoutsRef = useRef<number[]>([]);
@@ -1342,6 +1349,12 @@ const LikesLibrary = ({
                         setTimeout(() => setRevealedCards([0]), 1000);
                         setTimeout(() => setRevealedCards([0, 1]), 3000);
                         setTimeout(() => setRevealedCards([0, 1, 2]), 5000);
+                        // After all cards revealed — Madam Zofee appears
+                        setTimeout(() => {
+                          const reward = generateMadamZofeeReward();
+                          setMadamZofeeReward(reward);
+                          setTimeout(() => setShowMadamZofee(true), 800);
+                        }, 7000);
                       }, 2000);
                     }}
                     style={{
@@ -1721,6 +1734,178 @@ const LikesLibrary = ({
                       ))}
                     </div>
                   </div>
+
+                  {/* Madam Zofee Surprise Reward */}
+                  <AnimatePresence>
+                    {showMadamZofee && madamZofeeReward && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        style={{
+                          borderRadius: 20,
+                          background: "linear-gradient(135deg, rgba(20,0,40,0.95), rgba(40,10,60,0.95))",
+                          border: "1px solid rgba(255,215,0,0.4)",
+                          padding: "24px 18px",
+                          marginBottom: 20,
+                          position: "relative",
+                          overflow: "hidden",
+                          boxShadow: "0 0 40px rgba(255,215,0,0.15), inset 0 0 40px rgba(180,80,180,0.1)",
+                        }}
+                      >
+                        {/* Gold shimmer top */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 2,
+                            background: "linear-gradient(to right, transparent, #FFD700, transparent)",
+                          }}
+                        />
+
+                        {/* Candle flicker */}
+                        <motion.p
+                          animate={{ opacity: [1, 0.6, 1, 0.8, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          style={{ textAlign: "center", fontSize: 28, marginBottom: 4 }}
+                        >
+                          🕯️
+                        </motion.p>
+
+                        {/* Madam Zofee title */}
+                        <p
+                          style={{
+                            textAlign: "center",
+                            color: "rgba(255,215,0,0.6)",
+                            fontSize: 10,
+                            letterSpacing: "0.2em",
+                            marginBottom: 4,
+                            textTransform: "uppercase",
+                          }}
+                        >
+                          The Ancient One Speaks
+                        </p>
+                        <p
+                          style={{
+                            textAlign: "center",
+                            color: "#FFD700",
+                            fontSize: 18,
+                            fontWeight: "bold",
+                            marginBottom: 16,
+                            textShadow: "0 0 16px rgba(255,215,0,0.5)",
+                          }}
+                        >
+                          Madam Zofee
+                        </p>
+
+                        {/* Divider */}
+                        <div
+                          style={{
+                            height: 1,
+                            background: "linear-gradient(to right, transparent, rgba(255,215,0,0.3), transparent)",
+                            marginBottom: 16,
+                          }}
+                        />
+
+                        {/* Message */}
+                        <p
+                          style={{
+                            color: "rgba(255,255,255,0.82)",
+                            fontSize: 13,
+                            lineHeight: 1.9,
+                            textAlign: "center",
+                            fontStyle: "italic",
+                            marginBottom: 20,
+                          }}
+                        >
+                          "{madamZofeeReward.message}"
+                        </p>
+
+                        {/* Reward badge */}
+                        {madamZofeeReward.type !== "wisdom" && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            style={{
+                              textAlign: "center",
+                              marginBottom: 16,
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "inline-block",
+                                background:
+                                  "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05))",
+                                border: "1px solid rgba(255,215,0,0.5)",
+                                borderRadius: 50,
+                                padding: "8px 20px",
+                                marginBottom: 12,
+                              }}
+                            >
+                              <p style={{ color: "#FFD700", fontSize: 15, fontWeight: "bold" }}>
+                                {madamZofeeReward.type === "superlike" &&
+                                  `⭐ ${madamZofeeReward.amount} Super Like${madamZofeeReward.amount > 1 ? "s" : ""} Granted`}
+                                {madamZofeeReward.type === "boost" && "🚀 Profile Boost Granted"}
+                                {madamZofeeReward.type === "discount" && `💫 ${madamZofeeReward.amount}% Discount Granted`}
+                              </p>
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {/* Claim button */}
+                        {madamZofeeReward.type !== "wisdom" && !madamZofeeReward.claimed && (
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => {
+                              setMadamZofeeReward((prev) => (prev ? { ...prev, claimed: true } : null));
+                              // TODO: connect to onPurchaseFeature or super_likes_count update
+                            }}
+                            style={{
+                              width: "100%",
+                              padding: "14px",
+                              borderRadius: 14,
+                              background: "linear-gradient(135deg, #FFD700, #FFA500)",
+                              border: "none",
+                              color: "#000",
+                              fontSize: 15,
+                              fontWeight: "bold",
+                              cursor: "pointer",
+                              letterSpacing: "0.02em",
+                            }}
+                          >
+                            ✨ Claim Thy Blessing
+                          </motion.button>
+                        )}
+
+                        {/* Claimed state */}
+                        {madamZofeeReward.claimed && (
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: "center" }}>
+                            <p style={{ color: "#FFD700", fontSize: 14, fontWeight: "bold" }}>
+                              ✨ Blessing Received
+                            </p>
+                            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, marginTop: 4 }}>
+                              Go forth, dear seeker. Love awaits.
+                            </p>
+                          </motion.div>
+                        )}
+
+                        {/* Gold shimmer bottom */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            height: 2,
+                            background: "linear-gradient(to right, transparent, #FFD700, transparent)",
+                          }}
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   {/* Share button */}
                   <button
