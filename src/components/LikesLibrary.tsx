@@ -1271,12 +1271,17 @@ const LikesLibrary = ({
               position: "fixed",
               inset: 0,
               zIndex: 999999,
-              background: "linear-gradient(135deg, #0a0015 0%, #1a0533 50%, #0a0015 100%)",
+              backgroundImage:
+                "linear-gradient(135deg, rgba(10,0,21,0.92) 0%, rgba(26,5,51,0.92) 50%, rgba(10,0,21,0.92) 100%), url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
               display: "flex",
               flexDirection: "column",
               overflowY: "auto",
             }}
+            className="premium-reading-selection"
           >
+            <style>{`.premium-reading-selection{scrollbar-width:none;-ms-overflow-style:none}.premium-reading-selection::-webkit-scrollbar{width:0;height:0}`}</style>
             {/* Close button */}
             <button
               onClick={() => setShowPremiumReading(false)}
