@@ -26,6 +26,8 @@ const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   5: "https://ik.imagekit.io/7grri5v7d/emperor-removebg-preview.png",
   6: "https://ik.imagekit.io/7grri5v7d/higherfdsdfsdf-removebg-preview.png",
   7: "https://ik.imagekit.io/7grri5v7d/higherfdsdfsdfsss-removebg-preview.png",
+  8: "https://ik.imagekit.io/7grri5v7d/higherfdsdfsdfssstertert-removebg-preview.png",
+  9: "https://ik.imagekit.io/7grri5v7d/higherfdsdfsdfssstertertddd-removebg-preview.png",
 };
 
 // ── Countdown hook ────────────────────────────────────────────────────────────
