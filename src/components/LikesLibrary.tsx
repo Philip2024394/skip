@@ -734,8 +734,8 @@ const LikesLibrary = ({
               borderRadius: "20px 20px 0 0",
               overflow: "hidden",
               maxHeight: "88vh",
-              borderTop: "2px solid rgba(180,80,180,0.5)",
-              boxShadow: "0 -4px 40px rgba(180,80,180,0.3)",
+              borderTop: "2px solid rgba(255,105,180,0.55)",
+              boxShadow: "0 -4px 40px rgba(255,105,180,0.35)",
             }}
           >
             {/* Background image layer */}
@@ -772,7 +772,7 @@ const LikesLibrary = ({
                 width: 28,
                 height: 28,
                 borderRadius: "50%",
-                background: "rgba(180,80,180,0.6)",
+                background: "rgba(255,105,180,0.65)",
                 border: "1px solid rgba(255,255,255,0.3)",
                 color: "white",
                 fontSize: 14,
@@ -885,10 +885,10 @@ const LikesLibrary = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.5, ease: "easeOut" }}
                       >
-                        {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
+                        {TAROT_CARD_FRONT_IMAGES[1] ? (
                           <img
-                            src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
-                            alt={dailyTarot.cardName}
+                            src={TAROT_CARD_FRONT_IMAGES[1]}
+                            alt="The Fool"
                             style={{ width: 140, height: 185, objectFit: "contain" }}
                             decoding="async"
                             loading="lazy"
