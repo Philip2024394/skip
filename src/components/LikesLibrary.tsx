@@ -3,15 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Unlock, Clock, Sparkles, MapPin, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from "@/components/ui/drawer";
 import PromoCard from "./PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import { isOnline } from "@/hooks/useOnlineStatus";
@@ -719,117 +710,255 @@ const LikesLibrary = ({
 
       {/* ── Tab dot indicators removed — swipe tabs with finger ── */}
 
-      <Drawer open={showTarotDrawer} onOpenChange={setShowTarotDrawer}>
-        <DrawerContent
-          className="relative text-white border-0 overflow-hidden"
-          style={{
-            position: "relative",
-            zIndex: 10,
-            color: "white",
-            background: "linear-gradient(135deg, #1a0533 0%, #2d1b4e 50%, #1a0533 100%)",
-          }}
-        >
-          <div style={{ position: "relative", zIndex: 9999 }}>
-            <DrawerHeader className="text-center">
-              <DrawerTitle className="text-yellow-200 font-black">
-                <span className="inline-flex flex-col items-center justify-center">
-                  <AnimatePresence initial={false}>
-                    <motion.img
-                      key={tarotReaderSrc}
-                      src={tarotReaderSrc}
-                      alt="Tarot reader"
-                      className="w-40 h-40 object-contain opacity-95 select-none pointer-events-none"
-                      loading="lazy"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.18 }}
-                    />
-                  </AnimatePresence>
-                  <span className="-mt-6">Daily love reading</span>
-                </span>
-              </DrawerTitle>
-              <DrawerDescription className="text-white/60"></DrawerDescription>
-            </DrawerHeader>
+      {showTarotDrawer && (
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowTarotDrawer(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.75)",
+              zIndex: 99990,
+            }}
+          />
 
-            {dailyTarot ? (
-              <div className="px-4 pb-2">
-                <div className="mx-auto w-full max-w-md flex flex-col items-center">
-                  <motion.div
-                    key={`tarot-card-${dailyTarot.cardId}-${showTarotDrawer ? "open" : "closed"}`}
-                    initial={{ opacity: 0, x: 40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
-                    className="w-full flex items-center justify-center"
-                  >
-                    <AnimatePresence mode="wait">
-                      {!showDailyTarotFront ? (
-                        <motion.div
-                          key={`tarot-drawer-deck-${dailyTarot.cardId}`}
-                          className="relative"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1, scale: [1, 1.03, 1] }}
-                          exit={{ opacity: 0, scale: 0.98 }}
-                          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                          <div className="absolute inset-0 -z-10 blur-2xl opacity-70">
-                            <div className="w-full h-full rounded-[32px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.65),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
-                          </div>
+          {/* Bottom Sheet */}
+          <div
+            style={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 99999,
+              borderRadius: "20px 20px 0 0",
+              overflow: "hidden",
+              maxHeight: "88vh",
+              borderTop: "2px solid rgba(180,80,180,0.5)",
+              boxShadow: "0 -4px 40px rgba(180,80,180,0.3)",
+            }}
+          >
+            {/* Background image layer */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center top",
+                zIndex: 0,
+              }}
+            />
+
+            {/* Dark gradient overlay — fades image into dark at bottom */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(to bottom, rgba(10,0,20,0.55) 0%, rgba(10,0,20,0.75) 50%, rgba(10,0,20,0.95) 100%)",
+                zIndex: 1,
+              }}
+            />
+
+            {/* Close button — small circle top right */}
+            <button
+              onClick={() => setShowTarotDrawer(false)}
+              style={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                zIndex: 99999,
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: "rgba(180,80,180,0.6)",
+                border: "1px solid rgba(255,255,255,0.3)",
+                color: "white",
+                fontSize: 14,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                backdropFilter: "blur(8px)",
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Content */}
+            <div
+              style={{
+                position: "relative",
+                zIndex: 2,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: "16px 20px 28px",
+                overflowY: "auto",
+                maxHeight: "88vh",
+              }}
+            >
+              {/* Tarot woman — blends into background via mask */}
+              <div
+                style={{
+                  position: "relative",
+                  width: 160,
+                  height: 160,
+                  marginBottom: -8,
+                  WebkitMaskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
+                  maskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
+                }}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={tarotReaderSrc}
+                    src={tarotReaderSrc}
+                    alt="Tarot reader"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      objectPosition: "bottom",
+                    }}
+                    loading="lazy"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.4 }}
+                  />
+                </AnimatePresence>
+              </div>
+
+              {/* Title */}
+              <p
+                style={{
+                  color: "#FFD700",
+                  fontSize: 13,
+                  fontWeight: "bold",
+                  letterSpacing: "0.1em",
+                  marginBottom: 12,
+                  textShadow: "0 0 12px rgba(255,215,0,0.5)",
+                }}
+              >
+                ✨ Daily Love Reading
+              </p>
+
+              {/* Tarot card — face down until reveal */}
+              {dailyTarot && (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+                  <AnimatePresence mode="wait">
+                    {!showDailyTarotFront ? (
+                      <motion.div
+                        key="card-back"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1, scale: [1, 1.03, 1] }}
+                        exit={{ opacity: 0, rotateY: 90 }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                        style={{ position: "relative" }}
+                      >
+                        {/* Gold glow behind card */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            filter: "blur(20px)",
+                            opacity: 0.6,
+                            background:
+                              "radial-gradient(circle at 50% 70%, rgba(250,204,21,0.65), transparent 70%)",
+                            zIndex: -1,
+                          }}
+                        />
+                        <img
+                          src={TAROT_DRAWER_CARD_URL}
+                          alt="Card back"
+                          style={{ width: 140, height: 185, objectFit: "contain" }}
+                          decoding="async"
+                          loading="lazy"
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="card-front"
+                        initial={{ opacity: 0, rotateY: -90 }}
+                        animate={{ opacity: 1, rotateY: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                      >
+                        {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
                           <img
-                            src={TAROT_DRAWER_CARD_URL}
+                            src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
                             alt={dailyTarot.cardName}
-                            className="w-[160px] h-[210px] object-contain drop-shadow-[0_14px_28px_rgba(250,204,21,0.35)]"
+                            style={{ width: 140, height: 185, objectFit: "contain" }}
                             decoding="async"
                             loading="lazy"
                           />
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key={`tarot-drawer-daily-${dailyTarot.cardId}`}
-                          className="relative"
-                          initial={{ opacity: 0, x: 16 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.35, ease: "easeOut" }}
+                        ) : (
+                          <div
+                            style={{
+                              width: 140,
+                              height: 185,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: 64,
+                            }}
+                          >
+                            {dailyTarot.cardEmoji}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Card info — only shows after card flips */}
+                  <AnimatePresence>
+                    {showDailyTarotFront && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.4, delay: 0.3 }}
+                        style={{
+                          marginTop: 16,
+                          width: "100%",
+                          borderRadius: 16,
+                          background: "rgba(255,255,255,0.08)",
+                          border: "1px solid rgba(255,255,255,0.15)",
+                          backdropFilter: "blur(12px)",
+                          padding: "14px 16px",
+                          textAlign: "center",
+                        }}
+                      >
+                        <p
+                          style={{
+                            color: "#FFD700",
+                            fontWeight: "bold",
+                            fontSize: 13,
+                            marginBottom: 8,
+                            textShadow: "0 0 8px rgba(255,215,0,0.4)",
+                          }}
                         >
-                          {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
-                            <img
-                              src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
-                              alt={dailyTarot.cardName}
-                              className="w-[160px] h-[210px] object-contain"
-                              decoding="async"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="w-[160px] h-[210px] flex items-center justify-center">
-                              <span className="text-6xl">{dailyTarot.cardEmoji}</span>
-                            </div>
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.div>
-
-                  <div className="mt-4 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
-                    {dailyTarot.cardName ? (
-                      <p className="text-white font-black text-xs text-center tracking-wide mb-2">{dailyTarot.cardName}</p>
-                    ) : null}
-                    <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
-                  </div>
+                          {dailyTarot.cardName}
+                        </p>
+                        <p
+                          style={{
+                            color: "rgba(255,255,255,0.88)",
+                            fontSize: 13,
+                            lineHeight: 1.7,
+                          }}
+                        >
+                          {dailyTarot.reading}
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
-            ) : null}
-
-            <DrawerFooter>
-              <DrawerClose asChild>
-                <Button className="w-full h-11 rounded-2xl gradient-love text-white border-0 font-black">
-                  Close
-                </Button>
-              </DrawerClose>
-            </DrawerFooter>
+              )}
+            </div>
           </div>
-        </DrawerContent>
-      </Drawer>
+        </>
+      )}
     </div>
   );
 };
