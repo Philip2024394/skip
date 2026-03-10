@@ -1432,7 +1432,7 @@ const LikesLibrary = ({
             zIndex: 9999999,
             background:
               premiumReadingType === "soulmate"
-                ? "linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.92) 100%)"
+                ? "transparent"
                 : "linear-gradient(135deg, #0a0015 0%, #1a0533 50%, #0a0015 100%)",
             overflowY: "auto",
             color: "white",
@@ -1449,7 +1449,7 @@ const LikesLibrary = ({
                   : "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
               backgroundSize: "cover",
               backgroundPosition: "center",
-              opacity: premiumReadingType === "soulmate" ? 0.22 : 0.15,
+              opacity: premiumReadingType === "soulmate" ? 1 : 0.15,
               zIndex: 0,
             }}
           />
