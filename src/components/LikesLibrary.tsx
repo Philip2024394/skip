@@ -673,14 +673,14 @@ const LikesLibrary = ({
         <DrawerContent className="bg-[#050505] text-white border-0 overflow-hidden">
           <DrawerHeader className="text-center">
             <DrawerTitle className="text-yellow-200 font-black">
-              <span className="inline-flex items-center justify-center gap-3">
+              <span className="inline-flex flex-col items-center justify-center">
                 <img
                   src={TAROT_READER_IMAGE_URL}
                   alt="Tarot reader"
-                  className="w-11 h-11 object-contain opacity-95 select-none pointer-events-none"
+                  className="w-40 h-40 object-contain opacity-95 select-none pointer-events-none"
                   loading="lazy"
                 />
-                <span>Daily love reading</span>
+                <span className="-mt-6">Daily love reading</span>
               </span>
             </DrawerTitle>
             <DrawerDescription className="text-white/60">{dailyTarot?.cardName || ""}</DrawerDescription>
@@ -689,25 +689,31 @@ const LikesLibrary = ({
           {dailyTarot ? (
             <div className="px-4 pb-2">
               <div className="mx-auto w-full max-w-md flex flex-col items-center">
-                {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
-                  <div className="w-28 h-40 rounded-3xl bg-black/40 border border-yellow-300/20 overflow-hidden">
-                    <img
-                      src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
-                      alt={dailyTarot.cardName}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-28 h-40 rounded-3xl bg-black/40 border border-yellow-300/20 flex items-center justify-center">
-                    <span className="text-5xl">{dailyTarot.cardEmoji}</span>
-                  </div>
-                )}
+                <motion.div
+                  key={`tarot-card-${dailyTarot.cardId}-${showTarotDrawer ? "open" : "closed"}`}
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  className="w-full flex items-center justify-center"
+                >
+                  {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
+                    <div className="w-full max-w-[320px] h-[360px] rounded-3xl bg-black/40 border border-white/10 overflow-hidden">
+                      <img
+                        src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
+                        alt={dailyTarot.cardName}
+                        className="w-full h-full object-contain"
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-[320px] h-[360px] rounded-3xl bg-black/40 border border-white/10 flex items-center justify-center">
+                      <span className="text-6xl">{dailyTarot.cardEmoji}</span>
+                    </div>
+                  )}
+                </motion.div>
 
-                <div className="mt-3 w-full rounded-2xl p-[1.5px] bg-[conic-gradient(from_180deg,rgba(236,72,153,0.55),rgba(168,85,247,0.55),rgba(59,130,246,0.45),rgba(236,72,153,0.55))] animate-[spin_6s_linear_infinite]">
-                  <div className="relative rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10 p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
-                    <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
-                  </div>
+                <div className="mt-4 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
+                  <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
                 </div>
               </div>
             </div>
