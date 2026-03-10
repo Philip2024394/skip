@@ -962,17 +962,6 @@ const LikesLibrary = ({
               }}
             />
 
-            {/* Dark gradient overlay — fades image into dark at bottom */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(to bottom, rgba(10,0,20,0.55) 0%, rgba(10,0,20,0.75) 50%, rgba(10,0,20,0.95) 100%)",
-                zIndex: 1,
-              }}
-            />
-
             {/* Right side vertical buttons */}
             <div
               style={{
@@ -1217,8 +1206,8 @@ const LikesLibrary = ({
                           marginTop: 16,
                           width: "100%",
                           borderRadius: 16,
-                          background: "rgba(255,255,255,0.08)",
-                          border: "1px solid rgba(255,255,255,0.15)",
+                          background: "rgba(0,0,0,0.55)",
+                          border: "1px solid rgba(255,105,180,0.55)",
                           backdropFilter: "blur(12px)",
                           padding: "14px 16px",
                           textAlign: "center",
@@ -1272,7 +1261,7 @@ const LikesLibrary = ({
               inset: 0,
               zIndex: 999999,
               backgroundImage:
-                "linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.88) 100%), url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
+                "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
               backgroundSize: "cover",
               backgroundPosition: "center",
               display: "flex",
@@ -1368,7 +1357,8 @@ const LikesLibrary = ({
                       padding: "16px",
                       borderRadius: 16,
                       background: "rgba(0,0,0,0.55)",
-                      border: "1px solid rgba(255,255,255,0.14)",
+                      border: "1px solid rgba(255,105,180,0.45)",
+                      boxShadow: "0 0 18px rgba(255,105,180,0.18)",
                       backdropFilter: "blur(10px)",
                       color: "white",
                       textAlign: "left",
@@ -1440,7 +1430,10 @@ const LikesLibrary = ({
             position: "fixed",
             inset: 0,
             zIndex: 9999999,
-            background: "linear-gradient(135deg, #0a0015 0%, #1a0533 50%, #0a0015 100%)",
+            background:
+              premiumReadingType === "soulmate"
+                ? "linear-gradient(180deg, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.92) 100%)"
+                : "linear-gradient(135deg, #0a0015 0%, #1a0533 50%, #0a0015 100%)",
             overflowY: "auto",
             color: "white",
           }}
@@ -1450,10 +1443,13 @@ const LikesLibrary = ({
             style={{
               position: "fixed",
               inset: 0,
-              backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
+              backgroundImage:
+                premiumReadingType === "soulmate"
+                  ? "url('https://ik.imagekit.io/7grri5v7d/grave%20yardssssss.png')"
+                  : "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
               backgroundSize: "cover",
               backgroundPosition: "center",
-              opacity: 0.15,
+              opacity: premiumReadingType === "soulmate" ? 0.22 : 0.15,
               zIndex: 0,
             }}
           />
@@ -1603,8 +1599,13 @@ const LikesLibrary = ({
                       transition={{ duration: 0.6 }}
                       style={{
                         borderRadius: 18,
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,215,0,0.2)",
+                        background:
+                          premiumReadingType === "soulmate" ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.06)",
+                        border:
+                          premiumReadingType === "soulmate"
+                            ? "1px solid rgba(255,255,255,0.14)"
+                            : "1px solid rgba(255,215,0,0.2)",
+                        backdropFilter: premiumReadingType === "soulmate" ? "blur(10px)" : undefined,
                         padding: "18px 16px",
                       }}
                     >
@@ -1676,8 +1677,15 @@ const LikesLibrary = ({
                   <div
                     style={{
                       borderRadius: 18,
-                      background: "linear-gradient(135deg, rgba(180,80,180,0.15), rgba(255,215,0,0.08))",
-                      border: "1px solid rgba(180,80,180,0.3)",
+                      background:
+                        premiumReadingType === "soulmate"
+                          ? "rgba(0,0,0,0.55)"
+                          : "linear-gradient(135deg, rgba(180,80,180,0.15), rgba(255,215,0,0.08))",
+                      border:
+                        premiumReadingType === "soulmate"
+                          ? "1px solid rgba(255,255,255,0.14)"
+                          : "1px solid rgba(180,80,180,0.3)",
+                      backdropFilter: premiumReadingType === "soulmate" ? "blur(10px)" : undefined,
                       padding: "18px 16px",
                       marginBottom: 20,
                     }}
@@ -1699,8 +1707,12 @@ const LikesLibrary = ({
                   <div
                     style={{
                       borderRadius: 18,
-                      background: "rgba(255,255,255,0.04)",
-                      border: "1px solid rgba(255,255,255,0.1)",
+                      background: premiumReadingType === "soulmate" ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.04)",
+                      border:
+                        premiumReadingType === "soulmate"
+                          ? "1px solid rgba(255,255,255,0.14)"
+                          : "1px solid rgba(255,255,255,0.1)",
+                      backdropFilter: premiumReadingType === "soulmate" ? "blur(10px)" : undefined,
                       padding: "18px 16px",
                       marginBottom: 24,
                     }}
