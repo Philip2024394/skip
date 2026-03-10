@@ -20,6 +20,14 @@ import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 const TAROT_CARD_BACK_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png";
 const TAROT_DRAWER_CARD_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards_new-removebg-preview.png";
 const TAROT_READER_IMAGE_URL = "https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png";
+const TAROT_READER_SEQUENCE: Array<{ src: string; durationMs: number }> = [
+  { src: "https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png?updatedAt=1773149993777", durationMs: 4000 },
+  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_2-removebg-preview.png", durationMs: 3000 },
+  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_4-removebg-preview.png", durationMs: 2000 },
+  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_5-removebg-preview.png", durationMs: 2000 },
+  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_6-removebg-preview.png", durationMs: 2000 },
+  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_7-removebg-preview.png", durationMs: 2000 },
+];
 const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   1: "https://ik.imagekit.io/7grri5v7d/fool-removebg-preview.png",
   2: "https://ik.imagekit.io/7grri5v7d/Tha_magician-removebg-preview.png",
@@ -144,6 +152,9 @@ const LikesLibrary = ({
   const [promoPosition, setPromoPosition] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTarotDrawer, setShowTarotDrawer] = useState(false);
+  const [tarotReaderSrc, setTarotReaderSrc] = useState(TAROT_READER_IMAGE_URL);
+  const [showDailyTarotFront, setShowDailyTarotFront] = useState(false);
+  const tarotSequenceTimeoutsRef = useRef<number[]>([]);
 
   const matches = iLiked.filter((p) => likedMe.some((l) => l.id === p.id));
 
@@ -179,6 +190,38 @@ const LikesLibrary = ({
   useEffect(() => {
     if (receivedHighlightProfileId) setTab("received");
   }, [receivedHighlightProfileId]);
+
+  useEffect(() => {
+    tarotSequenceTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+    tarotSequenceTimeoutsRef.current = [];
+
+    if (!showTarotDrawer) {
+      setTarotReaderSrc(TAROT_READER_IMAGE_URL);
+      setShowDailyTarotFront(false);
+      return;
+    }
+
+    setShowDailyTarotFront(false);
+    setTarotReaderSrc(TAROT_READER_SEQUENCE[0]?.src || TAROT_READER_IMAGE_URL);
+
+    let cumulative = 0;
+    TAROT_READER_SEQUENCE.forEach((step, idx) => {
+      const timeoutId = window.setTimeout(() => {
+        setTarotReaderSrc(step.src);
+        if (idx === TAROT_READER_SEQUENCE.length - 1) {
+          const revealId = window.setTimeout(() => setShowDailyTarotFront(true), step.durationMs);
+          tarotSequenceTimeoutsRef.current.push(revealId);
+        }
+      }, cumulative);
+      tarotSequenceTimeoutsRef.current.push(timeoutId);
+      cumulative += step.durationMs;
+    });
+
+    return () => {
+      tarotSequenceTimeoutsRef.current.forEach((id) => window.clearTimeout(id));
+      tarotSequenceTimeoutsRef.current = [];
+    };
+  }, [showTarotDrawer]);
 
   // ── Promo rotation ──────────────────────────────────────────────
   const pickNewPromo = useCallback(() => {
@@ -675,12 +718,19 @@ const LikesLibrary = ({
           <DrawerHeader className="text-center">
             <DrawerTitle className="text-yellow-200 font-black">
               <span className="inline-flex flex-col items-center justify-center">
-                <img
-                  src={TAROT_READER_IMAGE_URL}
-                  alt="Tarot reader"
-                  className="w-40 h-40 object-contain opacity-95 select-none pointer-events-none"
-                  loading="lazy"
-                />
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={tarotReaderSrc}
+                    src={tarotReaderSrc}
+                    alt="Tarot reader"
+                    className="w-40 h-40 object-contain opacity-95 select-none pointer-events-none"
+                    loading="lazy"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                  />
+                </AnimatePresence>
                 <span className="-mt-6">Daily love reading</span>
               </span>
             </DrawerTitle>
@@ -697,23 +747,52 @@ const LikesLibrary = ({
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className="w-full flex items-center justify-center"
                 >
-                  <motion.div
-                    key={`tarot-drawer-card-${dailyTarot.cardId}`}
-                    className="relative"
-                    animate={{ scale: [1, 1.03, 1] }}
-                    transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <div className="absolute inset-0 -z-10 blur-2xl opacity-70">
-                      <div className="w-full h-full rounded-[32px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.65),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
-                    </div>
-                    <img
-                      src={TAROT_DRAWER_CARD_URL}
-                      alt={dailyTarot.cardName}
-                      className="w-[160px] h-[210px] object-contain drop-shadow-[0_14px_28px_rgba(250,204,21,0.35)]"
-                      decoding="async"
-                      loading="lazy"
-                    />
-                  </motion.div>
+                  <AnimatePresence mode="wait">
+                    {!showDailyTarotFront ? (
+                      <motion.div
+                        key={`tarot-drawer-deck-${dailyTarot.cardId}`}
+                        className="relative"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1, scale: [1, 1.03, 1] }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <div className="absolute inset-0 -z-10 blur-2xl opacity-70">
+                          <div className="w-full h-full rounded-[32px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.65),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
+                        </div>
+                        <img
+                          src={TAROT_DRAWER_CARD_URL}
+                          alt={dailyTarot.cardName}
+                          className="w-[160px] h-[210px] object-contain drop-shadow-[0_14px_28px_rgba(250,204,21,0.35)]"
+                          decoding="async"
+                          loading="lazy"
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key={`tarot-drawer-daily-${dailyTarot.cardId}`}
+                        className="relative"
+                        initial={{ opacity: 0, x: 16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.35, ease: "easeOut" }}
+                      >
+                        {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
+                          <img
+                            src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
+                            alt={dailyTarot.cardName}
+                            className="w-[160px] h-[210px] object-contain"
+                            decoding="async"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-[160px] h-[210px] flex items-center justify-center">
+                            <span className="text-6xl">{dailyTarot.cardEmoji}</span>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
 
                 <div className="mt-4 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
