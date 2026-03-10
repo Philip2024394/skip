@@ -720,8 +720,8 @@ const LikesLibrary = ({
       {/* ── Tab dot indicators removed — swipe tabs with finger ── */}
 
       <Drawer open={showTarotDrawer} onOpenChange={setShowTarotDrawer}>
-        <DrawerContent className="relative bg-[#050505] text-white border-0 overflow-hidden">
-          <div className="absolute inset-0 -z-10">
+        <DrawerContent className="relative isolate bg-[#050505] text-white border-0 overflow-hidden">
+          <div className="absolute inset-0 z-0">
             <div
               className="absolute inset-0 bg-center bg-cover"
               style={{
@@ -730,103 +730,105 @@ const LikesLibrary = ({
             />
             <div className="absolute inset-0 bg-black/70" />
           </div>
-          <DrawerHeader className="text-center">
-            <DrawerTitle className="text-yellow-200 font-black">
-              <span className="inline-flex flex-col items-center justify-center">
-                <AnimatePresence initial={false}>
-                  <motion.img
-                    key={tarotReaderSrc}
-                    src={tarotReaderSrc}
-                    alt="Tarot reader"
-                    className="w-40 h-40 object-contain opacity-95 select-none pointer-events-none"
-                    loading="lazy"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                  />
-                </AnimatePresence>
-                <span className="-mt-6">Daily love reading</span>
-              </span>
-            </DrawerTitle>
-            <DrawerDescription className="text-white/60"></DrawerDescription>
-          </DrawerHeader>
+          <div className="relative z-10">
+            <DrawerHeader className="text-center">
+              <DrawerTitle className="text-yellow-200 font-black">
+                <span className="inline-flex flex-col items-center justify-center">
+                  <AnimatePresence initial={false}>
+                    <motion.img
+                      key={tarotReaderSrc}
+                      src={tarotReaderSrc}
+                      alt="Tarot reader"
+                      className="w-40 h-40 object-contain opacity-95 select-none pointer-events-none"
+                      loading="lazy"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.18 }}
+                    />
+                  </AnimatePresence>
+                  <span className="-mt-6">Daily love reading</span>
+                </span>
+              </DrawerTitle>
+              <DrawerDescription className="text-white/60"></DrawerDescription>
+            </DrawerHeader>
 
-          {dailyTarot ? (
-            <div className="px-4 pb-2">
-              <div className="mx-auto w-full max-w-md flex flex-col items-center">
-                <motion.div
-                  key={`tarot-card-${dailyTarot.cardId}-${showTarotDrawer ? "open" : "closed"}`}
-                  initial={{ opacity: 0, x: 40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                  className="w-full flex items-center justify-center"
-                >
-                  <AnimatePresence mode="wait">
-                    {!showDailyTarotFront ? (
-                      <motion.div
-                        key={`tarot-drawer-deck-${dailyTarot.cardId}`}
-                        className="relative"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1, scale: [1, 1.03, 1] }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                      >
-                        <div className="absolute inset-0 -z-10 blur-2xl opacity-70">
-                          <div className="w-full h-full rounded-[32px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.65),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
-                        </div>
-                        <img
-                          src={TAROT_DRAWER_CARD_URL}
-                          alt={dailyTarot.cardName}
-                          className="w-[160px] h-[210px] object-contain drop-shadow-[0_14px_28px_rgba(250,204,21,0.35)]"
-                          decoding="async"
-                          loading="lazy"
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key={`tarot-drawer-daily-${dailyTarot.cardId}`}
-                        className="relative"
-                        initial={{ opacity: 0, x: 16 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.35, ease: "easeOut" }}
-                      >
-                        {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
+            {dailyTarot ? (
+              <div className="px-4 pb-2">
+                <div className="mx-auto w-full max-w-md flex flex-col items-center">
+                  <motion.div
+                    key={`tarot-card-${dailyTarot.cardId}-${showTarotDrawer ? "open" : "closed"}`}
+                    initial={{ opacity: 0, x: 40 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    className="w-full flex items-center justify-center"
+                  >
+                    <AnimatePresence mode="wait">
+                      {!showDailyTarotFront ? (
+                        <motion.div
+                          key={`tarot-drawer-deck-${dailyTarot.cardId}`}
+                          className="relative"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1, scale: [1, 1.03, 1] }}
+                          exit={{ opacity: 0, scale: 0.98 }}
+                          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <div className="absolute inset-0 -z-10 blur-2xl opacity-70">
+                            <div className="w-full h-full rounded-[32px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.65),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
+                          </div>
                           <img
-                            src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
+                            src={TAROT_DRAWER_CARD_URL}
                             alt={dailyTarot.cardName}
-                            className="w-[160px] h-[210px] object-contain"
+                            className="w-[160px] h-[210px] object-contain drop-shadow-[0_14px_28px_rgba(250,204,21,0.35)]"
                             decoding="async"
                             loading="lazy"
                           />
-                        ) : (
-                          <div className="w-[160px] h-[210px] flex items-center justify-center">
-                            <span className="text-6xl">{dailyTarot.cardEmoji}</span>
-                          </div>
-                        )}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key={`tarot-drawer-daily-${dailyTarot.cardId}`}
+                          className="relative"
+                          initial={{ opacity: 0, x: 16 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.35, ease: "easeOut" }}
+                        >
+                          {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
+                            <img
+                              src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
+                              alt={dailyTarot.cardName}
+                              className="w-[160px] h-[210px] object-contain"
+                              decoding="async"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-[160px] h-[210px] flex items-center justify-center">
+                              <span className="text-6xl">{dailyTarot.cardEmoji}</span>
+                            </div>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
 
-                <div className="mt-4 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
-                  {dailyTarot.cardName ? (
-                    <p className="text-white font-black text-xs text-center tracking-wide mb-2">{dailyTarot.cardName}</p>
-                  ) : null}
-                  <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
+                  <div className="mt-4 w-full rounded-2xl bg-white/10 border border-white/15 backdrop-blur-xl p-4 shadow-[0_0_20px_rgba(0,0,0,0.25)]">
+                    {dailyTarot.cardName ? (
+                      <p className="text-white font-black text-xs text-center tracking-wide mb-2">{dailyTarot.cardName}</p>
+                    ) : null}
+                    <p className="text-white/90 text-[13px] leading-relaxed text-center">{dailyTarot.reading}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          <DrawerFooter>
-            <DrawerClose asChild>
-              <Button className="w-full h-11 rounded-2xl gradient-love text-white border-0 font-black">
-                Close
-              </Button>
-            </DrawerClose>
-          </DrawerFooter>
+            <DrawerFooter>
+              <DrawerClose asChild>
+                <Button className="w-full h-11 rounded-2xl gradient-love text-white border-0 font-black">
+                  Close
+                </Button>
+              </DrawerClose>
+            </DrawerFooter>
+          </div>
         </DrawerContent>
       </Drawer>
     </div>
