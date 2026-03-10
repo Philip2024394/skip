@@ -286,7 +286,7 @@ const AuthPage = () => {
         <div className="absolute inset-0 bg-black/20 pointer-events-none" />
 
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-          <AppLogo className="w-10 h-10 object-contain" />
+          <AppLogo className="w-20 h-20 object-contain" />
           <div className="leading-none">
             <span className="block text-white font-display font-extrabold tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
               2DateMe
@@ -327,11 +327,7 @@ const AuthPage = () => {
           <div className="rounded-3xl bg-yellow-400 p-3 shadow-[0_0_30px_rgba(250,204,21,0.25)] border border-yellow-300/60">
             <p className="text-black text-lg font-black text-center leading-tight">Get Started Free</p>
             <p className="text-black/70 text-[11px] font-semibold text-center mt-0.5">
-              {getDailyOnlineCount().toLocaleString()} Online Looking For You
-            </p>
-
-            <p className="text-black/80 text-xs font-semibold text-center mt-2">
-              Enter WhatsApp to continue
+              🔥 {getDailyOnlineCount().toLocaleString()} Online Looking For You
             </p>
 
             <div className="mt-3 space-y-2">
@@ -364,6 +360,10 @@ const AuthPage = () => {
                   inputMode="tel"
                 />
               </div>
+
+              <p className="text-black/80 text-xs font-semibold text-center">
+                Enter WhatsApp to continue
+              </p>
 
               <Button
                 onClick={handleLandingEnter}

@@ -545,8 +545,8 @@ const LikesLibrary = ({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        onRevealDailyTarot?.();
                         setShowTarotDrawer(true);
+                        window.setTimeout(() => onRevealDailyTarot?.(), 0);
                       }}
                       className="flex-shrink-0 cursor-pointer transition-all hover:scale-105 relative overflow-visible bg-transparent border-0"
                       style={{ width: 80, height: 104 }}
