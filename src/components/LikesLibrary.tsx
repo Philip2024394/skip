@@ -509,7 +509,7 @@ const LikesLibrary = ({
                       aria-label="Open your Daily Love Reading"
                     >
                       <img
-                        src={TAROT_CARD_BACK_URL}
+                        src={TAROT_DRAWER_CARD_URL}
                         alt="Tarot card"
                         className="absolute inset-0 w-full h-full object-contain bg-black"
                         decoding="async"
