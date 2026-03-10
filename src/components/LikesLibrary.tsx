@@ -504,16 +504,16 @@ const LikesLibrary = ({
                         setShowTarotDrawer(true);
                       }}
                       className="flex-shrink-0 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border border-white/10 relative overflow-hidden"
-                      style={{ width: 80, height: 80 }}
+                      style={{ width: 80, height: 104 }}
                       aria-label="Open your Daily Love Reading"
                     >
                       <img
                         src={TAROT_CARD_BACK_URL}
                         alt="Tarot card"
                         className="absolute inset-0 w-full h-full object-cover"
+                        decoding="async"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-transparent" />
                     </motion.button>
                   );
                 }
