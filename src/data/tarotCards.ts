@@ -21,7 +21,7 @@ export type TarotCard = {
   contextReadings: TarotContextReadings;
 };
 
-export const TAROT_CARDS: TarotCard[] = [
+export const TAROT_CARDS_LEGACY: TarotCard[] = [
   {
     id: 0,
     name: "The Fool",
@@ -816,4 +816,760 @@ export const TAROT_CARDS: TarotCard[] = [
   },
 ];
 
-export const getTarotCardById = (cardId: number) => TAROT_CARDS.find((c) => c.id === cardId) || TAROT_CARDS[0];
+export const getLegacyTarotCardById = (cardId: number) =>
+  TAROT_CARDS_LEGACY.find((c) => c.id === cardId) || TAROT_CARDS_LEGACY[0];
+
+export type TarotContextKey = "beingPicky" | "openHearted" | "focusedOnOne" | "newUser" | "returning" | "mutual";
+
+export type TarotCardEnglishExact = {
+  id: number;
+  name: string;
+  emoji: string;
+  keywords: string[];
+  loveReading: string;
+  contextReadings: Record<TarotContextKey, string>;
+};
+
+export type TarotCardLocalizedExact = {
+  id: number;
+  name: string;
+  emoji: string;
+  keywords: string[];
+  loveReading: LocalizedText;
+  contextReadings: Record<TarotContextKey, LocalizedText>;
+};
+
+export const TAROT_CARDS: TarotCardEnglishExact[] = [
+  {
+    id: 1,
+    name: "The Fool",
+    emoji: "🌟",
+    keywords: ["new beginning", "adventure", "spontaneity"],
+    loveReading:
+      "A fresh start in love is calling you. Don't let fear stop you from taking that first step. The most beautiful love stories begin with one brave moment.",
+    contextReadings: {
+      beingPicky: "You are waiting for perfection — but love arrives unexpectedly. Open your heart just a little wider today.",
+      openHearted: "Your open heart is your greatest strength. Someone out there is about to surprise you completely.",
+      focusedOnOne: "Your heart already knows. Stop overthinking and take the leap.",
+      newUser: "Welcome — your love journey begins today. Anything is possible from this moment.",
+      returning: "You came back for a reason. The universe brought you here again — this time something is different.",
+      mutual: "You already have a connection waiting. Take the next step — what are you waiting for?",
+    },
+  },
+  {
+    id: 2,
+    name: "The Magician",
+    emoji: "✨",
+    keywords: ["power", "skill", "manifestation"],
+    loveReading:
+      "You have everything you need to attract the love you deserve. Your confidence and charm are magnetic right now. Use them.",
+    contextReadings: {
+      beingPicky: "Your standards are high because you know your worth. The right person will meet every one of them.",
+      openHearted: "You are radiating attractive energy today. Someone has already noticed you.",
+      focusedOnOne: "You have the power to make this connection real. One message changes everything.",
+      newUser: "You arrived here with everything you need. Your perfect match is already in this app.",
+      returning: "You came back stronger. Your energy has shifted — and others will feel it.",
+      mutual: "The connection is real and it is mutual. Now use your magic and make it happen.",
+    },
+  },
+  {
+    id: 3,
+    name: "The High Priestess",
+    emoji: "🌙",
+    keywords: ["intuition", "mystery", "inner knowing"],
+    loveReading:
+      "Your intuition is speaking loudly right now. That feeling you have about someone — trust it completely. Your inner wisdom knows things your mind hasn't caught up with yet.",
+    contextReadings: {
+      beingPicky: "Your gut is protecting you. Keep trusting it — the right one will feel completely different.",
+      openHearted: "You feel something stirring. Pay attention to who makes your heart quietly flutter.",
+      focusedOnOne: "You keep coming back to this person for a reason. Your soul recognises something.",
+      newUser: "First impressions matter here. Trust your very first feeling about each person you see.",
+      returning: "Something brought you back today. Listen to that quiet voice — it knows why.",
+      mutual: "You both felt it at the same time. That is not coincidence. That is the universe speaking.",
+    },
+  },
+  {
+    id: 4,
+    name: "The Empress",
+    emoji: "🌹",
+    keywords: ["love", "beauty", "abundance"],
+    loveReading:
+      "Love is blooming around you right now. A season of warmth, connection and deep feeling is beginning. Let yourself receive as much as you give.",
+    contextReadings: {
+      beingPicky: "You deserve abundance in love — not scraps. Your patience will be rewarded beautifully.",
+      openHearted: "Your loving energy is drawing beautiful people toward you right now.",
+      focusedOnOne: "This connection has real potential to grow into something deeply beautiful.",
+      newUser: "You arrived at exactly the right time. Love is in full bloom on this app today.",
+      returning: "You are ready to receive love now in a way you weren't before. Everything has changed.",
+      mutual: "This mutual connection is a seed. Water it with attention and watch it grow.",
+    },
+  },
+  {
+    id: 5,
+    name: "The Emperor",
+    emoji: "👑",
+    keywords: ["stability", "strength", "commitment"],
+    loveReading:
+      "You are ready for something real and solid. Not games, not uncertainty — but genuine committed love built on trust and respect.",
+    contextReadings: {
+      beingPicky: "You want something substantial and lasting. Never apologise for that standard.",
+      openHearted: "Among the people you are connecting with — one is looking for exactly what you are.",
+      focusedOnOne: "A strong foundation is built between two people who both show up consistently.",
+      newUser: "Set your intentions clearly from the start. Know exactly what you are here for.",
+      returning: "You know what you want now. That clarity will attract the right person instantly.",
+      mutual: "You have found someone worth building something real with. Don't let it slip away.",
+    },
+  },
+  {
+    id: 6,
+    name: "The Hierophant",
+    emoji: "🕊️",
+    keywords: ["tradition", "commitment", "soulmate"],
+    loveReading:
+      "A deep and meaningful connection is on the horizon — one that feels right in every traditional sense. Someone who shares your values is closer than you think.",
+    contextReadings: {
+      beingPicky: "You want a love that means something. That person exists and they are looking for you too.",
+      openHearted: "Somewhere in your connections today is a person who shares your deepest values.",
+      focusedOnOne: "This could be the real thing. Take time to truly get to know them.",
+      newUser: "You are here for something meaningful. The right energy always finds its match.",
+      returning: "Your values have not changed — and neither has what you deserve. Keep going.",
+      mutual: "This connection has the energy of something that could truly last.",
+    },
+  },
+  {
+    id: 7,
+    name: "The Lovers",
+    emoji: "💕",
+    keywords: ["choice", "connection", "harmony"],
+    loveReading:
+      "A meaningful choice about love stands before you. Your heart already knows the answer — it is time to stop letting your head argue with it.",
+    contextReadings: {
+      beingPicky: "You are weighing your options carefully. But your heart has already chosen — listen to it.",
+      openHearted: "You are open to love and love is open to you. A beautiful harmony is forming.",
+      focusedOnOne: "You keep coming back to this one person. That is your answer right there.",
+      newUser: "Every connection you make here is a choice. Choose with both your heart and your wisdom.",
+      returning: "You chose to come back. Now choose to be fully open to what arrives.",
+      mutual: "Two people chose each other. That is where all great love stories begin.",
+    },
+  },
+  {
+    id: 8,
+    name: "The Chariot",
+    emoji: "⚡",
+    keywords: ["confidence", "victory", "momentum"],
+    loveReading:
+      "Move forward with total confidence. Stop second guessing yourself. You are more attractive, more worthy and more ready than you realise right now.",
+    contextReadings: {
+      beingPicky: "Your standards are your chariot. They will carry you to exactly where you need to be.",
+      openHearted: "Your momentum is building. Keep going — you are getting closer with every connection.",
+      focusedOnOne: "Stop hesitating. Send the message. Make the move. Victory favours the brave.",
+      newUser: "You arrived with great energy. Ride that momentum — great things are ahead.",
+      returning: "You came back with more confidence than before. Use it. This is your time.",
+      mutual: "You both moved toward each other. Now keep moving — don't let this stop here.",
+    },
+  },
+  {
+    id: 9,
+    name: "Strength",
+    emoji: "🦁",
+    keywords: ["courage", "patience", "inner power"],
+    loveReading:
+      "Real love requires real courage. The strength to be vulnerable, to show your true self, to risk rejection — that is the bravest thing a human being can do.",
+    contextReadings: {
+      beingPicky: "Your discernment IS your strength. You know what you deserve and you refuse to settle.",
+      openHearted: "Your open heart takes tremendous courage. That strength is exactly what attracts the right person.",
+      focusedOnOne: "It takes strength to admit when someone has caught your attention. Be brave enough to act.",
+      newUser: "It took courage to join. Now have the courage to connect fully and honestly.",
+      returning: "You came back. That took strength. Now let that same strength guide you forward.",
+      mutual: "You both had the courage to choose each other. Now be brave enough to go deeper.",
+    },
+  },
+  {
+    id: 10,
+    name: "The Hermit",
+    emoji: "🕯️",
+    keywords: ["reflection", "wisdom", "self-discovery"],
+    loveReading:
+      "Before you can truly love someone else you must know yourself completely. Take a moment today to reflect on what you truly need — not just what you want.",
+    contextReadings: {
+      beingPicky: "Your careful approach shows wisdom. You are not being picky — you are being wise.",
+      openHearted: "Even as you connect with others — stay connected to yourself. Know your own heart.",
+      focusedOnOne: "Ask yourself honestly — why does this person keep drawing your attention?",
+      newUser: "Start this journey by being completely honest about who you are and what you truly need.",
+      returning: "Time away gave you clarity. Bring that wisdom with you into every connection now.",
+      mutual: "Before you go deeper — make sure you truly know what you are looking for.",
+    },
+  },
+  {
+    id: 11,
+    name: "Wheel of Fortune",
+    emoji: "🎡",
+    keywords: ["destiny", "turning point", "luck"],
+    loveReading:
+      "The wheel of your love life is turning right now — toward something better. What feels like coincidence is actually destiny moving you exactly where you need to be.",
+    contextReadings: {
+      beingPicky: "Your fortune is about to turn. The right person is entering your orbit right now.",
+      openHearted: "Your good energy is creating good fortune. The wheel is spinning in your favour.",
+      focusedOnOne: "This person appearing in your life is not random. The universe arranged this moment.",
+      newUser: "You joined at exactly the right moment. Timing in love is everything — and yours is perfect.",
+      returning: "You came back at exactly the right time. The wheel has turned and everything is different now.",
+      mutual: "This mutual connection is destiny doing its work. Don't ignore what the universe arranged.",
+    },
+  },
+  {
+    id: 12,
+    name: "Justice",
+    emoji: "⚖️",
+    keywords: ["balance", "truth", "fairness"],
+    loveReading:
+      "The love you give is the love you will receive. Be honest in all your connections today — with others and especially with yourself about what you truly need.",
+    contextReadings: {
+      beingPicky: "You are right to hold your standards. Justice says you deserve exactly what you are asking for.",
+      openHearted: "Your honesty and openness will be matched by someone equally genuine very soon.",
+      focusedOnOne: "Be honest with yourself about why this person draws you back again and again.",
+      newUser: "Start as you mean to go on — with complete honesty about who you are.",
+      returning: "The universe has balanced things in your favour. What you put out returns to you now.",
+      mutual: "Both of you chose honestly. That is the foundation of everything real.",
+    },
+  },
+  {
+    id: 13,
+    name: "The Hanged Man",
+    emoji: "🌊",
+    keywords: ["surrender", "letting go", "new perspective"],
+    loveReading:
+      "Let go of the love that was never meant for you. Release the expectation of how things should look. When you surrender control — the right person arrives almost immediately.",
+    contextReadings: {
+      beingPicky: "What if the right person looks completely different from what you imagined? Let go of the picture.",
+      openHearted: "Your willingness to let love surprise you is your greatest gift right now.",
+      focusedOnOne: "Let this connection unfold naturally. Stop trying to control how it develops.",
+      newUser: "Arrive here with no expectations. Let the experience surprise you completely.",
+      returning: "You let go of something that wasn't working. Now space has opened for what will.",
+      mutual: "Let this connection breathe. Don't rush it — let it become what it wants to be.",
+    },
+  },
+  {
+    id: 14,
+    name: "Death",
+    emoji: "🦋",
+    keywords: ["transformation", "ending", "rebirth"],
+    loveReading:
+      "Something old is ending to make room for something beautiful and new. This is not loss — this is transformation. Your love life is being reborn into something far better.",
+    contextReadings: {
+      beingPicky: "The old version of who you were in love is gone. A wiser, stronger you is choosing now.",
+      openHearted: "You have transformed. The connections you make now reflect the new version of you.",
+      focusedOnOne: "This person represents something new beginning in your life — not just a match.",
+      newUser: "You are here because something in your love life needed to change. That change starts now.",
+      returning: "Something shifted while you were away. You are not the same person who left. Good.",
+      mutual: "This connection marks the beginning of a new chapter for both of you.",
+    },
+  },
+  {
+    id: 15,
+    name: "Temperance",
+    emoji: "🌈",
+    keywords: ["patience", "balance", "divine timing"],
+    loveReading:
+      "The right love is worth waiting for. Don't rush, don't force, don't settle. Everything is moving toward you at exactly the right pace — trust the timing of your life.",
+    contextReadings: {
+      beingPicky: "Your patience is not weakness — it is wisdom. The right person is worth every moment of waiting.",
+      openHearted: "You are balancing openness with discernment perfectly. Keep this beautiful balance.",
+      focusedOnOne: "Take your time with this one. The best connections are built slowly and carefully.",
+      newUser: "Don't rush your first connections here. Let things develop at their natural pace.",
+      returning: "The timing of your return is perfect. Everything happens exactly when it should.",
+      mutual: "Don't rush this mutual connection. Let it breathe and grow at its own beautiful pace.",
+    },
+  },
+  {
+    id: 16,
+    name: "The Devil",
+    emoji: "🔥",
+    keywords: ["passion", "attraction", "awareness"],
+    loveReading:
+      "Intense attraction is powerful but make sure it is built on something real. Passion without foundation burns bright and fast. Look deeper than the surface today.",
+    contextReadings: {
+      beingPicky: "You are wise to look beyond just physical attraction. Keep looking for substance.",
+      openHearted: "Your passion is magnetic — just make sure the connections you make have real depth.",
+      focusedOnOne: "Ask yourself honestly — is this attraction based on something real or just intensity?",
+      newUser: "Physical attraction will catch your eye here — but look for what lies beneath it.",
+      returning: "You learned something about attraction that wasn't serving you. Apply that wisdom now.",
+      mutual: "The attraction is real and mutual — now find out if the connection goes even deeper.",
+    },
+  },
+  {
+    id: 17,
+    name: "The Tower",
+    emoji: "⚡",
+    keywords: ["change", "breakthrough", "revelation"],
+    loveReading:
+      "Something unexpected is about to shift your love life completely — in the best possible way. The structures that needed to fall are falling to reveal something magnificent underneath.",
+    contextReadings: {
+      beingPicky: "Your entire idea of what you want in a partner might be about to change. Stay open.",
+      openHearted: "An unexpected connection today could completely change how you see love.",
+      focusedOnOne: "This person might surprise you in ways you never expected. Let them.",
+      newUser: "Prepare to be surprised. What you find here may be completely different from what you expected.",
+      returning: "Everything you thought you knew about your love life is shifting. Embrace the change.",
+      mutual: "This connection will surprise both of you. Something unexpected and wonderful is coming.",
+    },
+  },
+  {
+    id: 18,
+    name: "The Star",
+    emoji: "⭐",
+    keywords: ["hope", "healing", "inspiration"],
+    loveReading:
+      "After everything you have been through — hope is returning. Your heart is healing and opening again. A love that feels like coming home is finding its way to you.",
+    contextReadings: {
+      beingPicky: "Your hope in real love has never died — and it is about to be rewarded.",
+      openHearted: "Your hopeful energy is like a star — visible from far away and drawing people toward you.",
+      focusedOnOne: "This person gives you hope. That feeling is trying to tell you something important.",
+      newUser: "Hope brought you here. Let that same hope guide every connection you make.",
+      returning: "You came back because hope never completely left you. That hope is about to pay off.",
+      mutual: "Both of you hoped for this. Now let that shared hope become something beautiful.",
+    },
+  },
+  {
+    id: 19,
+    name: "The Moon",
+    emoji: "🌕",
+    keywords: ["intuition", "dreams", "the subconscious"],
+    loveReading:
+      "Pay attention to your dreams and your deepest feelings right now. Something about a connection is trying to reach you beneath the surface. Trust what you feel — even the parts you cannot explain.",
+    contextReadings: {
+      beingPicky: "Your subconscious is protecting you from the wrong connections. Trust that quiet feeling.",
+      openHearted: "Your emotional sensitivity is your superpower right now. Feel everything fully.",
+      focusedOnOne: "You think about this person even when you don't mean to. Your subconscious is speaking.",
+      newUser: "Pay attention to your very first emotional reaction to each profile. It knows things.",
+      returning: "Something drew you back that you cannot fully explain. That is the moon speaking. Listen.",
+      mutual: "This connection exists on a level deeper than either of you fully understands yet.",
+    },
+  },
+  {
+    id: 20,
+    name: "The Sun",
+    emoji: "☀️",
+    keywords: ["joy", "happiness", "success"],
+    loveReading:
+      "Pure joy in love is coming your way. Not complicated, not painful — just warm, bright, beautiful happiness with someone who makes everything feel lighter and better.",
+    contextReadings: {
+      beingPicky: "The sunny joyful love you deserve is real and it is coming. Don't settle for anything less.",
+      openHearted: "Your joyful energy today is completely irresistible. Someone is already drawn to your light.",
+      focusedOnOne: "This person makes you feel something light and warm. That feeling is important.",
+      newUser: "You brought sunshine with you today. The right person will be drawn straight to it.",
+      returning: "You came back with more joy than before. That lightness will attract something wonderful.",
+      mutual: "This connection has genuine joy at its core. That is rare and precious — cherish it.",
+    },
+  },
+  {
+    id: 21,
+    name: "Judgement",
+    emoji: "🎺",
+    keywords: ["renewal", "second chances", "awakening"],
+    loveReading:
+      "A second chance at love — or a completely new awakening of your heart — is arriving. Answer the call. Do not let fear make you miss what is being offered to you right now.",
+    contextReadings: {
+      beingPicky: "Perhaps someone you overlooked deserves a second look today. Judgement asks you to reconsider.",
+      openHearted: "You are awake to love in a way you never were before. This awareness will change everything.",
+      focusedOnOne: "This person might represent a second chance at something your heart needed.",
+      newUser: "This is your awakening moment in love. Everything before led you here. Now answer the call.",
+      returning: "Coming back was your answer to the call. Now go all in — no half measures.",
+      mutual: "This mutual connection is an awakening for both of you. Don't let it pass.",
+    },
+  },
+  {
+    id: 22,
+    name: "The World",
+    emoji: "🌍",
+    keywords: ["completion", "fulfilment", "your person"],
+    loveReading:
+      "You are at the threshold of finding your person — a complete and fulfilling love that makes the whole world feel right. Everything you have been through has led to this moment.",
+    contextReadings: {
+      beingPicky: "Your journey has been long and worth every moment. Completion is very close now.",
+      openHearted: "You have opened yourself to the whole world of love. It is about to deliver something complete.",
+      focusedOnOne: "This person could be your world. That feeling deserves to be explored fully.",
+      newUser: "Your whole world of love begins here today. Welcome to the start of everything.",
+      returning: "You completed a cycle. Now a new and better one is beginning — this is it.",
+      mutual: "Two complete people finding each other. This is what the whole journey was for.",
+    },
+  },
+];
+
+export const TAROT_CARDS_ID: TarotCardEnglishExact[] = [
+  {
+    id: 1,
+    name: "The Fool",
+    emoji: "🌟",
+    keywords: ["new beginning", "adventure", "spontaneity"],
+    loveReading:
+      "Awal baru dalam cinta sedang memanggilmu. Jangan biarkan rasa takut menghentikanmu mengambil langkah pertama. Kisah cinta terindah dimulai dari satu momen berani.",
+    contextReadings: {
+      beingPicky: "Kamu menunggu kesempurnaan — padahal cinta sering datang tak terduga. Buka hatimu sedikit lebih lebar hari ini.",
+      openHearted: "Hati terbukamu adalah kekuatan terbesarmu. Seseorang akan segera mengejutkanmu sepenuhnya.",
+      focusedOnOne: "Hatimu sudah tahu. Berhenti overthinking dan ambil langkahnya.",
+      newUser: "Selamat datang — perjalanan cintamu dimulai hari ini. Apa pun mungkin dari momen ini.",
+      returning: "Kamu kembali karena suatu alasan. Semesta membawamu ke sini lagi — kali ini ada yang berbeda.",
+      mutual: "Kamu sudah punya koneksi yang menunggumu. Ambil langkah berikutnya — kamu menunggu apa lagi?",
+    },
+  },
+  {
+    id: 2,
+    name: "The Magician",
+    emoji: "✨",
+    keywords: ["power", "skill", "manifestation"],
+    loveReading:
+      "Kamu punya semua yang kamu butuhkan untuk menarik cinta yang kamu pantas dapatkan. Kepercayaan diri dan pesonamu sedang sangat magnetis. Gunakan itu.",
+    contextReadings: {
+      beingPicky: "Standarmu tinggi karena kamu tahu nilai dirimu. Orang yang tepat akan memenuhi semuanya.",
+      openHearted: "Kamu memancarkan energi yang menarik hari ini. Seseorang sudah memperhatikanmu.",
+      focusedOnOne: "Kamu punya kekuatan untuk membuat koneksi ini nyata. Satu pesan mengubah segalanya.",
+      newUser: "Kamu datang dengan semua yang kamu butuhkan. Match sempurnamu sudah ada di aplikasi ini.",
+      returning: "Kamu kembali lebih kuat. Energi kamu berubah — dan orang lain akan merasakannya.",
+      mutual: "Koneksinya nyata dan saling. Sekarang gunakan sihirmu dan wujudkan.",
+    },
+  },
+  {
+    id: 3,
+    name: "The High Priestess",
+    emoji: "🌙",
+    keywords: ["intuition", "mystery", "inner knowing"],
+    loveReading:
+      "Intuisimu sedang berbicara keras sekarang. Perasaanmu tentang seseorang — percaya sepenuhnya. Kebijaksanaan batinmu tahu hal-hal yang pikiranmu belum kejar.",
+    contextReadings: {
+      beingPicky: "Nalurimu melindungimu. Terus percaya — yang tepat akan terasa sangat berbeda.",
+      openHearted: "Ada sesuatu yang bergerak di dalam diri. Perhatikan siapa yang membuat hati kamu berdebar pelan.",
+      focusedOnOne: "Kamu terus kembali ke orang ini karena alasan. Jiwamu mengenali sesuatu.",
+      newUser: "Kesan pertama penting di sini. Percaya perasaan pertamamu tentang setiap orang yang kamu lihat.",
+      returning: "Ada sesuatu yang membawamu kembali hari ini. Dengarkan suara pelan itu — ia tahu alasannya.",
+      mutual: "Kalian berdua merasakannya bersamaan. Itu bukan kebetulan. Itu semesta yang berbicara.",
+    },
+  },
+  {
+    id: 4,
+    name: "The Empress",
+    emoji: "🌹",
+    keywords: ["love", "beauty", "abundance"],
+    loveReading:
+      "Cinta sedang mekar di sekelilingmu. Musim hangat, koneksi, dan perasaan yang dalam sedang dimulai. Izinkan dirimu menerima sebanyak kamu memberi.",
+    contextReadings: {
+      beingPicky: "Kamu pantas mendapat kelimpahan cinta — bukan sisa. Kesabaranmu akan terbayar indah.",
+      openHearted: "Energi penuh cintamu menarik orang-orang yang indah mendekat.",
+      focusedOnOne: "Koneksi ini punya potensi nyata untuk tumbuh menjadi sesuatu yang sangat indah.",
+      newUser: "Kamu datang di waktu yang tepat. Cinta sedang mekar di aplikasi ini hari ini.",
+      returning: "Kamu siap menerima cinta dengan cara yang belum pernah sebelumnya. Semuanya sudah berubah.",
+      mutual: "Koneksi mutual ini adalah benih. Sirami dengan perhatian dan lihat ia tumbuh.",
+    },
+  },
+  {
+    id: 5,
+    name: "The Emperor",
+    emoji: "👑",
+    keywords: ["stability", "strength", "commitment"],
+    loveReading:
+      "Kamu siap untuk sesuatu yang nyata dan kokoh. Bukan permainan, bukan ketidakpastian — tapi cinta berkomitmen yang dibangun dari kepercayaan dan rasa hormat.",
+    contextReadings: {
+      beingPicky: "Kamu ingin sesuatu yang solid dan bertahan lama. Jangan pernah minta maaf untuk standar itu.",
+      openHearted: "Di antara orang-orang yang kamu hubungi — ada satu yang mencari hal yang sama seperti kamu.",
+      focusedOnOne: "Fondasi kuat dibangun oleh dua orang yang sama-sama hadir dengan konsisten.",
+      newUser: "Tentukan niatmu dengan jelas sejak awal. Tahu persis kamu ada di sini untuk apa.",
+      returning: "Sekarang kamu tahu apa yang kamu mau. Kejelasan itu akan menarik orang yang tepat dengan cepat.",
+      mutual: "Kamu menemukan seseorang yang layak dibangun bersama. Jangan biarkan lepas.",
+    },
+  },
+  {
+    id: 6,
+    name: "The Hierophant",
+    emoji: "🕊️",
+    keywords: ["tradition", "commitment", "soulmate"],
+    loveReading:
+      "Koneksi yang dalam dan bermakna sudah dekat — yang terasa benar secara nilai dan komitmen. Seseorang yang sejalan dengan nilaimu lebih dekat dari yang kamu kira.",
+    contextReadings: {
+      beingPicky: "Kamu ingin cinta yang berarti. Orang itu ada dan mereka juga mencarimu.",
+      openHearted: "Di antara koneksimu hari ini ada seseorang yang berbagi nilai terdalam kamu.",
+      focusedOnOne: "Ini bisa jadi yang nyata. Luangkan waktu untuk benar-benar mengenalnya.",
+      newUser: "Kamu di sini untuk sesuatu yang bermakna. Energi yang tepat selalu menemukan pasangannya.",
+      returning: "Nilaimu tidak berubah — begitu juga dengan apa yang kamu pantas dapatkan. Teruskan.",
+      mutual: "Koneksi ini punya energi sesuatu yang bisa benar-benar bertahan lama.",
+    },
+  },
+  {
+    id: 7,
+    name: "The Lovers",
+    emoji: "💕",
+    keywords: ["choice", "connection", "harmony"],
+    loveReading:
+      "Pilihan bermakna tentang cinta ada di depanmu. Hatimu sudah tahu jawabannya — saatnya berhenti membiarkan kepala berdebat.",
+    contextReadings: {
+      beingPicky: "Kamu menimbang pilihan dengan hati-hati. Tapi hatimu sudah memilih — dengarkan.",
+      openHearted: "Kamu terbuka untuk cinta dan cinta terbuka untukmu. Harmoni indah sedang terbentuk.",
+      focusedOnOne: "Kamu terus kembali ke satu orang ini. Itu jawabannya.",
+      newUser: "Setiap koneksi di sini adalah pilihan. Pilih dengan hati dan kebijaksanaan.",
+      returning: "Kamu memilih kembali. Sekarang pilih untuk benar-benar terbuka pada yang datang.",
+      mutual: "Dua orang memilih satu sama lain. Di situlah semua kisah cinta besar dimulai.",
+    },
+  },
+  {
+    id: 8,
+    name: "The Chariot",
+    emoji: "⚡",
+    keywords: ["confidence", "victory", "momentum"],
+    loveReading:
+      "Majulah dengan percaya diri sepenuhnya. Berhenti meragukan diri. Kamu lebih menarik, lebih layak, dan lebih siap daripada yang kamu sadari.",
+    contextReadings: {
+      beingPicky: "Standarmu adalah keretamu. Itu akan membawamu tepat ke tempat yang kamu butuhkan.",
+      openHearted: "Momentummu sedang terbentuk. Teruskan — kamu makin dekat di setiap koneksi.",
+      focusedOnOne: "Berhenti ragu. Kirim pesan. Ambil langkah. Kemenangan memihak yang berani.",
+      newUser: "Kamu datang dengan energi yang bagus. Naiki momentum itu — hal hebat menanti.",
+      returning: "Kamu kembali dengan lebih percaya diri. Gunakan. Ini waktumu.",
+      mutual: "Kalian berdua bergerak menuju satu sama lain. Sekarang teruskan — jangan berhenti di sini.",
+    },
+  },
+  {
+    id: 9,
+    name: "Strength",
+    emoji: "🦁",
+    keywords: ["courage", "patience", "inner power"],
+    loveReading:
+      "Cinta yang nyata butuh keberanian yang nyata. Berani rentan, menunjukkan diri yang asli, berani ditolak — itulah hal paling berani yang bisa dilakukan manusia.",
+    contextReadings: {
+      beingPicky: "Kehati-hatianmu adalah kekuatanmu. Kamu tahu yang kamu pantas dapatkan dan kamu tidak mau settle.",
+      openHearted: "Hati terbukamu butuh keberanian besar. Kekuatan itu yang menarik orang yang tepat.",
+      focusedOnOne: "Butuh keberanian untuk mengakui seseorang menarik perhatianmu. Beranilah untuk bertindak.",
+      newUser: "Butuh keberanian untuk bergabung. Sekarang beranilah untuk terhubung dengan jujur.",
+      returning: "Kamu kembali. Itu butuh kekuatan. Biarkan kekuatan itu menuntunmu.",
+      mutual: "Kalian berdua berani memilih satu sama lain. Sekarang berani untuk lebih dalam.",
+    },
+  },
+  {
+    id: 10,
+    name: "The Hermit",
+    emoji: "🕯️",
+    keywords: ["reflection", "wisdom", "self-discovery"],
+    loveReading:
+      "Sebelum kamu benar-benar bisa mencintai orang lain, kamu harus mengenal dirimu. Ambil waktu hari ini untuk merenungkan apa yang benar-benar kamu butuhkan — bukan hanya yang kamu inginkan.",
+    contextReadings: {
+      beingPicky: "Pendekatanmu yang hati-hati menunjukkan kebijaksanaan. Kamu bukan picky — kamu bijak.",
+      openHearted: "Saat kamu terhubung dengan orang lain — tetap terhubung dengan dirimu. Kenali hatimu.",
+      focusedOnOne: "Tanya jujur — kenapa orang ini terus menarik perhatianmu?",
+      newUser: "Mulai perjalanan ini dengan jujur tentang siapa kamu dan apa yang benar-benar kamu butuhkan.",
+      returning: "Waktu jauh memberimu kejelasan. Bawa kebijaksanaan itu ke setiap koneksi.",
+      mutual: "Sebelum lebih dalam — pastikan kamu benar-benar tahu apa yang kamu cari.",
+    },
+  },
+  {
+    id: 11,
+    name: "Wheel of Fortune",
+    emoji: "🎡",
+    keywords: ["destiny", "turning point", "luck"],
+    loveReading:
+      "Roda kehidupan cintamu sedang berputar — menuju sesuatu yang lebih baik. Yang terasa kebetulan sebenarnya adalah takdir yang menggerakkanmu ke tempat yang tepat.",
+    contextReadings: {
+      beingPicky: "Keberuntunganmu akan segera berubah. Orang yang tepat sedang masuk ke orbitmu.",
+      openHearted: "Energi baikmu menciptakan keberuntungan baik. Roda berputar memihakmu.",
+      focusedOnOne: "Orang ini hadir bukan kebetulan. Semesta mengatur momen ini.",
+      newUser: "Kamu bergabung di saat yang tepat. Timing dalam cinta itu segalanya — dan timingmu pas.",
+      returning: "Kamu kembali tepat waktu. Roda sudah berputar dan semuanya berbeda sekarang.",
+      mutual: "Koneksi mutual ini adalah takdir. Jangan abaikan yang semesta atur.",
+    },
+  },
+  {
+    id: 12,
+    name: "Justice",
+    emoji: "⚖️",
+    keywords: ["balance", "truth", "fairness"],
+    loveReading:
+      "Cinta yang kamu beri adalah cinta yang akan kamu terima. Bersikap jujur dalam koneksimu hari ini — terutama pada diri sendiri tentang apa yang benar-benar kamu butuhkan.",
+    contextReadings: {
+      beingPicky: "Kamu benar mempertahankan standar. Keadilan berkata kamu pantas mendapatkan yang kamu minta.",
+      openHearted: "Kejujuran dan keterbukaanmu akan dibalas oleh seseorang yang sama tulusnya.",
+      focusedOnOne: "Jujur pada diri sendiri kenapa orang ini menarikmu lagi dan lagi.",
+      newUser: "Mulai dengan jujur tentang siapa kamu.",
+      returning: "Semesta menyeimbangkan hal-hal untukmu. Apa yang kamu berikan akan kembali.",
+      mutual: "Kalian berdua memilih dengan jujur. Itu fondasi untuk semua yang nyata.",
+    },
+  },
+  {
+    id: 13,
+    name: "The Hanged Man",
+    emoji: "🌊",
+    keywords: ["surrender", "letting go", "new perspective"],
+    loveReading:
+      "Lepaskan cinta yang memang bukan untukmu. Lepaskan ekspektasi bagaimana seharusnya terlihat. Saat kamu melepaskan kontrol — orang yang tepat datang hampir segera.",
+    contextReadings: {
+      beingPicky: "Bagaimana jika orang yang tepat terlihat sangat berbeda dari bayanganmu? Lepaskan gambarnya.",
+      openHearted: "Kesediaanmu membiarkan cinta mengejutkanmu adalah hadiah terbesarmu.",
+      focusedOnOne: "Biarkan koneksi ini berkembang alami. Berhenti mencoba mengontrolnya.",
+      newUser: "Datang tanpa ekspektasi. Biarkan pengalaman ini mengejutkanmu.",
+      returning: "Kamu melepas sesuatu yang tidak bekerja. Sekarang ada ruang untuk yang akan datang.",
+      mutual: "Biarkan koneksi ini bernapas. Jangan buru-buru — biarkan menjadi apa adanya.",
+    },
+  },
+  {
+    id: 14,
+    name: "Death",
+    emoji: "🦋",
+    keywords: ["transformation", "ending", "rebirth"],
+    loveReading:
+      "Sesuatu yang lama berakhir untuk memberi ruang bagi yang baru dan indah. Ini bukan kehilangan — ini transformasi. Kehidupan cintamu sedang terlahir kembali menjadi jauh lebih baik.",
+    contextReadings: {
+      beingPicky: "Versi lama dirimu dalam cinta sudah selesai. Dirimu yang lebih bijak dan kuat sedang memilih sekarang.",
+      openHearted: "Kamu sudah berubah. Koneksi yang kamu buat sekarang mencerminkan versi barumu.",
+      focusedOnOne: "Orang ini mewakili awal baru dalam hidupmu — bukan hanya match.",
+      newUser: "Kamu ada di sini karena sesuatu dalam cinta perlu berubah. Perubahan itu mulai sekarang.",
+      returning: "Ada yang bergeser saat kamu pergi. Kamu bukan orang yang sama. Bagus.",
+      mutual: "Koneksi ini menandai awal bab baru untuk kalian berdua.",
+    },
+  },
+  {
+    id: 15,
+    name: "Temperance",
+    emoji: "🌈",
+    keywords: ["patience", "balance", "divine timing"],
+    loveReading:
+      "Cinta yang tepat pantas ditunggu. Jangan terburu-buru, jangan memaksa, jangan settle. Semuanya bergerak menuju kamu dengan ritme yang tepat — percayai timing hidupmu.",
+    contextReadings: {
+      beingPicky: "Kesabaranmu bukan kelemahan — itu kebijaksanaan. Orang yang tepat pantas setiap detik menunggu.",
+      openHearted: "Kamu menyeimbangkan keterbukaan dan seleksi dengan indah. Pertahankan keseimbangan ini.",
+      focusedOnOne: "Pelan-pelan dengan yang ini. Koneksi terbaik dibangun perlahan dan hati-hati.",
+      newUser: "Jangan buru-buru dengan koneksi pertama. Biarkan berkembang dengan ritme natural.",
+      returning: "Timing kembalimu sempurna. Semua terjadi saat seharusnya.",
+      mutual: "Jangan buru-buru koneksi mutual ini. Biarkan tumbuh dengan ritme indahnya.",
+    },
+  },
+  {
+    id: 16,
+    name: "The Devil",
+    emoji: "🔥",
+    keywords: ["passion", "attraction", "awareness"],
+    loveReading:
+      "Ketertarikan yang intens itu kuat, tapi pastikan dibangun di atas sesuatu yang nyata. Gairah tanpa fondasi cepat menyala dan cepat padam. Lihat lebih dalam hari ini.",
+    contextReadings: {
+      beingPicky: "Kamu bijak melihat lebih dari sekadar ketertarikan fisik. Terus cari substansi.",
+      openHearted: "Gairahmu magnetis — pastikan koneksi yang kamu buat punya kedalaman.",
+      focusedOnOne: "Tanya jujur — ini koneksi nyata atau sekadar intensitas?",
+      newUser: "Ketertarikan fisik akan menarik perhatianmu — tapi lihat apa yang ada di baliknya.",
+      returning: "Kamu belajar sesuatu tentang ketertarikan yang tidak sehat. Terapkan kebijaksanaan itu sekarang.",
+      mutual: "Ketertarikan ini saling. Sekarang cari tahu apakah koneksinya lebih dalam.",
+    },
+  },
+  {
+    id: 17,
+    name: "The Tower",
+    emoji: "⚡",
+    keywords: ["change", "breakthrough", "revelation"],
+    loveReading:
+      "Sesuatu yang tak terduga akan menggeser kehidupan cintamu — dengan cara terbaik. Struktur yang perlu runtuh sedang runtuh untuk menampakkan sesuatu yang luar biasa.",
+    contextReadings: {
+      beingPicky: "Ide kamu tentang pasangan yang kamu mau mungkin akan berubah total. Tetap terbuka.",
+      openHearted: "Koneksi tak terduga hari ini bisa mengubah cara kamu melihat cinta.",
+      focusedOnOne: "Orang ini mungkin mengejutkanmu dengan cara yang tak kamu duga. Biarkan.",
+      newUser: "Siap-siap terkejut. Apa yang kamu temukan bisa sangat berbeda dari ekspektasimu.",
+      returning: "Semua yang kamu kira kamu tahu tentang cinta sedang bergeser. Rangkul perubahan.",
+      mutual: "Koneksi ini akan mengejutkan kalian. Sesuatu yang tak terduga dan indah sedang datang.",
+    },
+  },
+  {
+    id: 18,
+    name: "The Star",
+    emoji: "⭐",
+    keywords: ["hope", "healing", "inspiration"],
+    loveReading:
+      "Setelah semua yang kamu lewati — harapan kembali. Hatimu sedang sembuh dan terbuka lagi. Cinta yang terasa seperti pulang sedang menemukan jalan ke kamu.",
+    contextReadings: {
+      beingPicky: "Harapanmu pada cinta yang nyata tidak pernah mati — dan akan segera terbayar.",
+      openHearted: "Energi penuh harapanmu seperti bintang — terlihat dari jauh dan menarik orang mendekat.",
+      focusedOnOne: "Orang ini memberimu harapan. Perasaan itu ingin bilang sesuatu yang penting.",
+      newUser: "Harapan membawamu ke sini. Biarkan harapan itu menuntun setiap koneksi.",
+      returning: "Kamu kembali karena harapan tidak pernah benar-benar pergi. Harapan itu akan terbayar.",
+      mutual: "Kalian berdua berharap untuk ini. Sekarang biarkan harapan itu jadi sesuatu yang indah.",
+    },
+  },
+  {
+    id: 19,
+    name: "The Moon",
+    emoji: "🌕",
+    keywords: ["intuition", "dreams", "the subconscious"],
+    loveReading:
+      "Perhatikan mimpi dan perasaan terdalammu. Ada sesuatu tentang koneksi ini yang ingin menjangkau kamu di bawah permukaan. Percaya apa yang kamu rasakan — bahkan yang sulit dijelaskan.",
+    contextReadings: {
+      beingPicky: "Alam bawah sadarmu melindungimu dari koneksi yang salah. Percaya perasaan itu.",
+      openHearted: "Kepekaan emosimu adalah superpower hari ini. Rasakan sepenuhnya.",
+      focusedOnOne: "Kamu memikirkan orang ini bahkan saat tidak bermaksud. Alam bawah sadarmu bicara.",
+      newUser: "Perhatikan reaksi emosional pertamamu pada setiap profil. Itu tahu.",
+      returning: "Ada sesuatu yang menarikmu kembali dan kamu tidak bisa menjelaskan. Itu suara bulan. Dengarkan.",
+      mutual: "Koneksi ini ada di level yang lebih dalam dari yang kalian pahami saat ini.",
+    },
+  },
+  {
+    id: 20,
+    name: "The Sun",
+    emoji: "☀️",
+    keywords: ["joy", "happiness", "success"],
+    loveReading:
+      "Kebahagiaan murni dalam cinta sedang datang. Bukan rumit, bukan menyakitkan — hanya hangat, cerah, dan indah bersama seseorang yang membuat segalanya terasa lebih ringan.",
+    contextReadings: {
+      beingPicky: "Cinta yang cerah dan bahagia itu nyata dan sedang datang. Jangan settle.",
+      openHearted: "Energi bahagiamu hari ini tak tertahankan. Seseorang sudah tertarik pada cahayamu.",
+      focusedOnOne: "Orang ini membuatmu merasa ringan dan hangat. Perasaan itu penting.",
+      newUser: "Kamu membawa sinar matahari hari ini. Orang yang tepat akan tertarik.",
+      returning: "Kamu kembali dengan lebih banyak kebahagiaan. Cahaya itu akan menarik sesuatu yang indah.",
+      mutual: "Koneksi ini punya kebahagiaan tulus di intinya. Itu langka dan berharga — jaga baik-baik.",
+    },
+  },
+  {
+    id: 21,
+    name: "Judgement",
+    emoji: "🎺",
+    keywords: ["renewal", "second chances", "awakening"],
+    loveReading:
+      "Kesempatan kedua dalam cinta — atau kebangkitan baru dari hatimu — sedang datang. Jawab panggilan itu. Jangan biarkan takut membuatmu melewatkan yang ditawarkan padamu.",
+    contextReadings: {
+      beingPicky: "Mungkin seseorang yang kamu lewatkan layak dilihat lagi hari ini. Judgement memintamu mempertimbangkan ulang.",
+      openHearted: "Kamu sadar akan cinta dengan cara yang belum pernah. Kesadaran ini akan mengubah segalanya.",
+      focusedOnOne: "Orang ini mungkin mewakili kesempatan kedua atas sesuatu yang dibutuhkan hatimu.",
+      newUser: "Ini momen kebangkitan cintamu. Semua sebelumnya membawamu ke sini. Sekarang jawab panggilannya.",
+      returning: "Kembalimu adalah jawabanmu pada panggilan. Sekarang total — jangan setengah-setengah.",
+      mutual: "Koneksi mutual ini adalah kebangkitan untuk kalian berdua. Jangan biarkan lewat.",
+    },
+  },
+  {
+    id: 22,
+    name: "The World",
+    emoji: "🌍",
+    keywords: ["completion", "fulfilment", "your person"],
+    loveReading:
+      "Kamu berada di ambang menemukan orangmu — cinta yang lengkap dan memuaskan yang membuat dunia terasa benar. Semua yang kamu lewati membawamu ke momen ini.",
+    contextReadings: {
+      beingPicky: "Perjalananmu panjang dan sepadan. Penyelesaian sudah sangat dekat.",
+      openHearted: "Kamu membuka diri pada seluruh dunia cinta. Dunia akan memberi sesuatu yang lengkap.",
+      focusedOnOne: "Orang ini bisa jadi duniamu. Perasaan itu pantas dieksplorasi.",
+      newUser: "Duniamu dalam cinta dimulai di sini hari ini. Selamat datang di awal segalanya.",
+      returning: "Kamu menuntaskan satu siklus. Sekarang siklus yang lebih baik dimulai — inilah saatnya.",
+      mutual: "Dua orang utuh menemukan satu sama lain. Inilah tujuan perjalanan itu.",
+    },
+  },
+];
+
+export const getTarotCardById = (cardId: number, locale: "en" | "id" = "en"): TarotCardLocalizedExact => {
+  const base = TAROT_CARDS.find((c) => c.id === cardId) || TAROT_CARDS[0];
+  const idCard = TAROT_CARDS_ID.find((c) => c.id === cardId) || TAROT_CARDS_ID[0];
+
+  const idFallback = idCard || base;
+  return {
+    id: base?.id ?? cardId,
+    name: base?.name ?? "",
+    emoji: base?.emoji ?? "",
+    keywords: base?.keywords ?? [],
+    loveReading: {
+      en: base?.loveReading ?? "",
+      id: idFallback?.loveReading ?? base?.loveReading ?? "",
+    },
+    contextReadings: {
+      beingPicky: { en: base?.contextReadings?.beingPicky ?? "", id: idFallback?.contextReadings?.beingPicky ?? base?.contextReadings?.beingPicky ?? "" },
+      openHearted: { en: base?.contextReadings?.openHearted ?? "", id: idFallback?.contextReadings?.openHearted ?? base?.contextReadings?.openHearted ?? "" },
+      focusedOnOne: { en: base?.contextReadings?.focusedOnOne ?? "", id: idFallback?.contextReadings?.focusedOnOne ?? base?.contextReadings?.focusedOnOne ?? "" },
+      newUser: { en: base?.contextReadings?.newUser ?? "", id: idFallback?.contextReadings?.newUser ?? base?.contextReadings?.newUser ?? "" },
+      returning: { en: base?.contextReadings?.returning ?? "", id: idFallback?.contextReadings?.returning ?? base?.contextReadings?.returning ?? "" },
+      mutual: { en: base?.contextReadings?.mutual ?? "", id: idFallback?.contextReadings?.mutual ?? base?.contextReadings?.mutual ?? "" },
+    },
+  };
+};

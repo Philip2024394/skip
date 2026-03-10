@@ -185,20 +185,23 @@ const LikesLibrary = ({
     return items;
   }, [currentList, activePromoIndex, promoPosition, tab]);
 
-  const tarotInsertIndex = useMemo(() => {
-    // Insert after 3 profiles (index 3), but keep within bounds
-    const base = 3;
-    return Math.min(base, displayItems.length);
-  }, [displayItems.length]);
-
   const displayItemsWithTarot = useMemo(() => {
     if (!dailyTarot) return displayItems;
     if (tab !== "new") return displayItems;
     if (displayItems.length < 3) return displayItems;
-    const items = [...displayItems];
-    items.splice(tarotInsertIndex, 0, { type: "promo" as const, profile: null } as any);
+
+    // Insert tarot card after every 4 profiles while scrolling
+    const items: DisplayItem[] = [];
+    let profileCount = 0;
+    for (const it of displayItems) {
+      items.push(it);
+      if (it.type === "profile") profileCount += 1;
+      if (profileCount > 0 && profileCount % 4 === 0) {
+        items.push({ type: "promo" as const, profile: null } as any);
+      }
+    }
     return items;
-  }, [dailyTarot, displayItems, tab, tarotInsertIndex]);
+  }, [dailyTarot, displayItems, tab]);
 
   // ── Swipe/scroll tabs on horizontal drag — header area only ────────────────
   const dragStart = useRef<{ x: number; y: number; tab: Tab } | null>(null);
@@ -461,16 +464,11 @@ const LikesLibrary = ({
             ) : (
               displayItemsWithTarot.map((item, idx) => {
                 // ── Tarot card injection (uses the promo slot shape) ──
-                if (
-                  dailyTarot &&
-                  tab === "new" &&
-                  idx === tarotInsertIndex &&
-                  item.type === "promo"
-                ) {
+                if (dailyTarot && tab === "new" && item.type === "promo") {
                   const isRevealed = tarotRevealed || dailyTarot.shown;
                   return (
                     <motion.button
-                      key={`tarot-${dailyTarot.cardId}-${dailyTarot.shown ? "shown" : "new"}`}
+                      key={`tarot-${dailyTarot.cardId}-${dailyTarot.shown ? "shown" : "new"}-${idx}`}
                       type="button"
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}

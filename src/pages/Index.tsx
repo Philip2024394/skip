@@ -25,6 +25,7 @@ import { isNetworkError } from "@/utils/payments";
 import { hasUnlockBadges } from "@/utils/unlockPrice";
 import { useDevFeatures, isDevBuild } from "@/hooks/useDevFeatures";
 import { getTarotCardById } from "@/data/tarotCards";
+import logoHeart from "@/assets/logo-heart.png";
 import {
   Dialog,
   DialogContent,
@@ -221,7 +222,8 @@ const Index = () => {
   const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
 
-  const DAILY_CARD_KEY = "dailyCard";
+  const DAILY_CARD_KEY = "dailyTarotCard";
+  const SESSION_BEHAVIOR_KEY = "dailyTarotBehavior";
   const [dailyCard, setDailyCard] = useState<{ cardId: number; date: string; shown: boolean } | null>(null);
   const [showTarotPopup, setShowTarotPopup] = useState(false);
   const [tarotPhase, setTarotPhase] = useState<"back" | "flip" | "revealed">("back");
@@ -263,13 +265,7 @@ const Index = () => {
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
-  const getTodayKey = () => {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-  };
+  const getTodayKey = () => new Date().toDateString();
 
   const loadOrCreateDailyCard = useCallback(() => {
     const today = getTodayKey();
@@ -286,7 +282,7 @@ const Index = () => {
       // ignore
     }
 
-    const cardId = Math.floor(Math.random() * 22);
+    const cardId = 1 + Math.floor(Math.random() * 22);
     const next = { cardId, date: today, shown: false };
     try {
       localStorage.setItem(DAILY_CARD_KEY, JSON.stringify(next));
@@ -406,9 +402,25 @@ const Index = () => {
     ctx.textAlign = "center";
     ctx.fillText(dailyTarot.card.name, W / 2, 170);
 
+    // Logo
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error("logo load failed"));
+        i.src = logoHeart;
+      });
+      const size = 92;
+      ctx.globalAlpha = 0.95;
+      ctx.drawImage(img, W / 2 - size / 2, 220, size, size);
+      ctx.globalAlpha = 1;
+    } catch {
+      // ignore
+    }
+
     // Emoji art
     ctx.font = "120px serif";
-    ctx.fillText(dailyTarot.card.image, W / 2, 520);
+    ctx.fillText(dailyTarot.card.emoji, W / 2, 520);
 
     // Reading label
     ctx.fillStyle = "rgba(255,255,255,0.85)";
@@ -445,7 +457,11 @@ const Index = () => {
     ctx.fillText("2DateMe Daily Love Reading", W / 2, 1500);
     ctx.fillStyle = "rgba(255,215,130,0.85)";
     ctx.font = "bold 30px system-ui";
-    ctx.fillText(locale === "en" ? "Get yours free at 2dateme.com" : "Dapatkan gratis di 2dateme.com", W / 2, 1570);
+    ctx.fillText(
+      locale === "en" ? "Get your free daily love reading at 2dateme.com" : "Dapatkan ramalan cinta harian gratis di 2dateme.com",
+      W / 2,
+      1570
+    );
 
     const blob: Blob | null = await new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
     if (!blob) return;
@@ -469,10 +485,46 @@ const Index = () => {
     a.click();
     URL.revokeObjectURL(url);
     const msg = locale === "en"
-      ? `My 2DateMe Daily Love Reading: ${dailyTarot.card.name} ${dailyTarot.card.image}\n\n${dailyTarot.reading}\n\nGet yours free at https://2dateme.com`
-      : `Ramalan Cinta Harian 2DateMe: ${dailyTarot.card.name} ${dailyTarot.card.image}\n\n${dailyTarot.reading}\n\nDapatkan gratis di https://2dateme.com`;
+      ? `My 2DateMe Daily Love Reading: ${dailyTarot.card.name} ${dailyTarot.card.emoji}\n\n${dailyTarot.reading}\n\nGet your free daily love reading at https://2dateme.com`
+      : `Ramalan Cinta Harian 2DateMe: ${dailyTarot.card.name} ${dailyTarot.card.emoji}\n\n${dailyTarot.reading}\n\nDapatkan ramalan cinta harian gratis di https://2dateme.com`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   }, [dailyTarot, locale]);
+
+  // Restore persisted session behavior
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(SESSION_BEHAVIOR_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as any;
+      if (typeof parsed?.liked === "number") sessionStatsRef.current.liked = parsed.liked;
+      if (typeof parsed?.passed === "number") sessionStatsRef.current.passed = parsed.passed;
+      if (typeof parsed?.viewed === "number") sessionStatsRef.current.viewed = parsed.viewed;
+      if (parsed?.viewCountsById && typeof parsed.viewCountsById === "object") sessionStatsRef.current.viewCountsById = parsed.viewCountsById;
+      if (typeof parsed?.focusedOnOne === "boolean") sessionStatsRef.current.focusedOnOne = parsed.focusedOnOne;
+      setSessionTick((v) => v + 1);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const persistSessionBehavior = useCallback(() => {
+    try {
+      sessionStorage.setItem(
+        SESSION_BEHAVIOR_KEY,
+        JSON.stringify({
+          liked: sessionStatsRef.current.liked,
+          passed: sessionStatsRef.current.passed,
+          viewed: sessionStatsRef.current.viewed,
+          viewCountsById: sessionStatsRef.current.viewCountsById,
+          focusedOnOne: sessionStatsRef.current.focusedOnOne,
+          daysSinceLastActive,
+          hasMutual: iLiked.some((p) => likedMe.some((l) => l.id === p.id)),
+        })
+      );
+    } catch {
+      // ignore
+    }
+  }, [daysSinceLastActive, iLiked, likedMe]);
 
   // Ensure daily card exists on mount
   useEffect(() => {
@@ -489,6 +541,7 @@ const Index = () => {
     s.viewCountsById[currentProfileId] = (s.viewCountsById[currentProfileId] || 0) + 1;
     if (s.viewCountsById[currentProfileId] >= 2) s.focusedOnOne = true;
     setSessionTick((v) => v + 1);
+    persistSessionBehavior();
   }, [isProfileRoute, profileRouteId, topProfiles]);
 
   // Trigger popup after 3 minutes if daily card not shown
@@ -1653,6 +1706,7 @@ const Index = () => {
               onPass={(p) => {
                 sessionStatsRef.current.passed += 1;
                 setSessionTick((v) => v + 1);
+                persistSessionBehavior();
                 advanceQueue(p.id);
               }}
             />
@@ -1733,7 +1787,7 @@ const Index = () => {
                   ? {
                       cardId: dailyTarot.card.id,
                       cardName: dailyTarot.card.name,
-                      cardEmoji: dailyTarot.card.image,
+                      cardEmoji: dailyTarot.card.emoji,
                       reading: dailyTarot.reading,
                       shown: dailyTarot.shown,
                     }
@@ -2262,7 +2316,7 @@ const Index = () => {
                       <p className="text-yellow-200 font-black text-[13px] tracking-wide text-center drop-shadow-[0_0_10px_rgba(250,204,21,0.35)]">
                         {dailyTarot?.card.name ?? ""}
                       </p>
-                      <p className="text-6xl mt-3">{dailyTarot?.card.image ?? ""}</p>
+                      <p className="text-6xl mt-3">{dailyTarot?.card.emoji ?? ""}</p>
                       <p className="mt-4 text-white/80 text-[11px] font-black">{locale === "en" ? "Your Reading Today:" : "Ramalan Cintamu Hari Ini:"}</p>
                       <motion.p
                         className="mt-2 text-white/85 text-[12px] leading-relaxed text-center"
@@ -2297,7 +2351,7 @@ const Index = () => {
                     setShowTarotPopup(false);
                   }}
                 >
-                  {locale === "en" ? "Find My Match" : "Cari Jodohku"}
+                  {locale === "en" ? "Find My Match 💕" : "Cari Jodohku 💕"}
                 </Button>
                 <button
                   type="button"
