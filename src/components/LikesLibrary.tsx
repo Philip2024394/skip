@@ -229,6 +229,128 @@ const LikesLibrary = ({
     };
   };
 
+  const generatePremiumReading = (readingType: string, cards: number[]) => {
+    const readings: Record<string, any> = {
+      love_3card: {
+        title: "Your 3 Card Love Reading",
+        intro: "The cards have been drawn with intention and care. Each one carries a message your heart already knows — the cards simply give it words.",
+        cards: [
+          {
+            position: "Your Past in Love",
+            message: "Your past in love has shaped you in ways both beautiful and painful. You have loved deeply — perhaps too deeply at times — and the wounds you carry are not signs of weakness but proof of how fully you are capable of feeling. The experiences behind you were not mistakes. They were lessons delivered by the universe in the only language the heart truly understands — experience. You are not the same person who walked into those past chapters. You are wiser, softer in the right places and stronger where it matters.",
+            advice: "Release what no longer serves you. The love that hurt you was not your destination — it was your education.",
+          },
+          {
+            position: "Your Present Energy",
+            message: "Right now your energy around love is at a turning point. There is something awakening in you — a readiness that was not there before. You may not feel it fully yet, but the universe sees it clearly. You are becoming magnetic. The walls you built for protection are beginning to soften — not because you are becoming careless, but because you are becoming confident enough to let someone in without losing yourself in the process. This present moment is more powerful than you realise.",
+            advice: "Stop waiting to feel completely ready. The right person will not require you to be perfect — they will love you in progress.",
+          },
+          {
+            position: "Your Love Future",
+            message: "What is coming for you in love is something genuinely beautiful — a connection built on mutual respect, real conversation and shared laughter. Not a perfect relationship — but an honest one. One where you are chosen every single day, not just in the beginning. The person coming into your life has been shaped by their own journey, just as you have been shaped by yours. When you meet — and you will meet — there will be a recognition. A feeling of coming home to somewhere you have never been before. Trust this. It is already in motion.",
+            advice: "What is meant for you will not pass you. Stop chasing and start becoming the person your future love needs you to be.",
+          },
+        ],
+        closing: "The cards have spoken — but remember, you are not a passenger in your own love story. Every choice you make, every wall you lower, every moment of genuine connection you allow — these are the actions that bring your future closer. Be patient. Be present. Be open. Your love story is still being written and the best chapters are ahead.",
+        affirmations: [
+          "I am worthy of a love that is easy and real",
+          "I release the past and welcome what is coming",
+          "The right person is finding their way to me right now",
+          "I do not need to chase — I need to be ready to receive",
+          "Good things come to those who remain open and patient",
+        ],
+      },
+      soulmate: {
+        title: "Your Soulmate Reading",
+        intro: "A soulmate is not someone who completes you — they are someone who inspires you to complete yourself. The cards today carry a very specific energy around the person who is meant to find you.",
+        cards: [
+          {
+            position: "Who They Are",
+            message: "Your person carries a quiet strength that is immediately noticeable. They are not loud about who they are — they show you through actions rather than words. There is a warmth to them that feels safe — the kind of person who makes a room feel more comfortable simply by being in it. They have known their own struggles and it has made them compassionate rather than bitter. They are looking for exactly what you are looking for — not perfection, but presence. Not games, but genuine connection. They think about the person they are meant to meet more than they admit.",
+            advice: "Your soulmate is not looking for the most impressive version of you — they are looking for the most authentic version.",
+          },
+          {
+            position: "When They Arrive",
+            message: "Timing in love is not random — it is orchestrated. The universe does not bring two people together until both are ready to receive each other properly. You are closer to that readiness than you think. The energy around your meeting carries a sense of the unexpected — this is not someone you will find by searching in the obvious places. They will arrive in a moment when you are simply being yourself, not performing, not trying. When you have stopped forcing and started flowing — that is when they appear.",
+            advice: "Stop trying to control the timeline. The best love stories always begin with both people having given up on finding each other — and then finding each other anyway.",
+          },
+          {
+            position: "Where You Will Meet",
+            message: "The circumstances of your meeting carry an element of chance that will later feel like destiny. You may already be moving in overlapping circles without knowing it. Digital connection plays a role — an introduction that begins with words and curiosity before it becomes something felt in person. There will be a moment of recognition that you cannot explain logically — a feeling that this person is somehow already familiar. Pay attention to new connections that feel unusually comfortable from the very first moment.",
+            advice: "Stay open to connections that begin simply. The greatest love stories rarely begin dramatically — they begin with curiosity and a conversation.",
+          },
+        ],
+        closing: "Your soulmate is not a fantasy — they are a real person on their own journey right now, being shaped by their own experiences into exactly the right person for you. Trust the process. Trust the timing. Trust yourself enough to believe you deserve what is coming.",
+        affirmations: [
+          "My soulmate is real and they are on their way",
+          "I trust divine timing in my love life",
+          "I am exactly where I need to be right now",
+          "The right connection will feel easy and natural",
+          "What is meant for me will always find me",
+        ],
+      },
+      family_future: {
+        title: "Your Future Family Reading",
+        intro: "Home is not a place — it is a feeling created by the people who choose each other every day. The cards today speak of the beautiful life being built for you.",
+        cards: [
+          {
+            position: "Your Love Foundation",
+            message: "The foundation of your future family begins with the love you build with your partner — and that foundation is strong in your cards. What is coming is not a relationship built on convenience or loneliness, but one built on genuine choice. Two people who see each other clearly — with all their imperfections — and choose each other anyway. This foundation will be built slowly and carefully, with honest conversations and shared values. It will not always be easy, but it will always be worth it. The strength of what you build together will surprise even you.",
+            advice: "A strong family begins with a strong partnership. Invest in your relationship first — everything else grows from that.",
+          },
+          {
+            position: "Your Future Home",
+            message: "The home in your future is filled with warmth, laughter and the beautiful noise of a life well lived. It is not a perfect home — it is a real one. A place where people feel safe to be exactly who they are. There is light in this vision — natural light, open windows, the kind of space that feels alive. Children's energy is present in this reading — whether biological or chosen family — small voices and growing souls that bring a depth of love you cannot yet fully imagine. Your home will be a place people love to visit because of the energy inside it.",
+            advice: "The home you dream of begins with the love you cultivate now. Every loving choice you make today is a brick in the foundation of that future.",
+          },
+          {
+            position: "Your Legacy Together",
+            message: "The love you build will outlast the years you spend building it. Your legacy is not measured in possessions or achievements — it is measured in the people who are better because you loved them. Children who grow up knowing what real love looks like. A partner who becomes their best self because of the safety you gave them. And your own heart — finally at rest in the knowledge that you chose well and were chosen in return. This is not a small life. This is a full and beautiful human life — and it is yours.",
+            advice: "Do not underestimate the power of loving one person deeply and completely. That is one of the most significant things a human being can do.",
+          },
+        ],
+        closing: "The family life in your cards is not guaranteed by fate — it is built by choice. The choice to be vulnerable, to communicate honestly, to stay when it is difficult and to love generously even when you are tired. You are capable of every single one of these choices. The beautiful life you imagine is not out of reach. It is waiting for you to walk toward it.",
+        affirmations: [
+          "I deserve a love that feels like home",
+          "My future family is already being prepared for me",
+          "I am becoming the partner and parent I want to be",
+          "Love and stability are my birthright",
+          "The family I dream of is possible and it is coming",
+        ],
+      },
+      yearly_forecast: {
+        title: "Your 2026 Love Forecast",
+        intro: "2026 carries a powerful energy for love and connection. The cards drawn for your year ahead hold both challenge and extraordinary promise. Read each season with an open heart.",
+        cards: [
+          {
+            position: "First Half of 2026",
+            message: "The first half of 2026 asks you to do the internal work that makes external love possible. There may be moments of impatience — a feeling that things are moving too slowly, that everyone around you seems to be finding their person while you are still waiting. This feeling is the lesson, not the reality. The universe is not ignoring you — it is preparing you. Use this time to become deeply comfortable with who you are. Your standards, your values, your vision for your life. The person coming to you in 2026 will need you to know yourself — because they will love you for exactly who you are, not who you are pretending to be.",
+            advice: "The waiting is not wasted time. It is preparation time. Use it.",
+          },
+          {
+            position: "Second Half of 2026",
+            message: "The energy shifts significantly in the second half of the year. What felt stagnant begins to move. A connection that carries real weight enters your orbit — perhaps someone entirely new, perhaps someone already present who you finally see differently. There is a turning point moment — a conversation, a decision, a single yes — that changes the direction of your love life completely. Do not let fear make that decision for you. The opportunity that arrives in this period is genuine and it deserves your courage. This is not a false start. This is the beginning of something real.",
+            advice: "When the right opportunity arrives, do not talk yourself out of it. Trust the feeling more than the fear.",
+          },
+          {
+            position: "Your Greatest Opportunity",
+            message: "Your greatest opportunity in love this year is not a person — it is a version of yourself. The most powerful thing you can do for your love life in 2026 is to stop shrinking. Stop making yourself smaller to be more palatable. Stop apologising for knowing what you want. The person who is right for you will not be frightened by your wholeness — they will be drawn to it. Your greatest opportunity is to show up as the full, unedited, wonderfully imperfect human being that you actually are — and to trust that this person is exactly who the right one has been waiting for.",
+            advice: "Be so fully yourself that the right person cannot help but find you.",
+          },
+        ],
+        closing: "2026 is a year of genuine movement in your love life. Not all of it will be comfortable — growth rarely is. But the destination is worth every step of the journey. Keep your heart open, your standards high and your faith stronger than your fear. The love you deserve is not a dream. It is a destination — and you are already on your way.",
+        affirmations: [
+          "2026 is my year for real and lasting love",
+          "I show up as my full self and the right person loves me for it",
+          "I release fear and choose love",
+          "Every day I am getting closer to the connection I deserve",
+          "I am patient because I know what is coming is worth waiting for",
+        ],
+      },
+    };
+    return readings[readingType] || readings.love_3card;
+  };
+
   const matches = iLiked.filter((p) => likedMe.some((l) => l.id === p.id));
 
   // Sort new profiles: most recently seen first, cap at 30
