@@ -29,7 +29,7 @@ const TAROT_READER_SEQUENCE: Array<{ src: string; durationMs: number }> = [
   { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_7-removebg-preview.png", durationMs: 2000 },
 ];
 const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
-  1: "https://ik.imagekit.io/7grri5v7d/fool-removebg-preview.png",
+  1: "https://ik.imagekit.io/7grri5v7d/T_1-removebg-preview.png",
   2: "https://ik.imagekit.io/7grri5v7d/Tha_magician-removebg-preview.png",
   3: "https://ik.imagekit.io/7grri5v7d/higher-removebg-preview.png",
   4: "https://ik.imagekit.io/7grri5v7d/empressd-removebg-preview.png",
@@ -548,14 +548,17 @@ const LikesLibrary = ({
                         onRevealDailyTarot?.();
                         setShowTarotDrawer(true);
                       }}
-                      className="flex-shrink-0 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border border-white/10 relative overflow-hidden"
+                      className="flex-shrink-0 cursor-pointer transition-all hover:scale-105 relative overflow-visible bg-transparent border-0"
                       style={{ width: 80, height: 104 }}
                       aria-label="Open your Daily Love Reading"
                     >
+                      <div className="absolute inset-0 -z-10 blur-xl opacity-70">
+                        <div className="w-full h-full rounded-[18px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.55),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
+                      </div>
                       <img
-                        src={TAROT_DRAWER_CARD_URL}
+                        src="https://ik.imagekit.io/7grri5v7d/T_1ddrrr-removebg-preview.png"
                         alt="Tarot card"
-                        className="absolute inset-0 w-full h-full object-contain bg-black"
+                        className="absolute inset-0 w-full h-full object-contain"
                         decoding="async"
                         loading="lazy"
                       />

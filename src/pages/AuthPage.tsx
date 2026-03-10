@@ -320,18 +320,11 @@ const AuthPage = () => {
           {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
         </button>
 
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.15, duration: 0.4 }}
+        <div
           className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-[min(94vw,22rem)] sm:w-[min(92vw,24rem)]"
           style={{ paddingTop: `max(0px, env(safe-area-inset-top, 0px))` }}
         >
           <div className="rounded-3xl bg-yellow-400 p-3 shadow-[0_0_30px_rgba(250,204,21,0.25)] border border-yellow-300/60">
-            <div className="flex items-center justify-center mb-1.5">
-              <AppLogo className="w-14 h-14 object-contain" />
-            </div>
-
             <p className="text-black text-lg font-black text-center leading-tight">Get Started Free</p>
             <p className="text-black/70 text-[11px] font-semibold text-center mt-0.5">
               {getDailyOnlineCount().toLocaleString()} Online Looking For You
@@ -393,7 +386,7 @@ const AuthPage = () => {
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   }
