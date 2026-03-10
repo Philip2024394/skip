@@ -238,7 +238,7 @@ const AuthPage = () => {
             LANDING_BG_URL_VERSION,
             LANDING_BG_URL.includes("imagekit.io") ? { tr: "q-100,fo-auto,w-2160" } : undefined
           )}')`,
-          backgroundSize: "cover",
+          backgroundSize: "auto 100%",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }}
