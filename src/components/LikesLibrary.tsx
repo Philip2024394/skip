@@ -555,12 +555,14 @@ const LikesLibrary = ({
                       <div className="absolute inset-0 -z-10 blur-xl opacity-70">
                         <div className="w-full h-full rounded-[18px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.55),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
                       </div>
-                      <img
+                      <motion.img
                         src="https://ik.imagekit.io/7grri5v7d/T_1ddrrr-removebg-preview.png"
                         alt="Tarot card"
                         className="absolute inset-0 w-full h-full object-contain"
                         decoding="async"
                         loading="lazy"
+                        animate={{ scale: [1, 1.03, 1] }}
+                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
                       />
                     </motion.button>
                   );
@@ -718,7 +720,16 @@ const LikesLibrary = ({
       {/* ── Tab dot indicators removed — swipe tabs with finger ── */}
 
       <Drawer open={showTarotDrawer} onOpenChange={setShowTarotDrawer}>
-        <DrawerContent className="bg-[#050505] text-white border-0 overflow-hidden">
+        <DrawerContent className="relative bg-[#050505] text-white border-0 overflow-hidden">
+          <div className="absolute inset-0 -z-10">
+            <div
+              className="absolute inset-0 bg-center bg-cover"
+              style={{
+                backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
+              }}
+            />
+            <div className="absolute inset-0 bg-black/70" />
+          </div>
           <DrawerHeader className="text-center">
             <DrawerTitle className="text-yellow-200 font-black">
               <span className="inline-flex flex-col items-center justify-center">
