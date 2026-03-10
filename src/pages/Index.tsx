@@ -1444,14 +1444,26 @@ const Index = () => {
           {isProfileRoute ? (
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
-              <div className="relative z-10 h-full w-full px-6 py-6">
-                <div className="h-full w-full rounded-2xl bg-gradient-to-br from-fuchsia-900/25 via-black/35 to-purple-900/25 backdrop-blur-md border-2 border-fuchsia-300/25 ring-1 ring-fuchsia-300/15 shadow-[0_8px_24px_rgba(0,0,0,0.55)] px-5 py-4 flex items-center justify-center">
+              <div
+                className={`relative z-10 h-full w-full ${
+                  aboutMeTab === "received" && selectedUnlockItemKey === "unlock:single"
+                    ? "px-0 py-0"
+                    : "px-6 py-6"
+                }`}
+              >
+                <div
+                  className={`h-full w-full rounded-2xl bg-gradient-to-br from-fuchsia-900/25 via-black/35 to-purple-900/25 backdrop-blur-md border-2 border-fuchsia-300/25 ring-1 ring-fuchsia-300/15 shadow-[0_8px_24px_rgba(0,0,0,0.55)] flex ${
+                    aboutMeTab === "received" && selectedUnlockItemKey === "unlock:single"
+                      ? "p-0 items-stretch justify-stretch rounded-none border-0 ring-0 shadow-none"
+                      : "px-5 py-4 items-center justify-center"
+                  }`}
+                >
                   {aboutMeTab === "received" ? (
                     <div className="h-full w-full flex flex-col">
                       <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Unlock</p>
 
                       {selectedUnlockItemKey === "unlock:single" ? (
-                        <div className="flex-1 w-full relative overflow-hidden rounded-2xl border border-white/10">
+                        <div className="flex-1 w-full relative overflow-hidden rounded-none border-0">
                           <img
                             src="https://ik.imagekit.io/7grri5v7d/match%20unlock.png?v=1"
                             alt=""
@@ -1563,38 +1575,51 @@ const Index = () => {
                     <div className="h-full w-full flex flex-col">
                       <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Date Ideas</p>
                       {(() => {
-                        const places = selectedProfile?.first_date_places || [];
-                        const place = places[selectedDateIdeaIndex];
-                        if (!place) {
+                        const places = (selectedProfile?.first_date_places || []).filter(Boolean).slice(0, 3) as any[];
+                        if (places.length === 0) {
                           return (
                             <div className="flex-1 flex items-center justify-center">
-                              <p className="text-white/50 text-xs">Select a date idea above</p>
+                              <p className="text-white/50 text-xs">No date ideas yet</p>
                             </div>
                           );
                         }
 
-                        const title = place.title || place.idea || "Date idea";
-                        const desc = getDateIdeaDescription(place.idea, place.title);
-                        const url = place.url || "";
-
                         return (
-                          <div className="flex-1 flex flex-col items-center justify-center px-1">
-                            <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
-                              <p className="text-white/85 text-sm font-semibold text-center">{title}</p>
-                              <p className="mt-3 text-white/65 text-xs leading-relaxed text-center">{desc}</p>
+                          <div className="flex-1 w-full pt-3">
+                            <div className="grid grid-cols-3 gap-2 w-full">
+                              {places.map((place, idx) => {
+                                const title = place.title || place.idea || "Date idea";
+                                const desc = getDateIdeaDescription(place.idea, place.title);
+                                const url = place.url || "";
+                                const img = place.image_url || "/placeholder.svg";
 
-                              <div className="mt-4 flex items-center justify-center">
-                                <Button
-                                  type="button"
-                                  onClick={() => {
-                                    if (!url) return;
-                                    window.open(url, "_blank", "noopener,noreferrer");
-                                  }}
-                                  className="bg-fuchsia-500/80 hover:bg-fuchsia-500 text-white"
-                                >
-                                  View place
-                                </Button>
-                              </div>
+                                return (
+                                  <button
+                                    key={`place-${idx}`}
+                                    type="button"
+                                    onClick={() => {
+                                      if (!url) return;
+                                      window.open(url, "_blank", "noopener,noreferrer");
+                                    }}
+                                    className="relative rounded-2xl overflow-hidden border border-white/10 bg-black/30 hover:bg-black/35 transition-colors text-left"
+                                  >
+                                    <div className="relative w-full aspect-[4/5] overflow-hidden">
+                                      <img src={img} alt={title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
+                                    </div>
+
+                                    <div className="p-2">
+                                      <p className="text-white text-[10px] font-black leading-tight line-clamp-2">{title}</p>
+                                      <p className="mt-1 text-white/60 text-[9px] leading-snug line-clamp-3">{desc}</p>
+                                      <div className="mt-2">
+                                        <span className="inline-flex items-center justify-center w-full rounded-xl bg-fuchsia-500/70 hover:bg-fuchsia-500 text-white text-[10px] font-bold py-2">
+                                          View
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         );
@@ -1607,8 +1632,8 @@ const Index = () => {
                       </p>
 
                       {selectedProfileSection === "basic" ? (
-                        <div className="flex-1 flex flex-col items-center justify-center px-1">
-                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                        <div className="flex-1 flex flex-col items-center justify-start px-1 pt-2">
+                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-3">
                             <p className="text-white/70 text-xs leading-relaxed">
                               Age: {selectedProfile?.age ?? ""}
                             </p>
@@ -1627,8 +1652,8 @@ const Index = () => {
                           </div>
                         </div>
                       ) : selectedProfileSection === "lifestyle" ? (
-                        <div className="flex-1 flex flex-col items-center justify-center px-1">
-                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                        <div className="flex-1 flex flex-col items-center justify-start px-1 pt-2">
+                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-3">
                             <p className="text-white/70 text-xs leading-relaxed">
                               Drinking: {(selectedProfile as any)?.drinking || "Not specified"}
                             </p>
@@ -1644,8 +1669,8 @@ const Index = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center px-1">
-                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
+                        <div className="flex-1 flex flex-col items-center justify-start px-1 pt-2">
+                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-3">
                             <div className="flex flex-wrap gap-2 justify-center">
                               {(((selectedProfile as any)?.interests as string[] | null) || (selectedProfile?.languages || []) || [])
                                 .slice(0, 8)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, MessageCircle, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,7 @@ const AuthPage = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [landingPrefix, setLandingPrefix] = useState<string>(COUNTRY_CODES["Indonesia"] || "+62");
@@ -78,14 +79,14 @@ const AuthPage = () => {
   // Also listens for SIGNED_IN event so the header on Index updates immediately
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/home", { replace: true });
+      if (session && location.pathname === "/auth") navigate("/home", { replace: true });
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       // Only redirect on sign-in from the login form — signup is handled in handleRegisterStep
       if (event === "SIGNED_IN" && session && isLogin) navigate("/home", { replace: true });
     });
     return () => subscription.unsubscribe();
-  }, [navigate, isLogin]);
+  }, [navigate, isLogin, location.pathname]);
 
   // Auto-open sign-in tab if ?signin=1 is in URL
   // Auto-open register tab if ?register=1 is in URL

@@ -284,7 +284,7 @@ const LikesLibrary = ({
       <div
         ref={scrollRef}
         className={`flex-1 [&::-webkit-scrollbar]:hidden ${
-          isUnlockTab || isDateIdeasTab || isProfileInfoTab
+          isDateIdeasTab || isProfileInfoTab
             ? "overflow-y-auto overflow-x-hidden"
             : "overflow-x-auto overflow-y-hidden"
         }`}
@@ -292,7 +292,7 @@ const LikesLibrary = ({
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          ...(isUnlockTab || isDateIdeasTab || isProfileInfoTab
+          ...(isDateIdeasTab || isProfileInfoTab
             ? { overscrollBehaviorY: "contain", touchAction: "pan-y" }
             : { overscrollBehaviorX: "contain", touchAction: "pan-x" }),
         }}
@@ -304,7 +304,7 @@ const LikesLibrary = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.18 }}
-            className={(isUnlockTab || isDateIdeasTab || isProfileInfoTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
+            className={(isDateIdeasTab || isProfileInfoTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
             {isProfileInfoTab ? (
               <div className="grid grid-cols-3 gap-2 h-full pb-2">
@@ -338,7 +338,7 @@ const LikesLibrary = ({
               </div>
             ) : isUnlockTab ? (
               <div className="h-full pr-1">
-                <div className="grid grid-cols-2 gap-2 pb-2 place-items-center">
+                <div className="flex gap-2 pb-2 min-w-max">
                   {(
                     [
                       { key: "unlock:single", title: "1 Unlock", price: "$1.99", sub: "Match unlock" },
@@ -348,8 +348,8 @@ const LikesLibrary = ({
                       ...PREMIUM_FEATURES.filter((f) => f.id !== "vip").map((f) => ({
                         key: `feature:${f.id}`,
                         title: `${f.emoji} ${f.name}`,
-                        price: f.price.replace(/\/mo$/, ""),
-                        sub: f.isSubscription ? "/month" : "One-time",
+                        price: f.price,
+                        sub: f.description,
                       })),
                     ]
                   ).map((p, idx) => (
@@ -359,14 +359,13 @@ const LikesLibrary = ({
                       initial={{ opacity: 0, scale: 0.92 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.92 }}
-                      transition={{ delay: Math.min(idx * 0.02, 0.14) }}
+                      transition={{ delay: Math.min(idx * 0.04, 0.12) }}
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         onSelectUnlockItem?.(p.key);
                       }}
-                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative ${selectedUnlockItemKey === p.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
-                      style={{ height: 124, width: 124 }}
+                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative flex-shrink-0 w-[140px] ${selectedUnlockItemKey === p.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
                       aria-label={p.title}
                     >
                       <p className="text-white text-[10px] font-black text-center leading-tight line-clamp-2">{p.title}</p>
