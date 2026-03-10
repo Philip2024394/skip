@@ -674,7 +674,7 @@ const LikesLibrary = ({
       {/* ── Tab dot indicators removed — swipe tabs with finger ── */}
 
       <Drawer open={showTarotDrawer} onOpenChange={setShowTarotDrawer}>
-        <DrawerContent className="bg-black text-white border-white/10">
+        <DrawerContent className="bg-[#050505] text-white border-0 overflow-hidden">
           <DrawerHeader className="text-center">
             <DrawerTitle className="text-yellow-200 font-black">Your Daily Love Reading</DrawerTitle>
             <DrawerDescription className="text-white/60">2DateMe Daily Tarot</DrawerDescription>
@@ -682,10 +682,10 @@ const LikesLibrary = ({
 
           {dailyTarot ? (
             <div className="px-4 pb-2">
-              <div className="mx-auto w-full max-w-md rounded-2xl bg-white/5 border border-white/10 p-4">
-                <div className="flex items-start gap-3">
+              <div className="mx-auto w-full max-w-md">
+                <div className="flex items-start gap-4">
                   {TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId] ? (
-                    <div className="w-14 h-20 rounded-xl bg-black/40 border border-yellow-300/25 overflow-hidden flex-shrink-0">
+                    <div className="w-20 h-28 rounded-2xl bg-black/40 border border-yellow-300/20 overflow-hidden flex-shrink-0">
                       <img
                         src={TAROT_CARD_FRONT_IMAGES[dailyTarot.cardId]}
                         alt={dailyTarot.cardName}
@@ -694,8 +694,8 @@ const LikesLibrary = ({
                       />
                     </div>
                   ) : (
-                    <div className="w-14 h-20 rounded-xl bg-black/40 border border-yellow-300/25 flex items-center justify-center flex-shrink-0">
-                      <span className="text-3xl">{dailyTarot.cardEmoji}</span>
+                    <div className="w-20 h-28 rounded-2xl bg-black/40 border border-yellow-300/20 flex items-center justify-center flex-shrink-0">
+                      <span className="text-4xl">{dailyTarot.cardEmoji}</span>
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -703,11 +703,11 @@ const LikesLibrary = ({
                     <p className="mt-2 text-white/85 text-[13px] leading-relaxed">{dailyTarot.reading}</p>
                   </div>
 
-                  <div className="flex-shrink-0 w-16 sm:w-20">
+                  <div className="flex-shrink-0 w-24 sm:w-28">
                     <img
                       src={TAROT_READER_IMAGE_URL}
                       alt="Tarot reader"
-                      className="w-full h-auto opacity-80 drop-shadow-[0_0_10px_rgba(250,204,21,0.20)] select-none pointer-events-none"
+                      className="w-full h-auto opacity-90 select-none pointer-events-none"
                       loading="lazy"
                     />
                   </div>
