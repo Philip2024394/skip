@@ -3,10 +3,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Unlock, Clock, Sparkles, MapPin, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer";
 import PromoCard from "./PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
+
+const TAROT_CARD_BACK_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png";
 
 // ── Countdown hook ────────────────────────────────────────────────────────────
 const useCountdown = (expiresAt: string | null | undefined) => {
@@ -119,7 +130,7 @@ const LikesLibrary = ({
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
   const [promoPosition, setPromoPosition] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [tarotRevealed, setTarotRevealed] = useState(false);
+  const [showTarotDrawer, setShowTarotDrawer] = useState(false);
 
   const matches = iLiked.filter((p) => likedMe.some((l) => l.id === p.id));
 
@@ -187,6 +198,7 @@ const LikesLibrary = ({
 
   const displayItemsWithTarot = useMemo(() => {
     if (!dailyTarot) return displayItems;
+    if (dailyTarot.shown) return displayItems;
     if (tab !== "new") return displayItems;
     if (displayItems.length < 3) return displayItems;
 
@@ -465,7 +477,6 @@ const LikesLibrary = ({
               displayItemsWithTarot.map((item, idx) => {
                 // ── Tarot card injection (uses the promo slot shape) ──
                 if (dailyTarot && tab === "new" && item.type === "promo") {
-                  const isRevealed = tarotRevealed || dailyTarot.shown;
                   return (
                     <motion.button
                       key={`tarot-${dailyTarot.cardId}-${dailyTarot.shown ? "shown" : "new"}-${idx}`}
@@ -477,34 +488,24 @@ const LikesLibrary = ({
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (!isRevealed) {
-                          setTarotRevealed(true);
-                          onRevealDailyTarot?.();
-                        } else {
-                          // allow re-open by toggling for fun
-                          setTarotRevealed((v) => !v);
-                        }
+                        onRevealDailyTarot?.();
+                        setShowTarotDrawer(true);
                       }}
-                      className="flex-shrink-0 flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.03] border relative w-[150px] bg-gradient-to-br from-[#2b0a45]/80 via-black/70 to-[#120018]/90 border-yellow-300/30 shadow-[0_0_18px_rgba(168,85,247,0.20)]"
-                      style={{ perspective: 800 }}
-                      aria-label="Your Daily Love Reading"
+                      className="flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border border-yellow-300/30 relative"
+                      style={{ width: 80 }}
+                      aria-label="Open your Daily Love Reading"
                     >
-                      <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.16),rgba(0,0,0,0)_60%)]" />
-                      {!isRevealed ? (
-                        <>
-                          <MoonStar className="w-7 h-7 text-yellow-200 drop-shadow-[0_0_12px_rgba(250,204,21,0.35)]" />
-                          <p className="text-white text-[11px] font-black text-center leading-tight">Your Daily Love Reading ✨</p>
-                          <p className="text-white/55 text-[9px] font-semibold text-center">Tap to reveal</p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-yellow-200 text-[10px] font-black text-center tracking-wide">{dailyTarot.cardName}</p>
-                          <p className="text-3xl">{dailyTarot.cardEmoji}</p>
-                          <p className="text-white/80 text-[9px] font-black">Your Reading Today:</p>
-                          <p className="text-white/80 text-[9px] leading-snug text-center line-clamp-6">{dailyTarot.reading}</p>
-                          <p className="absolute bottom-2 text-white/25 text-[8px] font-semibold">2DateMe Daily Love Reading</p>
-                        </>
-                      )}
+                      <div className="relative w-full flex-1 rounded-lg overflow-hidden" style={{ height: 124 }}>
+                        <img
+                          src={TAROT_CARD_BACK_URL}
+                          alt="Tarot card"
+                          className="absolute inset-0 w-full h-full object-contain"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                      </div>
+                      <p className="text-white text-[10px] font-black text-center leading-tight">Daily Tarot</p>
+                      <p className="text-white/55 text-[8px] font-semibold text-center">Tap to open</p>
                     </motion.button>
                   );
                 }
@@ -659,6 +660,39 @@ const LikesLibrary = ({
       </div>
 
       {/* ── Tab dot indicators removed — swipe tabs with finger ── */}
+
+      <Drawer open={showTarotDrawer} onOpenChange={setShowTarotDrawer}>
+        <DrawerContent className="bg-black text-white border-white/10">
+          <DrawerHeader className="text-center">
+            <DrawerTitle className="text-yellow-200 font-black">Your Daily Love Reading</DrawerTitle>
+            <DrawerDescription className="text-white/60">2DateMe Daily Tarot</DrawerDescription>
+          </DrawerHeader>
+
+          {dailyTarot ? (
+            <div className="px-4 pb-2">
+              <div className="mx-auto w-full max-w-md rounded-2xl bg-white/5 border border-white/10 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-14 h-20 rounded-xl bg-black/40 border border-yellow-300/25 flex items-center justify-center flex-shrink-0">
+                    <span className="text-3xl">{dailyTarot.cardEmoji}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-yellow-200 font-black text-sm leading-tight">{dailyTarot.cardName}</p>
+                    <p className="mt-2 text-white/85 text-[13px] leading-relaxed">{dailyTarot.reading}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button className="w-full h-11 rounded-2xl gradient-love text-white border-0 font-black">
+                Close
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
