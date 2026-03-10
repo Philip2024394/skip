@@ -20,6 +20,12 @@ import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 const TAROT_CARD_BACK_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png";
 const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   1: "https://ik.imagekit.io/7grri5v7d/fool-removebg-preview.png",
+  2: "https://ik.imagekit.io/7grri5v7d/Tha_magician-removebg-preview.png",
+  3: "https://ik.imagekit.io/7grri5v7d/higher-removebg-preview.png",
+  4: "https://ik.imagekit.io/7grri5v7d/empressd-removebg-preview.png",
+  5: "https://ik.imagekit.io/7grri5v7d/emperor-removebg-preview.png",
+  6: "https://ik.imagekit.io/7grri5v7d/higherfdsdfsdf-removebg-preview.png",
+  7: "https://ik.imagekit.io/7grri5v7d/higherfdsdfsdfsss-removebg-preview.png",
 };
 
 // ── Countdown hook ────────────────────────────────────────────────────────────
