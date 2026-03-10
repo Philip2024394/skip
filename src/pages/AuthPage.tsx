@@ -63,6 +63,15 @@ const buildLandingBgSrc = (url: string, version: string, extra?: Record<string, 
   return appendQueryParams(url, { v: version, ...(extra || {}) });
 };
 
+const getDailyOnlineCount = () => {
+  const base = 135_692;
+  const key = new Date().toDateString();
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  const delta = (hash % 9000) - 4500; // +/- 4.5k
+  return base + delta;
+};
+
 const AuthPage = () => {
   const { t, locale, toggleLocale } = useLanguage();
   const [isLogin, setIsLogin] = useState(false);
@@ -275,6 +284,37 @@ const AuthPage = () => {
         }}
       >
         <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
+          <AppLogo className="w-10 h-10 object-contain" />
+          <div className="leading-none">
+            <span className="block text-white font-display font-extrabold tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
+              2DateMe
+            </span>
+            <span className="block text-[22px] font-black tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
+              <span className="text-white">Indonesia's </span>
+              <span className="text-yellow-400">Fastest</span>
+              <span className="text-white"> Way To Meet Singles</span>
+            </span>
+            <div className="mt-2 space-y-1.5">
+              {[
+                "Swipe And Match",
+                "Unlock WhatsApp",
+                "Meet Quickly",
+              ].map((label) => (
+                <div key={label} className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shadow-[0_0_14px_rgba(34,197,94,0.35)]">
+                    <span className="text-[12px] leading-none text-black font-black">✓</span>
+                  </span>
+                  <span className="text-white text-[12px] font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Language toggle */}
         <button onClick={toggleLocale} className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">
           {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
@@ -292,7 +332,12 @@ const AuthPage = () => {
               <AppLogo className="w-14 h-14 object-contain" />
             </div>
 
-            <p className="text-black/80 text-xs font-semibold text-center">
+            <p className="text-black text-lg font-black text-center leading-tight">Get Started Free</p>
+            <p className="text-black/70 text-[11px] font-semibold text-center mt-0.5">
+              {getDailyOnlineCount().toLocaleString()} Online Looking For You
+            </p>
+
+            <p className="text-black/80 text-xs font-semibold text-center mt-2">
               Enter WhatsApp to continue
             </p>
 

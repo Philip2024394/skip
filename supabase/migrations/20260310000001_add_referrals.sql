@@ -49,7 +49,8 @@ ALTER TABLE public.referrals ENABLE ROW LEVEL SECURITY;
 -- Basic RLS:
 -- - Referrers can read their own referral rows
 -- - Referred users can read their own referral row
-CREATE POLICY IF NOT EXISTS "Referrers can view their referrals" ON public.referrals
+DROP POLICY IF EXISTS "Referrers can view their referrals" ON public.referrals;
+CREATE POLICY "Referrers can view their referrals" ON public.referrals
   FOR SELECT TO authenticated
   USING (referrer_id = auth.uid() OR referred_id = auth.uid());
 
