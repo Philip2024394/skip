@@ -222,8 +222,9 @@ const Index = () => {
   const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
 
-  const DAILY_CARD_KEY = "dailyTarotCard";
-  const SESSION_BEHAVIOR_KEY = "dailyTarotBehavior";
+  const DAILY_CARD_KEY_BASE = "dailyTarotCard";
+  const DAILY_TAROT_HISTORY_KEY_BASE = "dailyTarotHistory";
+  const SESSION_BEHAVIOR_KEY_BASE = "dailyTarotBehavior";
   const [dailyCard, setDailyCard] = useState<{ cardId: number; date: string; shown: boolean } | null>(null);
   const [showTarotPopup, setShowTarotPopup] = useState(false);
   const [tarotPhase, setTarotPhase] = useState<"back" | "flip" | "revealed">("back");
@@ -267,10 +268,59 @@ const Index = () => {
 
   const getTodayKey = () => new Date().toDateString();
 
+  const getTarotIdentityKey = useCallback(() => {
+    if (user?.id) return `user:${user.id}`;
+    try {
+      const e164 = localStorage.getItem("landing_whatsapp_e164");
+      if (e164) return `wa:${e164}`;
+    } catch {
+      // ignore
+    }
+    return "anon";
+  }, [user?.id]);
+
+  const getDailyCardStorageKey = useCallback(() => {
+    const identity = getTarotIdentityKey();
+    return `${DAILY_CARD_KEY_BASE}:${identity}`;
+  }, [getTarotIdentityKey]);
+
+  const getBehaviorStorageKey = useCallback(() => {
+    const identity = getTarotIdentityKey();
+    return `${SESSION_BEHAVIOR_KEY_BASE}:${identity}`;
+  }, [getTarotIdentityKey]);
+
+  const getHistoryStorageKey = useCallback(() => {
+    const identity = getTarotIdentityKey();
+    return `${DAILY_TAROT_HISTORY_KEY_BASE}:${identity}`;
+  }, [getTarotIdentityKey]);
+
+  const readUsedTarotCards = useCallback((): number[] => {
+    try {
+      const raw = localStorage.getItem(getHistoryStorageKey());
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as unknown;
+      const arr = Array.isArray(parsed) ? parsed : (parsed as any)?.used;
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .map((n) => (typeof n === "number" ? n : parseInt(String(n), 10)))
+        .filter((n) => Number.isFinite(n) && n >= 1 && n <= 22);
+    } catch {
+      return [];
+    }
+  }, [getHistoryStorageKey]);
+
+  const writeUsedTarotCards = useCallback((used: number[]) => {
+    try {
+      localStorage.setItem(getHistoryStorageKey(), JSON.stringify({ used }));
+    } catch {
+      // ignore
+    }
+  }, [getHistoryStorageKey]);
+
   const loadOrCreateDailyCard = useCallback(() => {
     const today = getTodayKey();
     try {
-      const raw = localStorage.getItem(DAILY_CARD_KEY);
+      const raw = localStorage.getItem(getDailyCardStorageKey());
       if (raw) {
         const parsed = JSON.parse(raw) as { cardId: number; date: string; shown: boolean };
         if (parsed?.date === today && typeof parsed.cardId === "number") {
@@ -282,28 +332,38 @@ const Index = () => {
       // ignore
     }
 
-    const cardId = 1 + Math.floor(Math.random() * 22);
+    const used = readUsedTarotCards();
+    const all = Array.from({ length: 22 }, (_, i) => i + 1);
+    const available = all.filter((id) => !used.includes(id));
+    const pool = available.length > 0 ? available : all;
+    const cardId = pool[Math.floor(Math.random() * pool.length)];
+
     const next = { cardId, date: today, shown: false };
     try {
-      localStorage.setItem(DAILY_CARD_KEY, JSON.stringify(next));
+      localStorage.setItem(getDailyCardStorageKey(), JSON.stringify(next));
     } catch {
       // ignore
     }
+
+    // advance history only when we successfully created a new daily card
+    const nextUsed = available.length > 0 ? [...used, cardId] : [cardId];
+    writeUsedTarotCards(nextUsed);
+
     setDailyCard(next);
     return next;
-  }, []);
+  }, [getDailyCardStorageKey, readUsedTarotCards, writeUsedTarotCards]);
 
   const markDailyCardShown = useCallback(() => {
     const current = dailyCard || loadOrCreateDailyCard();
     if (!current || current.shown) return;
     const next = { ...current, shown: true };
     try {
-      localStorage.setItem(DAILY_CARD_KEY, JSON.stringify(next));
+      localStorage.setItem(getDailyCardStorageKey(), JSON.stringify(next));
     } catch {
       // ignore
     }
     setDailyCard(next);
-  }, [dailyCard, loadOrCreateDailyCard]);
+  }, [dailyCard, getDailyCardStorageKey, loadOrCreateDailyCard]);
 
   const computeTarotContext = useCallback(() => {
     const s = sessionStatsRef.current;
@@ -493,24 +553,25 @@ const Index = () => {
   // Restore persisted session behavior
   useEffect(() => {
     try {
-      const raw = sessionStorage.getItem(SESSION_BEHAVIOR_KEY);
+      const raw = sessionStorage.getItem(getBehaviorStorageKey());
       if (!raw) return;
       const parsed = JSON.parse(raw) as any;
       if (typeof parsed?.liked === "number") sessionStatsRef.current.liked = parsed.liked;
       if (typeof parsed?.passed === "number") sessionStatsRef.current.passed = parsed.passed;
       if (typeof parsed?.viewed === "number") sessionStatsRef.current.viewed = parsed.viewed;
-      if (parsed?.viewCountsById && typeof parsed.viewCountsById === "object") sessionStatsRef.current.viewCountsById = parsed.viewCountsById;
+      if (parsed?.viewCountsById && typeof parsed.viewCountsById === "object") {
+        sessionStatsRef.current.viewCountsById = parsed.viewCountsById;
+      }
       if (typeof parsed?.focusedOnOne === "boolean") sessionStatsRef.current.focusedOnOne = parsed.focusedOnOne;
-      setSessionTick((v) => v + 1);
     } catch {
       // ignore
     }
-  }, []);
+  }, [getBehaviorStorageKey]);
 
   const persistSessionBehavior = useCallback(() => {
     try {
       sessionStorage.setItem(
-        SESSION_BEHAVIOR_KEY,
+        getBehaviorStorageKey(),
         JSON.stringify({
           liked: sessionStatsRef.current.liked,
           passed: sessionStatsRef.current.passed,
@@ -524,7 +585,7 @@ const Index = () => {
     } catch {
       // ignore
     }
-  }, [daysSinceLastActive, iLiked, likedMe]);
+  }, [daysSinceLastActive, getBehaviorStorageKey, iLiked, likedMe]);
 
   // Ensure daily card exists on mount
   useEffect(() => {
@@ -553,7 +614,7 @@ const Index = () => {
     const id = window.setTimeout(() => {
       const latest = (() => {
         try {
-          const raw = localStorage.getItem(DAILY_CARD_KEY);
+          const raw = localStorage.getItem(getDailyCardStorageKey());
           return raw ? (JSON.parse(raw) as { cardId: number; date: string; shown: boolean }) : null;
         } catch {
           return null;
@@ -585,7 +646,7 @@ const Index = () => {
     const ms = next.getTime() - now.getTime();
     const id = window.setTimeout(() => {
       try {
-        localStorage.removeItem(DAILY_CARD_KEY);
+        localStorage.removeItem(getDailyCardStorageKey());
       } catch {
         // ignore
       }
