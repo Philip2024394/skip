@@ -1245,6 +1245,537 @@ const LikesLibrary = ({
           </div>
         </>
       )}
+
+      {/* Premium Reading Selection Screen */}
+      {showPremiumReading && !premiumReadingResult && (
+        <>
+          <div
+            onClick={() => setShowPremiumReading(false)}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.85)",
+              zIndex: 999990,
+            }}
+          />
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 999999,
+              background: "linear-gradient(135deg, #0a0015 0%, #1a0533 50%, #0a0015 100%)",
+              display: "flex",
+              flexDirection: "column",
+              overflowY: "auto",
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowPremiumReading(false)}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: "rgba(180,80,180,0.3)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                color: "white",
+                fontSize: 14,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 999999,
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ padding: "48px 20px 32px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <p style={{ fontSize: 40, marginBottom: 8 }}>🔮</p>
+              <h2
+                style={{
+                  color: "#FFD700",
+                  fontSize: 22,
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  marginBottom: 8,
+                  textShadow: "0 0 20px rgba(255,215,0,0.4)",
+                }}
+              >
+                Premium Readings
+              </h2>
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.6)",
+                  fontSize: 13,
+                  textAlign: "center",
+                  marginBottom: 28,
+                  maxWidth: 280,
+                  lineHeight: 1.6,
+                }}
+              >
+                Go deeper than your daily card — receive a full personalised reading crafted for your love journey
+              </p>
+
+              {/* Reading options */}
+              <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+                {PREMIUM_READINGS.map((reading) => (
+                  <button
+                    key={reading.id}
+                    onClick={() => {
+                      setPremiumReadingType(reading.id);
+                      setPremiumReadingLoading(true);
+                      // Pick 3 random card IDs
+                      const allIds = Object.keys(TAROT_CARD_FRONT_IMAGES).map(Number);
+                      const shuffled = allIds.sort(() => Math.random() - 0.5).slice(0, 3);
+                      setSelectedCards(shuffled);
+                      setRevealedCards([]);
+                      // Simulate payment then generate reading
+                      setTimeout(() => {
+                        const result = generatePremiumReading(reading.id, shuffled);
+                        setPremiumReadingResult(result);
+                        setPremiumReadingLoading(false);
+                        // Reveal cards one by one
+                        setTimeout(() => setRevealedCards([0]), 1000);
+                        setTimeout(() => setRevealedCards([0, 1]), 3000);
+                        setTimeout(() => setRevealedCards([0, 1, 2]), 5000);
+                      }, 2000);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      borderRadius: 16,
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,215,0,0.2)",
+                      color: "white",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                    }}
+                  >
+                    <span style={{ fontSize: 32 }}>{reading.emoji}</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: "bold", fontSize: 14, marginBottom: 2 }}>{reading.title}</p>
+                      <p style={{ color: "rgba(255,215,0,0.7)", fontSize: 11, marginBottom: 4 }}>{reading.subtitle}</p>
+                      <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, lineHeight: 1.4 }}>{reading.description}</p>
+                    </div>
+                    <div
+                      style={{
+                        flexShrink: 0,
+                        background: "linear-gradient(135deg, #ff1493, #ff69b4)",
+                        borderRadius: 10,
+                        padding: "6px 10px",
+                        fontSize: 13,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {reading.price}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Loading Screen */}
+      {showPremiumReading && premiumReadingLoading && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999999,
+            background: "linear-gradient(135deg, #0a0015 0%, #1a0533 100%)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+          }}
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            style={{ fontSize: 48 }}
+          >
+            🔮
+          </motion.div>
+          <p style={{ color: "#FFD700", fontSize: 16, fontWeight: "bold" }}>Reading the cards...</p>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, textAlign: "center", maxWidth: 240 }}>
+            The universe is preparing your personal reading
+          </p>
+        </div>
+      )}
+
+      {/* Full Screen Premium Reading Result */}
+      {showPremiumReading && premiumReadingResult && !premiumReadingLoading && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 9999999,
+            background: "linear-gradient(135deg, #0a0015 0%, #1a0533 50%, #0a0015 100%)",
+            overflowY: "auto",
+            color: "white",
+          }}
+        >
+          {/* Background graveyard subtle */}
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              opacity: 0.15,
+              zIndex: 0,
+            }}
+          />
+
+          {/* Close button */}
+          <button
+            onClick={() => {
+              setShowPremiumReading(false);
+              setPremiumReadingResult(null);
+              setPremiumReadingType(null);
+              setSelectedCards([]);
+              setRevealedCards([]);
+            }}
+            style={{
+              position: "fixed",
+              top: 16,
+              right: 16,
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: "rgba(180,80,180,0.3)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: "white",
+              fontSize: 14,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999999,
+            }}
+          >
+            ✕
+          </button>
+
+          {/* Content */}
+          <div style={{ position: "relative", zIndex: 1, padding: "48px 20px 60px" }}>
+            {/* Title */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              style={{ textAlign: "center", marginBottom: 24 }}
+            >
+              <p style={{ fontSize: 36, marginBottom: 8 }}>🔮</p>
+              <h2
+                style={{
+                  color: "#FFD700",
+                  fontSize: 22,
+                  fontWeight: "bold",
+                  textShadow: "0 0 20px rgba(255,215,0,0.4)",
+                  marginBottom: 8,
+                }}
+              >
+                {premiumReadingResult.title}
+              </h2>
+              <p
+                style={{
+                  color: "rgba(255,255,255,0.65)",
+                  fontSize: 13,
+                  lineHeight: 1.7,
+                  maxWidth: 320,
+                  margin: "0 auto",
+                }}
+              >
+                {premiumReadingResult.intro}
+              </p>
+            </motion.div>
+
+            {/* 3 Cards laid out */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                gap: 12,
+                marginBottom: 32,
+              }}
+            >
+              {selectedCards.map((cardId, idx) => (
+                <motion.div
+                  key={idx}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.3, duration: 0.5 }}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}
+                >
+                  <p
+                    style={{
+                      color: "rgba(255,215,0,0.7)",
+                      fontSize: 9,
+                      fontWeight: "bold",
+                      textAlign: "center",
+                      maxWidth: 90,
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {premiumReadingResult.cards[idx]?.position}
+                  </p>
+
+                  <div style={{ position: "relative", width: 90, height: 118 }}>
+                    <AnimatePresence mode="wait">
+                      {!revealedCards.includes(idx) ? (
+                        <motion.img
+                          key="back"
+                          src={TAROT_DRAWER_CARD_URL}
+                          alt="Card back"
+                          exit={{ opacity: 0, rotateY: 90 }}
+                          transition={{ duration: 0.3 }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            position: "absolute",
+                            inset: 0,
+                          }}
+                        />
+                      ) : (
+                        <motion.img
+                          key="front"
+                          src={TAROT_CARD_FRONT_IMAGES[cardId] || TAROT_DRAWER_CARD_URL}
+                          alt="Card front"
+                          initial={{ opacity: 0, rotateY: -90 }}
+                          animate={{ opacity: 1, rotateY: 0 }}
+                          transition={{ duration: 0.5 }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "contain",
+                            position: "absolute",
+                            inset: 0,
+                          }}
+                        />
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Card Readings — reveal one by one */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 28 }}>
+              {premiumReadingResult.cards.map((card: any, idx: number) => (
+                <AnimatePresence key={idx}>
+                  {revealedCards.includes(idx) && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6 }}
+                      style={{
+                        borderRadius: 18,
+                        background: "rgba(255,255,255,0.06)",
+                        border: "1px solid rgba(255,215,0,0.2)",
+                        padding: "18px 16px",
+                      }}
+                    >
+                      {/* Card position label */}
+                      <p
+                        style={{
+                          color: "#FFD700",
+                          fontSize: 11,
+                          fontWeight: "bold",
+                          letterSpacing: "0.08em",
+                          marginBottom: 10,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {card.position}
+                      </p>
+
+                      {/* Reading */}
+                      <p
+                        style={{
+                          color: "rgba(255,255,255,0.88)",
+                          fontSize: 14,
+                          lineHeight: 1.8,
+                          marginBottom: 14,
+                        }}
+                      >
+                        {card.message}
+                      </p>
+
+                      {/* Divider */}
+                      <div
+                        style={{
+                          height: 1,
+                          background:
+                            "linear-gradient(to right, transparent, rgba(255,215,0,0.3), transparent)",
+                          marginBottom: 12,
+                        }}
+                      />
+
+                      {/* Advice */}
+                      <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                        <span style={{ fontSize: 16, flexShrink: 0 }}>✨</span>
+                        <p
+                          style={{
+                            color: "rgba(255,215,0,0.85)",
+                            fontSize: 13,
+                            lineHeight: 1.6,
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {card.advice}
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              ))}
+            </div>
+
+            {/* Closing message — shows after all cards revealed */}
+            <AnimatePresence>
+              {revealedCards.length === 3 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  {/* Closing */}
+                  <div
+                    style={{
+                      borderRadius: 18,
+                      background: "linear-gradient(135deg, rgba(180,80,180,0.15), rgba(255,215,0,0.08))",
+                      border: "1px solid rgba(180,80,180,0.3)",
+                      padding: "18px 16px",
+                      marginBottom: 20,
+                    }}
+                  >
+                    <p style={{ fontSize: 20, textAlign: "center", marginBottom: 10 }}>🌙</p>
+                    <p
+                      style={{
+                        color: "rgba(255,255,255,0.85)",
+                        fontSize: 14,
+                        lineHeight: 1.8,
+                        textAlign: "center",
+                      }}
+                    >
+                      {premiumReadingResult.closing}
+                    </p>
+                  </div>
+
+                  {/* Affirmations */}
+                  <div
+                    style={{
+                      borderRadius: 18,
+                      background: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      padding: "18px 16px",
+                      marginBottom: 24,
+                    }}
+                  >
+                    <p
+                      style={{
+                        color: "#FFD700",
+                        fontSize: 12,
+                        fontWeight: "bold",
+                        textAlign: "center",
+                        marginBottom: 14,
+                        letterSpacing: "0.08em",
+                      }}
+                    >
+                      ✨ YOUR AFFIRMATIONS ✨
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      {premiumReadingResult.affirmations.map((affirmation: string, idx: number) => (
+                        <motion.div
+                          key={idx}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: idx * 0.15 }}
+                          style={{ display: "flex", gap: 10, alignItems: "flex-start" }}
+                        >
+                          <span style={{ color: "#FFD700", fontSize: 12, flexShrink: 0, marginTop: 1 }}>◆</span>
+                          <p
+                            style={{
+                              color: "rgba(255,255,255,0.8)",
+                              fontSize: 13,
+                              lineHeight: 1.5,
+                              fontStyle: "italic",
+                            }}
+                          >
+                            {affirmation}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Share button */}
+                  <button
+                    onClick={() => {
+                      const text = `🔮 I just got my ${premiumReadingResult.title} on 2DateMe!\n\n"${premiumReadingResult.affirmations[0]}"\n\nGet your free daily reading at 2dateme.com ✨`;
+                      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "16px",
+                      borderRadius: 14,
+                      background: "rgba(37,211,102,0.15)",
+                      border: "1px solid rgba(37,211,102,0.4)",
+                      color: "white",
+                      fontSize: 15,
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                      marginBottom: 12,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                    }}
+                  >
+                    💚 Share My Reading on WhatsApp
+                  </button>
+
+                  {/* New reading button */}
+                  <button
+                    onClick={() => {
+                      setPremiumReadingResult(null);
+                      setPremiumReadingType(null);
+                      setSelectedCards([]);
+                      setRevealedCards([]);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      borderRadius: 14,
+                      background: "linear-gradient(135deg, #ff1493, #ff69b4)",
+                      border: "none",
+                      color: "white",
+                      fontSize: 15,
+                      fontWeight: "bold",
+                      cursor: "pointer",
+                    }}
+                  >
+                    🔮 Get Another Reading
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
