@@ -18,6 +18,7 @@ import { isOnline } from "@/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 
 const TAROT_CARD_BACK_URL = "https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png";
+const TAROT_READER_IMAGE_URL = "https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png";
 const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   1: "https://ik.imagekit.io/7grri5v7d/fool-removebg-preview.png",
   2: "https://ik.imagekit.io/7grri5v7d/Tha_magician-removebg-preview.png",
@@ -697,9 +698,18 @@ const LikesLibrary = ({
                       <span className="text-3xl">{dailyTarot.cardEmoji}</span>
                     </div>
                   )}
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-yellow-200 font-black text-sm leading-tight">{dailyTarot.cardName}</p>
                     <p className="mt-2 text-white/85 text-[13px] leading-relaxed">{dailyTarot.reading}</p>
+                  </div>
+
+                  <div className="flex-shrink-0 w-16 sm:w-20">
+                    <img
+                      src={TAROT_READER_IMAGE_URL}
+                      alt="Tarot reader"
+                      className="w-full h-auto opacity-80 drop-shadow-[0_0_10px_rgba(250,204,21,0.20)] select-none pointer-events-none"
+                      loading="lazy"
+                    />
                   </div>
                 </div>
               </div>
