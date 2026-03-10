@@ -24,6 +24,7 @@ import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/lib/con
 import { isNetworkError } from "@/utils/payments";
 import { hasUnlockBadges } from "@/utils/unlockPrice";
 import { useDevFeatures, isDevBuild } from "@/hooks/useDevFeatures";
+import { getTarotCardById } from "@/data/tarotCards";
 import {
   Dialog,
   DialogContent,
@@ -219,6 +220,23 @@ const Index = () => {
   const [superLikesCount, setSuperLikesCount] = useState<number>(0);
   const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
+
+  const DAILY_CARD_KEY = "dailyCard";
+  const [dailyCard, setDailyCard] = useState<{ cardId: number; date: string; shown: boolean } | null>(null);
+  const [showTarotPopup, setShowTarotPopup] = useState(false);
+  const [tarotPhase, setTarotPhase] = useState<"back" | "flip" | "revealed">("back");
+
+  const sessionStatsRef = useRef({
+    viewed: 0,
+    liked: 0,
+    passed: 0,
+    viewCountsById: {} as Record<string, number>,
+    focusedOnOne: false,
+    lastViewedId: null as string | null,
+    sessionStartAt: Date.now(),
+  });
+  const [sessionTick, setSessionTick] = useState(0);
+  const [daysSinceLastActive, setDaysSinceLastActive] = useState<number>(0);
   const [selectedList, setSelectedList] = useState<Profile[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [profileImageIndex, setProfileImageIndex] = useState(0);
@@ -244,6 +262,285 @@ const Index = () => {
 
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
+
+  const getTodayKey = () => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const loadOrCreateDailyCard = useCallback(() => {
+    const today = getTodayKey();
+    try {
+      const raw = localStorage.getItem(DAILY_CARD_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as { cardId: number; date: string; shown: boolean };
+        if (parsed?.date === today && typeof parsed.cardId === "number") {
+          setDailyCard(parsed);
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    const cardId = Math.floor(Math.random() * 22);
+    const next = { cardId, date: today, shown: false };
+    try {
+      localStorage.setItem(DAILY_CARD_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+    setDailyCard(next);
+    return next;
+  }, []);
+
+  const markDailyCardShown = useCallback(() => {
+    const current = dailyCard || loadOrCreateDailyCard();
+    if (!current || current.shown) return;
+    const next = { ...current, shown: true };
+    try {
+      localStorage.setItem(DAILY_CARD_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+    setDailyCard(next);
+  }, [dailyCard, loadOrCreateDailyCard]);
+
+  const computeTarotContext = useCallback(() => {
+    const s = sessionStatsRef.current;
+    const hasMutual = iLiked.some((p) => likedMe.some((l) => l.id === p.id));
+    if (hasMutual) return "mutual" as const;
+    if (s.focusedOnOne) return "focusedOnOne" as const;
+
+    try {
+      const visited = localStorage.getItem("hasVisitedHome");
+      if (!visited) return "newUser" as const;
+    } catch {
+      // ignore
+    }
+
+    if (daysSinceLastActive >= 3) return "returning" as const;
+
+    if (s.viewed >= 8) {
+      const passRate = s.passed / Math.max(1, s.viewed);
+      const likeRate = s.liked / Math.max(1, s.viewed);
+      if (passRate >= 0.75 && likeRate <= 0.1) return "beingPicky" as const;
+      if (likeRate >= 0.35) return "openHearted" as const;
+    }
+
+    // default: lean open-hearted if user is liking
+    if (s.liked >= 3) return "openHearted" as const;
+    return "beingPicky" as const;
+  }, [daysSinceLastActive, iLiked, likedMe]);
+
+  const dailyTarot = useMemo(() => {
+    const dc = dailyCard || loadOrCreateDailyCard();
+    if (!dc) return null;
+    const card = getTarotCardById(dc.cardId);
+    const context = computeTarotContext();
+    const reading = card.contextReadings[context];
+    const localized = locale === "en" ? reading.en : reading.id;
+    return {
+      card,
+      context,
+      reading: localized,
+      shown: dc.shown,
+    };
+  }, [computeTarotContext, dailyCard, loadOrCreateDailyCard, locale]);
+
+  const exportTarotShareImage = useCallback(async () => {
+    if (!dailyTarot) return;
+    const W = 1080;
+    const H = 1920;
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0, "#120018");
+    grad.addColorStop(0.5, "#1b0630");
+    grad.addColorStop(1, "#050006");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Stars
+    for (let i = 0; i < 120; i++) {
+      const x = Math.random() * W;
+      const y = Math.random() * H;
+      const r = Math.random() * 2.2;
+      ctx.fillStyle = `rgba(255,215,100,${0.12 + Math.random() * 0.35})`;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Card frame
+    const pad = 90;
+    const cardX = pad;
+    const cardY = 360;
+    const cardW = W - pad * 2;
+    const cardH = 980;
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.strokeStyle = "rgba(255,215,100,0.55)";
+    ctx.lineWidth = 6;
+    const r = 48;
+    ctx.beginPath();
+    ctx.moveTo(cardX + r, cardY);
+    ctx.arcTo(cardX + cardW, cardY, cardX + cardW, cardY + cardH, r);
+    ctx.arcTo(cardX + cardW, cardY + cardH, cardX, cardY + cardH, r);
+    ctx.arcTo(cardX, cardY + cardH, cardX, cardY, r);
+    ctx.arcTo(cardX, cardY, cardX + cardW, cardY, r);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Title
+    ctx.fillStyle = "rgba(255,215,130,0.95)";
+    ctx.font = "bold 60px serif";
+    ctx.textAlign = "center";
+    ctx.fillText(dailyTarot.card.name, W / 2, 170);
+
+    // Emoji art
+    ctx.font = "120px serif";
+    ctx.fillText(dailyTarot.card.image, W / 2, 520);
+
+    // Reading label
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.font = "bold 34px system-ui";
+    ctx.fillText(locale === "en" ? "Your Reading Today:" : "Ramalan Cintamu Hari Ini:", W / 2, 650);
+
+    // Reading paragraph
+    ctx.fillStyle = "rgba(255,255,255,0.88)";
+    ctx.font = "32px system-ui";
+    ctx.textAlign = "left";
+    const text = dailyTarot.reading;
+    const maxWidth = cardW - 90;
+    const words = text.split(/\s+/);
+    let line = "";
+    let y = 740;
+    const lineHeight = 46;
+    const left = cardX + 45;
+    for (const w of words) {
+      const test = line ? `${line} ${w}` : w;
+      if (ctx.measureText(test).width > maxWidth) {
+        ctx.fillText(line, left, y);
+        line = w;
+        y += lineHeight;
+      } else {
+        line = test;
+      }
+    }
+    if (line) ctx.fillText(line, left, y);
+
+    // Watermark + CTA
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.35)";
+    ctx.font = "26px system-ui";
+    ctx.fillText("2DateMe Daily Love Reading", W / 2, 1500);
+    ctx.fillStyle = "rgba(255,215,130,0.85)";
+    ctx.font = "bold 30px system-ui";
+    ctx.fillText(locale === "en" ? "Get yours free at 2dateme.com" : "Dapatkan gratis di 2dateme.com", W / 2, 1570);
+
+    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob((b) => resolve(b), "image/png"));
+    if (!blob) return;
+
+    const file = new File([blob], "2dateme-daily-love-reading.png", { type: "image/png" });
+    const canShareFiles = typeof navigator !== "undefined" && (navigator as any).canShare?.({ files: [file] });
+    if (typeof navigator !== "undefined" && (navigator as any).share && canShareFiles) {
+      await (navigator as any).share({
+        title: "2DateMe Daily Love Reading",
+        text: locale === "en" ? "My daily love reading on 2DateMe" : "Ramalan cinta harian aku di 2DateMe",
+        files: [file],
+      });
+      return;
+    }
+
+    // Fallback: download + WhatsApp text
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "2dateme-daily-love-reading.png";
+    a.click();
+    URL.revokeObjectURL(url);
+    const msg = locale === "en"
+      ? `My 2DateMe Daily Love Reading: ${dailyTarot.card.name} ${dailyTarot.card.image}\n\n${dailyTarot.reading}\n\nGet yours free at https://2dateme.com`
+      : `Ramalan Cinta Harian 2DateMe: ${dailyTarot.card.name} ${dailyTarot.card.image}\n\n${dailyTarot.reading}\n\nDapatkan gratis di https://2dateme.com`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
+  }, [dailyTarot, locale]);
+
+  // Ensure daily card exists on mount
+  useEffect(() => {
+    loadOrCreateDailyCard();
+  }, [loadOrCreateDailyCard]);
+
+  // Track profile views + repeated views in-session
+  useEffect(() => {
+    const currentProfileId = isProfileRoute ? profileRouteId : topProfiles[0]?.id;
+    if (!currentProfileId) return;
+    const s = sessionStatsRef.current;
+    s.viewed += 1;
+    s.lastViewedId = currentProfileId;
+    s.viewCountsById[currentProfileId] = (s.viewCountsById[currentProfileId] || 0) + 1;
+    if (s.viewCountsById[currentProfileId] >= 2) s.focusedOnOne = true;
+    setSessionTick((v) => v + 1);
+  }, [isProfileRoute, profileRouteId, topProfiles]);
+
+  // Trigger popup after 3 minutes if daily card not shown
+  useEffect(() => {
+    if (loading) return;
+    if (isProfileRoute) return;
+    const dc = dailyCard || loadOrCreateDailyCard();
+    if (!dc || dc.shown) return;
+    const id = window.setTimeout(() => {
+      const latest = (() => {
+        try {
+          const raw = localStorage.getItem(DAILY_CARD_KEY);
+          return raw ? (JSON.parse(raw) as { cardId: number; date: string; shown: boolean }) : null;
+        } catch {
+          return null;
+        }
+      })();
+      if (!latest || latest.shown) return;
+      setShowTarotPopup(true);
+    }, 3 * 60 * 1000);
+    return () => window.clearTimeout(id);
+  }, [dailyCard, isProfileRoute, loadOrCreateDailyCard, loading]);
+
+  // Popup phase choreography
+  useEffect(() => {
+    if (!showTarotPopup) return;
+    setTarotPhase("back");
+    const t1 = window.setTimeout(() => setTarotPhase("flip"), 2000);
+    const t2 = window.setTimeout(() => setTarotPhase("revealed"), 2800);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [showTarotPopup]);
+
+  // Daily reset at midnight
+  useEffect(() => {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(24, 0, 0, 0);
+    const ms = next.getTime() - now.getTime();
+    const id = window.setTimeout(() => {
+      try {
+        localStorage.removeItem(DAILY_CARD_KEY);
+      } catch {
+        // ignore
+      }
+      setDailyCard(null);
+      loadOrCreateDailyCard();
+    }, ms);
+    return () => window.clearTimeout(id);
+  }, [loadOrCreateDailyCard]);
 
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
@@ -437,7 +734,7 @@ const Index = () => {
         // Check rose availability, terms acceptance, and gender
         const { data: myProfile } = await supabase
           .from("profiles")
-          .select("last_rose_at, terms_accepted_at, gender, is_active, name, super_likes_count, referral_code")
+          .select("last_rose_at, terms_accepted_at, gender, is_active, name, super_likes_count, referral_code, last_seen_at")
           .eq("id", session.user.id)
           .single();
         if (myProfile) {
@@ -449,6 +746,16 @@ const Index = () => {
           const nextSuperLikes = (myProfile as any).super_likes_count ?? 0;
           setSuperLikesCount(nextSuperLikes);
           setMyReferralCode((myProfile as any).referral_code ?? null);
+
+          try {
+            const lastSeenAt = (myProfile as any).last_seen_at as string | null;
+            if (lastSeenAt) {
+              const diff = Date.now() - new Date(lastSeenAt).getTime();
+              setDaysSinceLastActive(Math.floor(diff / MS_PER_DAY));
+            }
+          } catch {
+            // ignore
+          }
 
           try {
             const prevBalanceStr = localStorage.getItem(SUPER_LIKES_BALANCE_KEY);
@@ -484,6 +791,12 @@ const Index = () => {
             if (!shown) {
               window.setTimeout(() => setShowReferralPopup(true), 3000);
             }
+          } catch {
+            // ignore
+          }
+
+          try {
+            localStorage.setItem("hasVisitedHome", "true");
           } catch {
             // ignore
           }
@@ -790,6 +1103,8 @@ const Index = () => {
       return;
     }
     if (iLiked.some((p) => p.id === profile.id)) return;
+    sessionStatsRef.current.liked += 1;
+    setSessionTick((v) => v + 1);
     const likedProfile = { ...profile, expires_at: new Date(Date.now() + LIKE_EXPIRY_MS).toISOString() };
     setILiked((prev) => [...prev, likedProfile]);
     upsertLocalLikedProfile(likedProfile);
@@ -817,6 +1132,8 @@ const Index = () => {
       return;
     }
     if (superLikesCount > 0) {
+      sessionStatsRef.current.liked += 1;
+      setSessionTick((v) => v + 1);
       const nextBalance = Math.max(0, superLikesCount - 1);
       setSuperLikesCount(nextBalance);
       try {
@@ -851,6 +1168,8 @@ const Index = () => {
     }
     setRoseAvailable(false);
     setLastRoseAt(new Date().toISOString());
+    sessionStatsRef.current.liked += 1;
+    setSessionTick((v) => v + 1);
     const roseProfile = { ...profile, expires_at: new Date(Date.now() + LIKE_EXPIRY_MS).toISOString(), is_rose: true };
     setILiked((prev) => [...prev, roseProfile]);
     upsertLocalLikedProfile(roseProfile);
@@ -1331,7 +1650,11 @@ const Index = () => {
                 advanceQueue(p.id);
                 if (user) navigate(`/profile/${p.id}`);
               }}
-              onPass={(p) => advanceQueue(p.id)}
+              onPass={(p) => {
+                sessionStatsRef.current.passed += 1;
+                setSessionTick((v) => v + 1);
+                advanceQueue(p.id);
+              }}
             />
           ) : (
             <div className="flex items-center justify-center h-full">
@@ -1405,6 +1728,20 @@ const Index = () => {
               likedMe={likedMe}
               newProfiles={libraryNewProfiles}
               filterCountry={filters.country}
+              dailyTarot={
+                dailyTarot
+                  ? {
+                      cardId: dailyTarot.card.id,
+                      cardName: dailyTarot.card.name,
+                      cardEmoji: dailyTarot.card.image,
+                      reading: dailyTarot.reading,
+                      shown: dailyTarot.shown,
+                    }
+                  : null
+              }
+              onRevealDailyTarot={() => {
+                markDailyCardShown();
+              }}
               receivedHighlightProfileId={(butterflyTarget || superLikeRevealProfile?.id) ?? null}
               heartDropProfileId={heartDropProfileId}
               superLikeGlowProfileId={superLikeGlowProfileId}
@@ -1769,7 +2106,11 @@ const Index = () => {
                 advanceQueue(p.id);
                 if (user) navigate(`/profile/${p.id}`);
               }}
-              onPass={(p) => advanceQueue(p.id)}
+              onPass={(p) => {
+                sessionStatsRef.current.passed += 1;
+                setSessionTick((v) => v + 1);
+                advanceQueue(p.id);
+              }}
             />
           ) : (
             <div className="flex items-center justify-center h-full">
@@ -1838,6 +2179,138 @@ const Index = () => {
             >
               Maybe later
             </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Daily Tarot Popup */}
+      <Dialog
+        open={showTarotPopup}
+        onOpenChange={(open) => {
+          if (!open) setShowTarotPopup(false);
+        }}
+      >
+        <DialogContent className="bg-black/95 backdrop-blur-2xl border border-white/10 text-white w-[95vw] max-w-md mx-auto rounded-3xl overflow-hidden p-0">
+          <div className="relative w-full h-[78vh] min-h-[560px]">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.18),rgba(0,0,0,0)_55%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(168,85,247,0.22),rgba(0,0,0,0)_55%)]" />
+
+            {/* stars */}
+            {[...Array(26)].map((_, i) => (
+              <motion.span
+                key={`star-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: 2 + (i % 3),
+                  height: 2 + (i % 3),
+                  left: `${(i * 37) % 100}%`,
+                  top: `${(i * 29) % 100}%`,
+                  background: "rgba(255,215,130,0.65)",
+                  boxShadow: "0 0 10px rgba(255,215,130,0.35)",
+                }}
+                animate={{ opacity: [0.25, 0.95, 0.35] }}
+                transition={{ duration: 2.2 + (i % 5) * 0.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+            ))}
+
+            <div className="relative z-10 h-full flex flex-col items-center justify-between px-5 pt-6 pb-5">
+              <div className="text-center">
+                <p className="text-white/70 text-xs font-semibold tracking-wide">2DateMe</p>
+                <h2 className="font-display text-xl font-black text-yellow-200">{locale === "en" ? "Your Daily Love Reading" : "Ramalan Cinta Harianmu"}</h2>
+                <p className="text-white/55 text-[11px] mt-1">{locale === "en" ? "A mystical message, personalized for your vibe" : "Pesan mistis, dipersonalisasi sesuai vibemu"}</p>
+              </div>
+
+              {/* Card */}
+              <motion.div
+                initial={{ y: 140, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="w-full flex items-center justify-center"
+              >
+                <div
+                  className="w-[86%] max-w-[320px] aspect-[3/5] rounded-3xl border border-yellow-300/30 bg-gradient-to-br from-[#2b0a45]/85 via-[#120018]/90 to-black/80 shadow-[0_0_24px_rgba(168,85,247,0.25)] relative overflow-hidden"
+                  style={{ perspective: 1200 }}
+                >
+                  <motion.div
+                    className="absolute inset-0"
+                    animate={{ rotateY: tarotPhase === "flip" || tarotPhase === "revealed" ? 180 : 0 }}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
+                    style={{ transformStyle: "preserve-3d" }}
+                  >
+                    {/* back */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ backfaceVisibility: "hidden" }}>
+                      <div className="absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.18),rgba(0,0,0,0)_60%)]" />
+                      <Sparkles className="w-10 h-10 text-yellow-200 drop-shadow-[0_0_14px_rgba(250,204,21,0.5)]" />
+                      <p className="mt-3 text-white/80 text-xs font-black tracking-wide">{locale === "en" ? "Shuffling the universe…" : "Mengocok semesta…"}</p>
+                    </div>
+
+                    {/* front */}
+                    <div
+                      className="absolute inset-0 flex flex-col items-center justify-center px-4"
+                      style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
+                    >
+                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,215,130,0.18),rgba(0,0,0,0)_55%)]" />
+                      <motion.div
+                        className="absolute -inset-16"
+                        animate={{ opacity: tarotPhase === "revealed" ? 1 : 0 }}
+                        transition={{ duration: 0.6 }}
+                        style={{
+                          background:
+                            "radial-gradient(circle at center, rgba(250,204,21,0.18), rgba(168,85,247,0.10) 35%, rgba(0,0,0,0) 65%)",
+                        }}
+                      />
+                      <p className="text-yellow-200 font-black text-[13px] tracking-wide text-center drop-shadow-[0_0_10px_rgba(250,204,21,0.35)]">
+                        {dailyTarot?.card.name ?? ""}
+                      </p>
+                      <p className="text-6xl mt-3">{dailyTarot?.card.image ?? ""}</p>
+                      <p className="mt-4 text-white/80 text-[11px] font-black">{locale === "en" ? "Your Reading Today:" : "Ramalan Cintamu Hari Ini:"}</p>
+                      <motion.p
+                        className="mt-2 text-white/85 text-[12px] leading-relaxed text-center"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: tarotPhase === "revealed" ? 1 : 0, y: tarotPhase === "revealed" ? 0 : 8 }}
+                        transition={{ duration: 0.6, delay: 0.15 }}
+                      >
+                        {dailyTarot?.reading ?? ""}
+                      </motion.p>
+                      <p className="absolute bottom-3 text-white/30 text-[9px] font-semibold">2DateMe Daily Love Reading</p>
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
+
+              <div className="w-full flex flex-col gap-2">
+                <Button
+                  type="button"
+                  className="w-full h-12 rounded-2xl bg-yellow-400 hover:bg-yellow-400/90 text-black font-black"
+                  onClick={async () => {
+                    markDailyCardShown();
+                    await exportTarotShareImage();
+                  }}
+                >
+                  {locale === "en" ? "Share My Reading 💫" : "Bagikan Ramalanku 💫"}
+                </Button>
+                <Button
+                  type="button"
+                  className="w-full h-12 rounded-2xl gradient-love text-white border-0 font-black"
+                  onClick={() => {
+                    markDailyCardShown();
+                    setShowTarotPopup(false);
+                  }}
+                >
+                  {locale === "en" ? "Find My Match" : "Cari Jodohku"}
+                </Button>
+                <button
+                  type="button"
+                  className="w-full text-center text-white/55 text-[11px] font-semibold underline underline-offset-2"
+                  onClick={() => {
+                    markDailyCardShown();
+                    setShowTarotPopup(false);
+                  }}
+                >
+                  {locale === "en" ? "Close" : "Tutup"}
+                </button>
+              </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

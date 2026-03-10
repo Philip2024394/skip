@@ -70,6 +70,14 @@ interface LikesLibraryProps {
   receivedHighlightProfileId?: string | null;  // when set, switch to "Likes Me" and butterfly is flying to this profile
   heartDropProfileId?: string | null;          // when set, show dropped heart on this profile's card (Likes Me tab)
   superLikeGlowProfileId?: string | null;     // when set, show yellow glow on this profile's card (Likes Me tab, first in list)
+  dailyTarot?: {
+    cardId: number;
+    cardName: string;
+    cardEmoji: string;
+    reading: string;
+    shown: boolean;
+  } | null;
+  onRevealDailyTarot?: () => void;
   onUnlock: (profile: Profile) => void;
   onSelectProfile: (profile: Profile, sourceList: Profile[]) => void;
   onPurchaseFeature: (feature: PremiumFeature) => void;
@@ -102,6 +110,8 @@ const LikesLibrary = ({
   selectedDateIdeaIndex,
   onSelectDateIdea,
   iLiked, likedMe, newProfiles, filterCountry,
+  dailyTarot,
+  onRevealDailyTarot,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
 }: LikesLibraryProps) => {
@@ -109,6 +119,7 @@ const LikesLibrary = ({
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
   const [promoPosition, setPromoPosition] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [tarotRevealed, setTarotRevealed] = useState(false);
 
   const matches = iLiked.filter((p) => likedMe.some((l) => l.id === p.id));
 
@@ -173,6 +184,21 @@ const LikesLibrary = ({
     }
     return items;
   }, [currentList, activePromoIndex, promoPosition, tab]);
+
+  const tarotInsertIndex = useMemo(() => {
+    // Insert after 3 profiles (index 3), but keep within bounds
+    const base = 3;
+    return Math.min(base, displayItems.length);
+  }, [displayItems.length]);
+
+  const displayItemsWithTarot = useMemo(() => {
+    if (!dailyTarot) return displayItems;
+    if (tab !== "new") return displayItems;
+    if (displayItems.length < 3) return displayItems;
+    const items = [...displayItems];
+    items.splice(tarotInsertIndex, 0, { type: "promo" as const, profile: null } as any);
+    return items;
+  }, [dailyTarot, displayItems, tab, tarotInsertIndex]);
 
   // ── Swipe/scroll tabs on horizontal drag — header area only ────────────────
   const dragStart = useRef<{ x: number; y: number; tab: Tab } | null>(null);
@@ -428,12 +454,63 @@ const LikesLibrary = ({
                   ) : null}
                 </div>
               )
-            ) : displayItems.length === 0 ? (
+            ) : displayItemsWithTarot.length === 0 ? (
               <div className="flex items-center justify-center flex-1 px-4">
                 <p className="text-white/40 text-xs text-center">{emptyText}</p>
               </div>
             ) : (
-              displayItems.map((item, idx) => {
+              displayItemsWithTarot.map((item, idx) => {
+                // ── Tarot card injection (uses the promo slot shape) ──
+                if (
+                  dailyTarot &&
+                  tab === "new" &&
+                  idx === tarotInsertIndex &&
+                  item.type === "promo"
+                ) {
+                  const isRevealed = tarotRevealed || dailyTarot.shown;
+                  return (
+                    <motion.button
+                      key={`tarot-${dailyTarot.cardId}-${dailyTarot.shown ? "shown" : "new"}`}
+                      type="button"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ delay: Math.min(idx * 0.04, 0.3) }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!isRevealed) {
+                          setTarotRevealed(true);
+                          onRevealDailyTarot?.();
+                        } else {
+                          // allow re-open by toggling for fun
+                          setTarotRevealed((v) => !v);
+                        }
+                      }}
+                      className="flex-shrink-0 flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.03] border relative w-[150px] bg-gradient-to-br from-[#2b0a45]/80 via-black/70 to-[#120018]/90 border-yellow-300/30 shadow-[0_0_18px_rgba(168,85,247,0.20)]"
+                      style={{ perspective: 800 }}
+                      aria-label="Your Daily Love Reading"
+                    >
+                      <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.16),rgba(0,0,0,0)_60%)]" />
+                      {!isRevealed ? (
+                        <>
+                          <MoonStar className="w-7 h-7 text-yellow-200 drop-shadow-[0_0_12px_rgba(250,204,21,0.35)]" />
+                          <p className="text-white text-[11px] font-black text-center leading-tight">Your Daily Love Reading ✨</p>
+                          <p className="text-white/55 text-[9px] font-semibold text-center">Tap to reveal</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-yellow-200 text-[10px] font-black text-center tracking-wide">{dailyTarot.cardName}</p>
+                          <p className="text-3xl">{dailyTarot.cardEmoji}</p>
+                          <p className="text-white/80 text-[9px] font-black">Your Reading Today:</p>
+                          <p className="text-white/80 text-[9px] leading-snug text-center line-clamp-6">{dailyTarot.reading}</p>
+                          <p className="absolute bottom-2 text-white/25 text-[8px] font-semibold">2DateMe Daily Love Reading</p>
+                        </>
+                      )}
+                    </motion.button>
+                  );
+                }
+
                 // ── Promo card ──
                 if (item.type === "promo" && activePromoIndex !== null) {
                   return (
