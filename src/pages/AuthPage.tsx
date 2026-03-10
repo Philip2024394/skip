@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, MessageCircle, Home } from "lucide-react";
@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
+import { supabase } from "@/integrations/supabase/client";
+import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import AppLogo from "@/components/AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { COUNTRIES_WITH_CODES, ALL_COUNTRIES } from "@/data/countries";
@@ -92,12 +93,38 @@ const AuthPage = () => {
   // Auto-open register tab if ?register=1 is in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      try {
+        localStorage.setItem("pending_referral_code", ref);
+      } catch {
+        // ignore
+      }
+    }
     if (params.get("signin") === "1") {
       setShowAuth(true);
       setIsLogin(true);
     } else if (params.get("register") === "1") {
       setShowAuth(true);
       setIsLogin(false);
+    }
+  }, []);
+
+  const processPendingReferral = useCallback(async () => {
+    let code: string | null = null;
+    try {
+      code = localStorage.getItem("pending_referral_code");
+    } catch {
+      code = null;
+    }
+    if (!code) return;
+    try {
+      const { data } = await (supabase as any).rpc("process_referral", { _referral_code: code });
+      if (data?.ok) {
+        try { localStorage.removeItem("pending_referral_code"); } catch { /* ignore */ }
+      }
+    } catch {
+      // ignore
     }
   }, []);
 
@@ -134,6 +161,7 @@ const AuthPage = () => {
     setLoading(false);
     if (error) { toast.error(getLoginErrorMessage(error)); return; }
     toast.success(t("auth.welcomeBack"));
+    await processPendingReferral();
     navigate("/home");
   };
 
@@ -153,6 +181,7 @@ const AuthPage = () => {
       if (signUpData.session) {
         setLoading(false);
         toast.success(t("auth.welcome2DateMe") + " 🎉 " + t("auth.completeProfile"));
+        await processPendingReferral();
         navigate("/dashboard");
         return;
       }
@@ -164,6 +193,7 @@ const AuthPage = () => {
       setLoading(false);
       if (!loginErr && loginData.session) {
         toast.success(t("auth.welcome2DateMe") + " 🎉 " + t("auth.completeProfile"));
+        await processPendingReferral();
         navigate("/dashboard");
       } else {
         toast.success(t("auth.accountCreated"));

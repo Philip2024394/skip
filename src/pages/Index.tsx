@@ -216,6 +216,9 @@ const Index = () => {
   const [showTerms, setShowTerms] = useState(false);
   const [featureLoading, setFeatureLoading] = useState(false);
   const [lastRoseAt, setLastRoseAt] = useState<string | null>(null);
+  const [superLikesCount, setSuperLikesCount] = useState<number>(0);
+  const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
+  const [showReferralPopup, setShowReferralPopup] = useState(false);
   const [selectedList, setSelectedList] = useState<Profile[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [profileImageIndex, setProfileImageIndex] = useState(0);
@@ -238,6 +241,9 @@ const Index = () => {
 
   const POST_LOGIN_LANDING_KEY = "post_login_landing_dismissed";
   const [showPostLoginLanding, setShowPostLoginLanding] = useState(false);
+
+  const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
+  const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
@@ -431,7 +437,7 @@ const Index = () => {
         // Check rose availability, terms acceptance, and gender
         const { data: myProfile } = await supabase
           .from("profiles")
-          .select("last_rose_at, terms_accepted_at, gender, is_active, name")
+          .select("last_rose_at, terms_accepted_at, gender, is_active, name, super_likes_count, referral_code")
           .eq("id", session.user.id)
           .single();
         if (myProfile) {
@@ -440,6 +446,21 @@ const Index = () => {
             setRoseAvailable(daysSince >= ROSE_RESET_DAYS);
             setLastRoseAt(myProfile.last_rose_at);
           }
+          const nextSuperLikes = (myProfile as any).super_likes_count ?? 0;
+          setSuperLikesCount(nextSuperLikes);
+          setMyReferralCode((myProfile as any).referral_code ?? null);
+
+          try {
+            const prevBalanceStr = localStorage.getItem(SUPER_LIKES_BALANCE_KEY);
+            const prevBalance = prevBalanceStr ? parseInt(prevBalanceStr, 10) : 0;
+            if (!Number.isNaN(prevBalance) && nextSuperLikes > prevBalance) {
+              toast.success(`🌟 Super Likes +${nextSuperLikes - prevBalance}!`, { description: "A friend joined — you got rewarded." });
+            }
+            localStorage.setItem(SUPER_LIKES_BALANCE_KEY, String(nextSuperLikes));
+          } catch {
+            // ignore
+          }
+
           if (!(myProfile as any).terms_accepted_at) {
             setShowTerms(true);
           }
@@ -456,6 +477,15 @@ const Index = () => {
             const name = (myProfile as any).name || "friend";
             welcomeBackName.current = name;
             setShowWelcomeBack(true);
+          }
+
+          try {
+            const shown = localStorage.getItem(REFERRAL_POPUP_SHOWN_KEY);
+            if (!shown) {
+              window.setTimeout(() => setShowReferralPopup(true), 3000);
+            }
+          } catch {
+            // ignore
           }
         }
       }
@@ -786,6 +816,35 @@ const Index = () => {
       showGuestPrompt("superlike");
       return;
     }
+    if (superLikesCount > 0) {
+      const nextBalance = Math.max(0, superLikesCount - 1);
+      setSuperLikesCount(nextBalance);
+      try {
+        await (supabase.from("profiles").update as any)({ super_likes_count: nextBalance }).eq("id", user.id);
+      } catch {
+        // ignore
+      }
+
+      try {
+        localStorage.setItem(SUPER_LIKES_BALANCE_KEY, String(nextBalance));
+      } catch {
+        // ignore
+      }
+
+      const roseProfile = { ...profile, expires_at: new Date(Date.now() + LIKE_EXPIRY_MS).toISOString(), is_rose: true };
+      setILiked((prev) => [...prev, roseProfile]);
+      upsertLocalLikedProfile(roseProfile);
+
+      const isMockProfile = profile.id.startsWith("indo-") || profile.id.startsWith("profile-");
+      if (user && !isMockProfile) {
+        await supabase.from("likes").insert({ liker_id: user.id, liked_id: profile.id, is_rose: true });
+      }
+
+      const isMatch = likedMe.some((p) => p.id === profile.id);
+      if (isMatch) setMatchDialog(profile);
+      else toast("❤️ " + t("swipe.roseSent"), { description: `${t("swipe.roseSentTo")} ${profile.name}` });
+      return;
+    }
     if (!roseAvailable) {
       toast.error("🌹 " + t("popup.roseUsed"), { description: t("popup.roseReset") });
       return;
@@ -1023,7 +1082,14 @@ const Index = () => {
           <AppLogo alt={APP_NAME} className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,80,150,0.5)]" />
           <span className="font-display font-bold text-white text-xl tracking-tight leading-none">{APP_NAME}</span>
         </div>
+
         <div className="flex items-center gap-2">
+          {user && (
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/80">
+              <Star className="w-4 h-4 text-yellow-300" />
+              <span className="text-[11px] font-black">{superLikesCount}</span>
+            </div>
+          )}
           {isProfileRoute ? (
             <button
               type="button"
@@ -1714,6 +1780,67 @@ const Index = () => {
       </div>
 
       {/* Profile page is now routed to /profile/:id and clones Home layout */}
+
+      {/* Referral Popup */}
+      <Dialog
+        open={showReferralPopup && !!user}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowReferralPopup(false);
+            try { localStorage.setItem(REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
+          }
+        }}
+      >
+        <DialogContent className="bg-black/90 backdrop-blur-xl border border-white/10 text-white max-w-sm mx-auto rounded-3xl overflow-hidden">
+          <DialogHeader className="text-center">
+            <DialogTitle className="font-display text-center text-white">
+              <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-yellow-400/15 border border-yellow-300/30 flex items-center justify-center shadow-[0_0_18px_rgba(250,204,21,0.18)]">
+                <Star className="w-8 h-8 text-yellow-300" />
+              </div>
+              Get 10 FREE Super Likes!
+            </DialogTitle>
+            <DialogDescription className="text-center text-white/60">
+              Share 2DateMe with a friend on WhatsApp
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-3 space-y-3">
+            <div className="rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
+              <p className="text-white/40 text-[10px] font-semibold">Your link</p>
+              <p className="text-white text-[12px] font-bold break-all">
+                {`https://2dateme.com/?ref=${myReferralCode || ""}`}
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              className="w-full h-12 rounded-2xl bg-green-500 hover:bg-green-500/90 text-white font-black"
+              onClick={() => {
+                const code = myReferralCode || "";
+                const link = `https://2dateme.com/?ref=${code}`;
+                const msg = `Hey! I just joined 2DateMe — Indonesia's dating app where you connect via WhatsApp! 🇮🇩❤️\nJoin me here: ${link}`;
+                const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                try { localStorage.setItem(REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
+                window.open(url, "_blank", "noopener,noreferrer");
+                setShowReferralPopup(false);
+              }}
+            >
+              Share on WhatsApp 💚
+            </Button>
+
+            <button
+              type="button"
+              className="w-full text-center text-white/60 text-[11px] font-semibold underline underline-offset-2"
+              onClick={() => {
+                setShowReferralPopup(false);
+                try { localStorage.setItem(REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
+              }}
+            >
+              Maybe later
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Match Dialog */}
       <Dialog open={!!matchDialog} onOpenChange={() => setMatchDialog(null)}>

@@ -224,7 +224,11 @@ export type Database = {
           looking_for: string
           main_image_pos: string | null
           name: string
+          referral_code: string | null
+          referral_rewards_claimed: boolean
+          referred_by: string | null
           spotlight_until: string | null
+          super_likes_count: number
           terms_accepted_at: string | null
           updated_at: string
           weekend_plans: boolean
@@ -265,7 +269,11 @@ export type Database = {
           looking_for: string
           main_image_pos?: string | null
           name: string
+          referral_code?: string | null
+          referral_rewards_claimed?: boolean
+          referred_by?: string | null
           spotlight_until?: string | null
+          super_likes_count?: number
           terms_accepted_at?: string | null
           updated_at?: string
           weekend_plans?: boolean
@@ -306,7 +314,11 @@ export type Database = {
           looking_for?: string
           main_image_pos?: string | null
           name?: string
+          referral_code?: string | null
+          referral_rewards_claimed?: boolean
+          referred_by?: string | null
           spotlight_until?: string | null
+          super_likes_count?: number
           terms_accepted_at?: string | null
           updated_at?: string
           weekend_plans?: boolean
@@ -316,6 +328,48 @@ export type Database = {
           whatsapp_connections_count?: number
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          id: string
+          referrer_id: string | null
+          referred_id: string | null
+          whatsapp_shared: boolean
+          reward_given: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          referrer_id?: string | null
+          referred_id?: string | null
+          whatsapp_shared?: boolean
+          reward_given?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          referrer_id?: string | null
+          referred_id?: string | null
+          whatsapp_shared?: boolean
+          reward_given?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {
