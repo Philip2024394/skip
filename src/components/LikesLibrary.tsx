@@ -198,6 +198,7 @@ const LikesLibrary = ({
     claimed: boolean;
   } | null>(null);
   const [showMadamZofee, setShowMadamZofee] = useState(false);
+  const [showMadamZofeeParticles, setShowMadamZofeeParticles] = useState(false);
   const [tarotReaderSrc, setTarotReaderSrc] = useState(TAROT_READER_IMAGE_URL);
   const [showDailyTarotFront, setShowDailyTarotFront] = useState(false);
   const tarotSequenceTimeoutsRef = useRef<number[]>([]);
@@ -1753,6 +1754,29 @@ const LikesLibrary = ({
                           boxShadow: "0 0 40px rgba(255,215,0,0.15), inset 0 0 40px rgba(180,80,180,0.1)",
                         }}
                       >
+                        {[...Array(20)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            animate={{ opacity: [0.2, 1, 0.2] }}
+                            transition={{
+                              duration: 1.5 + Math.random() * 2,
+                              repeat: Infinity,
+                              delay: Math.random() * 2,
+                            }}
+                            style={{
+                              position: "absolute",
+                              width: Math.random() * 3 + 1,
+                              height: Math.random() * 3 + 1,
+                              borderRadius: "50%",
+                              background: "#FFD700",
+                              top: `${Math.random() * 100}%`,
+                              left: `${Math.random() * 100}%`,
+                              pointerEvents: "none",
+                              zIndex: 0,
+                            }}
+                          />
+                        ))}
+
                         {/* Gold shimmer top */}
                         <div
                           style={{
@@ -1762,8 +1786,11 @@ const LikesLibrary = ({
                             right: 0,
                             height: 2,
                             background: "linear-gradient(to right, transparent, #FFD700, transparent)",
+                            zIndex: 2,
                           }}
                         />
+
+                        <div style={{ position: "relative", zIndex: 1 }}>
 
                         {/* Candle flicker */}
                         <motion.p
@@ -1773,6 +1800,29 @@ const LikesLibrary = ({
                         >
                           🕯️
                         </motion.p>
+
+                        <div
+                          style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: "50%",
+                            overflow: "hidden",
+                            border: "2px solid rgba(255,215,0,0.6)",
+                            boxShadow: "0 0 20px rgba(255,215,0,0.3)",
+                            margin: "0 auto 12px",
+                            background: "#1a0533",
+                          }}
+                        >
+                          <img
+                            src="https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png"
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              objectPosition: "top",
+                            }}
+                          />
+                        </div>
 
                         {/* Madam Zofee title */}
                         <p
@@ -1860,6 +1910,8 @@ const LikesLibrary = ({
                           <motion.button
                             whileTap={{ scale: 0.97 }}
                             onClick={() => {
+                              setShowMadamZofeeParticles(true);
+                              setTimeout(() => setShowMadamZofeeParticles(false), 800);
                               setMadamZofeeReward((prev) => (prev ? { ...prev, claimed: true } : null));
                               // TODO: connect to onPurchaseFeature or super_likes_count update
                             }}
@@ -1880,6 +1932,31 @@ const LikesLibrary = ({
                           </motion.button>
                         )}
 
+                        {showMadamZofeeParticles &&
+                          [...Array(12)].map((_, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+                              animate={{
+                                opacity: 0,
+                                x: Math.cos((i / 12) * Math.PI * 2) * 80,
+                                y: Math.sin((i / 12) * Math.PI * 2) * 80,
+                                scale: 0,
+                              }}
+                              transition={{ duration: 0.8, ease: "easeOut" }}
+                              style={{
+                                position: "absolute",
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                background: "#FFD700",
+                                top: "50%",
+                                left: "50%",
+                                pointerEvents: "none",
+                              }}
+                            />
+                          ))}
+
                         {/* Claimed state */}
                         {madamZofeeReward.claimed && (
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ textAlign: "center" }}>
@@ -1892,6 +1969,8 @@ const LikesLibrary = ({
                           </motion.div>
                         )}
 
+                        </div>
+
                         {/* Gold shimmer bottom */}
                         <div
                           style={{
@@ -1901,6 +1980,7 @@ const LikesLibrary = ({
                             right: 0,
                             height: 2,
                             background: "linear-gradient(to right, transparent, #FFD700, transparent)",
+                            zIndex: 2,
                           }}
                         />
                       </motion.div>
