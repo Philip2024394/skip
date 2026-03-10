@@ -721,26 +721,15 @@ const LikesLibrary = ({
 
       <Drawer open={showTarotDrawer} onOpenChange={setShowTarotDrawer}>
         <DrawerContent
-          className="relative bg-[#050505] text-white border-0 overflow-hidden"
+          className="relative text-white border-0 overflow-hidden"
           style={{
             position: "relative",
-            zIndex: 10,
+            zIndex: 9999,
             color: "white",
-            backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+            background: "linear-gradient(135deg, #1a0533 0%, #2d1b4e 50%, #1a0533 100%)",
           }}
         >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.8))",
-              zIndex: 1,
-              borderRadius: "inherit",
-            }}
-          />
-          <div style={{ position: "relative", zIndex: 2 }}>
+          <div style={{ position: "relative", zIndex: 9999 }}>
             <DrawerHeader className="text-center">
               <DrawerTitle className="text-yellow-200 font-black">
                 <span className="inline-flex flex-col items-center justify-center">
