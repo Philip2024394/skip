@@ -286,8 +286,8 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               zIndex: 99999,
               borderRadius: "20px 20px 0 0",
               overflow: "hidden",
-              height: "88vh",
-              maxHeight: "88vh",
+              height: "92vh",
+              maxHeight: "92vh",
               display: "flex",
               flexDirection: "column",
               background: "#000000",
@@ -302,7 +302,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 position: "relative",
                 width: "100%",
                 overflow: "hidden",
-                height: "42%",
+                height: 260,
                 flexShrink: 0,
               }}
             >
@@ -634,8 +634,9 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                         style={{
                           position: "relative",
                           width: "100%",
-                          maxWidth: 320,
-                          marginTop: 16,
+                          maxWidth: 300,
+                          marginTop: 8,
+                          flexShrink: 0,
                         }}
                       >
                         {/* Image */}
@@ -645,6 +646,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                           aria-hidden="true"
                           style={{
                             width: "100%",
+                            height: 180,
                             objectFit: "contain",
                             objectPosition: "bottom center",
                             pointerEvents: "none",
@@ -785,10 +787,11 @@ export default function TarotDrawer(props: TarotDrawerProps) {
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  padding: "8px 16px 10px",
+  padding: "8px 16px 24px",
   overflowY: "auto",
   flex: 1,
   minHeight: 0,
+  WebkitOverflowScrolling: "touch",
 }}>
               <p style={{ fontSize: 40, marginBottom: 8 }}>🔮</p>
               <h2
