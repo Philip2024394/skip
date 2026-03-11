@@ -93,27 +93,29 @@
     /* Desktop centering with iPhone-style device frame and background */
     @media (min-width: 429px) {
       box-shadow: 0 0 60px rgba(236, 72, 153, 0.4);
-      border-radius: 44px;
-      border: 14px solid #be185d;
+      border-radius: 31px; /* 44px * 0.7 = 30.8px ≈ 31px */
+      border: 10px solid #be185d; /* 14px * 0.7 = 9.8px ≈ 10px */
       margin: 20px auto;
-      height: calc(100vh - 40px);
-      max-height: calc(100vh - 40px);
-      max-width: 428px;
+      height: calc((100vh - 40px) * 0.7); /* Reduce height by 30% */
+      max-height: calc((100vh - 40px) * 0.7);
+      max-width: 300px; /* 428px * 0.7 = 299.6px ≈ 300px */
       overflow-y: auto;
       background: #000000;
       position: relative;
+      transform: scale(0.7); /* Reduce entire frame by 30% */
+      transform-origin: center center;
       
       /* iPhone-style camera notch */
       &::before {
         content: '';
         position: absolute;
-        top: 12px;
+        top: 8px; /* 12px * 0.7 = 8.4px ≈ 8px */
         left: 50%;
         transform: translateX(-50%);
-        width: 150px;
-        height: 28px;
+        width: 105px; /* 150px * 0.7 = 105px */
+        height: 20px; /* 28px * 0.7 = 19.6px ≈ 20px */
         background: #be185d;
-        border-radius: 0 0 20px 20px;
+        border-radius: 0 0 14px 14px; /* 20px * 0.7 = 14px */
         z-index: 10;
       }
       
@@ -121,54 +123,54 @@
       &::after {
         content: '';
         position: absolute;
-        top: 50px;
-        right: -18px;
-        width: 4px;
-        height: 60px;
+        top: 35px; /* 50px * 0.7 = 35px */
+        right: -13px; /* -18px * 0.7 = -12.6px ≈ -13px */
+        width: 3px; /* 4px * 0.7 = 2.8px ≈ 3px */
+        height: 42px; /* 60px * 0.7 = 42px */
         background: linear-gradient(to bottom, #db2777, #ec4899, #db2777);
-        border-radius: 0 4px 4px 0;
+        border-radius: 0 3px 3px 0; /* 4px * 0.7 = 2.8px ≈ 3px */
         z-index: 11;
       }
     }
     
     @media (min-width: 768px) {
       margin: 30px auto;
-      height: calc(100vh - 60px);
-      max-height: calc(100vh - 60px);
+      height: calc((100vh - 60px) * 0.7); /* Reduce height by 30% */
+      max-height: calc((100vh - 60px) * 0.7);
       box-shadow: 0 0 80px rgba(236, 72, 153, 0.5);
       
       &::before {
-        top: 14px;
-        width: 160px;
-        height: 30px;
+        top: 10px; /* 14px * 0.7 = 9.8px ≈ 10px */
+        width: 112px; /* 160px * 0.7 = 112px */
+        height: 21px; /* 30px * 0.7 = 21px */
         background: #be185d;
       }
       
       &::after {
-        top: 60px;
-        right: -18px;
-        height: 80px;
+        top: 42px; /* 60px * 0.7 = 42px */
+        right: -13px; /* -18px * 0.7 = -12.6px ≈ -13px */
+        height: 56px; /* 80px * 0.7 = 56px */
         background: linear-gradient(to bottom, #db2777, #ec4899, #db2777);
       }
     }
     
     @media (min-width: 1200px) {
       margin: 40px auto;
-      height: calc(100vh - 80px);
-      max-height: calc(100vh - 80px);
+      height: calc((100vh - 80px) * 0.7); /* Reduce height by 30% */
+      max-height: calc((100vh - 80px) * 0.7);
       box-shadow: 0 0 100px rgba(236, 72, 153, 0.6);
       
       &::before {
-        top: 16px;
-        width: 170px;
-        height: 32px;
+        top: 11px; /* 16px * 0.7 = 11.2px ≈ 11px */
+        width: 119px; /* 170px * 0.7 = 119px */
+        height: 22px; /* 32px * 0.7 = 22.4px ≈ 22px */
         background: #be185d;
       }
       
       &::after {
-        top: 70px;
-        right: -18px;
-        height: 100px;
+        top: 49px; /* 70px * 0.7 = 49px */
+        right: -13px; /* -18px * 0.7 = -12.6px ≈ -13px */
+        height: 70px; /* 100px * 0.7 = 70px */
         background: linear-gradient(to bottom, #db2777, #ec4899, #db2777);
       }
     }
@@ -186,20 +188,20 @@
     /* Desktop: fit within iPhone frame */
     @media (min-width: 429px) {
       height: 100%;
-      border-radius: 30px; /* Slightly smaller than body border */
+      border-radius: 21px; /* 30px * 0.7 = 21px */
       overflow: hidden;
       background: white;
-      margin-top: 28px; /* Space for camera notch */
+      margin-top: 20px; /* 28px * 0.7 = 19.6px ≈ 20px */
     }
     
     @media (min-width: 768px) {
-      margin-top: 30px; /* Space for larger camera notch */
-      border-radius: 32px;
+      margin-top: 21px; /* 30px * 0.7 = 21px */
+      border-radius: 22px; /* 32px * 0.7 = 22.4px ≈ 22px */
     }
     
     @media (min-width: 1200px) {
-      margin-top: 32px; /* Space for largest camera notch */
-      border-radius: 34px;
+      margin-top: 22px; /* 32px * 0.7 = 22.4px ≈ 22px */
+      border-radius: 24px; /* 34px * 0.7 = 23.8px ≈ 24px */
     }
   }
 
