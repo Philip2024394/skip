@@ -290,11 +290,28 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               maxHeight: "92vh",
               display: "flex",
               flexDirection: "column",
-              background: "#000000",
+              background: "transparent",
               borderTop: "2px solid rgba(255,105,180,0.55)",
               boxShadow: "0 -4px 40px rgba(255,105,180,0.35)",
             }}
           >
+            {/* Full background image for entire sheet */}
+            <img
+              src={GRAVEYARD_BG}
+              alt=""
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center top",
+                zIndex: 0,
+                pointerEvents: "none",
+              }}
+            />
+
             {/* Hero area — crow flies here */}
             <div
               ref={crowContainerRef}
@@ -304,25 +321,10 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 overflow: "hidden",
                 height: 260,
                 flexShrink: 0,
+                zIndex: 1,
               }}
             >
-              {/* Graveyard background image */}
-              <img
-                src={GRAVEYARD_BG}
-                alt=""
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  objectPosition: "center top",
-                  zIndex: 0,
-                  pointerEvents: "none",
-                }}
-              />
-
+              
               
               {/* Tarot woman — blends into background via mask */}
               <div
