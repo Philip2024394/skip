@@ -663,7 +663,7 @@ const LikesLibrary = ({
                 ))}
               </div>
             ) : isTreatTab ? (
-              <div className="grid grid-cols-2 gap-2 h-full pb-2">
+              <div className="flex gap-2 h-full pb-2">
                 {TREAT_ITEMS.map((item, idx) => (
                   <motion.button
                     key={item.key}
@@ -677,12 +677,12 @@ const LikesLibrary = ({
                       e.stopPropagation();
                       onSelectTreatItem?.(item.key);
                     }}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${
+                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border flex-shrink-0 ${
                       selectedTreatItem === item.key
                         ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20"
                         : "border-white/10"
                     }`}
-                    style={{ height: 124 }}
+                    style={{ height: 124, width: 110 }}
                     aria-label={item.label}
                   >
                     <span style={{ fontSize: 28 }}>{item.emoji}</span>
