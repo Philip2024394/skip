@@ -290,7 +290,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               maxHeight: "88vh",
               display: "flex",
               flexDirection: "column",
-              background: "#080010",
+              background: "#000000",
               borderTop: "2px solid rgba(255,105,180,0.55)",
               boxShadow: "0 -4px 40px rgba(255,105,180,0.35)",
             }}
@@ -334,7 +334,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                     style={{
                       position: "absolute",
                       inset: 0,
-                      background: "rgba(0,0,0,0.45)",
+                      background: "rgba(0,0,0,0.25)",
                       zIndex: 1,
                       pointerEvents: "none",
                     }}
@@ -352,8 +352,8 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   width: 110,
                   height: 110,
                   zIndex: 5,
-                  WebkitMaskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
-                  maskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
+                  maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
                 }}
               >
                 <AnimatePresence mode="wait">
