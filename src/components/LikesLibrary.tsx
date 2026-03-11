@@ -1041,32 +1041,6 @@ const LikesLibrary = ({
               )}
             </AnimatePresence>
 
-          {/* Grave digger — only appears when card text appears, same fade timing */}
-            <AnimatePresence>
-              {showDailyTarotFront && (
-                <motion.img
-                  src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
-                  alt=""
-                  aria-hidden="true"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.4, delay: 0.3 }}
-                  style={{
-                    position: "absolute",
-                    bottom: 0,
-                    left: "50%",
-                    transform: "translateX(-50%) translateY(70px)",
-                    width: "100%",
-                    maxWidth: 420,
-                    objectFit: "contain",
-                    objectPosition: "bottom center",
-                    zIndex: 2,
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
-            </AnimatePresence>
 
             {/* Right side vertical buttons */}
             <div
@@ -1184,7 +1158,7 @@ const LikesLibrary = ({
                 flexDirection: "column",
                 alignItems: "center",
                 padding: "16px 20px 28px",
-                overflowY: "auto",
+                overflow: "hidden",
                 maxHeight: "88vh",
               }}
             >
@@ -1329,6 +1303,29 @@ const LikesLibrary = ({
                     )}
                   </AnimatePresence>
 
+                  {/* Grave digger — in-flow, directly under the card */}
+                  <AnimatePresence>
+                    {showDailyTarotFront && (
+                      <motion.img
+                        src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
+                        alt=""
+                        aria-hidden="true"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.4, delay: 0.3 }}
+                        style={{
+                          width: "100%",
+                          maxWidth: 320,
+                          objectFit: "contain",
+                          objectPosition: "bottom center",
+                          pointerEvents: "none",
+                          marginTop: -20,
+                        }}
+                      />
+                    )}
+                  </AnimatePresence>
+
                   {/* Card info — only shows after card flips */}
                   <AnimatePresence>
                     {showDailyTarotFront && (
@@ -1338,7 +1335,7 @@ const LikesLibrary = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.4, delay: 0.3 }}
                         style={{
-                          marginTop: 146,
+                          marginTop: 166,
                           width: "100%",
                           textAlign: "center",
                         }}
