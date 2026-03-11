@@ -73,7 +73,7 @@ interface ProfileData {
 
 const ProfileEditor = () => {
   const navigate = useNavigate();
-  const [editorStep, setEditorStep] = useState<"photos" | "basics" | "about" | "lifestyle" | "goals" | "datingprefs">("photos");
+  const [editorStep, setEditorStep] = useState<"profile" | "lifestyle" | "goals" | "datingprefs">("profile");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -455,9 +455,7 @@ const ProfileEditor = () => {
       }}>
         <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
           {[
-            { key: "photos", emoji: "📸", label: "Photos" },
-            { key: "basics", emoji: "👤", label: "Basic" },
-            { key: "about", emoji: "✍️", label: "About" },
+            { key: "profile", emoji: "👤", label: "Profile" },
             { key: "lifestyle", emoji: "🌿", label: "Lifestyle" },
             { key: "goals", emoji: "💍", label: "Goals" },
             { key: "datingprefs", emoji: "📍", label: "Prefs" },
@@ -493,7 +491,7 @@ const ProfileEditor = () => {
         </div>
       </div>
 
-      {editorStep === "photos" && (
+      {editorStep === "profile" && (
         <>
           {/* Photo Gallery */}
           <div>
@@ -685,14 +683,9 @@ const ProfileEditor = () => {
               ⚠️ Please add at least 2 photos (1 main + 1 profile) to save
             </p>
           )}
-        </>
-      )}
-
-      {editorStep === "basics" && (
-        <>
 
           {/* Basic Info */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 mt-6">
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">Name</Label>
               <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
@@ -731,9 +724,36 @@ const ProfileEditor = () => {
             </div>
           </div>
 
+          {/* About Section */}
+          <div className="mt-6">
+            <Label className="text-muted-foreground text-xs mb-1 block">Bio</Label>
+            <Textarea
+              value={profile.bio}
+              onChange={(e) => update("bio", sanitizeBio(e.target.value))}
+              rows={3}
+              className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none resize-none"
+              placeholder="About you (no emoji or phone numbers, max 250 characters)"
+            />
+            <p className="text-muted-foreground text-[10px] mt-1 text-right">
+              {profile.bio.length}/{BIO_MAX_LENGTH}
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <Label className="text-muted-foreground text-xs mb-1 block">WhatsApp</Label>
+            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
+          </div>
+
+          {/* Voice Intro */}
+          <VoiceRecorder
+            voiceUrl={profile.voice_intro_url}
+            userId={userId}
+            onSaved={(url) => update("voice_intro_url", url)}
+          />
         </>
       )}
 
+      
       {editorStep === "lifestyle" && (
         <div className="pb-2">
           <BasicInfoEditor
@@ -756,36 +776,7 @@ const ProfileEditor = () => {
         </div>
       )}
 
-      {editorStep === "about" && (
-        <>
-          <div>
-            <Label className="text-muted-foreground text-xs mb-1 block">Bio</Label>
-            <Textarea
-              value={profile.bio}
-              onChange={(e) => update("bio", sanitizeBio(e.target.value))}
-              rows={3}
-              className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none resize-none"
-              placeholder="About you (no emoji or phone numbers, max 250 characters)"
-            />
-            <p className="text-muted-foreground text-[10px] mt-1 text-right">
-              {profile.bio.length}/{BIO_MAX_LENGTH}
-            </p>
-          </div>
-
-          <div>
-            <Label className="text-muted-foreground text-xs mb-1 block">WhatsApp</Label>
-            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
-          </div>
-
-          {/* Voice Intro */}
-          <VoiceRecorder
-            voiceUrl={profile.voice_intro_url}
-            userId={userId}
-            onSaved={(url) => update("voice_intro_url", url)}
-          />
-        </>
-      )}
-
+      
       {editorStep === "datingprefs" && (
         <>
 
@@ -1163,7 +1154,7 @@ const ProfileEditor = () => {
         boxShadow: "0 -4px 20px rgba(236,72,153,0.08)",
       }}>
         {(() => {
-          const steps = ["photos", "basics", "about", "lifestyle", "goals", "datingprefs"];
+          const steps = ["profile", "lifestyle", "goals", "datingprefs"];
           const currentIdx = steps.indexOf(editorStep);
           const isFirst = currentIdx === 0;
           const isLast = currentIdx === steps.length - 1;
