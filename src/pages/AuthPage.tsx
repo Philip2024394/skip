@@ -277,10 +277,10 @@ const AuthPage = () => {
           <div className="flex items-center gap-2.5">
             <AppLogo className="w-28 h-28 object-contain flex-shrink-0" />
             <div className="leading-none">
-              <p className="text-white font-display font-black text-[20px] tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+              <p className="text-white font-display font-black text-base tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
                 2DateMe
               </p>
-              <p className="text-yellow-300 text-[11px] font-bold tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+              <p className="text-yellow-300 text-[9px] font-bold tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
                 Indonesia's Dating App
               </p>
             </div>
