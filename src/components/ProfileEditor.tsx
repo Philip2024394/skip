@@ -73,6 +73,7 @@ interface ProfileData {
 
 const ProfileEditor = () => {
   const navigate = useNavigate();
+  const [editorStep, setEditorStep] = useState<"photos" | "basics" | "about" | "lifestyle" | "goals" | "datingprefs">("photos");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -442,289 +443,357 @@ const ProfileEditor = () => {
 
   return (
     <div className="space-y-4">
-      {/* Photo Gallery */}
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block">
-          Photos (min 2, max 5) — tap image to adjust position
-        </Label>
-        <p className="text-[10px] text-muted-foreground mb-2">⭐ = set as main swipe card image</p>
-        <div className="grid grid-cols-5 gap-2">
-          {Array.from({ length: 5 }).map((_, idx) => {
-            const img = profile.images[idx];
-            const isMain = isMainImage(idx);
-            const isEditing = editingImageIdx === idx;
-            return (
-              <div key={idx} className="flex flex-col items-center gap-1">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className={`aspect-square w-full rounded-xl overflow-hidden relative cursor-pointer group ${
-                    isEditing ? "ring-2 ring-secondary" : isMain ? "ring-2 ring-primary" : "glass"
-                  }`}
-                  onClick={() => {
-                    if (!img) {
-                      setUploadSlot(idx);
-                      fileInputRef.current?.click();
-                    } else {
-                      setEditingImageIdx(isEditing ? null : idx);
-                    }
-                  }}
-                >
-                  {uploadingIdx === idx ? (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                    </div>
-                  ) : img ? (
-                    <>
-                      <div className="absolute inset-0 overflow-hidden">
-                        <img
-                          src={img}
-                          alt={`Photo ${idx + 1}`}
-                          className="absolute w-full h-full object-cover pointer-events-none"
-                          style={{
-                            transform: `scale(${getPos(idx).zoom / 100}) translate(${50 - getPos(idx).x}%, ${50 - getPos(idx).y}%)`,
-                            transformOrigin: "center center",
-                          }}
-                        />
-                      </div>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                      {!isMain && (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setAsMain(idx); }}
-                          className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-muted/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Set as main"
-                        >
-                          <Star className="w-3 h-3 text-secondary" />
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
-                      <Camera className="w-4 h-4" />
-                      <span className="text-[8px] mt-0.5">{idx === 0 ? "Main" : idx === 1 ? "Profile" : "Add"}</span>
-                    </div>
-                  )}
-                </motion.div>
-                {img && (
-                  <span className={`text-[8px] font-medium leading-tight text-center ${isMain ? "text-primary" : "text-muted-foreground"}`}>
-                    {isMain ? "Main" : idx === 0 ? "Profile" : `Photo ${idx + 1}`}
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-      </div>
-
-      {/* Image Position Editor */}
-      {editingImageIdx !== null && profile.images[editingImageIdx] && (
-        <div className="space-y-3 p-3 rounded-xl border border-border bg-muted/30">
-          <div className="flex items-center justify-between">
-            <Label className="text-foreground text-xs font-semibold">
-              {isMainImage(editingImageIdx) ? "📸 Main Image (Swipe Card)" : `📸 ${getImageLabel(editingImageIdx)}`}
-            </Label>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-[10px] px-2 text-muted-foreground"
-              onClick={() => {
-                updateImagePos(editingImageIdx, "x", 50);
-                updateImagePos(editingImageIdx, "y", 50);
-                updateImagePos(editingImageIdx, "zoom", 100);
+      {/* ── Step Navigation ─────────────────────────────────────────── */}
+      <div style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        background: "rgba(8,0,16,0.97)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        padding: "10px 16px 8px",
+        backdropFilter: "blur(12px)",
+      }}>
+        <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
+          {[
+            { key: "photos", emoji: "📸", label: "Photos" },
+            { key: "basics", emoji: "👤", label: "Basic" },
+            { key: "about", emoji: "✍️", label: "About" },
+            { key: "lifestyle", emoji: "🌿", label: "Lifestyle" },
+            { key: "goals", emoji: "💍", label: "Goals" },
+            { key: "datingprefs", emoji: "📍", label: "Prefs" },
+          ].map(({ key, emoji, label }) => (
+            <button
+              key={key}
+              onClick={() => setEditorStep(key as any)}
+              style={{
+                flexShrink: 0,
+                padding: "6px 12px",
+                borderRadius: 999,
+                border: editorStep === key
+                  ? "1px solid rgba(255,105,180,0.8)"
+                  : "1px solid rgba(255,255,255,0.1)",
+                background: editorStep === key
+                  ? "linear-gradient(135deg, rgba(255,105,180,0.3), rgba(139,92,246,0.3))"
+                  : "rgba(255,255,255,0.04)",
+                color: editorStep === key ? "white" : "rgba(255,255,255,0.45)",
+                fontSize: 11,
+                fontWeight: editorStep === key ? 700 : 500,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                transition: "all 0.15s",
               }}
             >
-              Reset
-            </Button>
-          </div>
-
-          {/* Preview frame */}
-          <div className={`relative w-full rounded-2xl overflow-hidden shadow-card ${
-            isMainImage(editingImageIdx) ? "aspect-[4/5] max-h-[70vh]" : "aspect-square max-h-[40vh]"
-          }`}>
-            <div className="absolute inset-0 overflow-hidden">
-              <img
-                src={profile.images[editingImageIdx]}
-                alt="Preview"
-                className="absolute w-full h-full object-cover pointer-events-none"
-                style={{
-                  transform: `scale(${getPos(editingImageIdx).zoom / 100}) translate(${50 - getPos(editingImageIdx).x}%, ${50 - getPos(editingImageIdx).y}%)`,
-                  transformOrigin: "center center",
-                }}
-                draggable={false}
-              />
-            </div>
-            {isMainImage(editingImageIdx) && (
-              <>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
-                <div className="absolute bottom-3 left-3 pointer-events-none">
-                  <p className="font-display font-bold text-lg text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-                    {profile.name}, {profile.age}
-                  </p>
-                  <p className="text-white/80 text-xs flex items-center gap-1 mt-0.5">
-                    <MapPin className="w-3 h-3" /> {profile.city || "Your city"}, {profile.country}
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Sliders */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <MoveHorizontal className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-[10px] text-muted-foreground w-6">L/R</span>
-              <Slider
-                value={[getPos(editingImageIdx).x]}
-                onValueChange={([v]) => updateImagePos(editingImageIdx, "x", v)}
-                min={0}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <MoveVertical className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-[10px] text-muted-foreground w-6">U/D</span>
-              <Slider
-                value={[getPos(editingImageIdx).y]}
-                onValueChange={([v]) => updateImagePos(editingImageIdx, "y", v)}
-                min={0}
-                max={100}
-                step={1}
-                className="flex-1"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <ZoomIn className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-              <span className="text-[10px] text-muted-foreground w-6">Zoom</span>
-              <Slider
-                value={[getPos(editingImageIdx).zoom]}
-                onValueChange={([v]) => updateImagePos(editingImageIdx, "zoom", v)}
-                min={100}
-                max={300}
-                step={5}
-                className="flex-1"
-              />
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full h-8 text-xs"
-            onClick={() => setEditingImageIdx(null)}
-          >
-            Done Positioning
-          </Button>
-        </div>
-      )}
-
-      {/* Validation hint */}
-      {profile.images.length < 2 && (
-        <p className="text-destructive text-[10px] font-medium text-center">
-          ⚠️ Please add at least 2 photos (1 main + 1 profile) to save
-        </p>
-      )}
-
-      {/* Basic Info */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Name</Label>
-          <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="bg-muted border-border h-9 text-sm" />
-        </div>
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Age</Label>
-          <Input type="number" min={18} max={99} value={profile.age} onChange={(e) => update("age", parseInt(e.target.value) || 18)} className="bg-muted border-border h-9 text-sm" />
-        </div>
-      </div>
-
-      {/* Orientation */}
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block">Orientation (optional)</Label>
-        <div className="flex gap-2">
-          {[
-            { value: "", label: "Not specified" },
-            { value: "Straight", label: "Straight" },
-            { value: "Same-Sex", label: "Gay / Lesbian" },
-          ].map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => update("orientation", o.value)}
-              className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
-                profile.orientation === o.value
-                  ? "bg-primary text-primary-foreground border-primary shadow-md"
-                  : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/50"
-              }`}
-            >
-              {o.label}
+              <span>{emoji}</span>
+              <span>{label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Gender</Label>
-          <Select value={profile.gender} onValueChange={(v) => update("gender", v)}>
-            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Looking for</Label>
-          <Select value={profile.looking_for} onValueChange={(v) => update("looking_for", v)}>
-            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>{LOOKING_FOR.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-      </div>
+      {editorStep === "photos" && (
+        <>
+          {/* Photo Gallery */}
+          <div>
+            <Label className="text-muted-foreground text-xs mb-1 block">
+              Photos (min 2, max 5) — tap image to adjust position
+            </Label>
+            <p className="text-[10px] text-muted-foreground mb-2">⭐ = set as main swipe card image</p>
+            <div className="grid grid-cols-5 gap-2">
+              {Array.from({ length: 5 }).map((_, idx) => {
+                const img = profile.images[idx];
+                const isMain = isMainImage(idx);
+                const isEditing = editingImageIdx === idx;
+                return (
+                  <div key={idx} className="flex flex-col items-center gap-1">
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className={`aspect-square w-full rounded-xl overflow-hidden relative cursor-pointer group ${
+                        isEditing ? "ring-2 ring-secondary" : isMain ? "ring-2 ring-primary" : "glass"
+                      }`}
+                      onClick={() => {
+                        if (!img) {
+                          setUploadSlot(idx);
+                          fileInputRef.current?.click();
+                        } else {
+                          setEditingImageIdx(isEditing ? null : idx);
+                        }
+                      }}
+                    >
+                      {uploadingIdx === idx ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                        </div>
+                      ) : img ? (
+                        <>
+                          <div className="absolute inset-0 overflow-hidden">
+                            <img
+                              src={img}
+                              alt={`Photo ${idx + 1}`}
+                              className="absolute w-full h-full object-cover pointer-events-none"
+                              style={{
+                                transform: `scale(${getPos(idx).zoom / 100}) translate(${50 - getPos(idx).x}%, ${50 - getPos(idx).y}%)`,
+                                transformOrigin: "center center",
+                              }}
+                            />
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
+                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                          {!isMain && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setAsMain(idx); }}
+                              className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-muted/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Set as main"
+                            >
+                              <Star className="w-3 h-3 text-secondary" />
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                          <Camera className="w-4 h-4" />
+                          <span className="text-[8px] mt-0.5">{idx === 0 ? "Main" : idx === 1 ? "Profile" : "Add"}</span>
+                        </div>
+                      )}
+                    </motion.div>
+                    {img && (
+                      <span className={`text-[8px] font-medium leading-tight text-center ${isMain ? "text-primary" : "text-muted-foreground"}`}>
+                        {isMain ? "Main" : idx === 0 ? "Profile" : `Photo ${idx + 1}`}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Country</Label>
-          <Input value={profile.country} onChange={(e) => update("country", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+          {/* Image Position Editor */}
+          {editingImageIdx !== null && profile.images[editingImageIdx] && (
+            <div className="space-y-3 p-3 rounded-xl border border-border bg-muted/30">
+              <div className="flex items-center justify-between">
+                <Label className="text-foreground text-xs font-semibold">
+                  {isMainImage(editingImageIdx) ? "📸 Main Image (Swipe Card)" : `📸 ${getImageLabel(editingImageIdx)}`}
+                </Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[10px] px-2 text-muted-foreground"
+                  onClick={() => {
+                    updateImagePos(editingImageIdx, "x", 50);
+                    updateImagePos(editingImageIdx, "y", 50);
+                    updateImagePos(editingImageIdx, "zoom", 100);
+                  }}
+                >
+                  Reset
+                </Button>
+              </div>
+
+              {/* Preview frame */}
+              <div className={`relative w-full rounded-2xl overflow-hidden shadow-card ${
+                isMainImage(editingImageIdx) ? "aspect-[4/5] max-h-[70vh]" : "aspect-square max-h-[40vh]"
+              }`}>
+                <div className="absolute inset-0 overflow-hidden">
+                  <img
+                    src={profile.images[editingImageIdx]}
+                    alt="Preview"
+                    className="absolute w-full h-full object-cover pointer-events-none"
+                    style={{
+                      transform: `scale(${getPos(editingImageIdx).zoom / 100}) translate(${50 - getPos(editingImageIdx).x}%, ${50 - getPos(editingImageIdx).y}%)`,
+                      transformOrigin: "center center",
+                    }}
+                    draggable={false}
+                  />
+                </div>
+                {isMainImage(editingImageIdx) && (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                    <div className="absolute bottom-3 left-3 pointer-events-none">
+                      <p className="font-display font-bold text-lg text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+                        {profile.name}, {profile.age}
+                      </p>
+                      <p className="text-white/80 text-xs flex items-center gap-1 mt-0.5">
+                        <MapPin className="w-3 h-3" /> {profile.city || "Your city"}, {profile.country}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Sliders */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <MoveHorizontal className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  <span className="text-[10px] text-muted-foreground w-6">L/R</span>
+                  <Slider
+                    value={[getPos(editingImageIdx).x]}
+                    onValueChange={([v]) => updateImagePos(editingImageIdx, "x", v)}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <MoveVertical className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  <span className="text-[10px] text-muted-foreground w-6">U/D</span>
+                  <Slider
+                    value={[getPos(editingImageIdx).y]}
+                    onValueChange={([v]) => updateImagePos(editingImageIdx, "y", v)}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <ZoomIn className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                  <span className="text-[10px] text-muted-foreground w-6">Zoom</span>
+                  <Slider
+                    value={[getPos(editingImageIdx).zoom]}
+                    onValueChange={([v]) => updateImagePos(editingImageIdx, "zoom", v)}
+                    min={100}
+                    max={300}
+                    step={5}
+                    className="flex-1"
+                  />
+                </div>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-8 text-xs"
+                onClick={() => setEditingImageIdx(null)}
+              >
+                Done Positioning
+              </Button>
+            </div>
+          )}
+
+          {/* Validation hint */}
+          {profile.images.length < 2 && (
+            <p className="text-destructive text-[10px] font-medium text-center">
+              ⚠️ Please add at least 2 photos (1 main + 1 profile) to save
+            </p>
+          )}
+        </>
+      )}
+
+      {editorStep === "basics" && (
+        <>
+
+          {/* Basic Info */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-muted-foreground text-xs mb-1 block">Name</Label>
+              <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+            </div>
+            <div>
+              <Label className="text-muted-foreground text-xs mb-1 block">Age</Label>
+              <Input type="number" min={18} max={99} value={profile.age} onChange={(e) => update("age", parseInt(e.target.value) || 18)} className="bg-muted border-border h-9 text-sm" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-muted-foreground text-xs mb-1 block">Gender</Label>
+              <Select value={profile.gender} onValueChange={(v) => update("gender", v)}>
+                <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-muted-foreground text-xs mb-1 block">Looking for</Label>
+              <Select value={profile.looking_for} onValueChange={(v) => update("looking_for", v)}>
+                <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>{LOOKING_FOR.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-muted-foreground text-xs mb-1 block">Country</Label>
+              <Input value={profile.country} onChange={(e) => update("country", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+            </div>
+            <div>
+              <Label className="text-muted-foreground text-xs mb-1 block">City</Label>
+              <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+            </div>
+          </div>
+
+        </>
+      )}
+
+      {editorStep === "lifestyle" && (
+        <div className="pb-2">
+          <BasicInfoEditor
+            value={profile.basic_info as any}
+            onChange={(v) => update("basic_info", v)}
+          />
+          <LifestyleEditor
+            value={profile.lifestyle_info as any}
+            onChange={(v) => update("lifestyle_info", v)}
+          />
         </div>
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">City</Label>
-          <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+      )}
+
+      {editorStep === "goals" && (
+        <div className="pb-2">
+          <RelationshipGoalsEditor
+            value={profile.relationship_goals as any}
+            onChange={(v) => update("relationship_goals", v)}
+          />
         </div>
-      </div>
+      )}
 
-      {/* Profile Info Sections */}
-      <div className="pb-2">
-        <BasicInfoEditor
-          value={profile.basic_info as any}
-          onChange={(v) => update("basic_info", v)}
-        />
-        <LifestyleEditor
-          value={profile.lifestyle_info as any}
-          onChange={(v) => update("lifestyle_info", v)}
-        />
-        <RelationshipGoalsEditor
-          value={profile.relationship_goals as any}
-          onChange={(v) => update("relationship_goals", v)}
-        />
-      </div>
+      {editorStep === "about" && (
+        <>
+          <div>
+            <Label className="text-muted-foreground text-xs mb-1 block">Bio</Label>
+            <Textarea
+              value={profile.bio}
+              onChange={(e) => update("bio", sanitizeBio(e.target.value))}
+              rows={3}
+              className="bg-muted border-border text-sm resize-none"
+              placeholder="About you (no emoji or phone numbers, max 250 characters)"
+            />
+            <p className="text-muted-foreground text-[10px] mt-1 text-right">
+              {profile.bio.length}/{BIO_MAX_LENGTH}
+            </p>
+          </div>
 
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block">WhatsApp</Label>
-        <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="bg-muted border-border h-9 text-sm" />
-      </div>
+          <div>
+            <Label className="text-muted-foreground text-xs mb-1 block">WhatsApp</Label>
+            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+          </div>
 
-      {/* Languages */}
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block flex items-center gap-1">
-          <Languages className="w-3 h-3" /> Languages I Speak
-        </Label>
-        <div className="space-y-2">
+          {/* Voice Intro */}
+          <VoiceRecorder
+            voiceUrl={profile.voice_intro_url}
+            userId={userId}
+            onSaved={(url) => update("voice_intro_url", url)}
+          />
+        </>
+      )}
+
+      {editorStep === "datingprefs" && (
+        <>
+
+          {/* Languages */}
+          <div>
+            <Label className="text-muted-foreground text-xs mb-1 block flex items-center gap-1">
+              <Languages className="w-3 h-3" /> Languages I Speak
+            </Label>
+            <div className="space-y-2">
           {/* Native language (auto from country) */}
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 border border-border">
             <span className="text-sm text-foreground flex-1 flex items-center gap-2">
@@ -778,27 +847,38 @@ const ProfileEditor = () => {
               </SelectContent>
             </Select>
           )}
-        </div>
-      </div>
+            </div>
+          </div>
 
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block">Bio</Label>
-        <Textarea
-          value={profile.bio}
-          onChange={(e) => update("bio", sanitizeBio(e.target.value))}
-          rows={3}
-          className="bg-muted border-border text-sm resize-none"
-          placeholder="About you (no emoji or phone numbers, max 250 characters)"
-        />
-        <p className="text-muted-foreground text-[10px] mt-1 text-right">
-          {profile.bio.length}/{BIO_MAX_LENGTH}
-        </p>
-      </div>
+          {/* Orientation */}
+          <div>
+            <Label className="text-muted-foreground text-xs mb-1 block">Orientation (optional)</Label>
+            <div className="flex gap-2">
+          {[
+            { value: "", label: "Not specified" },
+            { value: "Straight", label: "Straight" },
+            { value: "Same-Sex", label: "Gay / Lesbian" },
+          ].map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => update("orientation", o.value)}
+              className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
+                profile.orientation === o.value
+                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                  : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/50"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+            </div>
+          </div>
 
-      {/* Location */}
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block">Map Location</Label>
-        <Button
+          {/* Location */}
+          <div>
+            <Label className="text-muted-foreground text-xs mb-1 block">Map Location</Label>
+            <Button
           variant="outline"
           onClick={handleSetLocation}
           disabled={locating}
@@ -817,27 +897,27 @@ const ProfileEditor = () => {
             📍 Approx: {profile.latitude.toFixed(2)}°, {profile.longitude?.toFixed(2)}°
           </p>
         )}
-      </div>
+          </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground text-xs font-semibold">Badges</p>
-        <button
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-xs font-semibold">Badges</p>
+            <button
           type="button"
           onClick={() => setShowBadgesHelp(true)}
           className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
         >
           <HelpCircle className="w-4 h-4" /> Help
-        </button>
-      </div>
+            </button>
+          </div>
 
-      <Dialog open={showBadgesHelp} onOpenChange={setShowBadgesHelp}>
-        <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-sm rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-gray-900">Badge meanings</DialogTitle>
-            <DialogDescription className="text-gray-500">
-              You can select 1 badge at a time (or none). Badges help others understand your vibe.
-            </DialogDescription>
-          </DialogHeader>
+          <Dialog open={showBadgesHelp} onOpenChange={setShowBadgesHelp}>
+            <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-sm rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-gray-900">Badge meanings</DialogTitle>
+                <DialogDescription className="text-gray-500">
+                  You can select 1 badge at a time (or none). Badges help others understand your vibe.
+                </DialogDescription>
+              </DialogHeader>
 
           <div className="space-y-3 text-sm">
             <div>
@@ -865,8 +945,8 @@ const ProfileEditor = () => {
               <p className="text-gray-600 text-xs mt-0.5">Prefer calm, positive, and respectful connections.</p>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+            </DialogContent>
+          </Dialog>
 
       {/* Free Tonight */}
       <div className="glass rounded-xl p-3 space-y-2">
@@ -1067,12 +1147,8 @@ const ProfileEditor = () => {
         onChange={(places) => update("first_date_places", places)}
       />
 
-      {/* Voice Intro */}
-      <VoiceRecorder
-        voiceUrl={profile.voice_intro_url}
-        userId={userId}
-        onSaved={(url) => update("voice_intro_url", url)}
-      />
+        </>
+      )}
 
       {/* Save */}
       <Button
