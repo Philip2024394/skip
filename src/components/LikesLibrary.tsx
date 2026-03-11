@@ -464,7 +464,6 @@ const LikesLibrary = ({
 
   const displayItemsWithTarot = useMemo(() => {
     if (!dailyTarot) return displayItems;
-    if (dailyTarot.shown) return displayItems;
     if (tab !== "new") return displayItems;
 
     // Always show exactly 1 tarot tile in the New carousel until the user reveals it.
