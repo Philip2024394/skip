@@ -662,6 +662,37 @@ const Index = () => {
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
+  // ── Add to Home Screen (PWA) ──────────────────────────────────────────
+  const a2hsPromptRef = useRef<any>(null);
+  const [showA2HS, setShowA2HS] = useState(false);
+
+  useEffect(() => {
+    try { if (localStorage.getItem("a2hs_dismissed")) return; } catch { return; }
+    if (!user) return;
+    const handler = (e: Event) => {
+      e.preventDefault();
+      a2hsPromptRef.current = e;
+      setShowA2HS(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler as EventListener);
+    return () => window.removeEventListener("beforeinstallprompt", handler as EventListener);
+  }, [user]);
+
+  const handleA2HSAdd = async () => {
+    if (a2hsPromptRef.current) {
+      a2hsPromptRef.current.prompt();
+      await a2hsPromptRef.current.userChoice;
+    }
+    try { localStorage.setItem("a2hs_dismissed", "1"); } catch { /* ignore */ }
+    setShowA2HS(false);
+  };
+
+  const handleA2HSDismiss = () => {
+    try { localStorage.setItem("a2hs_dismissed", "1"); } catch { /* ignore */ }
+    setShowA2HS(false);
+  };
+  // ────────────────────────────────────────────────────────────────────────
+
   const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat">("new");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
@@ -2709,6 +2740,41 @@ const Index = () => {
           </>
         )}
       </AnimatePresence>
+      {/* ── Add to Home Screen banner ─────────────────────────────────── */}
+      <AnimatePresence>
+        {showA2HS && (
+          <motion.div
+            initial={{ opacity: 0, y: 80 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 80 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            className="fixed bottom-20 inset-x-4 z-[99998] max-w-sm mx-auto"
+          >
+            <div className="rounded-2xl bg-[#0d0d0d] border border-white/10 p-4 flex items-center gap-3 shadow-2xl backdrop-blur-md">
+              <AppLogo className="w-10 h-10 object-contain flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-bold text-sm leading-tight">Add 2DateMe to your home screen</p>
+                <p className="text-white/50 text-[11px] mt-0.5">Quick access, no app store needed</p>
+              </div>
+              <div className="flex flex-col gap-1.5 flex-shrink-0">
+                <button
+                  onClick={handleA2HSAdd}
+                  className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white text-[11px] font-black shadow-[0_0_12px_rgba(255,105,180,0.4)]"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={handleA2HSDismiss}
+                  className="px-3 py-1.5 rounded-xl bg-white/10 text-white/60 text-[11px] font-semibold"
+                >
+                  Later
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Treat full-screen themed pages ──────────────────────────────── */}
       <AnimatePresence>
         {openTreatItem && (() => {
