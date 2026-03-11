@@ -666,16 +666,25 @@ const Index = () => {
   const a2hsPromptRef = useRef<any>(null);
   const [showA2HS, setShowA2HS] = useState(false);
 
+  // Capture the prompt on mount — fires once at page load before user logs in
   useEffect(() => {
     try { if (localStorage.getItem("a2hs_dismissed")) return; } catch { return; }
-    if (!user) return;
     const handler = (e: Event) => {
       e.preventDefault();
       a2hsPromptRef.current = e;
-      setShowA2HS(true);
+      // Only show immediately if already logged in
+      if (user) setShowA2HS(true);
     };
     window.addEventListener("beforeinstallprompt", handler as EventListener);
     return () => window.removeEventListener("beforeinstallprompt", handler as EventListener);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Once user logs in, show banner if prompt was already captured
+  useEffect(() => {
+    if (!user) return;
+    try { if (localStorage.getItem("a2hs_dismissed")) return; } catch { return; }
+    if (a2hsPromptRef.current) setShowA2HS(true);
   }, [user]);
 
   const handleA2HSAdd = async () => {
