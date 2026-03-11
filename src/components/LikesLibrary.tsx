@@ -1531,10 +1531,7 @@ const LikesLibrary = ({
             style={{
               position: "fixed",
               inset: 0,
-              backgroundImage:
-                premiumReadingType === "soulmate"
-                  ? "url('https://ik.imagekit.io/7grri5v7d/grave%20yardssssss.png')"
-                  : "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
+              backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yardssssss.png?updatedAt=1773171437105')",
               backgroundSize: "cover",
               backgroundPosition: "center",
               opacity: 1,
