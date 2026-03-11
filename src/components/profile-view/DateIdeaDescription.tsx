@@ -5,7 +5,7 @@ interface DateIdeaDescriptionProps {
   className?: string;
 }
 
-// Mock descriptions for date ideas (300 characters including spaces)
+// Mock descriptions for date ideas (275 characters including spaces)
 const DATE_IDEA_DESCRIPTIONS: { [key: string]: string } = {
   "Coffee At A Cozy Café ☕": "Perfect for intimate conversations and getting to know someone special. A cozy coffee shop provides the ideal relaxed atmosphere for meaningful discussions. The warm lighting, comfortable seating, and aromatic coffee create a welcoming environment where you can both feel at ease while sharing stories and discovering common interests.",
   
@@ -41,7 +41,7 @@ const DATE_IDEA_DESCRIPTIONS: { [key: string]: string } = {
 };
 
 const generateDefaultDescription = (dateIdea: string): string => {
-  return `This wonderful date idea offers the perfect opportunity to connect and create lasting memories together. The experience combines thoughtful planning with spontaneous moments, allowing you both to enjoy each other's company in a comfortable setting. Whether you're just getting to know each other or deepening an existing connection, this activity provides the ideal backdrop for meaningful conversations and shared experiences. The atmosphere and setting create just the right balance of relaxation and engagement, making it easy to be yourselves while exploring new aspects of your relationship. This date idea shows thoughtfulness and creativity, demonstrating your ability to plan enjoyable experiences that bring people closer together through shared activities and natural conversation flow.`;
+  return `This wonderful date idea offers the perfect opportunity to connect and create lasting memories together. The experience combines thoughtful planning with spontaneous moments, allowing you both to enjoy each other's company in a comfortable setting. Whether you're just getting to know each other or deepening an existing connection, this activity provides the ideal backdrop for meaningful conversations and shared experiences.`;
 };
 
 export const DateIdeaDescription = ({ selectedDateIdea, className }: DateIdeaDescriptionProps) => {
@@ -74,7 +74,7 @@ export const DateIdeaDescription = ({ selectedDateIdea, className }: DateIdeaDes
           <div className="flex items-center justify-between pt-2 border-t border-white/10">
             <span className="text-white/30 text-xs">Description length:</span>
             <span className="text-white/60 text-xs font-mono">
-              {description.length}/300 characters
+              {description.length}/275 characters
             </span>
           </div>
 
