@@ -125,9 +125,10 @@ const CrowAnimation = ({ containerWidth, containerHeight, onDone }: {
         <path d="M32,29 L32,34" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
         <path d="M33,29 L35,34" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
         <circle cx="32" cy="13" r="5" fill="#1a1a1a"/>
-        <path d="M37,12 C40,11.5 41,13 39,13.5 C38,14 37,13.5 37,13 Z" fill="#1a1a1a"/>
-        <circle cx="35" cy="12" r="1.5" fill="#ff6b6b"/>
-        <circle cx="35.5" cy="11.5" r="0.5" fill="rgba(255,255,255,0.8)"/>
+        <path d="M37,12 C40,11.5 41,13 39,13.5 C38,14 37,13.5 37,13 Z" fill="#222222"/>
+        <circle cx="35" cy="12" r="1.8" fill="#111111"/>
+        <circle cx="35.4" cy="11.4" r="0.9" fill="white"/>
+        <circle cx="35.7" cy="11.1" r="0.4" fill="rgba(0,0,0,0.5)"/>
       </svg>
     </div>
   );

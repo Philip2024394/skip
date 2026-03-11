@@ -301,7 +301,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 position: "relative",
                 width: "100%",
                 overflow: "hidden",
-                height: 200,
+                height: 220,
                 flexShrink: 0,
               }}
             >
@@ -348,8 +348,8 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   bottom: 0,
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: 130,
-                  height: 130,
+                  width: 110,
+                  height: 110,
                   zIndex: 5,
                   WebkitMaskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
                   maskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
@@ -505,10 +505,11 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                padding: "12px 20px 16px",
-                overflowY: "auto",
+                padding: "8px 16px 10px",
+                overflowY: "hidden",
                 flex: 1,
                 minHeight: 0,
+                overflow: "hidden",
               }}
             >
               {/* Progress steps */}
@@ -582,7 +583,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                         <img
                           src={TAROT_CARD_BACK}
                           alt="Card back"
-                          style={{ width: 125, height: 165, objectFit: "contain" }}
+                          style={{ width: 115, height: 152, objectFit: "contain" }}
                           decoding="async"
                           loading="lazy"
                         />
@@ -599,7 +600,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                           <img
                             src={TAROT_CARD_FRONT_IMAGES[1]}
                             alt="The Fool"
-                            style={{ width: 125, height: 165, objectFit: "contain" }}
+                            style={{ width: 115, height: 152, objectFit: "contain" }}
                             decoding="async"
                             loading="lazy"
                           />
