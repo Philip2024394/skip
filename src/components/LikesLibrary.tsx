@@ -73,6 +73,59 @@ const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   9: "https://ik.imagekit.io/7grri5v7d/higherfdsdfsdfssstertertddd-removebg-preview.png",
 };
 
+const TAROT_HEADERS = [
+  "Today's Message",
+  "The Cards Speak",
+  "Written In The Stars",
+  "Your Path Reveals",
+  "The Universe Whispers",
+  "Fated For You",
+  "Destiny Calls",
+  "The Veil Lifts",
+  "Ancient Wisdom Speaks",
+  "Your Truth Awaits",
+  "The Spirits Guide",
+  "Madam Zofee Sees",
+  "From The Beyond",
+  "The Mist Clears",
+  "Your Soul Knows",
+  "The Cards Have Chosen",
+  "Cosmic Forces Align",
+  "Listen Closely",
+  "The Stars Confess",
+  "Written In Fire",
+  "From Within The Flame",
+  "The Night Reveals",
+  "Your Heart Speaks",
+  "The Moon Knows",
+  "Fate Has Spoken",
+  "The Ancestors Whisper",
+  "Love's True Message",
+  "The Oracle Awakens",
+  "Hidden No Longer",
+  "Your Energy Speaks",
+  "The Cosmos Answers",
+  "What Was Hidden",
+  "The Future Stirs",
+  "Revealed By Moonlight",
+  "The Wheel Turns",
+  "Read Your Destiny",
+  "The Unseen Speaks",
+  "Forces Beyond Guide",
+  "From The Deep",
+  "Your Chapter Opens",
+  "The Light Breaks Through",
+  "Shadows Become Clear",
+  "The Sacred Reveals",
+  "Drawn For You Alone",
+  "Only You May Know",
+  "This Card Chose You",
+  "The Stars Selected This",
+  "Your Moment Has Come",
+  "The Mystic Sees You",
+  "Love Finds Its Way",
+];
+
 // ── Countdown hook ────────────────────────────────────────────────────────────
 const useCountdown = (expiresAt: string | null | undefined) => {
   const [timeLeft, setTimeLeft] = useState("");
@@ -214,7 +267,8 @@ const LikesLibrary = ({
   const [showMadamZofeeParticles, setShowMadamZofeeParticles] = useState(false);
   const [tarotReaderSrc, setTarotReaderSrc] = useState(TAROT_READER_IMAGE_URL);
   const [showDailyTarotFront, setShowDailyTarotFront] = useState(false);
-  const [tarotProgressStep, setTarotProgressStep] = useState(0); // 0=idle 1=Preparing 2=Shuffling 3=Card Spread 4=Chosen
+  const [tarotProgressStep, setTarotProgressStep] = useState(0);
+  const [tarotHeader, setTarotHeader] = useState(""); // 0=idle 1=Preparing 2=Shuffling 3=Card Spread 4=Chosen
   const tarotSequenceTimeoutsRef = useRef<number[]>([]);
 
   const generateMadamZofeeReward = () => {
@@ -443,6 +497,7 @@ const LikesLibrary = ({
           const revealId = window.setTimeout(() => {
             setShowDailyTarotFront(true);
             setTarotProgressStep(4); // Chosen Card
+            setTarotHeader(TAROT_HEADERS[Math.floor(Math.random() * TAROT_HEADERS.length)]);
           }, step.durationMs);
           tarotSequenceTimeoutsRef.current.push(revealId);
         }
@@ -1232,7 +1287,7 @@ const LikesLibrary = ({
                 </div>
               ) : (
                 <p style={{ color: "#FFD700", fontSize: 13, fontWeight: "bold", letterSpacing: "0.1em", marginBottom: 12, textShadow: "0 0 12px rgba(255,215,0,0.5)" }}>
-                  ✨ Your Card Has Been Chosen
+                  🔮 {tarotHeader}
                 </p>
               )}
 
