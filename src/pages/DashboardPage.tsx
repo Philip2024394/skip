@@ -140,34 +140,94 @@ const DashboardPage = () => {
       </header>
 
       {/* Tab toggle */}
-      <div className="px-4 pt-3">
-        <div className="flex gap-1 p-0.5 bg-gray-100 rounded-2xl border border-gray-200">
+      <div style={{ padding: "12px 16px 0" }}>
+        <div style={{
+          display: "flex",
+          gap: 6,
+          padding: 4,
+          background: "white",
+          borderRadius: 16,
+          border: "1px solid rgba(236,72,153,0.15)",
+          boxShadow: "0 2px 12px rgba(236,72,153,0.08)",
+        }}>
           <button
             onClick={() => setTab("profile")}
-            className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
-              tab === "profile" ? "gradient-love text-white" : "text-gray-500"
-            }`}
+            style={{
+              flex: 1,
+              padding: "10px 8px",
+              borderRadius: 12,
+              border: "none",
+              background: tab === "profile"
+                ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
+                : "transparent",
+              color: tab === "profile" ? "white" : "#9CA3AF",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.2s",
+              boxShadow: tab === "profile" ? "0 4px 12px rgba(236,72,153,0.3)" : "none",
+            }}
           >
-            <User className="w-3.5 h-3.5" /> {t("dash.myProfile")}
+            <User size={14} /> My Profile
           </button>
           <button
             onClick={() => setTab("powerups")}
-            className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 ${
-              tab === "powerups" ? "gradient-gold text-white" : "text-gray-500"
-            }`}
+            style={{
+              flex: 1,
+              padding: "10px 8px",
+              borderRadius: 12,
+              border: "none",
+              background: tab === "powerups"
+                ? "linear-gradient(135deg, #F59E0B, #EF4444)"
+                : "transparent",
+              color: tab === "powerups" ? "white" : "#9CA3AF",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.2s",
+              boxShadow: tab === "powerups" ? "0 4px 12px rgba(245,158,11,0.3)" : "none",
+            }}
           >
-            <Zap className="w-3.5 h-3.5" /> {t("dash.powerups")}
+            <Zap size={14} /> Power-Ups
           </button>
           <button
             onClick={() => navigate("/faq")}
-            className="flex-1 py-2 rounded-xl text-xs font-medium transition-all flex items-center justify-center gap-1.5 text-gray-500 hover:text-gray-800"
+            style={{
+              flex: 1,
+              padding: "10px 8px",
+              borderRadius: 12,
+              border: "none",
+              background: "transparent",
+              color: "#9CA3AF",
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              transition: "all 0.2s",
+            }}
           >
-            <HelpCircle className="w-3.5 h-3.5" /> Help
+            <HelpCircle size={14} /> Help
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-touch" style={{ paddingBottom: `max(1rem, env(safe-area-inset-bottom, 0px))` }}>
+      <div style={{
+  flex: 1,
+  overflowY: "auto",
+  background: "#FDF2F8",
+  paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
+}}>
         {tab === "profile" ? (
           <ProfileEditor />
         ) : (

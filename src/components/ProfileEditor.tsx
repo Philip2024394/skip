@@ -448,10 +448,10 @@ const ProfileEditor = () => {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "rgba(8,0,16,0.97)",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        background: "white",
+        borderBottom: "1px solid rgba(236,72,153,0.12)",
         padding: "10px 16px 8px",
-        backdropFilter: "blur(12px)",
+        boxShadow: "0 2px 12px rgba(236,72,153,0.08)",
       }}>
         <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
           {[
@@ -467,22 +467,23 @@ const ProfileEditor = () => {
               onClick={() => setEditorStep(key as any)}
               style={{
                 flexShrink: 0,
-                padding: "6px 12px",
+                padding: "7px 14px",
                 borderRadius: 999,
                 border: editorStep === key
-                  ? "1px solid rgba(255,105,180,0.8)"
-                  : "1px solid rgba(255,255,255,0.1)",
+                  ? "none"
+                  : "1px solid rgba(236,72,153,0.2)",
                 background: editorStep === key
-                  ? "linear-gradient(135deg, rgba(255,105,180,0.3), rgba(139,92,246,0.3))"
-                  : "rgba(255,255,255,0.04)",
-                color: editorStep === key ? "white" : "rgba(255,255,255,0.45)",
+                  ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
+                  : "white",
+                color: editorStep === key ? "white" : "#9CA3AF",
                 fontSize: 11,
                 fontWeight: editorStep === key ? 700 : 500,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: 4,
-                transition: "all 0.15s",
+                transition: "all 0.2s",
+                boxShadow: editorStep === key ? "0 4px 10px rgba(236,72,153,0.3)" : "none",
               }}
             >
               <span>{emoji}</span>
@@ -1154,12 +1155,12 @@ const ProfileEditor = () => {
       <div style={{
         position: "sticky",
         bottom: 0,
-        background: "rgba(8,0,16,0.97)",
-        borderTop: "1px solid rgba(255,255,255,0.08)",
+        background: "white",
+        borderTop: "1px solid rgba(236,72,153,0.12)",
         padding: "12px 16px",
         display: "flex",
         gap: 8,
-        backdropFilter: "blur(12px)",
+        boxShadow: "0 -4px 20px rgba(236,72,153,0.08)",
       }}>
         {(() => {
           const steps = ["photos", "basics", "about", "lifestyle", "goals", "datingprefs"];
@@ -1176,9 +1177,9 @@ const ProfileEditor = () => {
                     flex: 1,
                     padding: "12px",
                     borderRadius: 14,
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    background: "rgba(255,255,255,0.05)",
-                    color: "rgba(255,255,255,0.7)",
+                    border: "1px solid rgba(236,72,153,0.25)",
+                    background: "white",
+                    color: "#EC4899",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -1201,6 +1202,7 @@ const ProfileEditor = () => {
                     fontSize: 13,
                     fontWeight: 700,
                     cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(236,72,153,0.4)",
                   }}
                 >
                   Next →
