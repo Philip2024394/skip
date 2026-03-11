@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { toast } from "sonner";
 import MassageDrawer from "@/components/overlays/MassageDrawer";
+import FlowersDrawer from "@/components/overlays/FlowersDrawer";
 
 interface ProfileBottomSheetProps {
   // Profile data
@@ -40,12 +41,21 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
   const [selectedDateIdea, setSelectedDateIdea] = useState<string | null>(null);
   const [isMassageDrawerOpen, setIsMassageDrawerOpen] = useState(false);
   const [isMassageUnlocked, setIsMassageUnlocked] = useState(false);
+  const [isFlowersDrawerOpen, setIsFlowersDrawerOpen] = useState(false);
+  const [isFlowersUnlocked, setIsFlowersUnlocked] = useState(false);
 
   const handleMassageUnlock = () => {
     // Here you would integrate with your payment system
     // For now, we'll simulate the unlock
     setIsMassageUnlocked(true);
     toast.success("Massage therapists unlocked! You can now book directly via WhatsApp.");
+  };
+
+  const handleFlowersUnlock = () => {
+    // Here you would integrate with your payment system
+    // For now, we'll simulate the unlock
+    setIsFlowersUnlocked(true);
+    toast.success("Florists unlocked! You can now order flowers directly via WhatsApp.");
   };
 
   return (
@@ -200,10 +210,15 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                           const item = treats.find((t) => t.key === props.selectedTreatItem) ?? treats[0];
                           return (
                             <div 
-                              className={`w-full rounded-2xl bg-black/30 border border-fuchsia-300/20 px-5 py-5 flex flex-col items-center gap-3 ${item.key === 'massage' ? 'cursor-pointer hover:bg-black/40 transition-colors' : ''}`}
+                              className={`w-full rounded-2xl bg-black/30 border border-fuchsia-300/20 px-5 py-5 flex flex-col items-center gap-3 ${
+                                item.key === 'massage' ? 'cursor-pointer hover:bg-black/40 transition-colors' : 
+                                item.key === 'flowers' ? 'cursor-pointer hover:bg-black/40 transition-colors' : ''
+                              }`}
                               onClick={() => {
                                 if (item.key === 'massage') {
                                   setIsMassageDrawerOpen(true);
+                                } else if (item.key === 'flowers') {
+                                  setIsFlowersDrawerOpen(true);
                                 }
                               }}
                             >
@@ -473,6 +488,14 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
         onClose={() => setIsMassageDrawerOpen(false)}
         isUnlocked={isMassageUnlocked}
         onUnlock={handleMassageUnlock}
+      />
+      
+      {/* Flowers Drawer */}
+      <FlowersDrawer 
+        isOpen={isFlowersDrawerOpen} 
+        onClose={() => setIsFlowersDrawerOpen(false)}
+        isUnlocked={isFlowersUnlocked}
+        onUnlock={handleFlowersUnlock}
       />
     </>
   );
