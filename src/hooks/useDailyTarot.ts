@@ -303,9 +303,62 @@ export const useDailyTarot = (props: UseDailyTarotProps) => {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank", "noopener,noreferrer");
   }, [dailyTarot, props.locale]);
 
+  // Ensure daily card exists on mount
+  useEffect(() => {
+    loadOrCreateDailyCard();
+  }, [loadOrCreateDailyCard]);
+
+  // Trigger popup after 3 minutes if daily card not shown
+  useEffect(() => {
+    const dc = dailyCard || loadOrCreateDailyCard();
+    if (!dc || dc.shown) return;
+    const id = window.setTimeout(() => {
+      const latest = (() => {
+        try {
+          const raw = localStorage.getItem(getDailyCardStorageKey());
+          return raw ? (JSON.parse(raw) as { cardId: number; date: string; shown: boolean }) : null;
+        } catch {
+          return null;
+        }
+      })();
+      if (!latest || latest.shown) return;
+      setShowTarotPopup(true);
+    }, 3 * 60 * 1000);
+    return () => window.clearTimeout(id);
+  }, [dailyCard, loadOrCreateDailyCard, getDailyCardStorageKey]);
+
+  // Popup phase choreography
+  useEffect(() => {
+    if (!showTarotPopup) return;
+    setTarotPhase("back");
+    const t1 = window.setTimeout(() => setTarotPhase("flip"), 2000);
+    const t2 = window.setTimeout(() => setTarotPhase("revealed"), 2800);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [showTarotPopup]);
+
+  // Daily reset at midnight
+  useEffect(() => {
+    const now = new Date();
+    const next = new Date(now);
+    next.setHours(24, 0, 0, 0);
+    const ms = next.getTime() - now.getTime();
+    const id = window.setTimeout(() => {
+      try {
+        localStorage.removeItem(getDailyCardStorageKey());
+      } catch {
+        // ignore
+      }
+      setDailyCard(null);
+      loadOrCreateDailyCard();
+    }, ms);
+    return () => window.clearTimeout(id);
+  }, [loadOrCreateDailyCard, getDailyCardStorageKey]);
+
   return {
     dailyTarot,
-    setDailyTarot,
     showTarotPopup,
     setShowTarotPopup,
     tarotPhase,

@@ -274,7 +274,6 @@ const Index = () => {
 
   const {
     dailyTarot,
-    setDailyTarot,
     showTarotPopup,
     setShowTarotPopup,
     tarotPhase,
@@ -329,11 +328,7 @@ const Index = () => {
     }
   }, [daysSinceLastActive, getBehaviorStorageKey, iLiked, likedMe]);
 
-  // Ensure daily card exists on mount
-  useEffect(() => {
-    loadOrCreateDailyCard();
-  }, [loadOrCreateDailyCard]);
-
+  
   // Track profile views + repeated views in-session
   useEffect(() => {
     const currentProfileId = isProfileRoute ? profileRouteId : topProfiles[0]?.id;
