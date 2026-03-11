@@ -92,9 +92,9 @@
     
     /* Desktop centering with iPhone-style device frame and background */
     @media (min-width: 429px) {
-      box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 0 60px rgba(236, 72, 153, 0.4);
       border-radius: 44px;
-      border: 14px solid #0a0a0a;
+      border: 14px solid #be185d;
       margin: 20px auto;
       height: calc(100vh - 40px);
       max-height: calc(100vh - 40px);
@@ -112,20 +112,20 @@
         transform: translateX(-50%);
         width: 150px;
         height: 28px;
-        background: #0a0a0a;
+        background: #be185d;
         border-radius: 0 0 20px 20px;
         z-index: 10;
       }
       
-      /* iPhone-style edge buttons */
+      /* iPhone-style edge buttons - moved outside frame */
       &::after {
         content: '';
         position: absolute;
         top: 50px;
-        right: -2px;
+        right: -18px;
         width: 4px;
         height: 60px;
-        background: linear-gradient(to bottom, #333, #666, #333);
+        background: linear-gradient(to bottom, #db2777, #ec4899, #db2777);
         border-radius: 0 4px 4px 0;
         z-index: 11;
       }
@@ -135,16 +135,20 @@
       margin: 30px auto;
       height: calc(100vh - 60px);
       max-height: calc(100vh - 60px);
+      box-shadow: 0 0 80px rgba(236, 72, 153, 0.5);
       
       &::before {
         top: 14px;
         width: 160px;
         height: 30px;
+        background: #be185d;
       }
       
       &::after {
         top: 60px;
+        right: -18px;
         height: 80px;
+        background: linear-gradient(to bottom, #db2777, #ec4899, #db2777);
       }
     }
     
@@ -152,16 +156,20 @@
       margin: 40px auto;
       height: calc(100vh - 80px);
       max-height: calc(100vh - 80px);
+      box-shadow: 0 0 100px rgba(236, 72, 153, 0.6);
       
       &::before {
         top: 16px;
         width: 170px;
         height: 32px;
+        background: #be185d;
       }
       
       &::after {
         top: 70px;
+        right: -18px;
         height: 100px;
+        background: linear-gradient(to bottom, #db2777, #ec4899, #db2777);
       }
     }
   }
