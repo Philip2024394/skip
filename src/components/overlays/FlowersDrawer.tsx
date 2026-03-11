@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Sparkles, Gift, MessageCircle, Shield, MapPin, Clock, Lock, Crown, Truck } from "lucide-react";
+import { X, Sparkles, Gift, MessageCircle, Shield, MapPin, Clock, Lock, Crown, Flag, ChevronDown, Truck } from "lucide-react";
 
 interface FlowersDrawerProps {
   isOpen: boolean;
@@ -7,6 +7,19 @@ interface FlowersDrawerProps {
   isUnlocked?: boolean;
   onUnlock?: () => void;
 }
+
+// Report options
+const reportOptions = [
+  "Not replying to messages",
+  "Out of business", 
+  "No service available",
+  "Poor quality service",
+  "Unprofessional behavior",
+  "Other issues"
+];
+
+// Admin WhatsApp number
+const ADMIN_WHATSAPP = "+6281392000050";
 
 // Mock florist data for Yogyakarta
 const florists = [
@@ -63,6 +76,52 @@ const florists = [
 ];
 
 export default function FlowersDrawer({ isOpen, onClose, isUnlocked = false, onUnlock }: FlowersDrawerProps) {
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [selectedFlorist, setSelectedFlorist] = useState<any>(null);
+  const [reportType, setReportType] = useState("");
+  const [reportDetails, setReportDetails] = useState("");
+  const [userName, setUserName] = useState("");
+  const [userWhatsapp, setUserWhatsapp] = useState("");
+
+  const handleReportSubmit = () => {
+    if (!reportType || !reportDetails || !userName || !userWhatsapp) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    const message = `🚨 SERVICE COMPLAINT REPORT 🚨
+
+📝 SERVICE TYPE: Flower Delivery
+🌸 FLORIST: ${selectedFlorist?.name}
+📱 FLORIST WHATSAPP: ${selectedFlorist?.whatsapp}
+
+⚠️ COMPLAINT TYPE: ${reportType}
+
+📄 DETAILED COMPLAINT:
+${reportDetails}
+
+👤 REPORTED BY:
+Name: ${userName}
+WhatsApp: ${userWhatsapp}
+
+🏢 CITY: Yogyakarta
+📅 DATE: ${new Date().toLocaleDateString()}
+
+---
+This is an automated complaint from 2DateMe.com
+Quality service and professionalism are paramount to us.
+We are committed to offering the best service providers for you and your upcoming experiences.`;
+
+    window.open(`https://wa.me/${ADMIN_WHATSAPP.replace('+', '')}?text=${encodeURIComponent(message)}`, '_blank');
+    
+    // Reset form
+    setReportModalOpen(false);
+    setSelectedFlorist(null);
+    setReportType("");
+    setReportDetails("");
+    setUserName("");
+    setUserWhatsapp("");
+  };
   return (
     <AnimatePresence>
       {isOpen && (
@@ -256,15 +315,29 @@ export default function FlowersDrawer({ isOpen, onClose, isUnlocked = false, onU
                           </div>
 
                           {/* WhatsApp Button */}
-                          <button
-                            onClick={() => {
-                              window.open(`https://wa.me/${florist.whatsapp.replace('+', '')}`, '_blank');
-                            }}
-                            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            Contact Me
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                window.open(`https://wa.me/${florist.whatsapp.replace('+', '')}`, '_blank');
+                              }}
+                              className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              Contact Me
+                            </button>
+                            
+                            {/* Report Flag */}
+                            <button
+                              onClick={() => {
+                                setSelectedFlorist(florist);
+                                setReportModalOpen(true);
+                              }}
+                              className="w-8 h-8 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg flex items-center justify-center transition-colors"
+                              title="Report issue"
+                            >
+                              <Flag className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
@@ -291,6 +364,129 @@ export default function FlowersDrawer({ isOpen, onClose, isUnlocked = false, onU
               </div>
             </div>
           </motion.div>
+
+          {/* Report Modal */}
+          <AnimatePresence>
+            {reportModalOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/70 z-[60] flex items-center justify-center p-4"
+                onClick={() => setReportModalOpen(false)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-2xl p-6 max-w-md w-full border border-white/20"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                      <Flag className="w-5 h-5 text-red-400" />
+                      Report Issue
+                    </h3>
+                    <button
+                      onClick={() => setReportModalOpen(false)}
+                      className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center hover:bg-white/30 transition-colors"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Florist Info */}
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <p className="text-white/60 text-xs mb-1">Reporting:</p>
+                      <p className="text-white font-medium">{selectedFlorist?.name}</p>
+                      <p className="text-white/70 text-sm">{selectedFlorist?.specialty}</p>
+                    </div>
+
+                    {/* Report Type Dropdown */}
+                    <div>
+                      <label className="text-white/80 text-sm mb-2 block">Issue Type *</label>
+                      <div className="relative">
+                        <select
+                          value={reportType}
+                          onChange={(e) => setReportType(e.target.value)}
+                          className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white appearance-none cursor-pointer focus:outline-none focus:border-white/50"
+                        >
+                          <option value="" className="bg-purple-900">Select issue type...</option>
+                          {reportOptions.map((option) => (
+                            <option key={option} value={option} className="bg-purple-900">
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-white/60 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {/* Report Details */}
+                    <div>
+                      <label className="text-white/80 text-sm mb-2 block">
+                        Details * ({reportDetails.length}/350 characters)
+                      </label>
+                      <textarea
+                        value={reportDetails}
+                        onChange={(e) => {
+                          if (e.target.value.length <= 350) {
+                            setReportDetails(e.target.value);
+                          }
+                        }}
+                        placeholder="Please describe the issue in detail..."
+                        className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:border-white/50 resize-none"
+                        rows={3}
+                      />
+                    </div>
+
+                    {/* User Information */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-white/80 text-sm mb-2 block">Your Name *</label>
+                        <input
+                          type="text"
+                          value={userName}
+                          onChange={(e) => setUserName(e.target.value)}
+                          placeholder="Your name"
+                          className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:border-white/50"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-white/80 text-sm mb-2 block">Your WhatsApp *</label>
+                        <input
+                          type="text"
+                          value={userWhatsapp}
+                          onChange={(e) => setUserWhatsapp(e.target.value)}
+                          placeholder="+62xxx"
+                          className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white placeholder-white/50 focus:outline-none focus:border-white/50"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quality Statement */}
+                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                      <p className="text-white/60 text-xs leading-relaxed">
+                        At 2DateMe.com, service quality and professionalism are paramount to us. 
+                        We are committed to offering the best service providers possible for you 
+                        and your upcoming experiences. Your feedback helps us maintain high standards.
+                      </p>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      onClick={handleReportSubmit}
+                      className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-xl transition-colors"
+                    >
+                      Send Report to Admin
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </>
       )}
     </AnimatePresence>
