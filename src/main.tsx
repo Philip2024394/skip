@@ -23,6 +23,6 @@ document.addEventListener('wheel', (e) => {
   }
 }, { passive: false });
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(<div className="app-container"><App /></div>);
 
 // Service worker is registered and update flow is handled in App via useServiceWorkerUpdate

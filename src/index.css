@@ -92,39 +92,35 @@
     
     /* Desktop centering with device frame */
     @media (min-width: 429px) {
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
       border-radius: 40px;
-      border: 8px solid #1a1a1a;
-      margin: 20px auto;
-      max-height: calc(100vh - 40px);
+      border: 12px solid #1a1a1a;
+      margin: 40px auto;
+      max-height: calc(100vh - 80px);
       overflow-y: auto;
+      background: white;
     }
     
     @media (min-width: 768px) {
-      margin: 40px auto;
-      max-height: calc(100vh - 80px);
+      margin: 60px auto;
+      max-height: calc(100vh - 120px);
     }
     
     @media (min-width: 1200px) {
-      margin: 60px auto;
-      max-height: calc(100vh - 120px);
+      margin: 80px auto;
+      max-height: calc(100vh - 160px);
     }
   }
 
   /* #root must also follow mobile viewport constraints */
   #root {
-    width: 100vw;
-    max-width: 428px;
-    height: 100vh;
+    width: 100%;
+    max-width: none;
+    height: 100%;
     height: 100dvh;
     overflow: hidden;
-    margin: 0 auto;
+    margin: 0;
     position: relative;
-    
-    @media (min-width: 429px) {
-      border-radius: 32px; /* Slightly smaller than body border */
-      overflow: hidden;
-    }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -204,25 +200,35 @@
     
     /* On desktop, add visual container */
     @media (min-width: 429px) {
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
       border-radius: 40px;
-      border: 8px solid #1a1a1a;
-      margin: 20px auto;
-      max-height: calc(100vh - 40px);
+      border: 12px solid #1a1a1a;
+      margin: 40px auto;
+      max-height: calc(100vh - 80px);
       overflow-y: auto;
+      background: white;
     }
     
     /* Larger desktop screens */
     @media (min-width: 768px) {
-      margin: 40px auto;
-      max-height: calc(100vh - 80px);
+      margin: 60px auto;
+      max-height: calc(100vh - 120px);
     }
     
     /* Ultra-wide screens */
     @media (min-width: 1200px) {
-      margin: 60px auto;
-      max-height: calc(100vh - 120px);
+      margin: 80px auto;
+      max-height: calc(100vh - 160px);
     }
+  }
+
+  /* ── App container to ensure content stays within frame ── */
+  .app-container {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    overflow: hidden;
+    position: relative;
   }
 
   /* ── App logo floating hearts (used by AppLogo component) ── */
