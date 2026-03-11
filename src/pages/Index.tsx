@@ -793,6 +793,7 @@ const Index = () => {
   const [reviewerAvatarById, setReviewerAvatarById] = useState<Record<string, string>>({});
   const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
   const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "goals" | null>(null);
+  const [selectedDatePlace, setSelectedDatePlace] = useState<any | null>(null);
   const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
 
   const PROFILE_THIRD_TAB_MODE: "unlock" | "reviews" = "unlock";
@@ -2266,55 +2267,168 @@ const Index = () => {
                     </div>
                   ) : aboutMeTab === "sent" ? (
                     <div className="h-full w-full flex flex-col">
-                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Date Ideas</p>
                       {(() => {
                         const places = (selectedProfile?.first_date_places || []).filter(Boolean).slice(0, 3) as any[];
+
                         if (places.length === 0) {
                           return (
                             <div className="flex-1 flex items-center justify-center">
-                              <p className="text-white/50 text-xs">No date ideas yet</p>
+                              <p className="text-white/50 text-xs">No date ideas added yet</p>
                             </div>
                           );
                         }
 
                         return (
-                          <div className="flex-1 w-full pt-3">
-                            <div className="grid grid-cols-3 gap-2 w-full">
+                          <>
+                            {/* 3 date idea cards */}
+                            <div className="grid grid-cols-3 gap-2 w-full mb-3">
                               {places.map((place, idx) => {
                                 const title = place.title || place.idea || "Date idea";
-                                const desc = getDateIdeaDescription(place.idea, place.title);
-                                const url = place.url || "";
                                 const img = place.image_url || "/placeholder.svg";
+                                const isSelected = selectedDatePlace?.idea === place.idea && selectedDatePlace?.title === place.title;
 
                                 return (
                                   <button
                                     key={`place-${idx}`}
                                     type="button"
-                                    onClick={() => {
-                                      if (!url) return;
-                                      window.open(url, "_blank", "noopener,noreferrer");
+                                    onClick={() => setSelectedDatePlace(isSelected ? null : place)}
+                                    style={{
+                                      borderRadius: 14,
+                                      overflow: "hidden",
+                                      border: isSelected ? "2px solid rgba(255,105,180,0.8)" : "1px solid rgba(255,255,255,0.1)",
+                                      background: "rgba(0,0,0,0.3)",
+                                      padding: 0,
+                                      cursor: "pointer",
+                                      transition: "all 0.2s",
+                                      transform: isSelected ? "scale(0.97)" : "scale(1)",
                                     }}
-                                    className="relative rounded-2xl overflow-hidden border border-white/10 bg-black/30 hover:bg-black/35 transition-colors text-left"
                                   >
-                                    <div className="relative w-full aspect-[4/5] overflow-hidden">
-                                      <img src={img} alt={title} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-                                    </div>
-
-                                    <div className="p-2">
-                                      <p className="text-white text-[10px] font-black leading-tight line-clamp-2">{title}</p>
-                                      <p className="mt-1 text-white/60 text-[9px] leading-snug line-clamp-3">{desc}</p>
-                                      <div className="mt-2">
-                                        <span className="inline-flex items-center justify-center w-full rounded-xl bg-fuchsia-500/70 hover:bg-fuchsia-500 text-white text-[10px] font-bold py-2">
-                                          View
-                                        </span>
-                                      </div>
+                                    <div style={{ position: "relative", width: "100%", aspectRatio: "4/5", overflow: "hidden" }}>
+                                      <img src={img} alt={title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+                                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent 60%)" }} />
+                                      <p style={{
+                                        position: "absolute",
+                                        bottom: 6, left: 6, right: 6,
+                                        color: "white",
+                                        fontSize: 9,
+                                        fontWeight: 800,
+                                        lineHeight: 1.2,
+                                        margin: 0,
+                                        textShadow: "0 1px 4px rgba(0,0,0,0.8)",
+                                      }}>{place.idea}</p>
                                     </div>
                                   </button>
                                 );
                               })}
                             </div>
-                          </div>
+
+                            {/* Detail window */}
+                            <div style={{
+                              flex: 1,
+                              borderRadius: 14,
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              background: "rgba(0,0,0,0.2)",
+                              overflow: "hidden",
+                              display: "flex",
+                              flexDirection: "column",
+                            }}>
+                              {!selectedDatePlace ? (
+                                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Tap a date idea to see details</p>
+                                </div>
+                              ) : (
+                                <>
+                                  {/* Hero image */}
+                                  <div style={{ position: "relative", height: 100, flexShrink: 0 }}>
+                                    <img
+                                      src={selectedDatePlace.image_url || "/placeholder.svg"}
+                                      alt={selectedDatePlace.idea}
+                                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    />
+                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent 50%)" }} />
+                                    <div style={{ position: "absolute", bottom: 8, left: 12, right: 12 }}>
+                                      <p style={{ color: "white", fontWeight: 800, fontSize: 13, margin: 0 }}>{selectedDatePlace.idea}</p>
+                                      {selectedDatePlace.title && (
+                                        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, margin: "2px 0 0" }}>{selectedDatePlace.title}</p>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Action buttons */}
+                                  <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+                                    {(selectedDatePlace.instagram_url || selectedDatePlace.url?.includes("instagram")) && (
+                                      <a
+                                        href={selectedDatePlace.instagram_url || selectedDatePlace.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          gap: 6,
+                                          padding: "8px 12px",
+                                          borderRadius: 10,
+                                          background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
+                                          color: "white",
+                                          fontSize: 11,
+                                          fontWeight: 700,
+                                          textDecoration: "none",
+                                        }}
+                                      >
+                                        📸 View on Instagram
+                                      </a>
+                                    )}
+                                    {selectedDatePlace.google_url && (
+                                      <a
+                                        href={selectedDatePlace.google_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          gap: 6,
+                                          padding: "8px 12px",
+                                          borderRadius: 10,
+                                          background: "rgba(66,133,244,0.25)",
+                                          border: "1px solid rgba(66,133,244,0.4)",
+                                          color: "white",
+                                          fontSize: 11,
+                                          fontWeight: 700,
+                                          textDecoration: "none",
+                                        }}
+                                      >
+                                        📍 View on Google Maps
+                                      </a>
+                                    )}
+                                    {selectedDatePlace.other_url && (
+                                      <a
+                                        href={selectedDatePlace.other_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          justifyContent: "center",
+                                          gap: 6,
+                                          padding: "8px 12px",
+                                          borderRadius: 10,
+                                          background: "rgba(255,255,255,0.08)",
+                                          border: "1px solid rgba(255,255,255,0.15)",
+                                          color: "white",
+                                          fontSize: 11,
+                                          fontWeight: 700,
+                                          textDecoration: "none",
+                                        }}
+                                      >
+                                        🔗 View Place
+                                      </a>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </>
                         );
                       })()}
                     </div>
