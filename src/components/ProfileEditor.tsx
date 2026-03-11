@@ -1150,14 +1150,86 @@ const ProfileEditor = () => {
         </>
       )}
 
-      {/* Save */}
-      <Button
-        onClick={handleSave}
-        disabled={saving || profile.images.length < 2}
-        className="w-full gradient-love text-primary-foreground border-0 font-bold h-11 rounded-xl"
-      >
-        {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</> : <><Save className="w-4 h-4 mr-2" /> Save Profile</>}
-      </Button>
+      {/* ── Step Navigation Footer ──────────────────────────────────── */}
+      <div style={{
+        position: "sticky",
+        bottom: 0,
+        background: "rgba(8,0,16,0.97)",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
+        padding: "12px 16px",
+        display: "flex",
+        gap: 8,
+        backdropFilter: "blur(12px)",
+      }}>
+        {(() => {
+          const steps = ["photos", "basics", "about", "lifestyle", "goals", "datingprefs"];
+          const currentIdx = steps.indexOf(editorStep);
+          const isFirst = currentIdx === 0;
+          const isLast = currentIdx === steps.length - 1;
+
+          return (
+            <>
+              {!isFirst && (
+                <button
+                  onClick={() => setEditorStep(steps[currentIdx - 1] as any)}
+                  style={{
+                    flex: 1,
+                    padding: "12px",
+                    borderRadius: 14,
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  ← Back
+                </button>
+              )}
+
+              {!isLast ? (
+                <button
+                  onClick={() => setEditorStep(steps[currentIdx + 1] as any)}
+                  style={{
+                    flex: 2,
+                    padding: "12px",
+                    borderRadius: 14,
+                    border: "none",
+                    background: "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                    color: "white",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Next →
+                </button>
+              ) : (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  style={{
+                    flex: 2,
+                    padding: "12px",
+                    borderRadius: 14,
+                    border: "none",
+                    background: saving
+                      ? "rgba(255,255,255,0.1)"
+                      : "linear-gradient(135deg, #EC4899, #8B5CF6)",
+                    color: saving ? "rgba(255,255,255,0.4)" : "white",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: saving ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {saving ? "Saving..." : "✅ Save Profile"}
+                </button>
+              )}
+            </>
+          );
+        })()}
+      </div>
 
       {/* Deactivate / Delete account */}
       <div className="pt-2 border-t border-border space-y-1">
