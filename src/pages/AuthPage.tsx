@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import AppLogo from "@/components/AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { COUNTRIES_WITH_CODES, ALL_COUNTRIES } from "@/data/countries";
+import { COUNTRIES_WITH_CODES, ALL_COUNTRIES, COUNTRY_ISO2 } from "@/data/countries";
 
 const COUNTRY_CODES = COUNTRIES_WITH_CODES;
 const COUNTRIES = ALL_COUNTRIES;
@@ -24,31 +24,15 @@ const TEST_PASSWORD = import.meta.env.VITE_TEST_PASSWORD || "TestPass123";
 const LANDING_BG_URL = (import.meta.env.VITE_LANDING_BG_URL as string | undefined) || "https://ik.imagekit.io/7grri5v7d/uytg.png";
 const LANDING_BG_URL_VERSION = (import.meta.env.VITE_LANDING_BG_URL_VERSION as string | undefined) || "v2";
 
-const FLAG_BY_COUNTRY: Record<string, string> = {
-  Indonesia: "🇮🇩",
-  "United States": "🇺🇸",
-  "United Kingdom": "🇬🇧",
-  Singapore: "🇸🇬",
-  Malaysia: "🇲🇾",
-  Thailand: "🇹🇭",
-  Philippines: "🇵🇭",
-  Vietnam: "🇻🇳",
-  India: "🇮🇳",
-  Australia: "🇦🇺",
-  Japan: "🇯🇵",
-  "South Korea": "🇰🇷",
-  Canada: "🇨🇦",
-  Germany: "🇩🇪",
-  France: "🇫🇷",
-  Netherlands: "🇳🇱",
-  Italy: "🇮🇹",
-  Spain: "🇪🇸",
-  Portugal: "🇵🇹",
-  UAE: "🇦🇪",
-  "Saudi Arabia": "🇸🇦",
-};
+const isoToFlag = (iso: string) =>
+  iso.toUpperCase().replace(/./g, (c) =>
+    String.fromCodePoint(0x1f1e6 - 65 + c.charCodeAt(0))
+  );
 
-const getFlagForCountry = (country: string) => FLAG_BY_COUNTRY[country] || "🏳️";
+const getFlagForCountry = (country: string) => {
+  const iso = COUNTRY_ISO2[country];
+  return iso ? isoToFlag(iso) : "🏳️";
+};
 
 const appendQueryParams = (url: string, params: Record<string, string>) => {
   const hasQuery = url.includes("?");
@@ -312,9 +296,11 @@ const AuthPage = () => {
         </div>
 
         {/* ── Tagline under logo ──────────────────────────────── */}
-        <div className="relative z-20 px-5 mt-3 text-center">
-          <p className="text-white text-[24px] font-black leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
-            Indonesia's <span className="text-yellow-300">Fastest</span> way to meet singles
+        <div className="relative z-20 px-5 mt-3 text-left">
+          <p className="text-white text-[28px] font-black leading-snug drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
+            Indonesia's<br />
+            <span className="text-yellow-300">Fastest Way to</span><br />
+            Meet Singles
           </p>
         </div>
 
