@@ -1342,6 +1342,7 @@ const LikesLibrary = ({
                             justifyContent: "center",
                             padding: "0 20px",
                             textAlign: "center",
+                            transform: "translateY(5px)",
                           }}
                         >
                           <p
