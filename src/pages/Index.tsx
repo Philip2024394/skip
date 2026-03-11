@@ -2108,15 +2108,28 @@ const Index = () => {
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
               <ProfileBottomSheet
+                selectedProfile={selectedProfile}
                 isProfileRoute={isProfileRoute}
                 aboutMeTab={aboutMeTab}
-                selectedUnlockItemKey={selectedUnlockItemKey}
-                selectedProfile={selectedProfile}
-                setUnlockDialog={setUnlockDialog}
-                selectedTreatItem={selectedTreatItem}
+                setAboutMeTab={setAboutMeTab}
+                selectedProfileSection={selectedProfileSection}
+                setSelectedProfileSection={setSelectedProfileSection}
                 selectedDatePlace={selectedDatePlace}
                 setSelectedDatePlace={setSelectedDatePlace}
-                selectedProfileSection={selectedProfileSection}
+                selectedTreatItem={selectedTreatItem}
+                selectedUnlockItemKey={selectedUnlockItemKey}
+                setSelectedUnlockItemKey={setSelectedUnlockItemKey}
+                onUnlockWhatsApp={() => setShowUnlockDialog(true)}
+                libraryRef={libraryRef}
+                tabLabelOverrides={
+                  isProfileRoute
+                    ? { new: "Profile", sent: "Date Ideas", received: "Unlock", treat: "Treat" }
+                    : undefined
+                }
+                likedMe={likedMe}
+                heartDropProfileId={heartDropProfileId}
+                onTabChange={(t) => setAboutMeTab(t)}
+                onSelectProfileSection={(s) => setSelectedProfileSection(s)}
               />
             </>
           ) : bottomProfiles.length > 0 ? (
