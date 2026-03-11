@@ -39,6 +39,14 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
   const navigate = useNavigate();
   const [selectedDateIdea, setSelectedDateIdea] = useState<string | null>(null);
   const [isMassageDrawerOpen, setIsMassageDrawerOpen] = useState(false);
+  const [isMassageUnlocked, setIsMassageUnlocked] = useState(false);
+
+  const handleMassageUnlock = () => {
+    // Here you would integrate with your payment system
+    // For now, we'll simulate the unlock
+    setIsMassageUnlocked(true);
+    toast.success("Massage therapists unlocked! You can now book directly via WhatsApp.");
+  };
 
   return (
     <>
@@ -462,7 +470,9 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
       {/* Massage Drawer */}
       <MassageDrawer 
         isOpen={isMassageDrawerOpen} 
-        onClose={() => setIsMassageDrawerOpen(false)} 
+        onClose={() => setIsMassageDrawerOpen(false)}
+        isUnlocked={isMassageUnlocked}
+        onUnlock={handleMassageUnlock}
       />
     </>
   );
