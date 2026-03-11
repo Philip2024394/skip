@@ -92,12 +92,16 @@
     
     /* Desktop centering with iPhone-style device frame and background */
     @media (min-width: 429px) {
+      /* Remove width constraints for background image */
+      width: 100vw;
+      max-width: none;
+      
       box-shadow: 0 0 60px rgba(236, 72, 153, 0.4);
       border-radius: 31px; /* 44px * 0.7 = 30.8px ≈ 31px */
       border: 10px solid #be185d; /* 14px * 0.7 = 9.8px ≈ 10px */
       margin: 20px auto;
-      height: calc((100vh - 40px) * 0.7); /* Reduce height by 30% */
-      max-height: calc((100vh - 40px) * 0.7);
+      height: calc(100vh - 40px); /* Full height before scaling */
+      max-height: calc(100vh - 40px);
       max-width: 300px; /* 428px * 0.7 = 299.6px ≈ 300px */
       overflow-y: auto;
       background: #000000;
@@ -135,8 +139,8 @@
     
     @media (min-width: 768px) {
       margin: 30px auto;
-      height: calc((100vh - 60px) * 0.7); /* Reduce height by 30% */
-      max-height: calc((100vh - 60px) * 0.7);
+      height: calc(100vh - 60px); /* Full height before scaling */
+      max-height: calc(100vh - 60px);
       box-shadow: 0 0 80px rgba(236, 72, 153, 0.5);
       
       &::before {
@@ -156,8 +160,8 @@
     
     @media (min-width: 1200px) {
       margin: 40px auto;
-      height: calc((100vh - 80px) * 0.7); /* Reduce height by 30% */
-      max-height: calc((100vh - 80px) * 0.7);
+      height: calc(100vh - 80px); /* Full height before scaling */
+      max-height: calc(100vh - 80px);
       box-shadow: 0 0 100px rgba(236, 72, 153, 0.6);
       
       &::before {
