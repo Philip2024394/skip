@@ -108,100 +108,90 @@ const ProfileEditor = () => {
       if (!user) return;
       setUserId(user.id);
 
-      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests, orientation";
-      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests, orientation";
-
+      // Use select("*") so we never 400 on missing columns — any column absent
+      // from the DB simply won't appear in the result and gets a safe default below.
       let data: Record<string, unknown> | null = null;
       let useBadgeColumns = true;
 
       const { data: fullData, error: fullError } = await supabase
         .from("profiles")
-        .select(columnsWithBadges)
+        .select("*")
         .eq("id", user.id)
         .single();
 
       if (fullError) {
-        const isColumnError = fullError.code === "42703" || (fullError.message && /column.*does not exist/i.test(fullError.message));
-        if (isColumnError) {
-          const { data: fallbackData } = await supabase
-            .from("profiles")
-            .select(columnsWithoutBadges)
-            .eq("id", user.id)
-            .single();
-          data = fallbackData as Record<string, unknown> | null;
-          useBadgeColumns = false;
-        }
+        // As a last-resort fallback, try only the guaranteed-core columns.
+        const coreColumns = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, images, available_tonight";
+        const { data: fallbackData } = await supabase
+          .from("profiles")
+          .select(coreColumns)
+          .eq("id", user.id)
+          .single();
+        data = fallbackData as Record<string, unknown> | null;
+        useBadgeColumns = false;
       } else {
         data = fullData as Record<string, unknown>;
       }
 
-      if (data) {
-        const imgs = ((data.images as string[]) || []);
-        const positions: ImagePosition[] = ((data.image_positions as ImagePosition[]) || []);
-        while (positions.length < imgs.length) positions.push({ ...defaultPos });
+      // Build a safe record even if data is null (new account / no row yet)
+      const row: Record<string, unknown> = data ?? {};
 
-        const available_tonight = (data.available_tonight as boolean) || false;
-        const is_plusone = (data.is_plusone as boolean) || false;
-        const generous_lifestyle = (data.generous_lifestyle as boolean) || false;
-        const weekend_plans = (data.weekend_plans as boolean) || false;
-        const late_night_chat = (data.late_night_chat as boolean) || false;
-        const no_drama = (data.no_drama as boolean) || false;
+      const imgs = ((row.images as string[]) || []);
+      const positions: ImagePosition[] = ((row.image_positions as ImagePosition[]) || []);
+      while (positions.length < imgs.length) positions.push({ ...defaultPos });
 
-        const badgePriority: Array<keyof Pick<ProfileData,
-          "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
-        >> = ["available_tonight", "is_plusone", "generous_lifestyle", "weekend_plans", "late_night_chat", "no_drama"];
+      const available_tonight = (row.available_tonight as boolean) || false;
+      const is_plusone = (row.is_plusone as boolean) || false;
+      const generous_lifestyle = (row.generous_lifestyle as boolean) || false;
+      const weekend_plans = (row.weekend_plans as boolean) || false;
+      const late_night_chat = (row.late_night_chat as boolean) || false;
+      const no_drama = (row.no_drama as boolean) || false;
 
-        const badgeState = {
-          available_tonight,
-          is_plusone,
-          generous_lifestyle,
-          weekend_plans,
-          late_night_chat,
-          no_drama,
-        };
+      const badgePriority: Array<keyof Pick<ProfileData,
+        "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
+      >> = ["available_tonight", "is_plusone", "generous_lifestyle", "weekend_plans", "late_night_chat", "no_drama"];
 
-        const activeBadges = badgePriority.filter((k) => badgeState[k]);
-        const keepBadge = activeBadges.length > 0 ? activeBadges[0] : null;
+      const badgeState = { available_tonight, is_plusone, generous_lifestyle, weekend_plans, late_night_chat, no_drama };
+      const activeBadges = badgePriority.filter((k) => badgeState[k]);
+      const keepBadge = activeBadges.length > 0 ? activeBadges[0] : null;
 
-        const normalizedBadges = {
-          available_tonight: keepBadge === "available_tonight" ? available_tonight : false,
-          is_plusone: keepBadge === "is_plusone" ? is_plusone : false,
-          generous_lifestyle: keepBadge === "generous_lifestyle" ? generous_lifestyle : false,
-          weekend_plans: keepBadge === "weekend_plans" ? weekend_plans : false,
-          late_night_chat: keepBadge === "late_night_chat" ? late_night_chat : false,
-          no_drama: keepBadge === "no_drama" ? no_drama : false,
-        };
+      const normalizedBadges = {
+        available_tonight: keepBadge === "available_tonight" ? available_tonight : false,
+        is_plusone: keepBadge === "is_plusone" ? is_plusone : false,
+        generous_lifestyle: keepBadge === "generous_lifestyle" ? generous_lifestyle : false,
+        weekend_plans: keepBadge === "weekend_plans" ? weekend_plans : false,
+        late_night_chat: keepBadge === "late_night_chat" ? late_night_chat : false,
+        no_drama: keepBadge === "no_drama" ? no_drama : false,
+      };
 
-        setProfile({
-          name: data.name as string,
-          age: data.age as number,
-          gender: data.gender as string,
-          looking_for: data.looking_for as string,
-          country: data.country as string,
-          city: (data.city as string) || "",
-          bio: sanitizeBio((data.bio as string) || ""),
-          whatsapp: data.whatsapp as string,
-          avatar_url: data.avatar_url as string | null,
-          images: imgs,
-          latitude: data.latitude as number | null,
-          longitude: data.longitude as number | null,
-          available_tonight: (data.available_tonight as boolean) || false,
-          voice_intro_url: (data.voice_intro_url as string | null) || null,
-          image_positions: positions,
-          first_date_idea: (data.first_date_idea as string | null) || null,
-          first_date_places: ((data.first_date_places as DatePlace[]) || []),
-          languages: (((data.languages as string[]) || []).slice(0, 2)),
-          height_cm: (data.height_cm as number | null) ?? null,
-          drinking: (data.drinking as string) || "",
-          smoking: (data.smoking as string) || "",
-          fitness: (data.fitness as string) || "",
-          pets: (data.pets as string) || "",
-          interests: ((data.interests as string[]) || []).slice(0, 8),
-          orientation: (data.orientation as string) || "",
-          ...normalizedBadges,
-        });
-        setSchemaHasBadgeColumns(useBadgeColumns);
-      }
+      setProfile({
+        name: (row.name as string) || "",
+        age: (row.age as number) || 18,
+        gender: (row.gender as string) || "",
+        looking_for: (row.looking_for as string) || "",
+        country: (row.country as string) || "",
+        city: (row.city as string) || "",
+        bio: sanitizeBio((row.bio as string) || ""),
+        whatsapp: (row.whatsapp as string) || "",
+        avatar_url: (row.avatar_url as string | null) || null,
+        images: imgs,
+        latitude: (row.latitude as number | null) ?? null,
+        longitude: (row.longitude as number | null) ?? null,
+        voice_intro_url: (row.voice_intro_url as string | null) || null,
+        image_positions: positions,
+        first_date_idea: (row.first_date_idea as string | null) || null,
+        first_date_places: ((row.first_date_places as DatePlace[]) || []),
+        languages: (((row.languages as string[]) || []).slice(0, 2)),
+        height_cm: (row.height_cm as number | null) ?? null,
+        drinking: (row.drinking as string) || "",
+        smoking: (row.smoking as string) || "",
+        fitness: (row.fitness as string) || "",
+        pets: (row.pets as string) || "",
+        interests: ((row.interests as string[]) || []).slice(0, 8),
+        orientation: (row.orientation as string) || "",
+        ...normalizedBadges,
+      });
+      setSchemaHasBadgeColumns(useBadgeColumns);
       setLoading(false);
     };
     loadProfile();
