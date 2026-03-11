@@ -271,69 +271,80 @@ const AuthPage = () => {
 
     return (
       <div
-        className="h-screen-safe relative overflow-hidden"
+        className="h-screen-safe flex flex-col overflow-hidden"
         style={{
           backgroundImage: `url('${buildLandingBgSrc(
             LANDING_BG_URL,
             LANDING_BG_URL_VERSION,
-            LANDING_BG_URL.includes("imagekit.io") ? { tr: "q-100,fo-auto,w-2160" } : undefined
+            LANDING_BG_URL.includes("imagekit.io") ? { tr: "q-100,fo-auto,w-1080" } : undefined
           )}')`,
-          backgroundSize: "auto calc(100% - 100px)",
-          backgroundPosition: "center",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+        {/* Gradient overlay — darkens bottom for card readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/70 pointer-events-none" />
 
-        <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-          <AppLogo className="w-20 h-20 object-contain" />
-          <div className="leading-none">
-            <span className="block text-white font-display font-extrabold tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
-              2DateMe
-            </span>
-            <span className="block text-[22px] font-black tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
-              <span className="text-white">Indonesia's </span>
-              <span className="text-yellow-400">Fastest</span>
-              <span className="text-white"> Way To Meet Singles</span>
-            </span>
-            <div className="mt-2 space-y-1.5">
-              {[
-                "Swipe And Match",
-                "Unlock WhatsApp",
-                "Meet Quickly",
-              ].map((label) => (
-                <div key={label} className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center shadow-[0_0_14px_rgba(34,197,94,0.35)]">
-                    <span className="text-[12px] leading-none text-black font-black">✓</span>
-                  </span>
-                  <span className="text-white text-[12px] font-bold drop-shadow-[0_2px_10px_rgba(0,0,0,0.35)]">
-                    {label}
-                  </span>
-                </div>
-              ))}
+        {/* ── Top bar ─────────────────────────────────────────── */}
+        <div className="relative z-20 flex items-center justify-between px-4 pt-safe"
+             style={{ paddingTop: `max(1rem, env(safe-area-inset-top, 1rem))` }}>
+          {/* Logo + name */}
+          <div className="flex items-center gap-2.5">
+            <AppLogo className="w-14 h-14 object-contain flex-shrink-0" />
+            <div className="leading-none">
+              <p className="text-white font-display font-black text-xl tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+                2DateMe
+              </p>
+              <p className="text-yellow-300 text-[11px] font-bold tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+                Indonesia's Dating App
+              </p>
             </div>
           </div>
+
+          {/* Language toggle */}
+          <button
+            onClick={toggleLocale}
+            className="px-2.5 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/15 text-white/80 hover:text-white transition-colors text-[11px] font-semibold"
+          >
+            {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
+          </button>
         </div>
 
-        {/* Language toggle */}
-        <button onClick={toggleLocale} className="absolute top-4 right-4 z-20 px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">
-          {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
-        </button>
+        {/* ── Feature bullets (mid-screen) ────────────────────── */}
+        <div className="relative z-20 mt-6 px-5 space-y-2">
+          {[
+            "Swipe & Match Real Singles",
+            "Unlock WhatsApp Instantly",
+            "Meet Quickly — No Fake Profiles",
+          ].map((label) => (
+            <div key={label} className="flex items-center gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.5)]">
+                <span className="text-[10px] leading-none text-white font-black">✓</span>
+              </span>
+              <span className="text-white text-[13px] font-semibold drop-shadow-[0_1px_8px_rgba(0,0,0,0.7)]">
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
 
-        <div
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-[min(94vw,22rem)] sm:w-[min(92vw,24rem)]"
-          style={{ paddingTop: `max(0px, env(safe-area-inset-top, 0px))` }}
-        >
-          <div className="rounded-3xl bg-yellow-400 p-3 shadow-[0_0_30px_rgba(250,204,21,0.25)] border border-yellow-300/60">
-            <p className="text-black text-lg font-black text-center leading-tight">Get Started Free</p>
-            <p className="text-black/70 text-[11px] font-semibold text-center mt-0.5">
+        {/* Spacer — background image visible here */}
+        <div className="flex-1" />
+
+        {/* ── CTA card — pinned to bottom ─────────────────────── */}
+        <div className="relative z-20 px-4 pb-safe"
+             style={{ paddingBottom: `max(1.25rem, env(safe-area-inset-bottom, 1.25rem))` }}>
+          <div className="rounded-3xl bg-yellow-400 p-4 shadow-[0_0_40px_rgba(250,204,21,0.3)] border border-yellow-300/60">
+            <p className="text-black text-[17px] font-black text-center leading-tight">Get Started Free</p>
+            <p className="text-black/65 text-[11px] font-semibold text-center mt-0.5">
               🔥 {getDailyOnlineCount().toLocaleString()} Online Looking For You
             </p>
 
-            <div className="mt-3 space-y-2">
-              <div className="grid grid-cols-[112px_1fr] gap-2">
+            <div className="mt-3 space-y-2.5">
+              <div className="grid grid-cols-[108px_1fr] gap-2">
                 <Select value={landingPrefix} onValueChange={setLandingPrefix}>
-                  <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-10">
+                  <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
                     <span className="flex items-center gap-1.5">
                       <span className="text-sm leading-none">{selectedFlag}</span>
                       <span className="text-[12px] font-semibold">{landingPrefix}</span>
@@ -356,34 +367,29 @@ const AuthPage = () => {
                   value={landingNumber}
                   onChange={(e) => setLandingNumber(e.target.value)}
                   placeholder="WhatsApp number"
-                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-10 w-full"
+                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
                   inputMode="tel"
                 />
               </div>
 
-              <p className="text-black/80 text-xs font-semibold text-center">
-                Enter WhatsApp to continue
-              </p>
-
               <Button
                 onClick={handleLandingEnter}
                 disabled={landingSubmitting}
-                className="w-full h-11 rounded-2xl bg-black text-white hover:bg-black/90 font-bold"
+                className="w-full h-12 rounded-2xl bg-black text-white hover:bg-black/90 font-black text-[15px]"
               >
-                {landingSubmitting ? "Entering..." : "Enter App"}
+                {landingSubmitting ? "Entering..." : "Enter App →"}
               </Button>
 
-              <button
-                type="button"
-                onClick={() => setShowAuth(true)}
-                className="w-full text-center text-black/70 text-[11px] font-semibold underline underline-offset-2"
-              >
-                Sign in / Register
-              </button>
-
-              <p className="text-black/60 text-[10px] text-center">
-                No verification required.
-              </p>
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowAuth(true)}
+                  className="text-black/65 text-[11px] font-semibold underline underline-offset-2"
+                >
+                  Sign in / Register
+                </button>
+                <p className="text-black/50 text-[10px]">No verification required</p>
+              </div>
             </div>
           </div>
         </div>
