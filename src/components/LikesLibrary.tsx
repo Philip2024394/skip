@@ -214,6 +214,7 @@ const LikesLibrary = ({
   const [showMadamZofeeParticles, setShowMadamZofeeParticles] = useState(false);
   const [tarotReaderSrc, setTarotReaderSrc] = useState(TAROT_READER_IMAGE_URL);
   const [showDailyTarotFront, setShowDailyTarotFront] = useState(false);
+  const [tarotProgressStep, setTarotProgressStep] = useState(0); // 0=idle 1=Preparing 2=Shuffling 3=Card Spread 4=Chosen
   const tarotSequenceTimeoutsRef = useRef<number[]>([]);
 
   const generateMadamZofeeReward = () => {
@@ -415,6 +416,7 @@ const LikesLibrary = ({
     if (!showTarotDrawer) {
       setTarotReaderSrc(TAROT_READER_IMAGE_URL);
       setShowDailyTarotFront(false);
+      setTarotProgressStep(0);
       return;
     }
 
@@ -427,13 +429,21 @@ const LikesLibrary = ({
 
     setShowDailyTarotFront(false);
     setTarotReaderSrc(TAROT_READER_SEQUENCE[0]?.src || TAROT_READER_IMAGE_URL);
+    setTarotProgressStep(1); // Preparing
+
+    // Progress step timers — timed to match sequence
+    tarotSequenceTimeoutsRef.current.push(window.setTimeout(() => setTarotProgressStep(2), 4000)); // Shuffling Cards
+    tarotSequenceTimeoutsRef.current.push(window.setTimeout(() => setTarotProgressStep(3), 9000)); // Card Spread
 
     let cumulative = 0;
     TAROT_READER_SEQUENCE.forEach((step, idx) => {
       const timeoutId = window.setTimeout(() => {
         setTarotReaderSrc(step.src);
         if (idx === TAROT_READER_SEQUENCE.length - 1) {
-          const revealId = window.setTimeout(() => setShowDailyTarotFront(true), step.durationMs);
+          const revealId = window.setTimeout(() => {
+            setShowDailyTarotFront(true);
+            setTarotProgressStep(4); // Chosen Card
+          }, step.durationMs);
           tarotSequenceTimeoutsRef.current.push(revealId);
         }
       }, cumulative);
@@ -1209,19 +1219,48 @@ const LikesLibrary = ({
                 </AnimatePresence>
               </div>
 
-              {/* Title */}
-              <p
-                style={{
-                  color: "#FFD700",
-                  fontSize: 13,
-                  fontWeight: "bold",
-                  letterSpacing: "0.1em",
-                  marginBottom: 12,
-                  textShadow: "0 0 12px rgba(255,215,0,0.5)",
-                }}
-              >
-                ✨ Daily Love Reading
-              </p>
+              {/* Progress steps */}
+              {!showDailyTarotFront ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, width: "100%", maxWidth: 220 }}>
+                  {([
+                    { step: 1, label: "Preparing the Cards" },
+                    { step: 2, label: "Shuffling..." },
+                    { step: 3, label: "Card Spread" },
+                    { step: 4, label: "Your Card is Chosen ✨" },
+                  ] as { step: number; label: string }[]).map(({ step, label }) => {
+                    const done = tarotProgressStep > step;
+                    const active = tarotProgressStep === step;
+                    return (
+                      <div key={step} style={{ display: "flex", alignItems: "center", gap: 8, opacity: tarotProgressStep >= step ? 1 : 0.3, transition: "opacity 0.4s" }}>
+                        <div style={{
+                          width: 18, height: 18, borderRadius: "50%",
+                          background: done ? "#FFD700" : active ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)",
+                          border: active ? "2px solid #FFD700" : done ? "2px solid #FFD700" : "2px solid rgba(255,255,255,0.2)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          flexShrink: 0,
+                          boxShadow: active ? "0 0 10px rgba(255,215,0,0.6)" : "none",
+                          transition: "all 0.4s",
+                        }}>
+                          {done && <span style={{ fontSize: 9, color: "#000", fontWeight: "bold" }}>✓</span>}
+                          {active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#FFD700", display: "block" }} />}
+                        </div>
+                        <span style={{
+                          fontSize: 11,
+                          color: active ? "#FFD700" : done ? "rgba(255,215,0,0.7)" : "rgba(255,255,255,0.4)",
+                          fontWeight: active ? "bold" : "normal",
+                          letterSpacing: "0.04em",
+                          textShadow: active ? "0 0 8px rgba(255,215,0,0.5)" : "none",
+                          transition: "all 0.4s",
+                        }}>{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p style={{ color: "#FFD700", fontSize: 13, fontWeight: "bold", letterSpacing: "0.1em", marginBottom: 12, textShadow: "0 0 12px rgba(255,215,0,0.5)" }}>
+                  ✨ Your Card Has Been Chosen
+                </p>
+              )}
 
               {/* Tarot card — face down until reveal */}
               {dailyTarot && (
