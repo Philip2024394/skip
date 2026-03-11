@@ -506,7 +506,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 flexDirection: "column",
                 alignItems: "center",
                 padding: "12px 20px 16px",
-                overflowY: "hidden",
+                overflowY: "auto",
                 flex: 1,
                 minHeight: 0,
               }}
