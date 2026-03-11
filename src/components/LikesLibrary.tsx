@@ -1252,10 +1252,10 @@ const LikesLibrary = ({
               {!showDailyTarotFront ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, width: "100%", maxWidth: 220 }}>
                   {([
-                    { step: 1, label: "Preparing the Cards" },
-                    { step: 2, label: "Shuffling..." },
-                    { step: 3, label: "Card Spread" },
-                    { step: 4, label: "Your Card is Chosen ✨" },
+                    { step: 1, label: "Preparing Spread" },
+                    { step: 2, label: "Channelling" },
+                    { step: 3, label: "Connected" },
+                    { step: 4, label: "Your Card Awaits ✨" },
                   ] as { step: number; label: string }[]).map(({ step, label }) => {
                     const done = tarotProgressStep > step;
                     const active = tarotProgressStep === step;
