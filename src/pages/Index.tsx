@@ -2230,66 +2230,175 @@ const Index = () => {
                       })()}
                     </div>
                   ) : (
-                    <div className="h-full w-full flex flex-col">
-                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">
-                        {selectedProfileSection === "basic" ? "Basic Info" : selectedProfileSection === "lifestyle" ? "Lifestyle" : "Interests"}
-                      </p>
+                    <div className="h-full w-full overflow-y-auto">
+                      {(() => {
+                        const basicInfo = (selectedProfile as any)?.basic_info as any || {};
+                        const lifestyleInfo = (selectedProfile as any)?.lifestyle_info as any || {};
+                        const relationshipGoals = (selectedProfile as any)?.relationship_goals as any || {};
 
-                      {selectedProfileSection === "basic" ? (
-                        <div className="flex-1 flex flex-col items-center justify-start px-1 pt-2">
-                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-3">
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Age: {selectedProfile?.age ?? ""}
-                            </p>
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Location: {selectedProfile?.city || selectedProfile?.country || ""}
-                            </p>
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Height: {(selectedProfile as any)?.height_cm ? `${(selectedProfile as any).height_cm} cm` : "Not specified"}
-                            </p>
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Gender: {(selectedProfile as any)?.gender || ""}
-                            </p>
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Looking for: {(selectedProfile as any)?.looking_for || ""}
-                            </p>
-                          </div>
-                        </div>
-                      ) : selectedProfileSection === "lifestyle" ? (
-                        <div className="flex-1 flex flex-col items-center justify-start px-1 pt-2">
-                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-3">
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Drinking: {(selectedProfile as any)?.drinking || "Not specified"}
-                            </p>
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Smoking: {(selectedProfile as any)?.smoking || "Not specified"}
-                            </p>
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Fitness: {(selectedProfile as any)?.fitness || "Not specified"}
-                            </p>
-                            <p className="text-white/70 text-xs leading-relaxed">
-                              Pets: {(selectedProfile as any)?.pets || "Not specified"}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex-1 flex flex-col items-center justify-start px-1 pt-2">
-                          <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-3">
-                            <div className="flex flex-wrap gap-2 justify-center">
-                              {(((selectedProfile as any)?.interests as string[] | null) || (selectedProfile?.languages || []) || [])
-                                .slice(0, 8)
-                                .map((t: string, idx: number) => (
-                                  <span key={`${t}-${idx}`} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[11px] font-semibold">
-                                    {t}
-                                  </span>
-                                ))}
-                              {((((selectedProfile as any)?.interests as string[] | null) || (selectedProfile?.languages || []) || []).length === 0) ? (
-                                <p className="text-white/50 text-xs">No interests yet</p>
-                              ) : null}
+                        const InfoChip = ({ label, value }: { label: string; value?: string }) =>
+                          value ? (
+                            <div style={{
+                              background: "rgba(255,255,255,0.07)",
+                              border: "1px solid rgba(255,255,255,0.12)",
+                              borderRadius: 20,
+                              padding: "4px 10px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}>
+                              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)" }}>{label}</span>
+                              <span style={{ fontSize: 11, color: "white", fontWeight: 600 }}>{value}</span>
+                            </div>
+                          ) : null;
+
+                        const Section = ({ title, chips }: { title: string; chips: React.ReactNode }) => (
+                          <div style={{ marginBottom: 12 }}>
+                            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>{title}</p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {chips}
                             </div>
                           </div>
-                        </div>
-                      )}
+                        );
+
+                        const ContainerBlock = ({
+                          emoji, title, subtitle, children, accentColor, defaultOpen
+                        }: {
+                          emoji: string; title: string; subtitle: string;
+                          children: React.ReactNode; accentColor: string; defaultOpen?: boolean;
+                        }) => {
+                          const [open, setOpen] = useState(defaultOpen ?? false);
+                          return (
+                            <div style={{
+                              borderRadius: 16,
+                              overflow: "hidden",
+                              border: `1px solid ${accentColor}33`,
+                              background: `linear-gradient(135deg, ${accentColor}11, rgba(0,0,0,0.3))`,
+                              marginBottom: 8,
+                            }}>
+                              <button
+                                onClick={() => setOpen(!open)}
+                                style={{
+                                  width: "100%",
+                                  padding: "12px 14px",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  background: "transparent",
+                                  border: "none",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  <span style={{
+                                    fontSize: 22,
+                                    width: 40, height: 40,
+                                    borderRadius: 12,
+                                    background: `${accentColor}22`,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                  }}>{emoji}</span>
+                                  <div style={{ textAlign: "left" }}>
+                                    <p style={{ color: "white", fontWeight: 700, fontSize: 13, margin: 0 }}>{title}</p>
+                                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>{open ? "Tap to close" : subtitle}</p>
+                                  </div>
+                                </div>
+                                <span style={{ color: accentColor, fontSize: 16 }}>{open ? "▲" : "▼"}</span>
+                              </button>
+
+                              {open && (
+                                <div style={{
+                                  padding: "0 14px 14px",
+                                  borderTop: `1px solid ${accentColor}22`,
+                                  paddingTop: 12,
+                                }}>
+                                  {children}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        };
+
+                        return (
+                          <div style={{ padding: "0 12px 8px" }}>
+                            {/* Basic Info */}
+                            <ContainerBlock emoji="👤" title="Basic Info" subtitle="Height, education, background" accentColor="#EC4899" defaultOpen={selectedProfileSection === "basic"}>
+                              <Section title="Physical" chips={<>
+                                <InfoChip label="📏" value={basicInfo.height} />
+                                <InfoChip label="💪" value={basicInfo.body_type} />
+                                <InfoChip label="🌏" value={basicInfo.ethnicity} />
+                              </>} />
+                              <Section title="Background" chips={<>
+                                <InfoChip label="🎓" value={basicInfo.education} />
+                                <InfoChip label="💼" value={basicInfo.occupation} />
+                                <InfoChip label="💰" value={basicInfo.income} />
+                                <InfoChip label="🏠" value={basicInfo.lives_with} />
+                                <InfoChip label="👶" value={basicInfo.children} />
+                              </>} />
+                              {basicInfo.languages?.length > 0 && (
+                                <Section title="Languages" chips={
+                                  basicInfo.languages.map((l: string) => <InfoChip key={l} label="🗣️" value={l} />)
+                                } />
+                              )}
+                            </ContainerBlock>
+
+                            {/* Lifestyle */}
+                            <ContainerBlock emoji="🌿" title="Lifestyle" subtitle="Habits, hobbies, how I live" accentColor="#8B5CF6" defaultOpen={selectedProfileSection === "lifestyle"}>
+                              <Section title="Habits" chips={<>
+                                <InfoChip label="🚬" value={lifestyleInfo.smoking} />
+                                <InfoChip label="🍷" value={lifestyleInfo.drinking} />
+                                <InfoChip label="🏃" value={lifestyleInfo.exercise} />
+                                <InfoChip label="🍽️" value={lifestyleInfo.diet} />
+                                <InfoChip label="🌙" value={lifestyleInfo.sleep} />
+                              </>} />
+                              <Section title="Personality" chips={<>
+                                <InfoChip label="🎭" value={lifestyleInfo.social_style} />
+                                <InfoChip label="❤️" value={lifestyleInfo.love_language} />
+                                <InfoChip label="🐾" value={lifestyleInfo.pets} />
+                                <InfoChip label="📱" value={lifestyleInfo.social_media} />
+                              </>} />
+                              {lifestyleInfo.hobbies?.length > 0 && (
+                                <Section title="Hobbies" chips={
+                                  lifestyleInfo.hobbies.map((h: string) => <InfoChip key={h} label="" value={h} />)
+                                } />
+                              )}
+                            </ContainerBlock>
+
+                            {/* Relationship Goals */}
+                            <ContainerBlock emoji="💍" title="Relationship Goals" subtitle="What I'm looking for" accentColor="#F59E0B" defaultOpen={selectedProfileSection === "interests"}>
+                              <Section title="My Intention" chips={<>
+                                <InfoChip label="💍" value={relationshipGoals.looking_for} />
+                                <InfoChip label="⏱️" value={relationshipGoals.timeline} />
+                                <InfoChip label="🌹" value={relationshipGoals.date_type} />
+                                <InfoChip label="💔" value={relationshipGoals.marital_status} />
+                              </>} />
+                              <Section title="Religion & Culture" chips={<>
+                                <InfoChip label="🕌" value={relationshipGoals.religion} />
+                                <InfoChip label="🙏" value={relationshipGoals.prayer} />
+                                <InfoChip label="👤" value={relationshipGoals.hijab} />
+                                <InfoChip label="🤲" value={relationshipGoals.partner_religion} />
+                              </>} />
+                              <Section title="Family & Tradition" chips={<>
+                                <InfoChip label="💛" value={relationshipGoals.dowry} />
+                                <InfoChip label="👨‍👩‍👧" value={relationshipGoals.family_involvement} />
+                                <InfoChip label="⚠️" value={relationshipGoals.polygamy} />
+                                <InfoChip label="📍" value={relationshipGoals.relocate} />
+                              </>} />
+                              {relationshipGoals.about_partner && (
+                                <div style={{
+                                  background: "rgba(245,158,11,0.08)",
+                                  border: "1px solid rgba(245,158,11,0.2)",
+                                  borderRadius: 12,
+                                  padding: "10px 12px",
+                                  marginTop: 8,
+                                }}>
+                                  <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>Looking for</p>
+                                  <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, lineHeight: 1.5, margin: 0 }}>{relationshipGoals.about_partner}</p>
+                                </div>
+                              )}
+                            </ContainerBlock>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

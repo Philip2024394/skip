@@ -20,6 +20,9 @@ import { HelpCircle, Languages, Plus, X as XIcon } from "lucide-react";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { BIO_MAX_LENGTH } from "@/lib/constants";
 import { sanitizeBio } from "@/utils/bio";
+import { BasicInfoEditor } from "@/components/profile-editor/BasicInfoEditor";
+import { LifestyleEditor } from "@/components/profile-editor/LifestyleEditor";
+import { RelationshipGoalsEditor } from "@/components/profile-editor/RelationshipGoalsEditor";
 
 const GENDERS = ["Male", "Female", "Non-binary", "Other"];
 const LOOKING_FOR = ["Men", "Women", "Everyone"];
@@ -63,6 +66,9 @@ interface ProfileData {
   pets: string;
   interests: string[];
   orientation: string;
+  basic_info: Record<string, unknown>;
+  lifestyle_info: Record<string, unknown>;
+  relationship_goals: Record<string, unknown>;
 }
 
 const ProfileEditor = () => {
@@ -189,6 +195,9 @@ const ProfileEditor = () => {
         pets: (row.pets as string) || "",
         interests: ((row.interests as string[]) || []).slice(0, 8),
         orientation: (row.orientation as string) || "",
+        basic_info: (row.basic_info as Record<string, unknown>) || {},
+        lifestyle_info: (row.lifestyle_info as Record<string, unknown>) || {},
+        relationship_goals: (row.relationship_goals as Record<string, unknown>) || {},
         ...normalizedBadges,
       });
       setSchemaHasBadgeColumns(useBadgeColumns);
@@ -353,6 +362,9 @@ const ProfileEditor = () => {
         pets: profile.pets || null,
         interests: profile.interests as unknown as import("@/integrations/supabase/types").Json,
         orientation: profile.orientation || null,
+        basic_info: profile.basic_info as unknown as import("@/integrations/supabase/types").Json,
+        lifestyle_info: profile.lifestyle_info as unknown as import("@/integrations/supabase/types").Json,
+        relationship_goals: profile.relationship_goals as unknown as import("@/integrations/supabase/types").Json,
         is_plusone: profile.is_plusone,
         generous_lifestyle: profile.generous_lifestyle,
         ...(schemaHasBadgeColumns && {
@@ -686,75 +698,19 @@ const ProfileEditor = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Height (cm)</Label>
-          <Input
-            type="number"
-            min={120}
-            max={230}
-            value={profile.height_cm ?? ""}
-            onChange={(e) => update("height_cm", e.target.value ? parseInt(e.target.value) : null)}
-            className="bg-muted border-border h-9 text-sm"
-          />
-        </div>
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Drinking</Label>
-          <Select value={profile.drinking} onValueChange={(v) => update("drinking", v)}>
-            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
-            <SelectContent>
-              {["", "Socially", "No"].map((v) => (
-                <SelectItem key={v || "none"} value={v}>{v || "Not specified"}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Smoking</Label>
-          <Select value={profile.smoking} onValueChange={(v) => update("smoking", v)}>
-            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
-            <SelectContent>
-              {["", "Yes", "No"].map((v) => (
-                <SelectItem key={v || "none"} value={v}>{v || "Not specified"}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-muted-foreground text-xs mb-1 block">Fitness</Label>
-          <Select value={profile.fitness} onValueChange={(v) => update("fitness", v)}>
-            <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue placeholder="Select" /></SelectTrigger>
-            <SelectContent>
-              {["", "Active", "Casual"].map((v) => (
-                <SelectItem key={v || "none"} value={v}>{v || "Not specified"}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block">Pets</Label>
-        <Input value={profile.pets} onChange={(e) => update("pets", e.target.value)} className="bg-muted border-border h-9 text-sm" placeholder="Dog lover 🐶" />
-      </div>
-
-      <div>
-        <Label className="text-muted-foreground text-xs mb-1 block">Interests (comma separated, max 8)</Label>
-        <Input
-          value={(profile.interests || []).join(", ")}
-          onChange={(e) => {
-            const items = e.target.value
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
-              .slice(0, 8);
-            update("interests", items);
-          }}
-          className="bg-muted border-border h-9 text-sm"
-          placeholder="Movies, Beach, Travel, Sushi"
+      {/* Profile Info Sections */}
+      <div className="pb-2">
+        <BasicInfoEditor
+          value={profile.basic_info as any}
+          onChange={(v) => update("basic_info", v)}
+        />
+        <LifestyleEditor
+          value={profile.lifestyle_info as any}
+          onChange={(v) => update("lifestyle_info", v)}
+        />
+        <RelationshipGoalsEditor
+          value={profile.relationship_goals as any}
+          onChange={(v) => update("relationship_goals", v)}
         />
       </div>
 
