@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { toast } from "sonner";
+import MassageDrawer from "@/components/overlays/MassageDrawer";
 
 interface ProfileBottomSheetProps {
   // Profile data
@@ -37,6 +38,7 @@ interface ProfileBottomSheetProps {
 export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
   const navigate = useNavigate();
   const [selectedDateIdea, setSelectedDateIdea] = useState<string | null>(null);
+  const [isMassageDrawerOpen, setIsMassageDrawerOpen] = useState(false);
 
   return (
     <>
@@ -189,7 +191,14 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                           ];
                           const item = treats.find((t) => t.key === props.selectedTreatItem) ?? treats[0];
                           return (
-                            <div className="w-full rounded-2xl bg-black/30 border border-fuchsia-300/20 px-5 py-5 flex flex-col items-center gap-3">
+                            <div 
+                              className={`w-full rounded-2xl bg-black/30 border border-fuchsia-300/20 px-5 py-5 flex flex-col items-center gap-3 ${item.key === 'massage' ? 'cursor-pointer hover:bg-black/40 transition-colors' : ''}`}
+                              onClick={() => {
+                                if (item.key === 'massage') {
+                                  setIsMassageDrawerOpen(true);
+                                }
+                              }}
+                            >
                               <span style={{ fontSize: 44 }}>{item.emoji}</span>
                               <p className="text-white font-black text-base text-center">{item.label}</p>
                               <p className="text-white/60 text-xs text-center leading-relaxed">{item.detail}</p>
@@ -449,6 +458,12 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                   )}
                 </div>
       </div>
+      
+      {/* Massage Drawer */}
+      <MassageDrawer 
+        isOpen={isMassageDrawerOpen} 
+        onClose={() => setIsMassageDrawerOpen(false)} 
+      />
     </>
   );
 }
