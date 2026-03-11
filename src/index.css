@@ -90,29 +90,79 @@
     margin: 0 auto;
     overflow-x: hidden;
     
-    /* Desktop centering with device frame */
+    /* Desktop centering with iPhone-style device frame */
     @media (min-width: 429px) {
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
-      border-radius: 40px;
-      border: 12px solid #1a1a1a;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
+      border-radius: 44px;
+      border: 14px solid #0a0a0a;
       margin: 20px auto;
       height: calc(100vh - 40px);
       max-height: calc(100vh - 40px);
+      max-width: 428px;
       overflow-y: auto;
-      background: white;
+      background: #000000;
       position: relative;
+      
+      /* iPhone-style camera notch */
+      &::before {
+        content: '';
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 150px;
+        height: 28px;
+        background: #0a0a0a;
+        border-radius: 0 0 20px 20px;
+        z-index: 10;
+      }
+      
+      /* iPhone-style edge buttons */
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50px;
+        right: -2px;
+        width: 4px;
+        height: 60px;
+        background: linear-gradient(to bottom, #333, #666, #333);
+        border-radius: 0 4px 4px 0;
+        z-index: 11;
+      }
     }
     
     @media (min-width: 768px) {
       margin: 30px auto;
       height: calc(100vh - 60px);
       max-height: calc(100vh - 60px);
+      
+      &::before {
+        top: 14px;
+        width: 160px;
+        height: 30px;
+      }
+      
+      &::after {
+        top: 60px;
+        height: 80px;
+      }
     }
     
     @media (min-width: 1200px) {
       margin: 40px auto;
       height: calc(100vh - 80px);
       max-height: calc(100vh - 80px);
+      
+      &::before {
+        top: 16px;
+        width: 170px;
+        height: 32px;
+      }
+      
+      &::after {
+        top: 70px;
+        height: 100px;
+      }
     }
   }
 
@@ -125,11 +175,23 @@
     margin: 0;
     position: relative;
     
-    /* Desktop: fit within frame */
+    /* Desktop: fit within iPhone frame */
     @media (min-width: 429px) {
       height: 100%;
-      border-radius: 28px; /* Slightly smaller than body border */
+      border-radius: 30px; /* Slightly smaller than body border */
       overflow: hidden;
+      background: white;
+      margin-top: 28px; /* Space for camera notch */
+    }
+    
+    @media (min-width: 768px) {
+      margin-top: 30px; /* Space for larger camera notch */
+      border-radius: 32px;
+    }
+    
+    @media (min-width: 1200px) {
+      margin-top: 32px; /* Space for largest camera notch */
+      border-radius: 34px;
     }
   }
 
