@@ -323,7 +323,7 @@ const AuthPage = () => {
           {[
             "Swipe & Match Real Singles",
             "Unlock WhatsApp Instantly",
-            "Meet Quickly — No Fake Profiles",
+            "Meet Quickly On WhatsApp",
           ].map((label) => (
             <div key={label} className="flex items-center gap-2.5">
               <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.5)]">
