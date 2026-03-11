@@ -1303,63 +1303,69 @@ const LikesLibrary = ({
                     )}
                   </AnimatePresence>
 
-                  {/* Grave digger — in-flow, directly under the card */}
-                  <AnimatePresence>
-                    {showDailyTarotFront && (
-                      <motion.img
-                        src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
-                        alt=""
-                        aria-hidden="true"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
-                        style={{
-                          width: "100%",
-                          maxWidth: 320,
-                          objectFit: "contain",
-                          objectPosition: "bottom center",
-                          pointerEvents: "none",
-                          marginTop: -20,
-                        }}
-                      />
-                    )}
-                  </AnimatePresence>
-
-                  {/* Card info — only shows after card flips */}
+                  {/* Grave digger + card text — image with text centered over it */}
                   <AnimatePresence>
                     {showDailyTarotFront && (
                       <motion.div
-                        initial={{ opacity: 0, y: 16 }}
+                        initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.4, delay: 0.3 }}
                         style={{
-                          marginTop: 166,
+                          position: "relative",
                           width: "100%",
-                          textAlign: "center",
+                          maxWidth: 320,
+                          marginTop: 16,
                         }}
                       >
-                        <p
+                        {/* Image */}
+                        <img
+                          src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
+                          alt=""
+                          aria-hidden="true"
                           style={{
-                            color: "#FFD700",
-                            fontWeight: "bold",
-                            fontSize: 13,
-                            marginBottom: 8,
-                            textShadow: "0 0 8px rgba(255,215,0,0.4)",
+                            width: "100%",
+                            objectFit: "contain",
+                            objectPosition: "bottom center",
+                            pointerEvents: "none",
+                            display: "block",
+                          }}
+                        />
+                        {/* Text centered over the image */}
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0 20px",
+                            textAlign: "center",
                           }}
                         >
-                          {dailyTarot.cardName}
-                        </p>
-                        <p
-                          style={{
-                            color: "rgba(255,255,255,0.88)",
-                            fontSize: 13,
-                            lineHeight: 1.7,
-                          }}
-                        >
-                          {dailyTarot.reading}
-                        </p>
+                          <p
+                            style={{
+                              color: "#FFD700",
+                              fontWeight: "bold",
+                              fontSize: 13,
+                              marginBottom: 6,
+                              textShadow: "0 0 10px rgba(0,0,0,0.9), 0 0 8px rgba(255,215,0,0.4)",
+                            }}
+                          >
+                            {dailyTarot.cardName}
+                          </p>
+                          <p
+                            style={{
+                              color: "rgba(255,255,255,0.92)",
+                              fontSize: 11,
+                              lineHeight: 1.6,
+                              textShadow: "0 1px 4px rgba(0,0,0,0.9)",
+                            }}
+                          >
+                            {dailyTarot.reading}
+                          </p>
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
