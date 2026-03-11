@@ -349,7 +349,7 @@ const AuthPage = () => {
             </p>
 
             <div className="mt-3 space-y-2.5">
-              <div className="grid grid-cols-[108px_1fr] gap-2">
+              <div className="grid grid-cols-[76px_1fr] gap-2">
                 <Select value={landingPrefix} onValueChange={setLandingPrefix}>
                   <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
                     <span className="flex items-center gap-1.5">
