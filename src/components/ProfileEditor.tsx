@@ -695,11 +695,11 @@ const ProfileEditor = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">Name</Label>
-              <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+              <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
             </div>
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">Age</Label>
-              <Input type="number" min={18} max={99} value={profile.age} onChange={(e) => update("age", parseInt(e.target.value) || 18)} className="bg-muted border-border h-9 text-sm" />
+              <Input type="number" min={18} max={99} value={profile.age} onChange={(e) => update("age", parseInt(e.target.value) || 18)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
             </div>
           </div>
 
@@ -707,14 +707,14 @@ const ProfileEditor = () => {
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">Gender</Label>
               <Select value={profile.gender} onValueChange={(v) => update("gender", v)}>
-                <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none"><SelectValue /></SelectTrigger>
                 <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">Looking for</Label>
               <Select value={profile.looking_for} onValueChange={(v) => update("looking_for", v)}>
-                <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none"><SelectValue /></SelectTrigger>
                 <SelectContent>{LOOKING_FOR.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
               </Select>
             </div>
@@ -723,11 +723,11 @@ const ProfileEditor = () => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">Country</Label>
-              <Input value={profile.country} onChange={(e) => update("country", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+              <Input value={profile.country} onChange={(e) => update("country", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
             </div>
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">City</Label>
-              <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+              <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
             </div>
           </div>
 
@@ -764,7 +764,7 @@ const ProfileEditor = () => {
               value={profile.bio}
               onChange={(e) => update("bio", sanitizeBio(e.target.value))}
               rows={3}
-              className="bg-muted border-border text-sm resize-none"
+              className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none resize-none"
               placeholder="About you (no emoji or phone numbers, max 250 characters)"
             />
             <p className="text-muted-foreground text-[10px] mt-1 text-right">
@@ -774,7 +774,7 @@ const ProfileEditor = () => {
 
           <div>
             <Label className="text-muted-foreground text-xs mb-1 block">WhatsApp</Label>
-            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="bg-muted border-border h-9 text-sm" />
+            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
           </div>
 
           {/* Voice Intro */}
@@ -1135,7 +1135,7 @@ const ProfileEditor = () => {
           <Heart className="w-3 h-3 text-primary" /> First Date Would Be Nice...
         </Label>
         <Select value={profile.first_date_idea || ""} onValueChange={(v) => update("first_date_idea", v || null)}>
-          <SelectTrigger className="bg-muted border-border h-9 text-sm"><SelectValue placeholder="Select your ideal first date" /></SelectTrigger>
+          <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none"><SelectValue placeholder="Select your ideal first date" /></SelectTrigger>
           <SelectContent className="max-h-[200px]">
             {FIRST_DATE_IDEAS.map((idea) => <SelectItem key={idea} value={idea}>{idea}</SelectItem>)}
           </SelectContent>
@@ -1191,7 +1191,20 @@ const ProfileEditor = () => {
 
               {!isLast ? (
                 <button
-                  onClick={() => setEditorStep(steps[currentIdx + 1] as any)}
+                  onClick={async () => {
+  // Auto save current step data silently
+  if (profile && userId) {
+    await supabase.from("profiles").update({
+      basic_info: profile.basic_info as any,
+      lifestyle_info: profile.lifestyle_info as any,
+      relationship_goals: profile.relationship_goals as any,
+      name: profile.name,
+      age: profile.age,
+      bio: profile.bio,
+    }).eq("id", userId);
+  }
+  setEditorStep(steps[currentIdx + 1] as any);
+}}
                   style={{
                     flex: 2,
                     padding: "12px",

@@ -46,7 +46,7 @@ export const LifestyleEditor = ({
     label: string; field: keyof LifestyleInfo; options: string[]; multi?: boolean; max?: number;
   }) => (
     <div className="mb-4">
-      <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, marginBottom: 8, fontWeight: 600 }}>{label}{max ? ` (pick up to ${max})` : ""}</p>
+      <p style={{ color: "#EC4899", fontSize: 9, fontWeight: 700, marginBottom: 8 }}>{label}{max ? ` (pick up to ${max})` : ""}</p>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const selected = multi
@@ -99,16 +99,16 @@ export const LifestyleEditor = ({
   );
 
   return (
-    <div className="rounded-2xl overflow-hidden mb-4" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+    <div className="rounded-2xl overflow-hidden mb-4" style={{ background: "white", border: "1px solid rgba(236,72,153,0.15)", boxShadow: "0 2px 8px rgba(236,72,153,0.06)" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-4"
+        className="w-full flex items-center justify-between p-4 bg-white"
       >
         <div className="flex items-center gap-3">
           <span className="text-xl">🌿</span>
           <div className="text-left">
-            <p className="text-white font-bold text-sm">Lifestyle</p>
-            <p className="text-white/40 text-xs">Habits, hobbies, how you live</p>
+            <p style={{ color: "#1F2937", fontWeight: 700, fontSize: 14, margin: 0 }}>Lifestyle</p>
+            <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0 }}>Daily habits, hobbies, preferences</p>
           </div>
         </div>
         {open ? <ChevronUp className="w-4 h-4 text-white/40" /> : <ChevronDown className="w-4 h-4 text-white/40" />}
