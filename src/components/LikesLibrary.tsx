@@ -1076,7 +1076,7 @@ const LikesLibrary = ({
 
               {/* Premium Reading */}
               <button
-                onClick={() => setShowPremiumReading(true)}
+                onClick={(e) => { e.stopPropagation(); setShowPremiumReading(true); }}
                 style={{
                   width: 36,
                   height: 36,
@@ -1293,7 +1293,7 @@ const LikesLibrary = ({
       {showPremiumReading && !premiumReadingResult && (
         <>
           <div
-            onClick={() => setShowPremiumReading(false)}
+            onClick={(e) => { e.stopPropagation(); setShowPremiumReading(false); setShowTarotDrawer(true); }}
             style={{
               position: "fixed",
               inset: 0,
@@ -1319,7 +1319,7 @@ const LikesLibrary = ({
             <style>{`.premium-reading-selection{scrollbar-width:none;-ms-overflow-style:none}.premium-reading-selection::-webkit-scrollbar{width:0;height:0}`}</style>
             {/* Close button */}
             <button
-              onClick={() => setShowPremiumReading(false)}
+              onClick={(e) => { e.stopPropagation(); setShowPremiumReading(false); setShowTarotDrawer(true); }}
               style={{
                 position: "absolute",
                 top: 16,
@@ -1502,12 +1502,14 @@ const LikesLibrary = ({
 
           {/* Close button */}
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setShowPremiumReading(false);
               setPremiumReadingResult(null);
               setPremiumReadingType(null);
               setSelectedCards([]);
               setRevealedCards([]);
+              setShowTarotDrawer(true);
             }}
             style={{
               position: "fixed",
