@@ -90,7 +90,7 @@
     margin: 0 auto;
     overflow-x: hidden;
     
-    /* Desktop centering with iPhone-style device frame */
+    /* Desktop centering with iPhone-style device frame and background */
     @media (min-width: 429px) {
       box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
       border-radius: 44px;
@@ -197,6 +197,23 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+  }
+}
+
+/* Desktop background image */
+@media (min-width: 429px) {
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('https://ik.imagekit.io/7grri5v7d/ssssssddff.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
   }
 }
 
