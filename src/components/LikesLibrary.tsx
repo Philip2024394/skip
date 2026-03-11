@@ -950,7 +950,43 @@ const LikesLibrary = ({
               boxShadow: "0 -4px 40px rgba(255,105,180,0.35)",
             }}
           >
-            {/* Grave digger — only appears when card text appears, same fade timing */}
+            {/* Graveyard background image */}
+            <img
+              src="https://ik.imagekit.io/7grri5v7d/grave%20yard.png?updatedAt=1773169904335"
+              alt=""
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "center top",
+                zIndex: 0,
+                pointerEvents: "none",
+              }}
+            />
+
+            {/* Shade overlay — fades in when card is revealed */}
+            <AnimatePresence>
+              {showDailyTarotFront && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.5 }}
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "rgba(0,0,0,0.45)",
+                    zIndex: 1,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+            </AnimatePresence>
+
+          {/* Grave digger — only appears when card text appears, same fade timing */}
             <AnimatePresence>
               {showDailyTarotFront && (
                 <motion.img
@@ -970,7 +1006,7 @@ const LikesLibrary = ({
                     maxWidth: 420,
                     objectFit: "contain",
                     objectPosition: "bottom center",
-                    zIndex: 1,
+                    zIndex: 2,
                     pointerEvents: "none",
                   }}
                 />
