@@ -44,7 +44,7 @@ export const RelationshipGoalsEditor = ({
     label: string; field: keyof RelationshipGoals; options: string[];
   }) => (
     <div className="mb-4">
-      <p className="text-white/60 text-xs mb-2 font-medium">{label}</p>
+      <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, marginBottom: 8, fontWeight: 600 }}>{label}</p>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const selected = value[field] === opt;
@@ -52,13 +52,20 @@ export const RelationshipGoalsEditor = ({
             <button
               key={opt}
               onClick={() => update(field, selected ? undefined : opt)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                selected
-                  ? "bg-pink-500/30 border-pink-500 text-white"
-                  : "bg-white/5 border-white/15 text-white hover:border-white/30"
-              }`}
+              style={{
+                padding: "6px 12px",
+                borderRadius: 999,
+                fontSize: 12,
+                fontWeight: 600,
+                border: selected ? "1px solid #F59E0B" : "1px solid rgba(255,255,255,0.15)",
+                background: selected ? "rgba(245,158,11,0.25)" : "rgba(255,255,255,0.05)",
+                color: selected ? "#fde68a" : "rgba(255,255,255,0.85)",
+                cursor: "pointer",
+                transition: "all 0.15s",
+                whiteSpace: "nowrap" as const,
+              }}
             >
-              <span style={{ color: "inherit", fontSize: "inherit" }}>{opt}</span>
+              {opt}
             </button>
           );
         })}
