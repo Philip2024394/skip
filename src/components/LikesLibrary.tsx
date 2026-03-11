@@ -1239,6 +1239,7 @@ const LikesLibrary = ({
               maxHeight: "88vh",
               display: "flex",
               flexDirection: "column",
+              background: "#080010",
               borderTop: "2px solid rgba(255,105,180,0.55)",
               boxShadow: "0 -4px 40px rgba(255,105,180,0.35)",
             }}
