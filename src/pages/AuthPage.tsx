@@ -293,14 +293,11 @@ const AuthPage = () => {
           <div className="flex items-center gap-2.5">
             <AppLogo className="w-28 h-28 object-contain flex-shrink-0" />
             <div className="leading-none">
-              <p className="text-white font-display font-black text-xl tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+              <p className="text-white font-display font-black text-[40px] tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
                 2DateMe
               </p>
-              <p className="text-yellow-300 text-[11px] font-bold tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
+              <p className="text-yellow-300 text-[22px] font-bold tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
                 Indonesia's Dating App
-              </p>
-              <p className="text-white text-[12px] font-bold mt-1 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
-                Indonesia's <span className="text-yellow-300">Fastest</span> way to meet singles
               </p>
             </div>
           </div>
@@ -312,6 +309,13 @@ const AuthPage = () => {
           >
             {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
           </button>
+        </div>
+
+        {/* ── Tagline under logo ──────────────────────────────── */}
+        <div className="relative z-20 px-5 mt-3 text-center">
+          <p className="text-white text-[48px] font-black leading-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)]">
+            Indonesia's <span className="text-yellow-300">Fastest</span> way to meet singles
+          </p>
         </div>
 
         {/* ── Feature bullets (mid-screen) ────────────────────── */}
