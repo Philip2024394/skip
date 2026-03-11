@@ -80,6 +80,88 @@ const saveLocalLikedMeProfiles = (profiles: Profile[]) => {
   }
 };
 
+const InfoChip = ({ label, value }: { label: string; value?: string }) =>
+  value ? (
+    <div style={{
+      background: "rgba(255,255,255,0.07)",
+      border: "1px solid rgba(255,255,255,0.12)",
+      borderRadius: 20,
+      padding: "4px 10px",
+      display: "flex",
+      alignItems: "center",
+      gap: 4,
+    }}>
+      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)" }}>{label}</span>
+      <span style={{ fontSize: 11, color: "white", fontWeight: 600 }}>{value}</span>
+    </div>
+  ) : null;
+
+const Section = ({ title, chips }: { title: string; chips: React.ReactNode }) => (
+  <div style={{ marginBottom: 12 }}>
+    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>{title}</p>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      {chips}
+    </div>
+  </div>
+);
+
+const ContainerBlock = ({
+  emoji, title, subtitle, children, accentColor, defaultOpen
+}: {
+  emoji: string; title: string; subtitle: string;
+  children: React.ReactNode; accentColor: string; defaultOpen?: boolean;
+}) => {
+  const [open, setOpen] = useState(defaultOpen ?? false);
+  return (
+    <div style={{
+      borderRadius: 16,
+      overflow: "hidden",
+      border: `1px solid ${accentColor}33`,
+      background: `linear-gradient(135deg, ${accentColor}11, rgba(0,0,0,0.3))`,
+      marginBottom: 8,
+    }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: "100%",
+          padding: "12px 14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{
+            fontSize: 22,
+            width: 40, height: 40,
+            borderRadius: 12,
+            background: `${accentColor}22`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>{emoji}</span>
+          <div style={{ textAlign: "left" }}>
+            <p style={{ color: "white", fontWeight: 700, fontSize: 13, margin: 0 }}>{title}</p>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>{open ? "Tap to close" : subtitle}</p>
+          </div>
+        </div>
+        <span style={{ color: accentColor, fontSize: 16 }}>{open ? "\u25b2" : "\u25bc"}</span>
+      </button>
+
+      {open && (
+        <div style={{
+          padding: "0 14px 14px",
+          borderTop: `1px solid ${accentColor}22`,
+          paddingTop: 12,
+        }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Index = () => {
   const { t, toggleLocale, locale } = useLanguage();
   const navigate = useNavigate();
@@ -2020,28 +2102,28 @@ const Index = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
               <div
                 className={`relative z-10 h-full w-full ${
-                  aboutMeTab === "received" && selectedUnlockItemKey === "unlock:single"
+                  aboutMeTab === "received" && ["unlock:single", "unlock:pack3", "unlock:pack10"].includes(selectedUnlockItemKey)
                     ? "px-0 py-0"
                     : "px-6 py-6"
                 }`}
               >
                 <div
                   className={`h-full w-full rounded-2xl bg-gradient-to-br from-fuchsia-900/25 via-black/35 to-purple-900/25 backdrop-blur-md border-2 border-fuchsia-300/25 ring-1 ring-fuchsia-300/15 shadow-[0_8px_24px_rgba(0,0,0,0.55)] flex ${
-                    aboutMeTab === "received" && selectedUnlockItemKey === "unlock:single"
+                    aboutMeTab === "received" && ["unlock:single", "unlock:pack3", "unlock:pack10"].includes(selectedUnlockItemKey)
                       ? "p-0 items-stretch justify-stretch rounded-none border-0 ring-0 shadow-none"
                       : "px-5 py-4 items-center justify-center"
                   }`}
                 >
                   {aboutMeTab === "received" ? (
                     <div className="h-full w-full flex flex-col">
-                      {selectedUnlockItemKey !== "unlock:single" && (
+                      {!["unlock:single", "unlock:pack3", "unlock:pack10"].includes(selectedUnlockItemKey) && (
                         <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Unlock</p>
                       )}
 
-                      {selectedUnlockItemKey === "unlock:single" ? (
+                      {["unlock:single", "unlock:pack3", "unlock:pack10"].includes(selectedUnlockItemKey) ? (
                         <div className="flex-1 w-full relative overflow-hidden rounded-none border-0">
                           <img
-                            src="https://ik.imagekit.io/7grri5v7d/match%20unlock.png?v=1"
+                            src="https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png"
                             alt=""
                             className="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
                             draggable={false}
@@ -2050,60 +2132,67 @@ const Index = () => {
                           <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/75" />
 
                           <div className="relative z-10 h-full w-full p-4 flex flex-col items-center justify-center text-center">
-                            <p className="text-white text-base font-black">1 Match Unlock</p>
-                            <p className="text-white/85 text-xs mt-1 max-w-sm">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
-
-                            <div className="mt-5 w-full max-w-sm flex items-center justify-between">
-                              <p className="text-white/95 font-black text-2xl">$1.99</p>
-                              <Button
-                                onClick={() => {
-                                  if (!selectedProfile) return;
-                                  setUnlockDialog(selectedProfile);
-                                }}
-                                className="gradient-love text-primary-foreground border-0 h-11 rounded-xl font-black"
-                              >
-                                Unlock now
-                              </Button>
-                            </div>
-
-                            <div className="mt-4 w-full max-w-sm rounded-xl bg-white/5 border border-white/10 px-3 py-2">
-                              <p className="text-white/70 text-[11px] font-semibold">Requires a mutual match ✅</p>
-                            </div>
+                            {selectedUnlockItemKey === "unlock:single" ? (
+                              <>
+                                <p className="text-white text-base font-black">1 Match Unlock</p>
+                                <p className="text-white/85 text-xs mt-1 max-w-sm">Unlock WhatsApp after you both match. Fast, simple, direct.</p>
+                                <div className="mt-5 w-full max-w-sm flex items-center justify-between">
+                                  <p className="text-white/95 font-black text-2xl">$1.99</p>
+                                  <Button
+                                    onClick={() => { if (!selectedProfile) return; setUnlockDialog(selectedProfile); }}
+                                    className="gradient-love text-primary-foreground border-0 h-11 rounded-xl font-black"
+                                  >
+                                    Unlock now
+                                  </Button>
+                                </div>
+                                <div className="mt-4 w-full max-w-sm rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+                                  <p className="text-white/70 text-[11px] font-semibold">Requires a mutual match ✅</p>
+                                </div>
+                              </>
+                            ) : selectedUnlockItemKey === "unlock:pack3" ? (
+                              <>
+                                <p className="text-white text-base font-black">3 Unlock Pack</p>
+                                <p className="text-white/85 text-xs mt-1 max-w-sm">Perfect for a week of real connections. Save vs singles.</p>
+                                <div className="mt-5 w-full max-w-sm flex items-center justify-between">
+                                  <p className="text-white/95 font-black text-2xl">$4.99</p>
+                                  <Button
+                                    onClick={() => toast.info("3-pack checkout coming next")}
+                                    className="gradient-love text-primary-foreground border-0 h-11 rounded-xl font-black"
+                                  >
+                                    Choose pack
+                                  </Button>
+                                </div>
+                                <div className="mt-4 w-full max-w-sm rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+                                  <p className="text-white/70 text-[11px] font-semibold">Best for casual + active users.</p>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-white text-base font-black">10 Unlock Pack</p>
+                                <p className="text-white/85 text-xs mt-1 max-w-sm">Best value for heavy matching. Lowest cost per unlock.</p>
+                                <div className="mt-5 w-full max-w-sm flex items-center justify-between">
+                                  <p className="text-white/95 font-black text-2xl">$12.99</p>
+                                  <Button
+                                    onClick={() => toast.info("10-pack checkout coming next")}
+                                    className="gradient-love text-primary-foreground border-0 h-11 rounded-xl font-black"
+                                  >
+                                    Choose pack
+                                  </Button>
+                                </div>
+                                <div className="mt-4 w-full max-w-sm rounded-xl bg-white/5 border border-white/10 px-3 py-2">
+                                  <p className="text-white/70 text-[11px] font-semibold">Best value package.</p>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       ) : (
                         <div className="flex-1 flex flex-col items-center justify-center px-1">
                           <div className="w-full max-w-md rounded-2xl bg-black/30 border border-white/10 px-4 py-4">
                             {selectedUnlockItemKey === "unlock:pack3" ? (
-                            <>
-                              <p className="text-white text-sm font-black text-center">3 Unlock Pack</p>
-                              <p className="text-white/70 text-xs mt-1 text-center">Perfect for a week of real connections. Save vs singles.</p>
-                              <div className="mt-3 flex items-center justify-between">
-                                <p className="text-white/90 font-black text-xl">$4.99</p>
-                                <Button
-                                  onClick={() => toast.info("3-pack checkout coming next")}
-                                  className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
-                                >
-                                  Choose pack
-                                </Button>
-                              </div>
-                              <p className="text-white/45 text-[10px] mt-2 text-center">Best for casual + active users.</p>
-                            </>
+                            <></>
                           ) : selectedUnlockItemKey === "unlock:pack10" ? (
-                            <>
-                              <p className="text-white text-sm font-black text-center">10 Unlock Pack</p>
-                              <p className="text-white/70 text-xs mt-1 text-center">Best value for heavy matching. Lowest cost per unlock.</p>
-                              <div className="mt-3 flex items-center justify-between">
-                                <p className="text-white/90 font-black text-xl">$12.99</p>
-                                <Button
-                                  onClick={() => toast.info("10-pack checkout coming next")}
-                                  className="gradient-love text-primary-foreground border-0 h-10 rounded-xl font-black"
-                                >
-                                  Choose pack
-                                </Button>
-                              </div>
-                              <p className="text-white/45 text-[10px] mt-2 text-center">Best value package.</p>
-                            </>
+                            <></>
                           ) : selectedUnlockItemKey === "unlock:vip" ? (
                             <>
                               <p className="text-white text-sm font-black text-center">VIP Monthly</p>
@@ -2236,104 +2325,26 @@ const Index = () => {
                         const lifestyleInfo = (selectedProfile as any)?.lifestyle_info as any || {};
                         const relationshipGoals = (selectedProfile as any)?.relationship_goals as any || {};
 
-                        const InfoChip = ({ label, value }: { label: string; value?: string }) =>
-                          value ? (
-                            <div style={{
-                              background: "rgba(255,255,255,0.07)",
-                              border: "1px solid rgba(255,255,255,0.12)",
-                              borderRadius: 20,
-                              padding: "4px 10px",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 4,
-                            }}>
-                              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.45)" }}>{label}</span>
-                              <span style={{ fontSize: 11, color: "white", fontWeight: 600 }}>{value}</span>
-                            </div>
-                          ) : null;
-
-                        const Section = ({ title, chips }: { title: string; chips: React.ReactNode }) => (
-                          <div style={{ marginBottom: 12 }}>
-                            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>{title}</p>
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                              {chips}
-                            </div>
-                          </div>
-                        );
-
-                        const ContainerBlock = ({
-                          emoji, title, subtitle, children, accentColor, defaultOpen
-                        }: {
-                          emoji: string; title: string; subtitle: string;
-                          children: React.ReactNode; accentColor: string; defaultOpen?: boolean;
-                        }) => {
-                          const [open, setOpen] = useState(defaultOpen ?? false);
-                          return (
-                            <div style={{
-                              borderRadius: 16,
-                              overflow: "hidden",
-                              border: `1px solid ${accentColor}33`,
-                              background: `linear-gradient(135deg, ${accentColor}11, rgba(0,0,0,0.3))`,
-                              marginBottom: 8,
-                            }}>
-                              <button
-                                onClick={() => setOpen(!open)}
-                                style={{
-                                  width: "100%",
-                                  padding: "12px 14px",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "space-between",
-                                  background: "transparent",
-                                  border: "none",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                                  <span style={{
-                                    fontSize: 22,
-                                    width: 40, height: 40,
-                                    borderRadius: 12,
-                                    background: `${accentColor}22`,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                  }}>{emoji}</span>
-                                  <div style={{ textAlign: "left" }}>
-                                    <p style={{ color: "white", fontWeight: 700, fontSize: 13, margin: 0 }}>{title}</p>
-                                    <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>{open ? "Tap to close" : subtitle}</p>
-                                  </div>
-                                </div>
-                                <span style={{ color: accentColor, fontSize: 16 }}>{open ? "▲" : "▼"}</span>
-                              </button>
-
-                              {open && (
-                                <div style={{
-                                  padding: "0 14px 14px",
-                                  borderTop: `1px solid ${accentColor}22`,
-                                  paddingTop: 12,
-                                }}>
-                                  {children}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        };
-
                         return (
                           <div style={{ padding: "0 12px 8px" }}>
                             {/* Basic Info */}
                             <ContainerBlock emoji="👤" title="Basic Info" subtitle="Height, education, background" accentColor="#EC4899" defaultOpen={selectedProfileSection === "basic"}>
-                              <Section title="Physical" chips={<>
-                                <InfoChip label="📏" value={basicInfo.height} />
-                                <InfoChip label="💪" value={basicInfo.body_type} />
-                                <InfoChip label="🌏" value={basicInfo.ethnicity} />
-                              </>} />
-                              <Section title="Background" chips={<>
-                                <InfoChip label="🎓" value={basicInfo.education} />
-                                <InfoChip label="💼" value={basicInfo.occupation} />
-                                <InfoChip label="💰" value={basicInfo.income} />
-                                <InfoChip label="🏠" value={basicInfo.lives_with} />
-                                <InfoChip label="👶" value={basicInfo.children} />
-                              </>} />
+                              <Section title="Physical" chips={
+                                <>
+                                  <InfoChip label="📏" value={basicInfo.height} />
+                                  <InfoChip label="💪" value={basicInfo.body_type} />
+                                  <InfoChip label="🌏" value={basicInfo.ethnicity} />
+                                </>
+                              } />
+                              <Section title="Background" chips={
+                                <>
+                                  <InfoChip label="🎓" value={basicInfo.education} />
+                                  <InfoChip label="💼" value={basicInfo.occupation} />
+                                  <InfoChip label="💰" value={basicInfo.income} />
+                                  <InfoChip label="🏠" value={basicInfo.lives_with} />
+                                  <InfoChip label="👶" value={basicInfo.children} />
+                                </>
+                              } />
                               {basicInfo.languages?.length > 0 && (
                                 <Section title="Languages" chips={
                                   basicInfo.languages.map((l: string) => <InfoChip key={l} label="🗣️" value={l} />)
