@@ -725,6 +725,29 @@ export default function TarotDrawer(props: TarotDrawerProps) {
             }}
             className="premium-reading-selection"
           >
+            {/* Crow animation on premium pages */}
+            <div
+              ref={crowContainerRef}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 180,
+                overflow: "hidden",
+                pointerEvents: "none",
+                zIndex: 1,
+              }}
+            >
+              {activeCrows.map((crowId) => (
+                <CrowAnimation
+                  key={crowId}
+                  containerWidth={crowContainerWidth}
+                  containerHeight={180}
+                  onDone={() => setActiveCrows(prev => prev.filter(id => id !== crowId))}
+                />
+              ))}
+            </div>
             <style>{`.premium-reading-selection{scrollbar-width:none;-ms-overflow-style:none}.premium-reading-selection::-webkit-scrollbar{width:0;height:0}`}</style>
             {/* Close button */}
             <button
@@ -868,6 +891,29 @@ export default function TarotDrawer(props: TarotDrawerProps) {
             gap: 16,
           }}
         >
+          {/* Crow animation on premium pages */}
+          <div
+            ref={crowContainerRef}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 180,
+              overflow: "hidden",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            {activeCrows.map((crowId) => (
+              <CrowAnimation
+                key={crowId}
+                containerWidth={crowContainerWidth}
+                containerHeight={180}
+                onDone={() => setActiveCrows(prev => prev.filter(id => id !== crowId))}
+              />
+            ))}
+          </div>
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -894,6 +940,29 @@ export default function TarotDrawer(props: TarotDrawerProps) {
             color: "white",
           }}
         >
+          {/* Crow animation on premium pages */}
+          <div
+            ref={crowContainerRef}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 180,
+              overflow: "hidden",
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            {activeCrows.map((crowId) => (
+              <CrowAnimation
+                key={crowId}
+                containerWidth={crowContainerWidth}
+                containerHeight={180}
+                onDone={() => setActiveCrows(prev => prev.filter(id => id !== crowId))}
+              />
+            ))}
+          </div>
           {/* Background graveyard subtle */}
           <div
             style={{

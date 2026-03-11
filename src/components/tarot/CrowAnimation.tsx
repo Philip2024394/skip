@@ -108,14 +108,12 @@ const CrowAnimation = ({ containerWidth, containerHeight, onDone }: {
       <svg viewBox="0 0 64 40" width="64" height="40" style={{ overflow: "visible" }}>
         <g style={{ transformOrigin: "32px 20px", transform: `rotate(${leftWingAngle}deg)` }}>
           <path d="M32,18 C26,14 14,8 4,10 C1,11 1,15 4,18 C10,22 22,22 32,21 Z" fill="#1a1a1a"/>
-          <path d="M32,19 C26,15 16,10 7,11 C4,12 4,15 7,17 C14,20 24,21 32,20 Z" fill="#2a2a2a" opacity="0.7"/>
           <path d="M4,10 C2,8 0,9 1,11" stroke="#1a1a1a" strokeWidth="1.2" fill="none"/>
           <path d="M6,9 C5,7 3,8 4,10" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
           <path d="M9,8 C8,6 6,7 7,9" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
         </g>
         <g style={{ transformOrigin: "32px 20px", transform: `rotate(${rightWingAngle}deg)` }}>
           <path d="M32,18 C38,14 50,8 60,10 C63,11 63,15 60,18 C54,22 42,22 32,21 Z" fill="#1a1a1a"/>
-          <path d="M32,19 C38,15 48,10 57,11 C60,12 60,15 57,17 C50,20 40,21 32,20 Z" fill="#2a2a2a" opacity="0.7"/>
           <path d="M60,10 C62,8 64,9 63,11" stroke="#1a1a1a" strokeWidth="1.2" fill="none"/>
           <path d="M58,9 C59,7 61,8 60,10" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
           <path d="M55,8 C56,6 58,7 57,9" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
