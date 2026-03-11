@@ -286,6 +286,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               zIndex: 99999,
               borderRadius: "20px 20px 0 0",
               overflow: "hidden",
+              height: "88vh",
               maxHeight: "88vh",
               display: "flex",
               flexDirection: "column",
@@ -301,7 +302,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 position: "relative",
                 width: "100%",
                 overflow: "hidden",
-                height: 220,
+                height: "42%",
                 flexShrink: 0,
               }}
             >
@@ -778,7 +779,17 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               ✕
             </button>
 
-            <div style={{ padding: "48px 20px 32px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div style={{
+  position: "relative",
+  zIndex: 2,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  padding: "8px 16px 10px",
+  overflowY: "auto",
+  flex: 1,
+  minHeight: 0,
+}}>
               <p style={{ fontSize: 40, marginBottom: 8 }}>🔮</p>
               <h2
                 style={{
@@ -1073,7 +1084,16 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                     {props.premiumReadingResult.cards[idx]?.position}
                   </p>
 
-                  <div style={{ position: "relative", width: 90, height: 118 }}>
+                  <div
+                    ref={crowContainerRef}
+                    style={{
+                      position: "relative",
+                      width: "100%",
+                      overflow: "hidden",
+                      height: "42%",
+                      flexShrink: 0,
+                    }}
+                  >
                     <AnimatePresence mode="wait">
                       {!props.revealedCards.includes(idx) ? (
                         <motion.img
