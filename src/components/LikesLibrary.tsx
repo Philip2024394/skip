@@ -959,27 +959,32 @@ const LikesLibrary = ({
                 zIndex: 0,
               }}
             />
-            {/* Grave digger — fades in slowly, sits behind all content */}
-            <motion.img
-              src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
-              alt=""
-              aria-hidden="true"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 2.8, ease: "easeIn" }}
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "100%",
-                maxWidth: 420,
-                objectFit: "contain",
-                objectPosition: "bottom center",
-                zIndex: 1,
-                pointerEvents: "none",
-              }}
-            />
+            {/* Grave digger — only appears when card text appears, same fade timing */}
+            <AnimatePresence>
+              {showDailyTarotFront && (
+                <motion.img
+                  src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
+                  alt=""
+                  aria-hidden="true"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: "50%",
+                    transform: "translateX(-50%) translateY(70px)",
+                    width: "100%",
+                    maxWidth: 420,
+                    objectFit: "contain",
+                    objectPosition: "bottom center",
+                    zIndex: 1,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
+            </AnimatePresence>
 
             {/* Right side vertical buttons */}
             <div
@@ -1224,11 +1229,6 @@ const LikesLibrary = ({
                         style={{
                           marginTop: 16,
                           width: "100%",
-                          borderRadius: 16,
-                          background: "rgba(0,0,0,0.55)",
-                          border: "1px solid rgba(255,105,180,0.55)",
-                          backdropFilter: "blur(12px)",
-                          padding: "14px 16px",
                           textAlign: "center",
                         }}
                       >
