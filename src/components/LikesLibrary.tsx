@@ -157,9 +157,9 @@ type DisplayItem =
 
 // ── Tab pill config ───────────────────────────────────────────────────────────
 const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
-  new:      (c) => `New${c.new > 0 ? ` · ${c.new}` : ""}`,
-  sent:     (c) => `I Liked${c.sent > 0 ? ` · ${c.sent}` : ""}`,
-  received: (c) => `Likes Me${c.received > 0 ? ` · ${c.received}` : ""}`,
+  new:      () => "New",
+  sent:     () => "I Liked",
+  received: () => "Likes Me",
   treat:    () => "Treat",
 };
 const TABS: Tab[] = ["new", "sent", "received", "treat"];
