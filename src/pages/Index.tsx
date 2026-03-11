@@ -118,6 +118,7 @@ const Index = () => {
       if (p.age < filters.ageRange[0] || p.age > filters.ageRange[1]) return false;
       if (filters.gender && p.gender?.toLowerCase() !== filters.gender.toLowerCase()) return false;
       if (filters.lookingFor && p.looking_for?.toLowerCase() !== filters.lookingFor.toLowerCase()) return false;
+      if (filters.orientation && p.orientation?.toLowerCase() !== filters.orientation.toLowerCase()) return false;
       if (filters.availableTonight && !p.available_tonight) return false;
       if (filters.onlineNow && !isOnline(p.last_seen_at)) return false;
       if (filters.plusOne && !(p as { is_plusone?: boolean }).is_plusone) return false;

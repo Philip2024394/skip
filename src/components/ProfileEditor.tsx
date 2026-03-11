@@ -62,6 +62,7 @@ interface ProfileData {
   fitness: string;
   pets: string;
   interests: string[];
+  orientation: string;
 }
 
 const ProfileEditor = () => {
@@ -107,8 +108,8 @@ const ProfileEditor = () => {
       if (!user) return;
       setUserId(user.id);
 
-      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests";
-      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests";
+      const columnsWithBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests, orientation";
+      const columnsWithoutBadges = "name, age, gender, looking_for, country, city, bio, whatsapp, avatar_url, latitude, longitude, images, available_tonight, voice_intro_url, image_positions, first_date_idea, first_date_places, languages, height_cm, drinking, smoking, fitness, pets, interests, orientation";
 
       let data: Record<string, unknown> | null = null;
       let useBadgeColumns = true;
@@ -196,6 +197,7 @@ const ProfileEditor = () => {
           fitness: (data.fitness as string) || "",
           pets: (data.pets as string) || "",
           interests: ((data.interests as string[]) || []).slice(0, 8),
+          orientation: (data.orientation as string) || "",
           ...normalizedBadges,
         });
         setSchemaHasBadgeColumns(useBadgeColumns);
@@ -360,6 +362,7 @@ const ProfileEditor = () => {
         fitness: profile.fitness || null,
         pets: profile.pets || null,
         interests: profile.interests as unknown as import("@/integrations/supabase/types").Json,
+        orientation: profile.orientation || null,
         is_plusone: profile.is_plusone,
         generous_lifestyle: profile.generous_lifestyle,
         ...(schemaHasBadgeColumns && {
@@ -637,6 +640,31 @@ const ProfileEditor = () => {
         <div>
           <Label className="text-muted-foreground text-xs mb-1 block">Age</Label>
           <Input type="number" min={18} max={99} value={profile.age} onChange={(e) => update("age", parseInt(e.target.value) || 18)} className="bg-muted border-border h-9 text-sm" />
+        </div>
+      </div>
+
+      {/* Orientation */}
+      <div>
+        <Label className="text-muted-foreground text-xs mb-1 block">Orientation (optional)</Label>
+        <div className="flex gap-2">
+          {[
+            { value: "", label: "Not specified" },
+            { value: "Straight", label: "Straight" },
+            { value: "Same-Sex", label: "Gay / Lesbian" },
+          ].map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => update("orientation", o.value)}
+              className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
+                profile.orientation === o.value
+                  ? "bg-primary text-primary-foreground border-primary shadow-md"
+                  : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/50"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
         </div>
       </div>
 

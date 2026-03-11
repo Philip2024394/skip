@@ -22,6 +22,7 @@ export interface FilterState {
   weekendPlans: boolean;
   lateNightChat: boolean;
   noDrama: boolean;
+  orientation: string;
 }
 
 export const defaultFilters: FilterState = {
@@ -37,6 +38,7 @@ export const defaultFilters: FilterState = {
   weekendPlans: false,
   lateNightChat: false,
   noDrama: false,
+  orientation: "",
 };
 
 const COUNTRIES = ALL_COUNTRIES;
@@ -63,7 +65,7 @@ const FilterPanel = ({ open, onClose, filters, onApply }: FilterPanelProps) => {
   );
 
   const activeCount = [
-    local.country, local.city, local.gender, local.lookingFor,
+    local.country, local.city, local.gender, local.lookingFor, local.orientation,
     local.availableTonight, local.onlineNow, local.plusOne, local.generousLifestyle, local.weekendPlans, local.lateNightChat, local.noDrama,
     local.ageRange[0] !== 18 || local.ageRange[1] !== 60,
   ].filter(Boolean).length;
@@ -185,6 +187,25 @@ const FilterPanel = ({ open, onClose, filters, onApply }: FilterPanelProps) => {
                           local.gender === g.value ? "bg-primary text-primary-foreground border-primary shadow-md" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/50"
                         }`}>
                         {g.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Orientation */}
+                <div>
+                  <label className="text-xs font-semibold text-foreground mb-2 block uppercase tracking-wider">Orientation</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: "", label: "All" },
+                      { value: "Straight", label: "Straight" },
+                      { value: "Same-Sex", label: "Gay / Lesbian" },
+                    ].map((o) => (
+                      <button key={o.value} onClick={() => setLocal((f) => ({ ...f, orientation: o.value }))}
+                        className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
+                          local.orientation === o.value ? "bg-primary text-primary-foreground border-primary shadow-md" : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/50"
+                        }`}>
+                        {o.label}
                       </button>
                     ))}
                   </div>

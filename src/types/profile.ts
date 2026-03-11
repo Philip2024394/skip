@@ -35,4 +35,5 @@ export interface Profile {
   no_drama?: boolean;
   whatsapp_connections_count?: number;
   date_canceled_count?: number;
+  orientation?: string | null;
 }
