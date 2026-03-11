@@ -11,6 +11,9 @@ import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 export interface DatePlace {
   idea: string;
   url: string;
+  instagram_url?: string;
+  google_url?: string;
+  other_url?: string;
   image_url: string | null;
   title: string | null;
 }
@@ -91,48 +94,44 @@ const DatePlacesEditor = ({ places, onChange }: DatePlacesEditorProps) => {
       toast.error("Maximum 3 date places");
       return;
     }
-    onChange([...places, { idea: "", url: "", image_url: null, title: null }]);
+    onChange([...places, { idea: "", url: "", instagram_url: "", google_url: "", other_url: "", image_url: null, title: null }]);
   };
 
   const removePlace = (idx: number) => {
     onChange(places.filter((_, i) => i !== idx));
   };
 
-  const updatePlace = (idx: number, field: keyof DatePlace, value: string | null) => {
+  const updatePlace = (idx: number, field: keyof DatePlace, value: string | null | undefined) => {
     const updated = [...places];
     updated[idx] = { ...updated[idx], [field]: value };
     onChange(updated);
   };
 
   const fetchPreview = async (idx: number) => {
-    const url = places[idx].url;
-    if (!url) {
-      toast.error("Please enter a URL first");
+    const place = places[idx];
+    const urlToFetch = place.instagram_url || place.google_url || place.other_url || place.url;
+    if (!urlToFetch) {
+      toast.error("Please enter at least one URL first");
       return;
     }
 
     setFetchingIdx(idx);
     try {
-      const { data, error } = await supabase.functions.invoke("fetch-og-image", {
-        body: { url },
+      const { data } = await supabase.functions.invoke("fetch-og-image", {
+        body: { url: urlToFetch },
       });
-
-      if (error || !data?.success) {
-        // Use fallback image
-        const fallback = getFallbackImage(places[idx].idea);
-        updatePlace(idx, "image_url", fallback);
-        toast.info("Using category image as preview");
-      } else {
-        updatePlace(idx, "image_url", data.image_url || getFallbackImage(places[idx].idea));
-        if (data.title) updatePlace(idx, "title", data.title);
-        toast.success("Preview loaded!");
-      }
+      const fallback = getFallbackImage(place.idea);
+      updatePlace(idx, "image_url", data?.image_url || fallback);
+      if (data?.title) updatePlace(idx, "title", data.title);
+      updatePlace(idx, "url", urlToFetch);
+      toast.success("Preview loaded!");
     } catch {
-      const fallback = getFallbackImage(places[idx].idea);
-      updatePlace(idx, "image_url", fallback);
+      updatePlace(idx, "image_url", getFallbackImage(place.idea));
+      updatePlace(idx, "url", urlToFetch);
       toast.info("Using category image as preview");
+    } finally {
+      setFetchingIdx(null);
     }
-    setFetchingIdx(null);
   };
 
   return (
@@ -167,32 +166,44 @@ const DatePlacesEditor = ({ places, onChange }: DatePlacesEditorProps) => {
             </SelectContent>
           </Select>
 
-          {/* Instagram URL input */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5">
-              <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor" style={{ color: "#E1306C" }}>
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/>
-              </svg>
-              <span className="text-[10px] text-muted-foreground">Instagram link for this place</span>
-            </div>
-            <div className="flex gap-1.5">
+          {/* Three URL inputs */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground w-20 shrink-0">📸 Instagram</span>
               <Input
-                value={place.url}
-                onChange={(e) => updatePlace(idx, "url", e.target.value)}
-                placeholder="https://www.instagram.com/p/... or place URL"
+                value={place.instagram_url || ""}
+                onChange={(e) => updatePlace(idx, "instagram_url", e.target.value)}
+                placeholder="https://instagram.com/p/..."
                 className="bg-muted border-border h-8 text-xs flex-1"
               />
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-2 text-[10px] shrink-0"
-                onClick={() => fetchPreview(idx)}
-                disabled={fetchingIdx === idx || !place.url}
-              >
-                {fetchingIdx === idx ? <Loader2 className="w-3 h-3 animate-spin" /> : "Preview"}
-              </Button>
             </div>
-            <p className="text-[9px] text-muted-foreground/70">Viewers tap the image to open the Instagram post 📱</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground w-20 shrink-0">📍 Google</span>
+              <Input
+                value={place.google_url || ""}
+                onChange={(e) => updatePlace(idx, "google_url", e.target.value)}
+                placeholder="https://maps.google.com/..."
+                className="bg-muted border-border h-8 text-xs flex-1"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground w-20 shrink-0">🔗 Other</span>
+              <Input
+                value={place.other_url || ""}
+                onChange={(e) => updatePlace(idx, "other_url", e.target.value)}
+                placeholder="Any other link..."
+                className="bg-muted border-border h-8 text-xs flex-1"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-3 text-[10px] self-end"
+              onClick={() => fetchPreview(idx)}
+              disabled={fetchingIdx === idx}
+            >
+              {fetchingIdx === idx ? <Loader2 className="w-3 h-3 animate-spin" /> : "Load Preview"}
+            </Button>
           </div>
 
           {/* Preview card */}
@@ -212,9 +223,9 @@ const DatePlacesEditor = ({ places, onChange }: DatePlacesEditorProps) => {
                   <p className="text-white/70 text-[10px] truncate">{place.title}</p>
                 )}
               </div>
-              {place.url && (
+              {(place.instagram_url || place.google_url || place.other_url || place.url) && (
                 <a
-                  href={place.url}
+                  href={place.instagram_url || place.google_url || place.other_url || place.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white/80 hover:text-white transition-colors"

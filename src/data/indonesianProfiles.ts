@@ -46,6 +46,9 @@ import indoGuy9 from "@/assets/indo-guy-9.png";
 type DatePlace = {
   idea: string;
   url: string;
+  instagram_url?: string;
+  google_url?: string;
+  other_url?: string;
   image_url: string | null;
   title: string | null;
 };
@@ -245,23 +248,31 @@ const buildFirstDatePlaces = (city: string, lat: number, lng: number): DatePlace
   ];
 
   const cityTag = city.toLowerCase().replace(/\s+/g, "");
-  const instagramCandidates: Array<{ idea: string; title: string; url: string }> = [
+
+  type PickEntry = { idea: string; title: string; google_url?: string; instagram_url?: string };
+
+  const googlePool: PickEntry[] = candidates.map((c) => ({
+    idea: c.idea,
+    title: c.title,
+    google_url: c.url,
+  }));
+
+  const instagramPool: PickEntry[] = [
     {
       idea: "Coffee At A Cozy Café ☕",
-      title: `Instagram: #${cityTag}cafe`,
-      url: `https://www.instagram.com/explore/tags/${encodeURIComponent(`${cityTag}cafe`)}/`,
+      title: `#${cityTag}cafe`,
+      instagram_url: `https://www.instagram.com/explore/tags/${encodeURIComponent(`${cityTag}cafe`)}/`,
     },
     {
       idea: "Street Food Adventure 🌮",
-      title: `Instagram: #kuliner${cityTag}`,
-      url: `https://www.instagram.com/explore/tags/${encodeURIComponent(`kuliner${cityTag}`)}/`,
+      title: `#kuliner${cityTag}`,
+      instagram_url: `https://www.instagram.com/explore/tags/${encodeURIComponent(`kuliner${cityTag}`)}/`,
     },
   ];
 
-  const pool = [...candidates, ...instagramCandidates];
-
+  const pool: PickEntry[] = [...googlePool, ...instagramPool];
   const desiredCount = 3;
-  const picks: Array<{ idea: string; title: string; url: string }> = [];
+  const picks: PickEntry[] = [];
   const used = new Set<number>();
   while (picks.length < desiredCount && used.size < pool.length) {
     const idx = Math.floor(Math.random() * pool.length);
@@ -269,14 +280,15 @@ const buildFirstDatePlaces = (city: string, lat: number, lng: number): DatePlace
     used.add(idx);
     picks.push(pool[idx]);
   }
-
   while (picks.length < desiredCount && pool.length > 0) {
     picks.push(pool[picks.length % pool.length]);
   }
 
   return picks.map((p) => ({
     idea: p.idea,
-    url: p.url,
+    url: p.google_url || p.instagram_url || "",
+    google_url: p.google_url,
+    instagram_url: p.instagram_url,
     image_url: null,
     title: p.title,
   }));
