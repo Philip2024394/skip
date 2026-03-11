@@ -950,15 +950,34 @@ const LikesLibrary = ({
               boxShadow: "0 -4px 40px rgba(255,105,180,0.35)",
             }}
           >
-            {/* Background image layer */}
+            {/* Dark base background */}
             <div
               style={{
                 position: "absolute",
                 inset: 0,
-                backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yard.png')",
-                backgroundSize: "cover",
-                backgroundPosition: "center top",
+                background: "#08000f",
                 zIndex: 0,
+              }}
+            />
+            {/* Grave digger — fades in slowly, sits behind all content */}
+            <motion.img
+              src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
+              alt=""
+              aria-hidden="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 2.8, ease: "easeIn" }}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "100%",
+                maxWidth: 420,
+                objectFit: "contain",
+                objectPosition: "bottom center",
+                zIndex: 1,
+                pointerEvents: "none",
               }}
             />
 
