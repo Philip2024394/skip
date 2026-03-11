@@ -442,7 +442,7 @@ const ProfileEditor = () => {
   const isMainImage = (idx: number) => profile.images[idx] === profile.avatar_url;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 px-3 sm:px-4">
       {/* ── Step Navigation ─────────────────────────────────────────── */}
       <div style={{
         position: "sticky",
@@ -450,10 +450,10 @@ const ProfileEditor = () => {
         zIndex: 50,
         background: "white",
         borderBottom: "1px solid rgba(236,72,153,0.12)",
-        padding: "10px 16px 8px",
+        padding: "8px 12px 6px",
         boxShadow: "0 2px 12px rgba(236,72,153,0.08)",
       }}>
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
+        <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
           {[
             { key: "profile", emoji: "👤", label: "Profile" },
             { key: "details", emoji: "🌿", label: "Details" },
@@ -463,21 +463,21 @@ const ProfileEditor = () => {
               onClick={() => setEditorStep(key as any)}
               style={{
                 flexShrink: 0,
-                padding: "7px 14px",
+                padding: "6px 10px",
                 borderRadius: 999,
                 border: editorStep === key
                   ? "none"
-                  : "1px solid rgba(236,72,153,0.2)",
+                  : "1px solid rgba(236,72,153,0.15)",
                 background: editorStep === key
                   ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
                   : "white",
                 color: editorStep === key ? "white" : "#9CA3AF",
-                fontSize: 11,
+                fontSize: 10,
                 fontWeight: editorStep === key ? 700 : 500,
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
-                gap: 4,
+                gap: 3,
                 transition: "all 0.2s",
                 boxShadow: editorStep === key ? "0 4px 10px rgba(236,72,153,0.3)" : "none",
               }}

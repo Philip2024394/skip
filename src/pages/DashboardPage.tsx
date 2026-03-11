@@ -121,32 +121,32 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="h-screen-safe bg-white flex flex-col overflow-hidden">
-      <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-200" style={{ paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px))` }}>
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate("/")} className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <span className="font-display font-bold text-gray-900 text-sm">{t("dash.title")}</span>
-        </div>
+    <div className="h-screen-safe bg-white flex flex-col overflow-hidden max-w-full mx-auto">
+      <header className="flex items-center justify-between px-3 py-2.5 bg-white border-b border-gray-200" style={{ paddingTop: `max(0.5rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-2">
-          <button onClick={toggleLocale} className="px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors text-[10px] font-medium">
+          <button onClick={() => navigate("/")} className="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors">
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </button>
+          <span className="font-display font-bold text-gray-900 text-xs sm:text-sm">{t("dash.title")}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button onClick={toggleLocale} className="px-1.5 py-0.5 rounded-full bg-gray-100 border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors text-[9px] sm:text-[10px] font-medium">
             {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
           </button>
-          <button onClick={handleLogout} className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors" title={t("dash.logout")}>
-            <LogOut className="w-4 h-4" />
+          <button onClick={handleLogout} className="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors" title={t("dash.logout")}>
+            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
       </header>
 
       {/* Tab toggle */}
-      <div style={{ padding: "12px 16px 0" }}>
+      <div style={{ padding: "10px 12px 0" }}>
         <div style={{
           display: "flex",
-          gap: 6,
-          padding: 4,
+          gap: 4,
+          padding: 3,
           background: "white",
-          borderRadius: 16,
+          borderRadius: 14,
           border: "1px solid rgba(236,72,153,0.15)",
           boxShadow: "0 2px 12px rgba(236,72,153,0.08)",
         }}>
@@ -154,80 +154,80 @@ const DashboardPage = () => {
             onClick={() => setTab("profile")}
             style={{
               flex: 1,
-              padding: "10px 8px",
-              borderRadius: 12,
+              padding: "8px 6px",
+              borderRadius: 10,
               border: "none",
               background: tab === "profile"
                 ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
                 : "transparent",
               color: tab === "profile" ? "white" : "#9CA3AF",
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 6,
+              gap: 4,
               transition: "all 0.2s",
-              boxShadow: tab === "profile" ? "0 4px 12px rgba(236,72,153,0.3)" : "none",
+              boxShadow: tab === "profile" ? "0 4px 10px rgba(236,72,153,0.3)" : "none",
             }}
           >
-            <User size={14} /> My Profile
+            <User className="w-3 h-3" /> <span className="hidden sm:inline">{t("dash.myProfile")}</span><span className="sm:hidden">Profile</span>
           </button>
           <button
             onClick={() => setTab("powerups")}
             style={{
               flex: 1,
-              padding: "10px 8px",
-              borderRadius: 12,
+              padding: "8px 6px",
+              borderRadius: 10,
               border: "none",
               background: tab === "powerups"
                 ? "linear-gradient(135deg, #F59E0B, #EF4444)"
                 : "transparent",
               color: tab === "powerups" ? "white" : "#9CA3AF",
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 6,
+              gap: 4,
               transition: "all 0.2s",
               boxShadow: tab === "powerups" ? "0 4px 12px rgba(245,158,11,0.3)" : "none",
             }}
           >
-            <Zap size={14} /> Power-Ups
+            <Zap className="w-3 h-3" /> <span className="hidden sm:inline">{t("dash.powerups")}</span><span className="sm:hidden">Power</span>
           </button>
           <button
             onClick={() => navigate("/faq")}
             style={{
               flex: 1,
-              padding: "10px 8px",
-              borderRadius: 12,
+              padding: "8px 6px",
+              borderRadius: 10,
               border: "none",
               background: "transparent",
               color: "#9CA3AF",
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 6,
+              gap: 4,
               transition: "all 0.2s",
             }}
           >
-            <HelpCircle size={14} /> Help
+            <HelpCircle className="w-3 h-3" /> <span className="hidden sm:inline">Help</span><span className="sm:hidden">?</span>
           </button>
         </div>
       </div>
 
       <div style={{
-  flex: 1,
-  overflowY: "auto",
-  background: "#FDF2F8",
-  paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
-}}>
+        flex: 1,
+        overflowY: "auto",
+        background: "#FDF2F8",
+        paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))",
+      }}>
         {tab === "profile" ? (
           <ProfileEditor />
         ) : (
