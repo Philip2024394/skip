@@ -73,7 +73,7 @@ interface ProfileData {
 
 const ProfileEditor = () => {
   const navigate = useNavigate();
-  const [editorStep, setEditorStep] = useState<"profile" | "lifestyle" | "goals" | "datingprefs">("profile");
+  const [editorStep, setEditorStep] = useState<"profile" | "details">("profile");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -456,9 +456,7 @@ const ProfileEditor = () => {
         <div style={{ display: "flex", gap: 6, overflowX: "auto", scrollbarWidth: "none" }}>
           {[
             { key: "profile", emoji: "👤", label: "Profile" },
-            { key: "lifestyle", emoji: "🌿", label: "Lifestyle" },
-            { key: "goals", emoji: "💍", label: "Goals" },
-            { key: "datingprefs", emoji: "📍", label: "Prefs" },
+            { key: "details", emoji: "🌿", label: "Details" },
           ].map(({ key, emoji, label }) => (
             <button
               key={key}
@@ -754,33 +752,29 @@ const ProfileEditor = () => {
       )}
 
       
-      {editorStep === "lifestyle" && (
-        <div className="pb-2">
-          <BasicInfoEditor
-            value={profile.basic_info as any}
-            onChange={(v) => update("basic_info", v)}
-          />
-          <LifestyleEditor
-            value={profile.lifestyle_info as any}
-            onChange={(v) => update("lifestyle_info", v)}
-          />
-        </div>
-      )}
-
-      {editorStep === "goals" && (
-        <div className="pb-2">
-          <RelationshipGoalsEditor
-            value={profile.relationship_goals as any}
-            onChange={(v) => update("relationship_goals", v)}
-          />
-        </div>
-      )}
-
-      
-      {editorStep === "datingprefs" && (
+      {editorStep === "details" && (
         <>
+          {/* Lifestyle Section */}
+          <div className="pb-2">
+            <BasicInfoEditor
+              value={profile.basic_info as any}
+              onChange={(v) => update("basic_info", v)}
+            />
+            <LifestyleEditor
+              value={profile.lifestyle_info as any}
+              onChange={(v) => update("lifestyle_info", v)}
+            />
+          </div>
 
-          {/* Languages */}
+          {/* Goals Section */}
+          <div className="pb-2">
+            <RelationshipGoalsEditor
+              value={profile.relationship_goals as any}
+              onChange={(v) => update("relationship_goals", v)}
+            />
+          </div>
+
+          {/* Dating Preferences */}
           <div>
             <Label className="text-muted-foreground text-xs mb-1 block flex items-center gap-1">
               <Languages className="w-3 h-3" /> Languages I Speak
@@ -1138,7 +1132,6 @@ const ProfileEditor = () => {
         places={profile.first_date_places}
         onChange={(places) => update("first_date_places", places)}
       />
-
         </>
       )}
 
@@ -1154,7 +1147,7 @@ const ProfileEditor = () => {
         boxShadow: "0 -4px 20px rgba(236,72,153,0.08)",
       }}>
         {(() => {
-          const steps = ["profile", "lifestyle", "goals", "datingprefs"];
+          const steps = ["profile", "details"];
           const currentIdx = steps.indexOf(editorStep);
           const isFirst = currentIdx === 0;
           const isLast = currentIdx === steps.length - 1;
