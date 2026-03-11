@@ -253,6 +253,7 @@ const Index = () => {
   const libraryRef = useRef<HTMLDivElement>(null);
   const prevLikedMeIdsRef = useRef<Set<string>>(new Set());
   const [butterflyTarget, setButterflyTarget] = useState<string | null>(null);
+  const [helicopterTarget, setHelicopterTarget] = useState<string | null>(null);
   const [heartDropProfileId, setHeartDropProfileId] = useState<string | null>(null);
   const [superLikeRevealProfile, setSuperLikeRevealProfile] = useState<Profile | null>(null);
   const [superLikeGlowProfileId, setSuperLikeGlowProfileId] = useState<string | null>(null);
@@ -1086,7 +1087,7 @@ const Index = () => {
     };
   }, [navigate]);
 
-  // Detect new like: when likedMe gains an id we didn't have before (and we had a previous set), trigger butterfly (not for super likes — those use the dynamite modal)
+  // Detect new like: trigger butterfly for regular likes, helicopter for super likes (is_rose)
   useEffect(() => {
     const currentIds = new Set(likedMe.map((p) => p.id));
     const prev = prevLikedMeIdsRef.current;
@@ -1094,6 +1095,10 @@ const Index = () => {
     const newRegular = newProfiles.find((p) => !p.is_rose);
     if (prev.size > 0 && newRegular) {
       setButterflyTarget(newRegular.id);
+    }
+    const newSuperLike = newProfiles.find((p) => p.is_rose);
+    if (prev.size > 0 && newSuperLike) {
+      setHelicopterTarget(newSuperLike.id);
     }
     prevLikedMeIdsRef.current = currentIds;
   }, [likedMe]);
@@ -1206,9 +1211,9 @@ const Index = () => {
   const simulateSuperLike = useCallback(() => {
     const profile = createDevProfile("dev-super", true);
     setLikedMe((prev) => [profile, ...prev.filter((p) => p.id !== profile.id)]);
-    setSuperLikeRevealProfile(profile);
+    setHelicopterTarget(profile.id);
     setDevPanelOpen(false);
-    toast("Development: Simulated super like — dynamite + glitter modal.");
+    toast("Development: Simulated super like — helicopter flies in.");
   }, [createDevProfile]);
 
   const handleLike = async (profile: Profile) => {
@@ -1857,7 +1862,7 @@ const Index = () => {
               onRevealDailyTarot={() => {
                 markDailyCardShown();
               }}
-              receivedHighlightProfileId={(butterflyTarget || superLikeRevealProfile?.id) ?? null}
+              receivedHighlightProfileId={(butterflyTarget || helicopterTarget) ?? null}
               heartDropProfileId={heartDropProfileId}
               superLikeGlowProfileId={superLikeGlowProfileId}
               onUnlock={handleUnlock}
@@ -1881,16 +1886,14 @@ const Index = () => {
           />
         )}
 
-        {superLikeRevealProfile && (
+        {helicopterTarget && (
           <HelicopterSuperLikeAnimation
             libraryRef={libraryRef}
-            targetProfileId={superLikeRevealProfile.id}
-            onReachLibrary={() => {
-              setSuperLikeGlowProfileId(superLikeRevealProfile.id);
-              setTimeout(() => setSuperLikeGlowProfileId(null), 5000);
-            }}
+            targetProfileId={helicopterTarget}
+            onReachLibrary={() => setHeartDropProfileId(helicopterTarget)}
             onComplete={() => {
-              setSuperLikeRevealProfile(null);
+              setHelicopterTarget(null);
+              setHeartDropProfileId(null);
             }}
           />
         )}
