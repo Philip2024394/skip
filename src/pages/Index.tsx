@@ -272,6 +272,14 @@ const Index = () => {
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat">("new");
+  const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
+  const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
+  const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
+  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests" | null>(null);
+  const [selectedDatePlace, setSelectedDatePlace] = useState<any | null>(null);
+  const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
+
   const {
     dailyTarot,
     showTarotPopup,
@@ -386,14 +394,6 @@ const Index = () => {
     setShowA2HS(false);
   };
   // ────────────────────────────────────────────────────────────────────────
-
-  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat">("new");
-  const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
-  const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
-  const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
-  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests" | null>(null);
-  const [selectedDatePlace, setSelectedDatePlace] = useState<any | null>(null);
-  const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
 
   const PROFILE_THIRD_TAB_MODE: "unlock" | "reviews" = "unlock";
 
