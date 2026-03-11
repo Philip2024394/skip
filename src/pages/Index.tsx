@@ -476,7 +476,6 @@ const Index = () => {
 
   const {
     profileReviews,
-    setProfileReviews,
     profileReviewsLoading,
     activeReviewIndex,
     setActiveReviewIndex,
@@ -692,6 +691,7 @@ const Index = () => {
       {/* Main 3-container layout */}
       <div className="flex-1 grid grid-rows-[1fr_auto_1fr] gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))` }}>
         <TopCard
+          key="top-card"
           selectedProfile={selectedProfile}
           isProfileRoute={isProfileRoute}
           topProfiles={topProfiles}
