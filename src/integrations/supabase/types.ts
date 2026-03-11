@@ -202,6 +202,8 @@ export type Database = {
           created_at: string
           first_date_idea: string | null
           first_date_places: Json | null
+          selected_date_ideas: Json | null
+          date_ideas_updated_at: string | null
           generous_lifestyle: boolean
           gender: string
           hidden_until: string | null
@@ -247,6 +249,8 @@ export type Database = {
           created_at?: string
           first_date_idea?: string | null
           first_date_places?: Json | null
+          selected_date_ideas?: Json | null
+          date_ideas_updated_at?: string | null
           generous_lifestyle?: boolean
           gender: string
           hidden_until?: string | null
@@ -292,6 +296,8 @@ export type Database = {
           created_at?: string
           first_date_idea?: string | null
           first_date_places?: Json | null
+          selected_date_ideas?: Json | null
+          date_ideas_updated_at?: string | null
           generous_lifestyle?: boolean
           gender?: string
           hidden_until?: string | null
@@ -370,6 +376,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      date_ideas_images: {
+        Row: {
+          id: string
+          idea_name: string
+          image_url: string
+          image_alt: string | null
+          category: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          idea_name: string
+          image_url: string
+          image_alt?: string | null
+          category: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          idea_name?: string
+          image_url?: string
+          image_alt?: string | null
+          category?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       reports: {
         Row: {

@@ -301,25 +301,24 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                                       </div>
                                     )}
                                     
-                                    {/* Action buttons */}
-                                    {(props.selectedDatePlace.instagram_url || props.selectedDatePlace.url?.includes("instagram")) && (
-                                      <a href={props.selectedDatePlace.instagram_url || props.selectedDatePlace.url} target="_blank" rel="noopener noreferrer"
-                                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 10, background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
-                                        📸 View on Instagram
-                                      </a>
-                                    )}
-                                    {props.selectedDatePlace.google_url && (
-                                      <a href={props.selectedDatePlace.google_url} target="_blank" rel="noopener noreferrer"
-                                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 10, background: "rgba(66,133,244,0.2)", border: "1px solid rgba(66,133,244,0.4)", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
-                                        📍 View on Google Maps
-                                      </a>
-                                    )}
-                                    {(props.selectedDatePlace.other_url || (props.selectedDatePlace.url && !props.selectedDatePlace.url.includes("instagram") && !props.selectedDatePlace.url.includes("google"))) && (
-                                      <a href={props.selectedDatePlace.other_url || props.selectedDatePlace.url} target="_blank" rel="noopener noreferrer"
-                                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
-                                        🔗 View Place
-                                      </a>
-                                    )}
+                                    {/* Note about this date idea */}
+                                    <div style={{ 
+                                      background: "rgba(236,72,153,0.1)", 
+                                      borderRadius: 10, 
+                                      padding: "10px",
+                                      border: "1px solid rgba(236,72,153,0.2)"
+                                    }}>
+                                      <p style={{ 
+                                        color: "rgba(255,255,255,0.8)", 
+                                        fontSize: 10, 
+                                        lineHeight: 1.4, 
+                                        margin: 0,
+                                        fontWeight: 500,
+                                        fontStyle: "italic"
+                                      }}>
+                                        💕 This is one of your selected date ideas! Perfect for getting to know someone special.
+                                      </p>
+                                    </div>
                                   </div>
                                 </>
                               )}
