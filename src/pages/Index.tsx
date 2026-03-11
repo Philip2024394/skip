@@ -792,7 +792,7 @@ const Index = () => {
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
   const [reviewerAvatarById, setReviewerAvatarById] = useState<Record<string, string>>({});
   const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
-  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests">("basic");
+  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "goals" | null>(null);
   const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
 
   const PROFILE_THIRD_TAB_MODE: "unlock" | "reviews" = "unlock";
@@ -833,7 +833,7 @@ const Index = () => {
     if (!isProfileRoute) return;
     setAboutMeTab("new");
     setSelectedDateIdeaIndex(0);
-    setSelectedProfileSection("basic");
+    setSelectedProfileSection(null);
     setSelectedUnlockItemKey("unlock:single");
   }, [isProfileRoute, selectedProfile?.id]);
 
@@ -1950,14 +1950,14 @@ const Index = () => {
               onTabChange={(t) => {
                 if (!isProfileRoute) return;
                 setAboutMeTab(t);
-                if (t === "new") setSelectedProfileSection("basic");
+                if (t === "new") setSelectedProfileSection(null);
                 if (t === "received") setSelectedUnlockItemKey("unlock:single");
                 if (t === "treat") setSelectedTreatItem("massage");
               }}
               selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
               onSelectProfileSection={(s) => {
                 if (!isProfileRoute) return;
-                setSelectedProfileSection(s);
+                setSelectedProfileSection(s as any);
               }}
               selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : undefined}
               onSelectUnlockItem={(key) => {
@@ -2319,76 +2319,123 @@ const Index = () => {
                       })()}
                     </div>
                   ) : (
-                    <div className="h-full w-full overflow-y-auto">
+                    <div className="h-full w-full flex flex-col gap-3 justify-center">
                       {(() => {
                         const basicInfo = (selectedProfile as any)?.basic_info as any || {};
                         const lifestyleInfo = (selectedProfile as any)?.lifestyle_info as any || {};
                         const relationshipGoals = (selectedProfile as any)?.relationship_goals as any || {};
 
-                        return (
-                          <div style={{ padding: "0 12px 8px" }}>
-                            {/* Basic Info */}
-                            <ContainerBlock emoji="👤" title="Basic Info" subtitle="Height, education, background" accentColor="#EC4899" defaultOpen={selectedProfileSection === "basic"}>
-                              <Section title="Physical" chips={
-                                <>
-                                  <InfoChip label="📏" value={basicInfo.height} />
-                                  <InfoChip label="💪" value={basicInfo.body_type} />
-                                  <InfoChip label="🌏" value={basicInfo.ethnicity} />
-                                </>
-                              } />
-                              <Section title="Background" chips={
-                                <>
-                                  <InfoChip label="🎓" value={basicInfo.education} />
-                                  <InfoChip label="💼" value={basicInfo.occupation} />
-                                  <InfoChip label="💰" value={basicInfo.income} />
-                                  <InfoChip label="🏠" value={basicInfo.lives_with} />
-                                  <InfoChip label="👶" value={basicInfo.children} />
-                                </>
-                              } />
+                        const InfoChip = ({ label, value }: { label: string; value?: string }) =>
+                          value ? (
+                            <div style={{
+                              background: "rgba(255,255,255,0.08)",
+                              border: "1px solid rgba(255,255,255,0.14)",
+                              borderRadius: 20,
+                              padding: "5px 10px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 5,
+                            }}>
+                              <span style={{ fontSize: 12 }}>{label}</span>
+                              <span style={{ fontSize: 11, color: "white", fontWeight: 600 }}>{value}</span>
+                            </div>
+                          ) : null;
+
+                        const SectionBlock = ({ title, chips }: { title: string; chips: React.ReactNode }) => (
+                          <div style={{ marginBottom: 14 }}>
+                            <p style={{
+                              color: "rgba(255,255,255,0.35)",
+                              fontSize: 9,
+                              fontWeight: 700,
+                              letterSpacing: "0.1em",
+                              textTransform: "uppercase",
+                              marginBottom: 8,
+                            }}>{title}</p>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                              {chips}
+                            </div>
+                          </div>
+                        );
+
+                        const renderSectionDetail = () => {
+                          if (!selectedProfileSection) return (
+                            <div className="flex items-center justify-center h-full">
+                              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>
+                                Select a section above to view details
+                              </p>
+                            </div>
+                          );
+
+                          if (selectedProfileSection === "basic") return (
+                            <div style={{ padding: "4px 0" }}>
+                              <SectionBlock title="Physical" chips={<>
+                                <InfoChip label="📏" value={basicInfo.height} />
+                                <InfoChip label="💪" value={basicInfo.body_type} />
+                                <InfoChip label="🌏" value={basicInfo.ethnicity} />
+                              </>} />
+                              <SectionBlock title="Background" chips={<>
+                                <InfoChip label="🎓" value={basicInfo.education} />
+                                <InfoChip label="💼" value={basicInfo.occupation} />
+                                <InfoChip label="💰" value={basicInfo.income} />
+                                <InfoChip label="🏠" value={basicInfo.lives_with} />
+                                <InfoChip label="👶" value={basicInfo.children} />
+                              </>} />
                               {basicInfo.languages?.length > 0 && (
-                                <Section title="Languages" chips={
+                                <SectionBlock title="Languages" chips={
                                   basicInfo.languages.map((l: string) => <InfoChip key={l} label="🗣️" value={l} />)
                                 } />
                               )}
-                            </ContainerBlock>
+                            </div>
+                          );
 
-                            {/* Lifestyle */}
-                            <ContainerBlock emoji="🌿" title="Lifestyle" subtitle="Habits, hobbies, how I live" accentColor="#8B5CF6" defaultOpen={selectedProfileSection === "lifestyle"}>
-                              <Section title="Habits" chips={<>
+                          if (selectedProfileSection === "lifestyle") return (
+                            <div style={{ padding: "4px 0" }}>
+                              <SectionBlock title="Habits" chips={<>
                                 <InfoChip label="🚬" value={lifestyleInfo.smoking} />
                                 <InfoChip label="🍷" value={lifestyleInfo.drinking} />
                                 <InfoChip label="🏃" value={lifestyleInfo.exercise} />
                                 <InfoChip label="🍽️" value={lifestyleInfo.diet} />
                                 <InfoChip label="🌙" value={lifestyleInfo.sleep} />
                               </>} />
-                              <Section title="Personality" chips={<>
+                              <SectionBlock title="Personality" chips={<>
                                 <InfoChip label="🎭" value={lifestyleInfo.social_style} />
                                 <InfoChip label="❤️" value={lifestyleInfo.love_language} />
                                 <InfoChip label="🐾" value={lifestyleInfo.pets} />
                                 <InfoChip label="📱" value={lifestyleInfo.social_media} />
                               </>} />
                               {lifestyleInfo.hobbies?.length > 0 && (
-                                <Section title="Hobbies" chips={
-                                  lifestyleInfo.hobbies.map((h: string) => <InfoChip key={h} label="" value={h} />)
+                                <SectionBlock title="Hobbies & Interests" chips={
+                                  lifestyleInfo.hobbies.map((h: string) => (
+                                    <div key={h} style={{
+                                      background: "rgba(139,92,246,0.2)",
+                                      border: "1px solid rgba(139,92,246,0.4)",
+                                      borderRadius: 20,
+                                      padding: "5px 12px",
+                                      fontSize: 11,
+                                      color: "rgba(255,255,255,0.85)",
+                                      fontWeight: 600,
+                                    }}>{h}</div>
+                                  ))
                                 } />
                               )}
-                            </ContainerBlock>
+                            </div>
+                          );
 
-                            {/* Relationship Goals */}
-                            <ContainerBlock emoji="💍" title="Relationship Goals" subtitle="What I'm looking for" accentColor="#F59E0B" defaultOpen={selectedProfileSection === "interests"}>
-                              <Section title="My Intention" chips={<>
+                          if (selectedProfileSection === "goals") return (
+                            <div style={{ padding: "4px 0" }}>
+                              <SectionBlock title="My Intention" chips={<>
                                 <InfoChip label="💍" value={relationshipGoals.looking_for} />
                                 <InfoChip label="⏱️" value={relationshipGoals.timeline} />
                                 <InfoChip label="🌹" value={relationshipGoals.date_type} />
                                 <InfoChip label="💔" value={relationshipGoals.marital_status} />
                               </>} />
-                              <Section title="Religion & Culture" chips={<>
+                              <SectionBlock title="Religion & Culture" chips={<>
                                 <InfoChip label="🕌" value={relationshipGoals.religion} />
                                 <InfoChip label="🙏" value={relationshipGoals.prayer} />
                                 <InfoChip label="👤" value={relationshipGoals.hijab} />
                                 <InfoChip label="🤲" value={relationshipGoals.partner_religion} />
                               </>} />
-                              <Section title="Family & Tradition" chips={<>
+                              <SectionBlock title="Family & Tradition" chips={<>
                                 <InfoChip label="💛" value={relationshipGoals.dowry} />
                                 <InfoChip label="👨‍👩‍👧" value={relationshipGoals.family_involvement} />
                                 <InfoChip label="⚠️" value={relationshipGoals.polygamy} />
@@ -2397,17 +2444,66 @@ const Index = () => {
                               {relationshipGoals.about_partner && (
                                 <div style={{
                                   background: "rgba(245,158,11,0.08)",
-                                  border: "1px solid rgba(245,158,11,0.2)",
+                                  border: "1px solid rgba(245,158,11,0.25)",
                                   borderRadius: 12,
                                   padding: "10px 12px",
-                                  marginTop: 8,
+                                  marginTop: 4,
                                 }}>
-                                  <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>Looking for</p>
-                                  <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, lineHeight: 1.5, margin: 0 }}>{relationshipGoals.about_partner}</p>
+                                  <p style={{ color: "rgba(245,158,11,0.6)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", marginBottom: 6 }}>Looking for in a partner</p>
+                                  <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, lineHeight: 1.6, margin: 0 }}>{relationshipGoals.about_partner}</p>
                                 </div>
                               )}
-                            </ContainerBlock>
-                          </div>
+                            </div>
+                          );
+                        };
+
+                        return (
+                          <>
+                            <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                              {[
+                                { key: "basic" as const, emoji: "👤", label: "Basic Info", color: "#EC4899" },
+                                { key: "lifestyle" as const, emoji: "🌿", label: "Lifestyle", color: "#8B5CF6" },
+                                { key: "goals" as const, emoji: "💍", label: "Goals", color: "#F59E0B" },
+                              ].map(({ key, emoji, label, color }) => (
+                                <button
+                                  key={key}
+                                  onClick={() => setSelectedProfileSection(prev => prev === key ? null : key)}
+                                  style={{
+                                    flex: 1,
+                                    padding: "10px 4px",
+                                    borderRadius: 14,
+                                    border: `1px solid ${selectedProfileSection === key ? color : "rgba(255,255,255,0.1)"}`,
+                                    background: selectedProfileSection === key
+                                      ? `linear-gradient(135deg, ${color}33, ${color}11)`
+                                      : "rgba(255,255,255,0.04)",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    cursor: "pointer",
+                                    transition: "all 0.2s",
+                                  }}
+                                >
+                                  <span style={{ fontSize: 20 }}>{emoji}</span>
+                                  <span style={{
+                                    fontSize: 9,
+                                    fontWeight: 700,
+                                    color: selectedProfileSection === key ? "white" : "rgba(255,255,255,0.5)",
+                                    textAlign: "center",
+                                    lineHeight: 1.2,
+                                  }}>{label}</span>
+                                </button>
+                              ))}
+                            </div>
+
+                            <div style={{
+                              flex: 1,
+                              overflowY: "auto",
+                              padding: "4px 2px",
+                            }}>
+                              {renderSectionDetail()}
+                            </div>
+                          </>
                         );
                       })()}
                     </div>
