@@ -949,15 +949,6 @@ const LikesLibrary = ({
               boxShadow: "0 -4px 40px rgba(255,105,180,0.35)",
             }}
           >
-            {/* Dark base background */}
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "#08000f",
-                zIndex: 0,
-              }}
-            />
             {/* Grave digger — only appears when card text appears, same fade timing */}
             <AnimatePresence>
               {showDailyTarotFront && (
@@ -1226,7 +1217,7 @@ const LikesLibrary = ({
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.4, delay: 0.3 }}
                         style={{
-                          marginTop: 16,
+                          marginTop: 86,
                           width: "100%",
                           textAlign: "center",
                         }}
