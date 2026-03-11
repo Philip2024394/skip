@@ -9,8 +9,6 @@ interface UseProfileDataProps {
   setSelectedDateIdeaIndex: (v: number) => void;
   setSelectedProfileSection: (v: "basic" | "lifestyle" | "interests" | null) => void;
   setSelectedUnlockItemKey: (v: string) => void;
-  setProfileImageIndex: (v: number) => void;
-  setProfileImageDirection: (v: 1 | -1) => void;
   topCardX: any;
   selectedIndex: number;
   selectedList: any[];

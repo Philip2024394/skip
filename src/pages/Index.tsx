@@ -476,6 +476,7 @@ const Index = () => {
 
   const {
     profileReviews,
+    setProfileReviews,
     profileReviewsLoading,
     activeReviewIndex,
     setActiveReviewIndex,
@@ -492,8 +493,6 @@ const Index = () => {
     setSelectedDateIdeaIndex,
     setSelectedProfileSection,
     setSelectedUnlockItemKey,
-    setProfileImageIndex,
-    setProfileImageDirection,
     topCardX,
     selectedIndex,
     selectedList,
