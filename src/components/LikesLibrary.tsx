@@ -1784,13 +1784,9 @@ const LikesLibrary = ({
                       transition={{ duration: 0.6 }}
                       style={{
                         borderRadius: 18,
-                        background:
-                          premiumReadingType === "soulmate" ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.06)",
-                        border:
-                          premiumReadingType === "soulmate"
-                            ? "1px solid rgba(255,255,255,0.14)"
-                            : "1px solid rgba(255,215,0,0.2)",
-                        backdropFilter: premiumReadingType === "soulmate" ? "blur(10px)" : undefined,
+                        background: "rgba(0,0,0,0.72)",
+                        border: "1px solid rgba(255,215,0,0.2)",
+                        backdropFilter: "blur(10px)",
                         padding: "18px 16px",
                       }}
                     >
@@ -1862,15 +1858,9 @@ const LikesLibrary = ({
                   <div
                     style={{
                       borderRadius: 18,
-                      background:
-                        premiumReadingType === "soulmate"
-                          ? "rgba(0,0,0,0.55)"
-                          : "linear-gradient(135deg, rgba(180,80,180,0.15), rgba(255,215,0,0.08))",
-                      border:
-                        premiumReadingType === "soulmate"
-                          ? "1px solid rgba(255,255,255,0.14)"
-                          : "1px solid rgba(180,80,180,0.3)",
-                      backdropFilter: premiumReadingType === "soulmate" ? "blur(10px)" : undefined,
+                      background: "rgba(0,0,0,0.72)",
+                      border: "1px solid rgba(255,215,0,0.2)",
+                      backdropFilter: "blur(10px)",
                       padding: "18px 16px",
                       marginBottom: 20,
                     }}
@@ -1892,12 +1882,9 @@ const LikesLibrary = ({
                   <div
                     style={{
                       borderRadius: 18,
-                      background: premiumReadingType === "soulmate" ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.04)",
-                      border:
-                        premiumReadingType === "soulmate"
-                          ? "1px solid rgba(255,255,255,0.14)"
-                          : "1px solid rgba(255,255,255,0.1)",
-                      backdropFilter: premiumReadingType === "soulmate" ? "blur(10px)" : undefined,
+                      background: "rgba(0,0,0,0.72)",
+                      border: "1px solid rgba(255,215,0,0.2)",
+                      backdropFilter: "blur(10px)",
                       padding: "18px 16px",
                       marginBottom: 24,
                     }}
