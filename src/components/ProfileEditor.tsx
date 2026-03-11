@@ -442,7 +442,7 @@ const ProfileEditor = () => {
   const isMainImage = (idx: number) => profile.images[idx] === profile.avatar_url;
 
   return (
-    <div className="space-y-3 px-3 sm:px-4">
+    <div className="space-y-3 px-3 sm:px-4" style={{ paddingBottom: "100px" }}>
       {/* ── Step Navigation ─────────────────────────────────────────── */}
       <div style={{
         position: "sticky",
@@ -1137,14 +1137,18 @@ const ProfileEditor = () => {
 
       {/* ── Step Navigation Footer ──────────────────────────────────── */}
       <div style={{
-        position: "sticky",
+        position: "fixed",
         bottom: 0,
+        left: 0,
+        right: 0,
         background: "white",
         borderTop: "1px solid rgba(236,72,153,0.12)",
         padding: "12px 16px",
+        paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
         display: "flex",
         gap: 8,
         boxShadow: "0 -4px 20px rgba(236,72,153,0.08)",
+        zIndex: 50,
       }}>
         {(() => {
           const steps = ["profile", "details"];
@@ -1179,9 +1183,9 @@ const ProfileEditor = () => {
   // Auto save current step data silently
   if (profile && userId) {
     await supabase.from("profiles").update({
-      basic_info: profile.basic_info as any,
-      lifestyle_info: profile.lifestyle_info as any,
-      relationship_goals: profile.relationship_goals as any,
+      basic_info: profile.basic_info as unknown as import("@/integrations/supabase/types").Json,
+      lifestyle_info: profile.lifestyle_info as unknown as import("@/integrations/supabase/types").Json,
+      relationship_goals: profile.relationship_goals as unknown as import("@/integrations/supabase/types").Json,
       name: profile.name,
       age: profile.age,
       bio: profile.bio,

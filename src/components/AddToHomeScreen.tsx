@@ -68,9 +68,10 @@ export const AddToHomeScreen = () => {
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="sync">
       {visible && (
         <motion.div
+          key="pwa-banner"
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}

@@ -323,25 +323,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 }}
               />
 
-              {/* Shade overlay — fades in when card is revealed */}
-              <AnimatePresence>
-                {props.showDailyTarotFront && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5 }}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "rgba(0,0,0,0.25)",
-                      zIndex: 1,
-                      pointerEvents: "none",
-                    }}
-                  />
-                )}
-              </AnimatePresence>
-
+              
               {/* Tarot woman — blends into background via mask */}
               <div
                 style={{
@@ -403,7 +385,6 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 justifyContent: "center",
                 gap: 8,
                 padding: "60px 0 24px",
-                background: "linear-gradient(to left, rgba(10,0,20,0.8), transparent)",
               }}
             >
               {/* WhatsApp Share */}
