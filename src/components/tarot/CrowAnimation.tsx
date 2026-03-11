@@ -107,26 +107,26 @@ const CrowAnimation = ({ containerWidth, containerHeight, onDone }: {
     >
       <svg viewBox="0 0 64 40" width="64" height="40" style={{ overflow: "visible" }}>
         <g style={{ transformOrigin: "32px 20px", transform: `rotate(${leftWingAngle}deg)` }}>
-          <path d="M32,18 C26,14 14,8 4,10 C1,11 1,15 4,18 C10,22 22,22 32,21 Z" fill="#1a1a1a"/>
-          <path d="M4,10 C2,8 0,9 1,11" stroke="#1a1a1a" strokeWidth="1.2" fill="none"/>
-          <path d="M6,9 C5,7 3,8 4,10" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
-          <path d="M9,8 C8,6 6,7 7,9" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
+          <path d="M32,18 C26,14 14,8 4,10 C1,11 1,15 4,18 C10,22 22,22 32,21 Z" fill="#000000"/>
+          <path d="M4,10 C2,8 0,9 1,11" stroke="#000000" strokeWidth="1.2" fill="none"/>
+          <path d="M6,9 C5,7 3,8 4,10" stroke="#000000" strokeWidth="1" fill="none"/>
+          <path d="M9,8 C8,6 6,7 7,9" stroke="#000000" strokeWidth="1" fill="none"/>
         </g>
         <g style={{ transformOrigin: "32px 20px", transform: `rotate(${rightWingAngle}deg)` }}>
-          <path d="M32,18 C38,14 50,8 60,10 C63,11 63,15 60,18 C54,22 42,22 32,21 Z" fill="#1a1a1a"/>
-          <path d="M60,10 C62,8 64,9 63,11" stroke="#1a1a1a" strokeWidth="1.2" fill="none"/>
-          <path d="M58,9 C59,7 61,8 60,10" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
-          <path d="M55,8 C56,6 58,7 57,9" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
+          <path d="M32,18 C38,14 50,8 60,10 C63,11 63,15 60,18 C54,22 42,22 32,21 Z" fill="#000000"/>
+          <path d="M60,10 C62,8 64,9 63,11" stroke="#000000" strokeWidth="1.2" fill="none"/>
+          <path d="M58,9 C59,7 61,8 60,10" stroke="#000000" strokeWidth="1" fill="none"/>
+          <path d="M55,8 C56,6 58,7 57,9" stroke="#000000" strokeWidth="1" fill="none"/>
         </g>
-        <ellipse cx="32" cy="21" rx="5" ry="8" fill="#1a1a1a"/>
-        <ellipse cx="32" cy="19" rx="3.5" ry="5" fill="#2a2a2a"/>
-        <path d="M29,28 C30,31 32,33 32,33 C32,33 34,31 35,28 Z" fill="#1a1a1a"/>
-        <path d="M31,29 L29,34" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
-        <path d="M32,29 L32,34" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
-        <path d="M33,29 L35,34" stroke="#1a1a1a" strokeWidth="1" fill="none"/>
-        <circle cx="32" cy="13" r="5" fill="#1a1a1a"/>
-        <path d="M37,12 C40,11.5 41,13 39,13.5 C38,14 37,13.5 37,13 Z" fill="#222222"/>
-        <circle cx="35" cy="12" r="1.8" fill="#111111"/>
+        <ellipse cx="32" cy="21" rx="5" ry="8" fill="#000000"/>
+        <ellipse cx="32" cy="19" rx="3.5" ry="5" fill="#1a1a1a"/>
+        <path d="M29,28 C30,31 32,33 32,33 C32,33 34,31 35,28 Z" fill="#000000"/>
+        <path d="M31,29 L29,34" stroke="#000000" strokeWidth="1" fill="none"/>
+        <path d="M32,29 L32,34" stroke="#000000" strokeWidth="1" fill="none"/>
+        <path d="M33,29 L35,34" stroke="#000000" strokeWidth="1" fill="none"/>
+        <circle cx="32" cy="13" r="5" fill="#000000"/>
+        <path d="M37,12 C40,11.5 41,13 39,13.5 C38,14 37,13.5 37,13 Z" fill="#1a1a1a"/>
+        <circle cx="35" cy="12" r="1.8" fill="#000000"/>
         <circle cx="35.4" cy="11.4" r="0.9" fill="white"/>
         <circle cx="35.7" cy="11.1" r="0.4" fill="rgba(0,0,0,0.5)"/>
       </svg>
