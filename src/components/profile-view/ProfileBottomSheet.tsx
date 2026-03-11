@@ -235,15 +235,19 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                                       transition: "all 0.2s",
                                       transform: isSelected ? "scale(0.96)" : "scale(1)",
                                       background: "rgba(0,0,0,0.3)",
+                                      height: "120px", // Fixed height for consistency
                                     }}
                                   >
-                                    <div style={{ position: "relative", width: "100%", aspectRatio: "4/5" }}>
+                                    <div style={{ position: "relative", width: "100%", height: "100%" }}>
                                       <img src={img} alt={place.idea} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
                                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%)" }} />
                                       <p style={{
                                         position: "absolute", bottom: 6, left: 6, right: 6,
                                         color: "white", fontSize: 9, fontWeight: 800,
                                         lineHeight: 1.2, margin: 0,
+                                        textOverflow: "ellipsis",
+                                        overflow: "hidden",
+                                        whiteSpace: "nowrap",
                                       }}>{place.idea}</p>
                                     </div>
                                   </button>
@@ -268,15 +272,36 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                                 </div>
                               ) : (
                                 <>
-                                  <div style={{ position: "relative", height: 90, flexShrink: 0 }}>
+                                  <div style={{ position: "relative", height: 100, flexShrink: 0 }}>
                                     <img src={props.selectedDatePlace.image_url || "/placeholder.svg"} alt={props.selectedDatePlace.idea} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                                     <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92), transparent 50%)" }} />
                                     <div style={{ position: "absolute", bottom: 8, left: 12, right: 12 }}>
                                       <p style={{ color: "white", fontWeight: 800, fontSize: 13, margin: 0 }}>{props.selectedDatePlace.idea}</p>
-                                      {props.selectedDatePlace.title && <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, margin: "2px 0 0" }}>{props.selectedDatePlace.title}</p>}
+                                      {props.selectedDatePlace.title && <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 10, margin: "2px 0 0" }}>{props.selectedDatePlace.title}</p>}
                                     </div>
                                   </div>
-                                  <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column" as const, gap: 6, overflowY: "auto" as const }}>
+                                  <div style={{ padding: "12px", display: "flex", flexDirection: "column" as const, gap: 8, overflowY: "auto" as const }}>
+                                    {/* Description */}
+                                    {props.selectedDatePlace.description && (
+                                      <div style={{ 
+                                        background: "rgba(255,255,255,0.05)", 
+                                        borderRadius: 10, 
+                                        padding: "10px",
+                                        border: "1px solid rgba(255,255,255,0.1)"
+                                      }}>
+                                        <p style={{ 
+                                          color: "rgba(255,255,255,0.9)", 
+                                          fontSize: 11, 
+                                          lineHeight: 1.4, 
+                                          margin: 0,
+                                          fontWeight: 400
+                                        }}>
+                                          {props.selectedDatePlace.description}
+                                        </p>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Action buttons */}
                                     {(props.selectedDatePlace.instagram_url || props.selectedDatePlace.url?.includes("instagram")) && (
                                       <a href={props.selectedDatePlace.instagram_url || props.selectedDatePlace.url} target="_blank" rel="noopener noreferrer"
                                         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 10, background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
