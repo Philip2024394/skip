@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useSEO } from "@/hooks/useSEO";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mt-8">
@@ -11,6 +12,14 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const PrivacyPage = () => {
   const navigate = useNavigate();
+
+  useSEO({
+    title: "Kebijakan Privasi – 2DateMe Aplikasi Kencan Online Indonesia",
+    description: "Kebijakan Privasi 2DateMe, aplikasi kencan online terpercaya di Indonesia. Kami melindungi data pribadi pengguna yang cari jodoh & kencan di Jakarta, Bali, Surabaya & seluruh Indonesia.",
+    canonical: "https://2dateme.com/privacy",
+    keywords: "kebijakan privasi 2DateMe, privacy policy aplikasi kencan Indonesia, perlindungan data dating app Indonesia, privasi kencan online Indonesia",
+  });
+
   return (
     <div className="h-screen overflow-y-auto overflow-x-hidden bg-black text-white scroll-touch">
       <div className="max-w-2xl mx-auto px-5 py-8 pb-20">
@@ -22,6 +31,10 @@ const PrivacyPage = () => {
           <h1 className="text-3xl font-display font-bold mb-2">Privacy Policy</h1>
           <p className="text-white/40 text-xs">2DateMe.com · Last updated: March 7, 2026</p>
         </div>
+
+        <p className="text-white/70 text-sm leading-relaxed mb-4">
+          <strong className="text-white">2DateMe</strong> — <em>aplikasi kencan online Indonesia terbaik</em> — berkomitmen penuh untuk melindungi data pribadi setiap pengguna yang cari jodoh, kencan online, dan connect via WhatsApp di Jakarta, Bali, Surabaya, Bandung, dan seluruh Indonesia. Sebagai <strong className="text-white">dating app Indonesia terpercaya</strong>, keamanan dan privasi kamu adalah prioritas utama kami.
+        </p>
 
         <p className="text-white/70 text-sm leading-relaxed">
           2DateMe ("<strong className="text-white">we</strong>", "<strong className="text-white">us</strong>", or "<strong className="text-white">our</strong>") is committed to protecting your privacy. This Privacy Policy explains what information we collect, how we use it, and the choices you have. By using 2DateMe.com or our mobile application ("<strong className="text-white">Service</strong>"), you agree to this policy.

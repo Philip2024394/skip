@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useSEO } from "@/hooks/useSEO";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mt-8">
@@ -11,6 +12,14 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const TermsPage = () => {
   const navigate = useNavigate();
+
+  useSEO({
+    title: "Syarat & Ketentuan – 2DateMe Aplikasi Kencan Indonesia",
+    description: "Syarat dan Ketentuan penggunaan 2DateMe, aplikasi kencan online terbaik di Indonesia. Kencan di Jakarta, Bali, Surabaya & seluruh Indonesia via WhatsApp.",
+    canonical: "https://2dateme.com/terms",
+    keywords: "syarat ketentuan 2DateMe, terms of service aplikasi kencan Indonesia, aturan dating app Indonesia, kebijakan pengguna kencan online Indonesia",
+  });
+
   return (
     <div className="h-screen overflow-y-auto overflow-x-hidden bg-black text-white scroll-touch">
       <div className="max-w-2xl mx-auto px-5 py-8 pb-20">
@@ -22,6 +31,10 @@ const TermsPage = () => {
           <h1 className="text-3xl font-display font-bold mb-2">Terms of Service</h1>
           <p className="text-white/40 text-xs">2DateMe.com · Last updated: March 7, 2026</p>
         </div>
+
+        <p className="text-white/70 text-sm leading-relaxed mb-4">
+          <strong className="text-white">2DateMe</strong> adalah aplikasi kencan online terbaik di Indonesia — platform <em>dating app Indonesia</em> yang memungkinkan kamu cari jodoh, kencan online, dan connect langsung via WhatsApp di Jakarta, Bali, Surabaya, Bandung, dan seluruh Indonesia. Dengan mendaftar dan menggunakan layanan 2DateMe (<strong className="text-white">aplikasi kencan Indonesia terpercaya</strong>), kamu setuju untuk terikat oleh Syarat dan Ketentuan di bawah ini.
+        </p>
 
         <p className="text-white/70 text-sm leading-relaxed">
           Please read these Terms of Service ("<strong className="text-white">Terms</strong>") carefully before using 2DateMe ("<strong className="text-white">we</strong>", "<strong className="text-white">us</strong>", "<strong className="text-white">our</strong>") at 2DateMe.com or our mobile application (the "<strong className="text-white">Service</strong>"). By accessing or using the Service, you agree to be legally bound by these Terms. If you do not agree, please do not use the Service.
