@@ -311,11 +311,11 @@ const AuthPage = () => {
             "Unlock WhatsApp Instantly",
             "Meet Quickly On WhatsApp",
           ].map((label) => (
-            <div key={label} className="flex items-center gap-4">
-              <span className="w-9 h-9 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-[0_0_14px_rgba(34,197,94,0.6)]">
-                <span className="text-[18px] leading-none text-white font-black">✓</span>
+            <div key={label} className="flex items-center gap-2.5">
+              <span className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.5)]">
+                <span className="text-[10px] leading-none text-white font-black">✓</span>
               </span>
-              <span className="text-white text-[20px] font-bold drop-shadow-[0_1px_8px_rgba(0,0,0,0.7)]">
+              <span className="text-white text-[13px] font-semibold drop-shadow-[0_1px_8px_rgba(0,0,0,0.7)]">
                 {label}
               </span>
             </div>
