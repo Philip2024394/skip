@@ -36,6 +36,45 @@ const DashboardPage = () => {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [tab, setTab] = useState<"profile" | "powerups">("profile");
   const [autoOpenFeatureId, setAutoOpenFeatureId] = useState<string | null>(null);
+  const [navigationHistory, setNavigationHistory] = useState<("profile" | "powerups")[]>([]);
+
+  // Track navigation history
+  useEffect(() => {
+    const handleTabChange = (newTab: "profile" | "powerups") => {
+      setNavigationHistory(prev => {
+        const updated = [...prev, newTab];
+        // Keep only last 10 entries to prevent memory issues
+        return updated.slice(-10);
+      });
+    };
+
+    // Add initial tab to history
+    if (navigationHistory.length === 0) {
+      setNavigationHistory([tab]);
+    }
+  }, []);
+
+  // Update history when tab changes
+  useEffect(() => {
+    if (navigationHistory.length > 0) {
+      setNavigationHistory(prev => {
+        const updated = [...prev, tab];
+        return updated.slice(-10);
+      });
+    }
+  }, [tab]);
+
+  // Smart back button handler
+  const handleBack = () => {
+    // If we have navigation history and not on first tab
+    if (navigationHistory.length > 1) {
+      const previousTab = navigationHistory[navigationHistory.length - 2];
+      setTab(previousTab);
+    } else {
+      // On first tab, go to home page
+      navigate("/");
+    }
+  };
 
   // Handle ?purchase=featureId param from ProfileEditor redirect
   useEffect(() => {
@@ -124,7 +163,7 @@ const DashboardPage = () => {
     <div className="h-screen-safe bg-white flex flex-col overflow-hidden max-w-full mx-auto">
       <header className="flex items-center justify-between px-3 py-2.5 bg-white border-b border-gray-200" style={{ paddingTop: `max(0.5rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-2">
-          <button onClick={() => navigate("/")} className="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors">
+          <button onClick={handleBack} className="w-7 h-7 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors" title="Back">
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <span className="font-display font-bold text-gray-900 text-xs sm:text-sm">{t("dash.title")}</span>
