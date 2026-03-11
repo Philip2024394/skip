@@ -19,12 +19,14 @@ interface DateIdeasSelectorProps {
   selectedIdeas: string[];
   onSelectionChange: (ideas: string[]) => void;
   maxSelection?: number;
+  onDateIdeaSelect?: (idea: string | null) => void;
 }
 
 export const DateIdeasSelector = ({ 
   selectedIdeas, 
   onSelectionChange, 
-  maxSelection = 3 
+  maxSelection = 3,
+  onDateIdeaSelect
 }: DateIdeasSelectorProps) => {
   const [dateIdeasImages, setDateIdeasImages] = useState<DateIdeasImage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +59,11 @@ export const DateIdeasSelector = ({
 
   const toggleIdeaSelection = (ideaName: string) => {
     const isSelected = selectedIdeas.includes(ideaName);
+    
+    // Call the description callback
+    if (onDateIdeaSelect) {
+      onDateIdeaSelect(ideaName);
+    }
     
     if (isSelected) {
       // Remove from selection
