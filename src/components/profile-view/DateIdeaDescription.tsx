@@ -52,7 +52,7 @@ export const DateIdeaDescription = ({ selectedDateIdea, className }: DateIdeaDes
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">Date Idea Description</h3>
+        <h3 className="text-lg font-semibold text-white">Date Idea ( )</h3>
         {selectedDateIdea && (
           <div className="flex items-center gap-2">
             <span className="text-white/60 text-sm">Selected:</span>
