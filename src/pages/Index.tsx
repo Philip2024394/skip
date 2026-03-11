@@ -7,7 +7,7 @@ import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
 import LikesLibrary from "@/components/LikesLibrary";
 import ButterflyLikeAnimation from "@/components/ButterflyLikeAnimation";
-import SuperLikeRevealModal from "@/components/SuperLikeRevealModal";
+import HelicopterSuperLikeAnimation from "@/components/HelicopterSuperLikeAnimation";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 import { toast } from "sonner";
 import { getPrimaryBadgeKey } from "@/utils/profileBadges";
@@ -1882,13 +1882,15 @@ const Index = () => {
         )}
 
         {superLikeRevealProfile && (
-          <SuperLikeRevealModal
-            profile={superLikeRevealProfile}
-            onComplete={() => {
-              const id = superLikeRevealProfile.id;
-              setSuperLikeRevealProfile(null);
-              setSuperLikeGlowProfileId(id);
+          <HelicopterSuperLikeAnimation
+            libraryRef={libraryRef}
+            targetProfileId={superLikeRevealProfile.id}
+            onReachLibrary={() => {
+              setSuperLikeGlowProfileId(superLikeRevealProfile.id);
               setTimeout(() => setSuperLikeGlowProfileId(null), 5000);
+            }}
+            onComplete={() => {
+              setSuperLikeRevealProfile(null);
             }}
           />
         )}
