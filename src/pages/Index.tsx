@@ -1951,7 +1951,8 @@ const Index = () => {
               onTabChange={(t) => {
                 if (!isProfileRoute) return;
                 setAboutMeTab(t);
-                if (t === "new") setSelectedProfileSection(null);
+                setSelectedProfileSection(null);
+                setSelectedDatePlace(null);
                 if (t === "received") setSelectedUnlockItemKey("unlock:single");
                 if (t === "treat") setSelectedTreatItem("massage");
               }}
@@ -1993,6 +1994,7 @@ const Index = () => {
                     }
                   : null
               }
+              hidePrivateTabs={isProfileRoute}
               onRevealDailyTarot={() => {
                 markDailyCardShown();
               }}

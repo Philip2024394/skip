@@ -58,11 +58,11 @@ export const BasicInfoEditor = ({
               }}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                 selected
-                  ? "bg-pink-500/30 border-pink-500 text-pink-300"
-                  : "bg-white/5 border-white/15 text-white/60 hover:border-white/30"
+                  ? "bg-pink-500/30 border-pink-500 text-white"
+                  : "bg-white/5 border-white/15 text-white hover:border-white/30"
               }`}
             >
-              {opt}
+              <span style={{ color: "inherit", fontSize: "inherit" }}>{opt}</span>
             </button>
           );
         })}

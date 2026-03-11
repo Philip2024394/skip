@@ -67,13 +67,13 @@ export const LifestyleEditor = ({
               }}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                 selected
-                  ? "bg-purple-500/30 border-purple-500 text-purple-300"
+                  ? "bg-purple-500/30 border-purple-500 text-white"
                   : atMax
-                  ? "bg-white/2 border-white/8 text-white/25 cursor-not-allowed"
-                  : "bg-white/5 border-white/15 text-white/60 hover:border-white/30"
+                  ? "opacity-30 cursor-not-allowed text-white border-white/15"
+                  : "bg-white/5 border-white/15 text-white hover:border-white/30"
               }`}
             >
-              {opt}
+              <span style={{ color: "inherit", fontSize: "inherit" }}>{opt}</span>
             </button>
           );
         })}
