@@ -24,33 +24,26 @@ export const AddToHomeScreen = () => {
     if (isInStandaloneMode()) return;
     if (sessionStorage.getItem(DISMISS_KEY)) return;
 
-    // Capture Android/Chrome install prompt
+    // Capture Android/Chrome install prompt — single handler
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-
-    // Detect platform and show after 30s
-    const timer = setTimeout(() => {
-      if (sessionStorage.getItem(DISMISS_KEY)) return;
-      if (isIOS()) {
-        setPlatform("ios");
-        setVisible(true);
-      } else if (isAndroid()) {
-        setPlatform("android");
-        setVisible(true);
-      }
-    }, 30000);
-
-    // If Android prompt fires early, show immediately
-    window.addEventListener("beforeinstallprompt", () => {
       clearTimeout(timer);
       if (!sessionStorage.getItem(DISMISS_KEY)) {
         setPlatform("android");
         setVisible(true);
       }
-    });
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+
+    // iOS / delayed fallback — show after 30s if no prompt fired
+    const timer = setTimeout(() => {
+      if (sessionStorage.getItem(DISMISS_KEY)) return;
+      if (isIOS()) {
+        setPlatform("ios");
+        setVisible(true);
+      }
+    }, 30000);
 
     return () => {
       clearTimeout(timer);

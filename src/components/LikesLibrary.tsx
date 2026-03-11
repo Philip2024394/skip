@@ -25,6 +25,8 @@ const CrowAnimation = ({ containerWidth, containerHeight, onDone }: {
   const [scale, setScale] = useState(1);
   const animRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
+  const isMountedRef = useRef(true);
+  useEffect(() => { return () => { isMountedRef.current = false; }; }, []);
 
   const flightConfig = useMemo(() => {
     const goingRight = Math.random() > 0.3;
@@ -63,6 +65,7 @@ const CrowAnimation = ({ containerWidth, containerHeight, onDone }: {
       const dy = nextY - currentY;
       const tiltAngle = Math.max(-18, Math.min(18, dy * 0.8));
       const flipScale = goingRight ? 1 : -1;
+      if (!isMountedRef.current) return;
       setPos({ x: currentX, y: currentY });
       setAngle(tiltAngle);
       setOpacity(currentOpacity);
