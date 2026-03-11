@@ -1263,7 +1263,7 @@ const LikesLibrary = ({
                 position: "relative",
                 width: "100%",
                 overflow: "hidden",
-                height: 260,
+                height: 200,
                 flexShrink: 0,
               }}
             >
@@ -1310,8 +1310,8 @@ const LikesLibrary = ({
                   bottom: 0,
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: 160,
-                  height: 160,
+                  width: 130,
+                  height: 130,
                   zIndex: 5,
                   WebkitMaskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
                   maskImage: "linear-gradient(to bottom, black 40%, transparent 100%)",
@@ -1463,10 +1463,10 @@ const LikesLibrary = ({
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                padding: "16px 20px 28px",
-                overflowY: "auto",
+                padding: "12px 20px 16px",
+                overflowY: "hidden",
                 flex: 1,
-                WebkitOverflowScrolling: "touch",
+                minHeight: 0,
               }}
             >
 
@@ -1515,7 +1515,7 @@ const LikesLibrary = ({
 
               {/* Tarot card — face down until reveal */}
               {dailyTarot && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", gap: 6 }}>
                   <AnimatePresence mode="wait">
                     {!showDailyTarotFront ? (
                       <motion.div
@@ -1541,7 +1541,7 @@ const LikesLibrary = ({
                         <img
                           src={TAROT_DRAWER_CARD_URL}
                           alt="Card back"
-                          style={{ width: 140, height: 185, objectFit: "contain" }}
+                          style={{ width: 125, height: 165, objectFit: "contain" }}
                           decoding="async"
                           loading="lazy"
                         />
@@ -1558,7 +1558,7 @@ const LikesLibrary = ({
                           <img
                             src={TAROT_CARD_FRONT_IMAGES[1]}
                             alt="The Fool"
-                            style={{ width: 140, height: 185, objectFit: "contain" }}
+                            style={{ width: 125, height: 165, objectFit: "contain" }}
                             decoding="async"
                             loading="lazy"
                           />
