@@ -291,13 +291,16 @@ const AuthPage = () => {
              style={{ paddingTop: `max(1rem, env(safe-area-inset-top, 1rem))` }}>
           {/* Logo + name */}
           <div className="flex items-center gap-2.5">
-            <AppLogo className="w-14 h-14 object-contain flex-shrink-0" />
+            <AppLogo className="w-28 h-28 object-contain flex-shrink-0" />
             <div className="leading-none">
               <p className="text-white font-display font-black text-xl tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
                 2DateMe
               </p>
               <p className="text-yellow-300 text-[11px] font-bold tracking-wide drop-shadow-[0_1px_6px_rgba(0,0,0,0.5)]">
                 Indonesia's Dating App
+              </p>
+              <p className="text-white text-[12px] font-bold mt-1 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)]">
+                Indonesia's <span className="text-yellow-300">Fastest</span> way to meet singles
               </p>
             </div>
           </div>
