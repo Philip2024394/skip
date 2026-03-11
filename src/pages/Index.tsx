@@ -656,7 +656,7 @@ const Index = () => {
           {isProfileRoute ? (
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/home")}
               aria-label="Home"
               className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
               title="Home"
