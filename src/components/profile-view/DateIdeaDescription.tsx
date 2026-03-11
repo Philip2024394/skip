@@ -70,14 +70,6 @@ export const DateIdeaDescription = ({ selectedDateIdea, className }: DateIdeaDes
             </p>
           </div>
 
-          {/* Character counter */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/10">
-            <span className="text-white/30 text-xs">Description length:</span>
-            <span className="text-white/60 text-xs font-mono">
-              {description.length}/275 characters
-            </span>
-          </div>
-
           {/* Date idea highlights */}
           {selectedDateIdea && (
             <div className="bg-pink-500/10 border border-pink-500/20 rounded-lg p-3">
@@ -95,15 +87,6 @@ export const DateIdeaDescription = ({ selectedDateIdea, className }: DateIdeaDes
           )}
         </div>
       </div>
-
-      {/* Instructions */}
-      {!selectedDateIdea && (
-        <div className="text-center py-4">
-          <p className="text-white/40 text-sm">
-            👆 Click on a date idea above to see its description
-          </p>
-        </div>
-      )}
     </div>
   );
 };

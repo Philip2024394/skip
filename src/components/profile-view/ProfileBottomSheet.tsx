@@ -213,12 +213,6 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       
                       {/* Date ideas selection area */}
                       <div className="px-4 py-4">
-                        <div className="text-center mb-4">
-                          <p className="text-white/60 text-sm">
-                            👆 Click on the date ideas above to see detailed descriptions
-                          </p>
-                        </div>
-                        
                         {/* Show user's selected date ideas if available */}
                         {props.selectedProfile?.selected_date_ideas && 
                          Array.isArray(props.selectedProfile.selected_date_ideas) && 
