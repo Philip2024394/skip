@@ -84,13 +84,47 @@
     touch-action: pan-x pan-y;
     /* Prevent tap callout on long-press (iOS) */
     -webkit-touch-callout: none;
+    /* Mobile viewport constraints */
+    width: 100vw;
+    max-width: 428px;
+    margin: 0 auto;
+    overflow-x: hidden;
+    
+    /* Desktop centering with device frame */
+    @media (min-width: 429px) {
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+      border-radius: 40px;
+      border: 8px solid #1a1a1a;
+      margin: 20px auto;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    
+    @media (min-width: 768px) {
+      margin: 40px auto;
+      max-height: calc(100vh - 80px);
+    }
+    
+    @media (min-width: 1200px) {
+      margin: 60px auto;
+      max-height: calc(100vh - 120px);
+    }
   }
 
-  /* #root must also fill the full height */
+  /* #root must also follow mobile viewport constraints */
   #root {
+    width: 100vw;
+    max-width: 428px;
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
+    margin: 0 auto;
+    position: relative;
+    
+    @media (min-width: 429px) {
+      border-radius: 32px; /* Slightly smaller than body border */
+      overflow: hidden;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -155,6 +189,40 @@
   .h-screen-safe {
     height: 100vh;
     height: 100dvh;
+  }
+
+  /* ── Mobile-only viewport constraints ── */
+  .mobile-viewport {
+    /* Force mobile dimensions on all screens */
+    width: 100vw;
+    max-width: 428px; /* iPhone Pro Max width */
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0 auto; /* Center on desktop */
+    position: relative;
+    overflow: hidden;
+    
+    /* On desktop, add visual container */
+    @media (min-width: 429px) {
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+      border-radius: 40px;
+      border: 8px solid #1a1a1a;
+      margin: 20px auto;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+    
+    /* Larger desktop screens */
+    @media (min-width: 768px) {
+      margin: 40px auto;
+      max-height: calc(100vh - 80px);
+    }
+    
+    /* Ultra-wide screens */
+    @media (min-width: 1200px) {
+      margin: 60px auto;
+      max-height: calc(100vh - 120px);
+    }
   }
 
   /* ── App logo floating hearts (used by AppLogo component) ── */
