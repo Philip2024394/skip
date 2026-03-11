@@ -637,8 +637,8 @@ const LikesLibrary = ({
                 ))}
               </div>
             ) : isUnlockTab ? (
-              <div className="h-full pr-1">
-                <div className="flex gap-2 pb-2 min-w-max">
+              <div className="pr-1">
+                <div className="flex gap-2 pb-2 min-w-max items-start">
                   {(
                     [
                       { key: "unlock:single", title: "1 Unlock", price: "$1.99", sub: "Match unlock" },
@@ -666,6 +666,7 @@ const LikesLibrary = ({
                         onSelectUnlockItem?.(p.key);
                       }}
                       className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative flex-shrink-0 w-[140px] ${selectedUnlockItemKey === p.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
+                      style={{ height: 100 }}
                       aria-label={p.title}
                     >
                       <p className="text-white text-[10px] font-black text-center leading-tight line-clamp-2">{p.title}</p>
