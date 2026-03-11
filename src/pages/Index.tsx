@@ -1984,7 +1984,9 @@ const Index = () => {
                 >
                   {aboutMeTab === "received" ? (
                     <div className="h-full w-full flex flex-col">
-                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Unlock</p>
+                      {selectedUnlockItemKey !== "unlock:single" && (
+                        <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Unlock</p>
+                      )}
 
                       {selectedUnlockItemKey === "unlock:single" ? (
                         <div className="flex-1 w-full relative overflow-hidden rounded-none border-0">
