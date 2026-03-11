@@ -2268,55 +2268,47 @@ const Index = () => {
                       </div>
                     </div>
                   ) : aboutMeTab === "sent" ? (
-                    <div className="h-full w-full flex flex-col">
+                    <div className="h-full w-full flex flex-col gap-2">
                       {(() => {
                         const places = (selectedProfile?.first_date_places || []).filter(Boolean).slice(0, 3) as any[];
 
                         if (places.length === 0) {
                           return (
-                            <div className="flex-1 flex items-center justify-center">
-                              <p className="text-white/50 text-xs">No date ideas added yet</p>
+                            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>No date ideas added yet</p>
                             </div>
                           );
                         }
 
                         return (
                           <>
-                            {/* 3 date idea cards */}
-                            <div className="grid grid-cols-3 gap-2 w-full mb-3">
+                            {/* 3 tap cards */}
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
                               {places.map((place, idx) => {
-                                const title = place.title || place.idea || "Date idea";
                                 const img = place.image_url || "/placeholder.svg";
-                                const isSelected = selectedDatePlace?.idea === place.idea && selectedDatePlace?.title === place.title;
-
+                                const isSelected = selectedDatePlace && selectedDatePlace.idea === place.idea && selectedDatePlace.title === place.title;
                                 return (
                                   <button
-                                    key={`place-${idx}`}
-                                    type="button"
+                                    key={idx}
                                     onClick={() => setSelectedDatePlace(isSelected ? null : place)}
                                     style={{
                                       borderRadius: 14,
                                       overflow: "hidden",
-                                      border: isSelected ? "2px solid rgba(255,105,180,0.8)" : "1px solid rgba(255,255,255,0.1)",
-                                      background: "rgba(0,0,0,0.3)",
+                                      border: isSelected ? "2px solid #EC4899" : "1px solid rgba(255,255,255,0.1)",
                                       padding: 0,
                                       cursor: "pointer",
                                       transition: "all 0.2s",
-                                      transform: isSelected ? "scale(0.97)" : "scale(1)",
+                                      transform: isSelected ? "scale(0.96)" : "scale(1)",
+                                      background: "rgba(0,0,0,0.3)",
                                     }}
                                   >
-                                    <div style={{ position: "relative", width: "100%", aspectRatio: "4/5", overflow: "hidden" }}>
-                                      <img src={img} alt={title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
-                                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent 60%)" }} />
+                                    <div style={{ position: "relative", width: "100%", aspectRatio: "4/5" }}>
+                                      <img src={img} alt={place.idea} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+                                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%)" }} />
                                       <p style={{
-                                        position: "absolute",
-                                        bottom: 6, left: 6, right: 6,
-                                        color: "white",
-                                        fontSize: 9,
-                                        fontWeight: 800,
-                                        lineHeight: 1.2,
-                                        margin: 0,
-                                        textShadow: "0 1px 4px rgba(0,0,0,0.8)",
+                                        position: "absolute", bottom: 6, left: 6, right: 6,
+                                        color: "white", fontSize: 9, fontWeight: 800,
+                                        lineHeight: 1.2, margin: 0,
                                       }}>{place.idea}</p>
                                     </div>
                                   </button>
@@ -2332,97 +2324,39 @@ const Index = () => {
                               background: "rgba(0,0,0,0.2)",
                               overflow: "hidden",
                               display: "flex",
-                              flexDirection: "column",
+                              flexDirection: "column" as const,
+                              minHeight: 0,
                             }}>
                               {!selectedDatePlace ? (
                                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>Tap a date idea to see details</p>
+                                  <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>👆 Tap a date idea to see details</p>
                                 </div>
                               ) : (
                                 <>
-                                  {/* Hero image */}
-                                  <div style={{ position: "relative", height: 100, flexShrink: 0 }}>
-                                    <img
-                                      src={selectedDatePlace.image_url || "/placeholder.svg"}
-                                      alt={selectedDatePlace.idea}
-                                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                    />
-                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.9), transparent 50%)" }} />
+                                  <div style={{ position: "relative", height: 90, flexShrink: 0 }}>
+                                    <img src={selectedDatePlace.image_url || "/placeholder.svg"} alt={selectedDatePlace.idea} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92), transparent 50%)" }} />
                                     <div style={{ position: "absolute", bottom: 8, left: 12, right: 12 }}>
                                       <p style={{ color: "white", fontWeight: 800, fontSize: 13, margin: 0 }}>{selectedDatePlace.idea}</p>
-                                      {selectedDatePlace.title && (
-                                        <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, margin: "2px 0 0" }}>{selectedDatePlace.title}</p>
-                                      )}
+                                      {selectedDatePlace.title && <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 10, margin: "2px 0 0" }}>{selectedDatePlace.title}</p>}
                                     </div>
                                   </div>
-
-                                  {/* Action buttons */}
-                                  <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+                                  <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column" as const, gap: 6, overflowY: "auto" as const }}>
                                     {(selectedDatePlace.instagram_url || selectedDatePlace.url?.includes("instagram")) && (
-                                      <a
-                                        href={selectedDatePlace.instagram_url || selectedDatePlace.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          gap: 6,
-                                          padding: "8px 12px",
-                                          borderRadius: 10,
-                                          background: "linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)",
-                                          color: "white",
-                                          fontSize: 11,
-                                          fontWeight: 700,
-                                          textDecoration: "none",
-                                        }}
-                                      >
+                                      <a href={selectedDatePlace.instagram_url || selectedDatePlace.url} target="_blank" rel="noopener noreferrer"
+                                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 10, background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
                                         📸 View on Instagram
                                       </a>
                                     )}
                                     {selectedDatePlace.google_url && (
-                                      <a
-                                        href={selectedDatePlace.google_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          gap: 6,
-                                          padding: "8px 12px",
-                                          borderRadius: 10,
-                                          background: "rgba(66,133,244,0.25)",
-                                          border: "1px solid rgba(66,133,244,0.4)",
-                                          color: "white",
-                                          fontSize: 11,
-                                          fontWeight: 700,
-                                          textDecoration: "none",
-                                        }}
-                                      >
+                                      <a href={selectedDatePlace.google_url} target="_blank" rel="noopener noreferrer"
+                                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 10, background: "rgba(66,133,244,0.2)", border: "1px solid rgba(66,133,244,0.4)", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
                                         📍 View on Google Maps
                                       </a>
                                     )}
-                                    {selectedDatePlace.other_url && (
-                                      <a
-                                        href={selectedDatePlace.other_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        style={{
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          gap: 6,
-                                          padding: "8px 12px",
-                                          borderRadius: 10,
-                                          background: "rgba(255,255,255,0.08)",
-                                          border: "1px solid rgba(255,255,255,0.15)",
-                                          color: "white",
-                                          fontSize: 11,
-                                          fontWeight: 700,
-                                          textDecoration: "none",
-                                        }}
-                                      >
+                                    {(selectedDatePlace.other_url || (selectedDatePlace.url && !selectedDatePlace.url.includes("instagram") && !selectedDatePlace.url.includes("google"))) && (
+                                      <a href={selectedDatePlace.other_url || selectedDatePlace.url} target="_blank" rel="noopener noreferrer"
+                                        style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, padding: "8px 12px", borderRadius: 10, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "white", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
                                         🔗 View Place
                                       </a>
                                     )}

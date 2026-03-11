@@ -803,19 +803,24 @@ const LikesLibrary = ({
         </h2>
 
         {/* 3-tab pill */}
-        {(() => {
-          const visibleTabs = hidePrivateTabs ? TABS.filter(t => t !== "sent" && t !== "received") : TABS;
-          const tabPct = `${100 / visibleTabs.length}%`;
-          const tabIdx = visibleTabs.indexOf(tab);
-          return (
         <div className="relative flex gap-0 p-0.5 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
           {/* Sliding background */}
           <motion.div
             className="absolute top-0.5 bottom-0.5 rounded-[10px] gradient-love"
-            animate={{ left: `calc(${tabIdx} * ${tabPct} + 2px)`, width: `calc(${tabPct} - 4px)` }}
+            animate={{
+              left: tabLabelOverrides
+                ? `calc(${["new", "sent", "treat"].indexOf(tab)} * 33.33% + 2px)`
+                : `calc(${TABS.indexOf(tab)} * 25% + 2px)`,
+              width: tabLabelOverrides ? "calc(33.33% - 4px)" : "calc(25% - 4px)",
+            }}
             transition={{ type: "spring", stiffness: 400, damping: 35 }}
           />
-          {visibleTabs.map((t) => (
+          {TABS.filter(t => {
+            if (tabLabelOverrides) {
+              return t === "new" || t === "sent" || t === "treat";
+            }
+            return true;
+          }).map((t) => (
             <button
               key={t}
               onClick={() => {
@@ -828,8 +833,6 @@ const LikesLibrary = ({
             </button>
           ))}
         </div>
-          );
-        })()}
       </div>
 
       {/* ── New profiles label ── */}
