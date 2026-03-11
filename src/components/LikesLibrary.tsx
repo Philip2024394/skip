@@ -126,6 +126,8 @@ interface LikesLibraryProps {
   onSelectProfileSection?: (section: "basic" | "lifestyle" | "interests") => void;
   selectedUnlockItemKey?: string;
   onSelectUnlockItem?: (key: string) => void;
+  selectedTreatItem?: TreatKey | null;
+  onSelectTreatItem?: (key: TreatKey) => void;
   selectedDateIdeaIndex?: number;
   onSelectDateIdea?: (index: number) => void;
   iLiked: Profile[];
@@ -148,7 +150,7 @@ interface LikesLibraryProps {
   onPurchaseFeature: (feature: PremiumFeature) => void;
 }
 
-type Tab = "sent" | "received" | "new";
+type Tab = "sent" | "received" | "new" | "treat";
 type DisplayItem =
   | { type: "profile"; profile: Profile }
   | { type: "promo"; profile: null };
@@ -158,8 +160,17 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   new:      (c) => `New${c.new > 0 ? ` · ${c.new}` : ""}`,
   sent:     (c) => `I Liked${c.sent > 0 ? ` · ${c.sent}` : ""}`,
   received: (c) => `Likes Me${c.received > 0 ? ` · ${c.received}` : ""}`,
+  treat:    () => "Treat",
 };
-const TABS: Tab[] = ["new", "sent", "received"];
+const TABS: Tab[] = ["new", "sent", "received", "treat"];
+
+const TREAT_ITEMS = [
+  { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage" },
+  { key: "beautician", emoji: "💅", label: "Beautician",  desc: "Professional beauty treatment" },
+  { key: "flowers",    emoji: "🌸", label: "Flowers",    desc: "Fresh flower bouquet" },
+  { key: "jewelry",   emoji: "💎", label: "Jewelry",    desc: "Sparkling gift" },
+] as const;
+type TreatKey = typeof TREAT_ITEMS[number]["key"];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 const LikesLibrary = ({
@@ -172,6 +183,8 @@ const LikesLibrary = ({
   onSelectProfileSection,
   selectedUnlockItemKey,
   onSelectUnlockItem,
+  selectedTreatItem,
+  onSelectTreatItem,
   selectedDateIdeaIndex,
   onSelectDateIdea,
   iLiked, likedMe, newProfiles, filterCountry,
@@ -381,6 +394,7 @@ const LikesLibrary = ({
     sent:     iLiked.length,
     received: likedMe.length,
     new:      sortedNew.length,
+    treat:    0,
   };
 
   // Scroll back to left whenever tab changes
@@ -517,6 +531,10 @@ const LikesLibrary = ({
     tab === "received" &&
     tabLabelOverrides?.received === "Unlock";
 
+  const isTreatTab =
+    tab === "treat" &&
+    tabLabelOverrides?.treat === "Treat";
+
   const dateIdeas = (
     (profileDatePlaces || [])
       .filter((p): p is NonNullable<typeof p> => !!p)
@@ -541,7 +559,7 @@ const LikesLibrary = ({
           {/* Sliding background */}
           <motion.div
             className="absolute top-0.5 bottom-0.5 rounded-[10px] gradient-love"
-            animate={{ left: `calc(${TABS.indexOf(tab)} * 33.33% + 2px)`, width: "calc(33.33% - 4px)" }}
+            animate={{ left: `calc(${TABS.indexOf(tab)} * 25% + 2px)`, width: "calc(25% - 4px)" }}
             transition={{ type: "spring", stiffness: 400, damping: 35 }}
           />
           {TABS.map((t) => (
@@ -551,9 +569,7 @@ const LikesLibrary = ({
                 onTabChange?.(t);
                 requestAnimationFrame(() => setTab(t));
               }}
-              className={`relative z-10 py-1 px-1.5 rounded-[10px] text-[9px] font-semibold transition-colors min-w-[56px] text-center ${
-                tab === t ? "text-white" : "text-white/40 hover:text-white/70"
-              }`}
+              className={`relative z-10 py-1 px-1.5 rounded-[10px] text-[9px] font-semibold transition-colors min-w-[44px] text-center ${tab === t ? "text-white" : "text-white/40 hover:text-white/70"}`}
             >
               {tabLabelOverrides?.[t] ?? TAB_LABELS[t](counts)}
             </button>
@@ -584,7 +600,7 @@ const LikesLibrary = ({
       <div
         ref={scrollRef}
         className={`flex-1 [&::-webkit-scrollbar]:hidden ${
-          isDateIdeasTab || isProfileInfoTab
+          isDateIdeasTab || isProfileInfoTab || isTreatTab
             ? "overflow-y-auto overflow-x-hidden"
             : "overflow-x-auto overflow-y-hidden"
         }`}
@@ -592,7 +608,7 @@ const LikesLibrary = ({
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          ...(isDateIdeasTab || isProfileInfoTab
+          ...(isDateIdeasTab || isProfileInfoTab || isTreatTab
             ? { overscrollBehaviorY: "contain", touchAction: "pan-y" }
             : { overscrollBehaviorX: "contain", touchAction: "pan-x" }),
         }}
@@ -604,7 +620,7 @@ const LikesLibrary = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.18 }}
-            className={(isDateIdeasTab || isProfileInfoTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
+            className={(isDateIdeasTab || isProfileInfoTab || isTreatTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
             {isProfileInfoTab ? (
               <div className="grid grid-cols-3 gap-2 h-full pb-2">
@@ -633,6 +649,35 @@ const LikesLibrary = ({
                   >
                     <p className="text-white text-[11px] font-bold text-center leading-tight">{s.label}</p>
                     <p className="text-white/45 text-[9px] font-semibold text-center">Tap to view</p>
+                  </motion.button>
+                ))}
+              </div>
+            ) : isTreatTab ? (
+              <div className="grid grid-cols-2 gap-2 h-full pb-2">
+                {TREAT_ITEMS.map((item, idx) => (
+                  <motion.button
+                    key={item.key}
+                    type="button"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ delay: Math.min(idx * 0.06, 0.18) }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSelectTreatItem?.(item.key);
+                    }}
+                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${
+                      selectedTreatItem === item.key
+                        ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20"
+                        : "border-white/10"
+                    }`}
+                    style={{ height: 124 }}
+                    aria-label={item.label}
+                  >
+                    <span style={{ fontSize: 28 }}>{item.emoji}</span>
+                    <p className="text-white text-[11px] font-bold text-center leading-tight">{item.label}</p>
+                    <p className="text-white/45 text-[9px] font-semibold text-center">{item.desc}</p>
                   </motion.button>
                 ))}
               </div>

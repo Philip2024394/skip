@@ -662,7 +662,8 @@ const Index = () => {
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
 
-  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received">("new");
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat">("new");
+  const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [profileReviews, setProfileReviews] = useState<Array<{ id: string; text: string; created_at: string; reviewer_id: string }> | null>(null);
   const [profileReviewsLoading, setProfileReviewsLoading] = useState(false);
   const [activeReviewIndex, setActiveReviewIndex] = useState(0);
@@ -1819,6 +1820,7 @@ const Index = () => {
                       new: "Profile",
                       sent: "Date Ideas",
                       received: "Unlock",
+                      treat: "Treat",
                     }
                   : undefined
               }
@@ -1827,6 +1829,7 @@ const Index = () => {
                 setAboutMeTab(t);
                 if (t === "new") setSelectedProfileSection("basic");
                 if (t === "received") setSelectedUnlockItemKey("unlock:single");
+                if (t === "treat") setSelectedTreatItem("massage");
               }}
               selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
               onSelectProfileSection={(s) => {
@@ -1837,6 +1840,11 @@ const Index = () => {
               onSelectUnlockItem={(key) => {
                 if (!isProfileRoute) return;
                 setSelectedUnlockItemKey(key);
+              }}
+              selectedTreatItem={isProfileRoute ? selectedTreatItem : null}
+              onSelectTreatItem={(key) => {
+                if (!isProfileRoute) return;
+                setSelectedTreatItem(key);
               }}
               selectedDateIdeaIndex={isProfileRoute ? selectedDateIdeaIndex : undefined}
               onSelectDateIdea={(idx) => {
@@ -2096,6 +2104,34 @@ const Index = () => {
                           </div>
                         </div>
                       )}
+                    </div>
+                  ) : aboutMeTab === "treat" ? (
+                    <div className="h-full w-full flex flex-col">
+                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Treat</p>
+                      <div className="flex-1 flex flex-col items-center justify-center px-1 pt-3">
+                        {(() => {
+                          const treats = [
+                            { key: "massage",    emoji: "💆", label: "Massage",    detail: "A soothing full-body massage to help her unwind and feel pampered.", btn: "Gift Massage" },
+                            { key: "beautician", emoji: "💅", label: "Beautician",  detail: "Professional nail, facial or hair treatment at a top salon.", btn: "Gift Beauty" },
+                            { key: "flowers",    emoji: "🌸", label: "Flowers",    detail: "A beautiful hand-picked bouquet delivered fresh to her door.", btn: "Send Flowers" },
+                            { key: "jewelry",    emoji: "💎", label: "Jewelry",    detail: "A sparkling piece of jewellery to make her feel truly special.", btn: "Gift Jewelry" },
+                          ];
+                          const item = treats.find((t) => t.key === selectedTreatItem) ?? treats[0];
+                          return (
+                            <div className="w-full rounded-2xl bg-black/30 border border-fuchsia-300/20 px-5 py-5 flex flex-col items-center gap-3">
+                              <span style={{ fontSize: 44 }}>{item.emoji}</span>
+                              <p className="text-white font-black text-base text-center">{item.label}</p>
+                              <p className="text-white/60 text-xs text-center leading-relaxed">{item.detail}</p>
+                              <button
+                                className="mt-1 w-full h-10 rounded-xl bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white text-sm font-bold shadow-[0_0_14px_rgba(255,105,180,0.4)] hover:opacity-90 transition-opacity"
+                                onClick={() => {}}
+                              >
+                                🎁 {item.btn}
+                              </button>
+                            </div>
+                          );
+                        })()}
+                      </div>
                     </div>
                   ) : aboutMeTab === "sent" ? (
                     <div className="h-full w-full flex flex-col">
