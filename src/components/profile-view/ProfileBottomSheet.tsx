@@ -213,10 +213,10 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       
                       {/* Date ideas selection area */}
                       <div className="px-4 py-4">
-                        {/* Show user's selected date ideas if available */}
-                        {props.selectedProfile?.selected_date_ideas && 
+                        {/* Show user's selected date ideas if available, otherwise show default date ideas */}
+                        {(props.selectedProfile?.selected_date_ideas && 
                          Array.isArray(props.selectedProfile.selected_date_ideas) && 
-                         props.selectedProfile.selected_date_ideas.length > 0 && (
+                         props.selectedProfile.selected_date_ideas.length > 0) ? (
                           <div className="space-y-3">
                             <h4 className="text-white/80 font-medium text-sm">
                               Your Selected Date Ideas:
@@ -235,6 +235,39 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                                   <p className="text-sm font-medium">{idea}</p>
                                 </button>
                               ))}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <h4 className="text-white/80 font-medium text-sm">
+                              Popular Date Ideas:
+                            </h4>
+                            <div className="grid grid-cols-1 gap-2">
+                              {[
+                                "Coffee At A Cozy Café ☕",
+                                "Dinner At A Nice Restaurant 🍝",
+                                "Walk In The Park 🌳",
+                                "Night At The Cinema 🎬",
+                                "Bowling Night Together 🎳",
+                                "Watching The Stars Together ⭐"
+                              ].map((idea, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() => setSelectedDateIdea(idea)}
+                                  className={`text-left p-3 rounded-lg border transition-all ${
+                                    selectedDateIdea === idea
+                                      ? "bg-pink-500/20 border-pink-500/50 text-pink-300"
+                                      : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <p className="text-sm font-medium">{idea}</p>
+                                </button>
+                              ))}
+                            </div>
+                            <div className="text-center pt-2">
+                              <p className="text-white/40 text-xs">
+                                This user hasn't selected their date ideas yet
+                              </p>
                             </div>
                           </div>
                         )}
