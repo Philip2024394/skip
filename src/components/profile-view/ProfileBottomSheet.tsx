@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DateIdeaDescription } from "./DateIdeaDescription";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
@@ -35,6 +36,7 @@ interface ProfileBottomSheetProps {
 
 export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
   const navigate = useNavigate();
+  const [selectedDateIdea, setSelectedDateIdea] = useState<string | null>(null);
 
   return (
     <>
@@ -203,129 +205,46 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       </div>
                     </div>
                   ) : props.aboutMeTab === "sent" ? (
-                    <div className="h-full w-full flex flex-col gap-2">
-                      {(() => {
-                        const places = (props.selectedProfile?.first_date_places || []).filter(Boolean).slice(0, 3) as any[];
-
-                        if (places.length === 0) {
-                          return (
-                            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>No date ideas added yet</p>
+                    <div className="h-full w-full overflow-y-auto">
+                      <DateIdeaDescription 
+                        selectedDateIdea={selectedDateIdea}
+                        className="px-4 py-4"
+                      />
+                      
+                      {/* Date ideas selection area */}
+                      <div className="px-4 py-4">
+                        <div className="text-center mb-4">
+                          <p className="text-white/60 text-sm">
+                            👆 Click on the date ideas above to see detailed descriptions
+                          </p>
+                        </div>
+                        
+                        {/* Show user's selected date ideas if available */}
+                        {props.selectedProfile?.selected_date_ideas && 
+                         Array.isArray(props.selectedProfile.selected_date_ideas) && 
+                         props.selectedProfile.selected_date_ideas.length > 0 && (
+                          <div className="space-y-3">
+                            <h4 className="text-white/80 font-medium text-sm">
+                              Your Selected Date Ideas:
+                            </h4>
+                            <div className="grid grid-cols-1 gap-2">
+                              {props.selectedProfile.selected_date_ideas.map((idea: string, index: number) => (
+                                <button
+                                  key={index}
+                                  onClick={() => setSelectedDateIdea(idea)}
+                                  className={`text-left p-3 rounded-lg border transition-all ${
+                                    selectedDateIdea === idea
+                                      ? "bg-pink-500/20 border-pink-500/50 text-pink-300"
+                                      : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
+                                  }`}
+                                >
+                                  <p className="text-sm font-medium">{idea}</p>
+                                </button>
+                              ))}
                             </div>
-                          );
-                        }
-
-                        return (
-                          <>
-                            {/* 3 tap cards */}
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8 }}>
-                              {places.map((place, idx) => {
-                                const img = place.image_url || "/placeholder.svg";
-                                const isSelected = props.selectedDatePlace && props.selectedDatePlace.idea === place.idea && props.selectedDatePlace.title === place.title;
-                                return (
-                                  <button
-                                    key={idx}
-                                    onClick={() => props.setSelectedDatePlace(isSelected ? null : place)}
-                                    style={{
-                                      borderRadius: 14,
-                                      overflow: "hidden",
-                                      border: isSelected ? "2px solid #EC4899" : "1px solid rgba(255,255,255,0.1)",
-                                      padding: 0,
-                                      cursor: "pointer",
-                                      transition: "all 0.2s",
-                                      transform: isSelected ? "scale(0.96)" : "scale(1)",
-                                      background: "rgba(0,0,0,0.3)",
-                                      height: "120px", // Fixed height for consistency
-                                    }}
-                                  >
-                                    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                                      <img src={img} alt={place.idea} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
-                                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 60%)" }} />
-                                      <p style={{
-                                        position: "absolute", bottom: 6, left: 6, right: 6,
-                                        color: "white", fontSize: 9, fontWeight: 800,
-                                        lineHeight: 1.2, margin: 0,
-                                        textOverflow: "ellipsis",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                      }}>{place.idea}</p>
-                                    </div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-
-                            {/* Detail window */}
-                            <div style={{
-                              flex: 1,
-                              borderRadius: 14,
-                              border: "1px solid rgba(255,255,255,0.1)",
-                              background: "rgba(0,0,0,0.2)",
-                              overflow: "hidden",
-                              display: "flex",
-                              flexDirection: "column" as const,
-                              minHeight: 0,
-                            }}>
-                              {!props.selectedDatePlace ? (
-                                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                  <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11 }}>👆 Tap a date idea to see details</p>
-                                </div>
-                              ) : (
-                                <>
-                                  <div style={{ position: "relative", height: 100, flexShrink: 0 }}>
-                                    <img src={props.selectedDatePlace.image_url || "/placeholder.svg"} alt={props.selectedDatePlace.idea} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.92), transparent 50%)" }} />
-                                    <div style={{ position: "absolute", bottom: 8, left: 12, right: 12 }}>
-                                      <p style={{ color: "white", fontWeight: 800, fontSize: 13, margin: 0 }}>{props.selectedDatePlace.idea}</p>
-                                      {props.selectedDatePlace.title && <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 10, margin: "2px 0 0" }}>{props.selectedDatePlace.title}</p>}
-                                    </div>
-                                  </div>
-                                  <div style={{ padding: "12px", display: "flex", flexDirection: "column" as const, gap: 8, overflowY: "auto" as const }}>
-                                    {/* Description */}
-                                    {props.selectedDatePlace.description && (
-                                      <div style={{ 
-                                        background: "rgba(255,255,255,0.05)", 
-                                        borderRadius: 10, 
-                                        padding: "10px",
-                                        border: "1px solid rgba(255,255,255,0.1)"
-                                      }}>
-                                        <p style={{ 
-                                          color: "rgba(255,255,255,0.9)", 
-                                          fontSize: 11, 
-                                          lineHeight: 1.4, 
-                                          margin: 0,
-                                          fontWeight: 400
-                                        }}>
-                                          {props.selectedDatePlace.description}
-                                        </p>
-                                      </div>
-                                    )}
-                                    
-                                    {/* Note about this date idea */}
-                                    <div style={{ 
-                                      background: "rgba(236,72,153,0.1)", 
-                                      borderRadius: 10, 
-                                      padding: "10px",
-                                      border: "1px solid rgba(236,72,153,0.2)"
-                                    }}>
-                                      <p style={{ 
-                                        color: "rgba(255,255,255,0.8)", 
-                                        fontSize: 10, 
-                                        lineHeight: 1.4, 
-                                        margin: 0,
-                                        fontWeight: 500,
-                                        fontStyle: "italic"
-                                      }}>
-                                        💕 This is one of your selected date ideas! Perfect for getting to know someone special.
-                                      </p>
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </>
-                        );
-                      })()}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="h-full w-full overflow-y-auto" style={{ padding: "4px 0" }}>
