@@ -7,8 +7,9 @@ interface UseRealtimeLikesProps {
   user: any;
   likedMe: Profile[];
   setLikedMe: (v: Profile[]) => void;
-  setButterflyTarget: (v: string | null) => void;
-  setHelicopterTarget: (v: string | null) => void;
+  setLikeParticlesActive: (v: boolean) => void;
+  setSuperLikeParticlesActive: (v: boolean) => void;
+  setSuperLikeGlowProfileId: (v: string | null) => void;
   setSuperLikeRevealProfile: (v: Profile | null) => void;
   getLocalLikedMeProfiles: () => Profile[];
   saveLocalLikedMeProfiles: (profiles: Profile[]) => void;
@@ -17,23 +18,24 @@ interface UseRealtimeLikesProps {
 export const useRealtimeLikes = (props: UseRealtimeLikesProps) => {
   const prevLikedMeIdsRef = useRef<Set<string>>(new Set());
 
-  // Detect new like: trigger butterfly for regular likes, helicopter for super likes (is_rose)
+  // Detect new like: trigger hearts for regular likes, hearts+stars for super likes
   useEffect(() => {
     const currentIds = new Set(props.likedMe.map((p) => p.id));
     const prev = prevLikedMeIdsRef.current;
     const newProfiles = props.likedMe.filter((p) => !prev.has(p.id));
     const newRegular = newProfiles.find((p) => !p.is_rose);
     if (prev.size > 0 && newRegular) {
-      props.setButterflyTarget(newRegular.id);
+      props.setLikeParticlesActive(true);
     }
     const newSuperLike = newProfiles.find((p) => p.is_rose);
     if (prev.size > 0 && newSuperLike) {
-      props.setHelicopterTarget(newSuperLike.id);
+      props.setSuperLikeParticlesActive(true);
+      props.setSuperLikeGlowProfileId(newSuperLike.id);
     }
     prevLikedMeIdsRef.current = currentIds;
   }, [props.likedMe]);
 
-  // Realtime: when someone likes the current user, add them to likedMe (then butterfly effect will trigger)
+  // Realtime: when someone likes the current user, add them to likedMe
   useEffect(() => {
     if (!props.user?.id) return;
     const channel = supabase

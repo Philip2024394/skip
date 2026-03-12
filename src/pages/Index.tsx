@@ -6,8 +6,7 @@ import AppLogo from "@/components/AppLogo";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
 import LikesLibrary from "@/components/LikesLibrary";
-import ButterflyLikeAnimation from "@/components/ButterflyLikeAnimation";
-import HelicopterSuperLikeAnimation from "@/components/HelicopterSuperLikeAnimation";
+import FloatingLikeParticles from "@/components/FloatingLikeParticles";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 import { toast } from "sonner";
 import { getPrimaryBadgeKey } from "@/utils/profileBadges";
@@ -268,12 +267,10 @@ const Index = () => {
   const [showWelcomeBack, setShowWelcomeBack] = useState(false);
   const welcomeBackName = useRef<string>("");
 
-  // Butterfly: when a new like appears, fly to library and drop heart on that profile's card
   const libraryRef = useRef<HTMLDivElement>(null);
   const prevLikedMeIdsRef = useRef<Set<string>>(new Set());
-  const [butterflyTarget, setButterflyTarget] = useState<string | null>(null);
-  const [helicopterTarget, setHelicopterTarget] = useState<string | null>(null);
-  const [heartDropProfileId, setHeartDropProfileId] = useState<string | null>(null);
+  const [likeParticlesActive, setLikeParticlesActive] = useState(false);
+  const [superLikeParticlesActive, setSuperLikeParticlesActive] = useState(false);
   const [superLikeRevealProfile, setSuperLikeRevealProfile] = useState<Profile | null>(null);
   const [superLikeGlowProfileId, setSuperLikeGlowProfileId] = useState<string | null>(null);
 
@@ -481,8 +478,9 @@ const Index = () => {
     user,
     likedMe,
     setLikedMe,
-    setButterflyTarget,
-    setHelicopterTarget,
+    setLikeParticlesActive,
+    setSuperLikeParticlesActive,
+    setSuperLikeGlowProfileId,
     setSuperLikeRevealProfile,
     getLocalLikedMeProfiles,
     saveLocalLikedMeProfiles,
@@ -825,8 +823,8 @@ const Index = () => {
               onRevealDailyTarot={() => {
                 markDailyCardShown();
               }}
-              receivedHighlightProfileId={(butterflyTarget || helicopterTarget) ?? null}
-              heartDropProfileId={heartDropProfileId}
+              receivedHighlightProfileId={null}
+              heartDropProfileId={null}
               superLikeGlowProfileId={superLikeGlowProfileId}
               onUnlock={handleUnlock}
               onSelectProfile={(profile, sourceList) => {
@@ -837,29 +835,16 @@ const Index = () => {
           </div>
         </motion.div>
 
-        {butterflyTarget && (
-          <ButterflyLikeAnimation
-            libraryRef={libraryRef}
-            targetProfileId={butterflyTarget}
-            onReachLibrary={() => setHeartDropProfileId(butterflyTarget)}
-            onComplete={() => {
-              setButterflyTarget(null);
-              setHeartDropProfileId(null);
-            }}
-          />
-        )}
-
-        {helicopterTarget && (
-          <HelicopterSuperLikeAnimation
-            libraryRef={libraryRef}
-            targetProfileId={helicopterTarget}
-            onReachLibrary={() => setHeartDropProfileId(helicopterTarget)}
-            onComplete={() => {
-              setHelicopterTarget(null);
-              setHeartDropProfileId(null);
-            }}
-          />
-        )}
+        <FloatingLikeParticles
+          active={likeParticlesActive}
+          superLike={false}
+          onComplete={() => setLikeParticlesActive(false)}
+        />
+        <FloatingLikeParticles
+          active={superLikeParticlesActive}
+          superLike={true}
+          onComplete={() => setSuperLikeParticlesActive(false)}
+        />
 
         {/* Development: toggle and simulate butterfly / super like — only in dev build */}
         {isDevBuild() && (
@@ -896,32 +881,24 @@ const Index = () => {
                   <span className="text-white/80 text-xs">On — animations & triggers live</span>
                 </label>
                 <p className="text-white/40 text-[10px]">
-                  Off = same as production: only real events trigger butterfly & super like.
+                  Off = same as production: only real events trigger like particles.
                 </p>
                 
                 {/* Animation Trigger Buttons */}
                 <div className="space-y-2 pt-2 border-t border-amber-500/30">
                   <button
                     type="button"
-                    onClick={() => {
-                      if (bottomProfiles.length > 0) {
-                        setButterflyTarget(bottomProfiles[0].id);
-                      }
-                    }}
+                    onClick={() => setLikeParticlesActive(true)}
                     className="w-full flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
                   >
-                    🦋 Trigger Butterfly
+                    ❤️ Trigger Like Hearts
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (bottomProfiles.length > 0) {
-                        setHelicopterTarget(bottomProfiles[0].id);
-                      }
-                    }}
+                    onClick={() => setSuperLikeParticlesActive(true)}
                     className="w-full flex items-center gap-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
                   >
-                    🚁 Trigger Helicopter
+                    ⭐ Trigger Super Like
                   </button>
                 </div>
               </div>
@@ -954,7 +931,7 @@ const Index = () => {
                     : undefined
                 }
                 likedMe={likedMe}
-                heartDropProfileId={heartDropProfileId}
+                heartDropProfileId={null}
                 onTabChange={(t) => setAboutMeTab(t)}
                 onSelectProfileSection={(s) => setSelectedProfileSection(s)}
               />

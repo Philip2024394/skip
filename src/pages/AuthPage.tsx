@@ -425,7 +425,7 @@ const AuthPage = () => {
             </button>
           </div>
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {isLogin ? (
               <motion.div key="login" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
                 <div>

@@ -95,7 +95,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
             transition={{ delay: Math.min(idx * 0.04, 0.3) }}
             onClick={() => props.onSelectProfile(profile, props.currentList)}
             data-likes-library-profile-id={profile.id}
-            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border relative ${props.tab === "received" && props.superLikeGlowProfileId === profile.id ? "border-amber-400/60 shadow-[0_0_16px_rgba(251,191,36,0.4)] ring-2 ring-amber-400/30" : "border-white/10"}`}
+            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border relative ${props.tab === "received" && props.superLikeGlowProfileId === profile.id ? "border-amber-400/60 super-like-heartbeat" : "border-white/10"}`}
             style={{ width: 80 }}
           >
             {/* NEW badge */}
@@ -110,17 +110,6 @@ export default function LikesCarousel(props: LikesCarouselProps) {
             {/* Available tonight glow — shown as moon badge only, no ring */}
 
             <div className="relative mt-1">
-              {/* Dropped heart from butterfly — behind the profile who liked you */}
-              {props.tab === "received" && props.heartDropProfileId === profile.id && (
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
-                  initial={{ y: -24, opacity: 1, scale: 1.2 }}
-                  animate={{ y: 4, opacity: 0.85, scale: 1 }}
-                  transition={{ duration: 0.6, ease: "easeOut" }}
-                >
-                  <Heart className="w-8 h-8 text-primary drop-shadow-lg" fill="currentColor" strokeWidth={1.5} />
-                </motion.div>
-              )}
               <img
                 src={profile.avatar_url || profile.image}
                 alt={profile.name}
