@@ -374,24 +374,37 @@ const LikesLibrary = ({
                       e.stopPropagation();
                       onSelectTreatItem?.(item.key);
                     }}
-                    className={`relative overflow-hidden rounded-xl cursor-pointer transition-all hover:scale-[1.02] border flex-shrink-0 ${
+                    className={`relative overflow-hidden rounded-xl cursor-pointer transition-all hover:scale-[1.02] flex-shrink-0 ${
                       selectedTreatItem === item.key
-                        ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20"
-                        : "border-white/10"
+                        ? "ring-2 ring-fuchsia-400/60"
+                        : ""
                     }`}
                     style={{
-                      height: 124, width: 110,
+                      height: 124, width: 80,
                       backgroundImage: `url(${item.image})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
+                      border: selectedTreatItem === item.key
+                        ? "1.5px solid rgba(232,72,199,0.7)"
+                        : "1.5px solid rgba(232,72,199,0.35)",
                     }}
                     aria-label={item.label}
                   >
                     {/* dark overlay */}
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.1) 100%)" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0.05) 100%)" }} />
                     {/* content */}
-                    <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", padding: "0 6px 8px" }}>
-                      <p className="text-white text-[11px] font-bold text-center leading-tight">{item.label}</p>
+                    <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", padding: "0 4px 6px" }}>
+                      <p className="text-white text-[10px] font-bold text-center leading-tight mb-1">{item.label}</p>
+                      <span style={{
+                        background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))",
+                        color: "#fff",
+                        fontSize: 8,
+                        fontWeight: 700,
+                        padding: "2px 7px",
+                        borderRadius: 20,
+                        letterSpacing: "0.03em",
+                        whiteSpace: "nowrap",
+                      }}>View</span>
                     </div>
                   </motion.button>
                 ))}
