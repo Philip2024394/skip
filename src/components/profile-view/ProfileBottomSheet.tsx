@@ -5,8 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { toast } from "sonner";
-import MassageDrawer from "@/components/overlays/MassageDrawer";
-import FlowersDrawer from "@/components/overlays/FlowersDrawer";
 
 interface ProfileBottomSheetProps {
   // Profile data
@@ -40,24 +38,6 @@ interface ProfileBottomSheetProps {
 export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
   const navigate = useNavigate();
   const [selectedDateIdea, setSelectedDateIdea] = useState<string | null>(null);
-  const [isMassageDrawerOpen, setIsMassageDrawerOpen] = useState(false);
-  const [isMassageUnlocked, setIsMassageUnlocked] = useState(false);
-  const [isFlowersDrawerOpen, setIsFlowersDrawerOpen] = useState(false);
-  const [isFlowersUnlocked, setIsFlowersUnlocked] = useState(false);
-
-  const handleMassageUnlock = () => {
-    // Here you would integrate with your payment system
-    // For now, we'll simulate the unlock
-    setIsMassageUnlocked(true);
-    toast.success("Massage therapists unlocked! You can now book directly via WhatsApp.");
-  };
-
-  const handleFlowersUnlock = () => {
-    // Here you would integrate with your payment system
-    // For now, we'll simulate the unlock
-    setIsFlowersUnlocked(true);
-    toast.success("Florists unlocked! You can now order flowers directly via WhatsApp.");
-  };
 
   return (
     <>
@@ -480,21 +460,6 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                 </div>
       </div>
       
-      {/* Massage Drawer */}
-      <MassageDrawer 
-        isOpen={isMassageDrawerOpen} 
-        onClose={() => setIsMassageDrawerOpen(false)}
-        isUnlocked={isMassageUnlocked}
-        onUnlock={handleMassageUnlock}
-      />
-      
-      {/* Flowers Drawer */}
-      <FlowersDrawer 
-        isOpen={isFlowersDrawerOpen} 
-        onClose={() => setIsFlowersDrawerOpen(false)}
-        isUnlocked={isFlowersUnlocked}
-        onUnlock={handleFlowersUnlock}
-      />
     </>
   );
 }
