@@ -71,10 +71,10 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
 const TABS: Tab[] = ["new", "sent", "received", "treat"];
 
 const TREAT_ITEMS = [
-  { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage" },
-  { key: "beautician", emoji: "💅", label: "Beautician",  desc: "Professional beauty treatment" },
-  { key: "flowers",    emoji: "🌸", label: "Flowers",    desc: "Fresh flower bouquet" },
-  { key: "jewelry",   emoji: "💎", label: "Jewelry",    desc: "Sparkling gift" },
+  { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage",      image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
+  { key: "beautician", emoji: "💅", label: "Beautician",  desc: "Professional beauty treatment",  image: "https://ik.imagekit.io/7grri5v7d/beauty%20woman.png?updatedAt=1773339036755" },
+  { key: "flowers",    emoji: "🌸", label: "Flowers",    desc: "Fresh flower bouquet",            image: "https://ik.imagekit.io/7grri5v7d/flowers%20nice.png?updatedAt=1773339411434" },
+  { key: "jewelry",   emoji: "💎", label: "Jewelry",    desc: "Sparkling gift",                  image: "https://ik.imagekit.io/7grri5v7d/jewerlysss.png?updatedAt=1773338936919" },
 ] as const;
 type TreatKey = typeof TREAT_ITEMS[number]["key"];
 
@@ -376,17 +376,25 @@ const LikesLibrary = ({
                       e.stopPropagation();
                       onSelectTreatItem?.(item.key);
                     }}
-                    className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border flex-shrink-0 ${
+                    className={`relative overflow-hidden rounded-xl cursor-pointer transition-all hover:scale-[1.02] border flex-shrink-0 ${
                       selectedTreatItem === item.key
                         ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20"
                         : "border-white/10"
                     }`}
-                    style={{ height: 124, width: 110 }}
+                    style={{
+                      height: 124, width: 110,
+                      backgroundImage: `url(${item.image})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                    }}
                     aria-label={item.label}
                   >
-                    <span style={{ fontSize: 28 }}>{item.emoji}</span>
-                    <p className="text-white text-[11px] font-bold text-center leading-tight">{item.label}</p>
-                    <p className="text-white/45 text-[9px] font-semibold text-center">{item.desc}</p>
+                    {/* dark overlay */}
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.1) 100%)" }} />
+                    {/* content */}
+                    <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", padding: "0 6px 8px" }}>
+                      <p className="text-white text-[11px] font-bold text-center leading-tight">{item.label}</p>
+                    </div>
                   </motion.button>
                 ))}
               </div>
