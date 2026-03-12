@@ -228,9 +228,7 @@ const LikesLibrary = ({
     tab === "received" &&
     tabLabelOverrides?.received === "Unlock";
 
-  const isTreatTab =
-    tab === "treat" &&
-    tabLabelOverrides?.treat === "Treat";
+  const isTreatTab = tab === "treat";
 
   const dateIdeas = (
     (profileDatePlaces || [])
