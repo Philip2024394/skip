@@ -154,28 +154,14 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                   <MoonStar className="w-2.5 h-2.5 text-indigo-300" />
                 </span>
               ) : profile.no_drama ? (
-                <span className="absolute -top-1 -left-1 bg-black border border-teal-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(45,212,191,0.5)]">
-                  <ShieldCheck className="w-2.5 h-2.5 text-teal-300" />
+                <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">
+                  <ShieldCheck className="w-2.5 h-2.5 text-yellow-300" />
                 </span>
               ) : props.tab === "new" && profile.available_tonight ? (
-                <span className="absolute -bottom-1 -right-1 text-[10px] bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</span>
+                <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</span>
               ) : null}
-              {/* Green heartbeat dot — avoid overlap with moon badge */}
-              {isOnline(profile.last_seen_at) && !(profile.is_plusone) && !(profile.generous_lifestyle) && !(profile.weekend_plans) && !(profile.late_night_chat) && !(profile.no_drama) && !(props.tab === "new" && profile.available_tonight) && (
-                <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
-                </span>
-              )}
-              {/* online dot when free tonight badge is showing — move to left */}
-              {isOnline(profile.last_seen_at) && !(profile.is_plusone) && props.tab === "new" && profile.available_tonight && (
-                <span className="absolute -bottom-0.5 -left-0.5 flex h-3.5 w-3.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
-                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />
-                </span>
-              )}
-              {/* online dot when +1 / generous / weekend / late / no-drama badge is showing — move to bottom-right */}
-              {isOnline(profile.last_seen_at) && (profile.is_plusone || profile.generous_lifestyle || profile.weekend_plans || profile.late_night_chat || profile.no_drama) && (
+              {/* Single online dot - positioned based on badge presence */}
+              {isOnline(profile.last_seen_at) && (
                 <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
                   <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-400 border-2 border-black shadow-[0_0_6px_rgba(74,222,128,0.7)]" />

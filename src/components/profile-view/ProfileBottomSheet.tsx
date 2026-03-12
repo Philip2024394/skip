@@ -198,19 +198,18 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                     </div>
                   ) : props.aboutMeTab === "treat" ? (
                     <div className="h-full w-full flex flex-col">
-                      <p className="text-white/80 text-xs font-semibold text-center pb-3 border-b border-white/10">Treat</p>
-                      <div className="flex-1 flex flex-col items-center justify-center px-1 pt-3">
-                        {(() => {
-                          const treats = [
+                      <p className="text-white/90 text-sm font-bold text-center pb-3 border-b border-white/10">Treat That Special Person</p>
+                      <div className="flex-1 overflow-x-auto overflow-y-auto px-1 pt-3">
+                        <div className="flex gap-3 pb-2" style={{ minWidth: "max-content" }}>
+                          {[
                             { key: "massage",    emoji: "💆", label: "Massage",    detail: "A soothing full-body massage to help her unwind and feel pampered.", btn: "Gift Massage" },
                             { key: "beautician", emoji: "💅", label: "Beautician",  detail: "Professional nail, facial or hair treatment at a top salon.", btn: "Gift Beauty" },
                             { key: "flowers",    emoji: "🌸", label: "Flowers",    detail: "A beautiful hand-picked bouquet delivered fresh to her door.", btn: "Send Flowers" },
                             { key: "jewelry",    emoji: "💎", label: "Jewelry",    detail: "A sparkling piece of jewellery to make her feel truly special.", btn: "Gift Jewelry" },
-                          ];
-                          const item = treats.find((t) => t.key === props.selectedTreatItem) ?? treats[0];
-                          return (
+                          ].map((item) => (
                             <div 
-                              className={`w-full rounded-2xl bg-black/30 border border-fuchsia-300/20 px-5 py-5 flex flex-col items-center gap-3 ${
+                              key={item.key}
+                              className={`rounded-2xl bg-black/30 border border-fuchsia-300/20 px-4 py-4 flex flex-col items-center gap-2 flex-shrink-0 w-44 h-auto min-h-[180px] ${
                                 item.key === 'massage' ? 'cursor-pointer hover:bg-black/40 transition-colors' : 
                                 item.key === 'flowers' ? 'cursor-pointer hover:bg-black/40 transition-colors' : ''
                               }`}
@@ -222,18 +221,21 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                                 }
                               }}
                             >
-                              <span style={{ fontSize: 44 }}>{item.emoji}</span>
-                              <p className="text-white font-black text-base text-center">{item.label}</p>
-                              <p className="text-white/60 text-xs text-center leading-relaxed">{item.detail}</p>
+                              <span style={{ fontSize: 32 }}>{item.emoji}</span>
+                              <p className="text-white font-black text-sm text-center">{item.label}</p>
+                              <p className="text-white/60 text-xs text-center leading-relaxed flex-1">{item.detail}</p>
                               <button
-                                className="mt-1 w-full h-10 rounded-xl bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white text-sm font-bold shadow-[0_0_14px_rgba(255,105,180,0.4)] hover:opacity-90 transition-opacity"
-                                onClick={() => {}}
+                                className="mt-1 w-full h-8 rounded-lg bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white text-xs font-bold shadow-[0_0_14px_rgba(255,105,180,0.4)] hover:opacity-90 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Handle button click if needed
+                                }}
                               >
                                 🎁 {item.btn}
                               </button>
                             </div>
-                          );
-                        })()}
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ) : props.aboutMeTab === "sent" ? (

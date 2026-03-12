@@ -65,7 +65,7 @@ const AppContent = () => {
       <ErrorBoundary>
         <AndroidBackHandler />
         <Routes>
-          <Route path="/" element={<AuthPage />} />
+          <Route path="/" element={<Index />} />
           <Route path="/home" element={<Index />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/profile/:id" element={<Index />} />

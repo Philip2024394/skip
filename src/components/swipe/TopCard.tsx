@@ -90,7 +90,7 @@ export default function TopCard(props: TopCardProps) {
 
             if (key === "generous_lifestyle") {
               return (
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.45)]">
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.45)]">
                   <span className="text-amber-400">🎁</span> Generous
                 </div>
               );
@@ -106,7 +106,7 @@ export default function TopCard(props: TopCardProps) {
 
             if (key === "late_night_chat") {
               return (
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
                   <span className="text-indigo-400">🌙</span> Late Night
                 </div>
               );
@@ -114,8 +114,8 @@ export default function TopCard(props: TopCardProps) {
 
             if (key === "no_drama") {
               return (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  <span className="text-teal-400">✨</span> No Drama
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
+                  <span className="text-yellow-400">✨</span> No Drama
                 </div>
               );
             }

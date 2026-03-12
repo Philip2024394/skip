@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, Gift, MessageCircle, Shield, MapPin, Clock, Lock, Crown, Flag, ChevronDown, Truck } from "lucide-react";
 

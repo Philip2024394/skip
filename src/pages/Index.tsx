@@ -115,6 +115,20 @@ const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() => defaultFilters);
 
+  // Handle signin/register URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("signin") === "1") {
+      showGuestPrompt("generic");
+      // Clean up the URL
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (params.get("register") === "1") {
+      showGuestPrompt("generic");
+      // Clean up the URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   // Fallback mock profiles if no real DB profiles with images exist
   const mockProfiles = useMemo(() => generateIndonesianProfiles(50), []);
   // In production (VITE_USE_MOCK_PROFILES !== "true"), only show real DB profiles
@@ -757,12 +771,17 @@ const Index = () => {
                   : undefined
               }
               onTabChange={(t) => {
+                // Allow treat tab on both home and profile pages
+                if (t === "treat") {
+                  setAboutMeTab(t);
+                  setSelectedTreatItem("massage");
+                  return;
+                }
                 if (!isProfileRoute) return;
                 setAboutMeTab(t);
                 setSelectedProfileSection(null);
                 setSelectedDatePlace(null);
                 if (t === "received") setSelectedUnlockItemKey("unlock:single");
-                if (t === "treat") setSelectedTreatItem("massage");
               }}
               selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
               onSelectProfileSection={(s) => {
@@ -774,9 +793,9 @@ const Index = () => {
                 if (!isProfileRoute) return;
                 setSelectedUnlockItemKey(key);
               }}
-              selectedTreatItem={isProfileRoute ? selectedTreatItem : null}
+              selectedTreatItem={selectedTreatItem}
               onSelectTreatItem={(key) => {
-                if (!isProfileRoute) return;
+                // Allow treat selection on both home and profile pages
                 setSelectedTreatItem(key);
                 setOpenTreatItem(key);
               }}
@@ -879,14 +898,40 @@ const Index = () => {
                 <p className="text-white/40 text-[10px]">
                   Off = same as production: only real events trigger butterfly & super like.
                 </p>
-                              </div>
+                
+                {/* Animation Trigger Buttons */}
+                <div className="space-y-2 pt-2 border-t border-amber-500/30">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (bottomProfiles.length > 0) {
+                        setButterflyTarget(bottomProfiles[0].id);
+                      }
+                    }}
+                    className="w-full flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    🦋 Trigger Butterfly
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (bottomProfiles.length > 0) {
+                        setHelicopterTarget(bottomProfiles[0].id);
+                      }
+                    }}
+                    className="w-full flex items-center gap-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    🚁 Trigger Helicopter
+                  </button>
+                </div>
+              </div>
             )}
           </>
         )}
 
         {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
         <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
-          {isProfileRoute ? (
+          {isProfileRoute || aboutMeTab === "treat" ? (
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
               <ProfileBottomSheet

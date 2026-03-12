@@ -1098,7 +1098,7 @@ const ProfileEditor = () => {
       <div className="glass rounded-xl p-3 space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-teal-400" />
+            <ShieldCheck className="w-4 h-4 text-yellow-400" />
             <div>
               <p className="text-foreground text-sm font-medium">No Drama</p>
               <p className="text-muted-foreground text-[10px]">Prefer relaxed, positive & respectful connections</p>

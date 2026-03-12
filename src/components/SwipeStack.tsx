@@ -349,8 +349,8 @@ const SwipeStack = ({
             }
             if (key === "no_drama") {
               return (
-                <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-black/80 backdrop-blur-md border border-teal-400/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                  <ShieldCheck className="w-2.5 h-2.5 text-teal-400" />
+                <div className="absolute top-3 left-3 z-10 flex items-center gap-1 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                  <ShieldCheck className="w-2.5 h-2.5 text-yellow-400" />
                   No Drama
                 </div>
               );
@@ -418,7 +418,7 @@ const SwipeStack = ({
                 if (key === "generous_lifestyle") return <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-amber-400/50 rounded-md px-1.5 py-0.5 text-amber-300 font-bold text-[10px] leading-none">Generous</span>;
                 if (key === "weekend_plans") return <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-primary/50 rounded-md px-1.5 py-0.5 text-primary font-semibold text-[10px] leading-none">Weekend</span>;
                 if (key === "late_night_chat") return <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-indigo-400/50 rounded-md px-1.5 py-0.5 text-indigo-300 font-semibold text-[10px] leading-none">Late</span>;
-                if (key === "no_drama") return <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-teal-400/50 rounded-md px-1.5 py-0.5 text-teal-300 font-semibold text-[10px] leading-none">No Drama</span>;
+                if (key === "no_drama") return <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-yellow-400/50 rounded-md px-1.5 py-0.5 text-yellow-300 font-semibold text-[10px] leading-none">No Drama</span>;
                 return null;
               })()}
               <h3 className="font-display font-bold text-xl text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">

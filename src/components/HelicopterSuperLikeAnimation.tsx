@@ -1,14 +1,95 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 
-const HELI_URL = "https://ik.imagekit.io/7grri5v7d/HELI.png";
+const HELI_URL = "https://ik.imagekit.io/7grri5v7d/helicopter-transparent.png";
 const HELI_WIDTH = 120;
 const HELI_HEIGHT = 72;
 
-const FLY_IN_DURATION = 1.8;
-const HOVER_DURATION = 2.0;
-const DROP_DURATION = 1.2;
-const EXIT_DURATION = 1.4;
+const FLY_IN_DURATION = 3.5;
+const HOVER_DURATION = 4.0;
+const DROP_DURATION = 2.0;
+const EXIT_DURATION = 2.5;
+
+// ── SVG Components ────────────────────────────────────────────────────────────────
+// ── Rotor SVG ────────────────────────────────────────────────────────────────
+const RotorSvg = () => (
+  <svg
+    width="120"
+    height="8"
+    viewBox="0 0 120 8"
+    className="rotor-blade"
+    style={{ filter: "blur(0.3px)" }}
+  >
+    {/* Main horizontal blade - side view */}
+    <rect x="2" y="3" width="116" height="2" rx="1"
+      fill="rgba(30,30,30,0.9)"
+      stroke="rgba(255,255,255,0.15)"
+      strokeWidth="0.3"
+    />
+    {/* Blade tips for more realistic look */}
+    <ellipse cx="60" cy="4" rx="58" ry="1.5"
+      fill="rgba(40,40,40,0.8)"
+      stroke="rgba(255,255,255,0.1)"
+      strokeWidth="0.2"
+    />
+    {/* Center hub */}
+    <circle cx="60" cy="4" r="2"
+      fill="rgba(50,50,50,0.95)"
+      stroke="rgba(255,255,255,0.2)"
+      strokeWidth="0.3"
+    />
+  </svg>
+);
+
+// ── Star SVG ─────────────────────────────────────────────────────────────────
+const StarSvg = ({ size }: { size: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 50 50"
+    style={{ filter: "drop-shadow(0 2px 8px rgba(255,215,0,0.8))" }}
+  >
+    <defs>
+      <radialGradient id="starGrad" cx="40%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#FFF176"/>
+        <stop offset="50%" stopColor="#FFD700"/>
+        <stop offset="100%" stopColor="#FFA000"/>
+      </radialGradient>
+    </defs>
+    <polygon
+      points="25,4 30,18 45,18 33,27 38,42 25,33 12,42 17,27 5,18 20,18"
+      fill="url(#starGrad)"
+      stroke="#FF8F00"
+      strokeWidth="1"
+    />
+    <polygon
+      points="25,8 28,16 36,16 30,21 32,30 25,25 18,30 20,21 14,16 22,16"
+      fill="rgba(255,255,255,0.25)"
+    />
+    <text
+      x="25"
+      y="24"
+      textAnchor="middle"
+      fontSize="6"
+      fontWeight="bold"
+      fill="white"
+      style={{ fontFamily: "sans-serif" }}
+    >
+      SUPER
+    </text>
+    <text
+      x="25"
+      y="31"
+      textAnchor="middle"
+      fontSize="5.5"
+      fontWeight="bold"
+      fill="white"
+      style={{ fontFamily: "sans-serif" }}
+    >
+      LIKE
+    </text>
+  </svg>
+);
 
 interface HelicopterSuperLikeAnimationProps {
   libraryRef: React.RefObject<HTMLElement | null>;
@@ -28,9 +109,7 @@ export default function HelicopterSuperLikeAnimation({
     "fly-in" | "hover" | "drop" | "exit" | "done"
   >("fly-in");
   const [showStar, setShowStar] = useState(false);
-  const [showSpotlight, setShowSpotlight] = useState(false);
   const [starDropped, setStarDropped] = useState(false);
-  const [ropeLength, setRopeLength] = useState(0);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -78,9 +157,7 @@ export default function HelicopterSuperLikeAnimation({
       opacity.set(1);
       setPhase("fly-in");
       setShowStar(false);
-      setShowSpotlight(false);
       setStarDropped(false);
-      setRopeLength(0);
 
       // Hover position — above target profile
       const hoverX = targetCenter.x;
@@ -104,43 +181,39 @@ export default function HelicopterSuperLikeAnimation({
       // Level out when hovering
       animate(tilt, 0, { duration: 0.4, ease: "easeOut" });
 
-      // HOVER — spotlight on, slight bob
+      // HOVER — slight bob
       setPhase("hover");
-      setShowSpotlight(true);
       setShowStar(true);
 
-      // Gentle hover bob
-      const bobAnim = animate(y, [hoverY, hoverY - 8, hoverY, hoverY - 6, hoverY], {
+      // Enhanced hover bob with more movement and gentle rotation
+      const bobAnim = animate(y, [hoverY, hoverY - 12, hoverY, hoverY - 8, hoverY, hoverY - 10, hoverY], {
         duration: HOVER_DURATION,
-        times: [0, 0.25, 0.5, 0.75, 1],
-        ease: "easeInOut",
+        times: [0, 0.15, 0.3, 0.5, 0.7, 0.85, 1],
+        ease: [0.4, 0.0, 0.2, 0.0, 0.2, 0.0, 0.4],
       });
-      await bobAnim.finished;
+      
+      // Add gentle rotation during hover
+      const rotationAnim = animate(tilt, [0, 2, -1, 1, -2, 0], {
+        duration: HOVER_DURATION,
+        times: [0, 0.15, 0.3, 0.5, 0.7, 0.85, 1],
+        ease: [0.4, 0.0, 0.2, 0.0, 0.2, 0.0, 0.4],
+      });
+      
+      await Promise.all([bobAnim.finished, rotationAnim.finished]);
       if (cancelled) return;
 
-      // DROP — lower rope then release star
+      // DROP — drop star directly without rope
       setPhase("drop");
       onReachLibrary();
 
-      // Extend rope downward
-      for (let i = 0; i <= 20; i++) {
-        if (cancelled) return;
-        setRopeLength(i * 4);
-        await new Promise((r) => setTimeout(r, 30));
-      }
-
-      // Release star — drop to profile
+      // Drop star directly
       setStarDropped(true);
-      setShowSpotlight(false);
-
-      await new Promise((r) => setTimeout(r, DROP_DURATION * 1000));
+      
+      // Small pause
+      await new Promise((r) => setTimeout(r, 600));
       if (cancelled) return;
 
       setShowStar(false);
-      setRopeLength(0);
-
-      // Small pause
-      await new Promise((r) => setTimeout(r, 400));
       if (cancelled) return;
 
       // EXIT — fast bank left and up
@@ -180,46 +253,7 @@ export default function HelicopterSuperLikeAnimation({
       style={{ zIndex: 99999 }}
       aria-hidden="true"
     >
-      {/* Spotlight beam */}
-      {showSpotlight && targetCenter && (
-        <motion.div
-          initial={{ opacity: 0, scaleY: 0 }}
-          animate={{ opacity: [0, 0.6, 0.5, 0.6], scaleY: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4 }}
-          style={{
-            position: "fixed",
-            left: targetCenter.x - 30,
-            top: targetCenter.y - 110,
-            width: 60,
-            height: 110,
-            background: "linear-gradient(to bottom, rgba(255,215,0,0.5), rgba(255,215,0,0.05))",
-            clipPath: "polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)",
-            transformOrigin: "top center",
-            zIndex: 99998,
-          }}
-        />
-      )}
-
-      {/* Rope */}
-      {ropeLength > 0 && !starDropped && (
-        <motion.div
-          style={{
-            position: "fixed",
-            left: x,
-            top: y,
-            marginLeft: -1,
-            marginTop: HELI_HEIGHT * 0.6,
-            width: 2,
-            height: ropeLength,
-            background: "rgba(255,255,255,0.7)",
-            transformOrigin: "top center",
-            zIndex: 99997,
-          }}
-        />
-      )}
-
-      {/* Star on rope — before drop */}
+      {/* Star - positioned below helicopter */}
       {showStar && !starDropped && (
         <motion.div
           style={{
@@ -227,7 +261,7 @@ export default function HelicopterSuperLikeAnimation({
             left: x,
             top: y,
             marginLeft: -14,
-            marginTop: HELI_HEIGHT * 0.6 + ropeLength,
+            marginTop: HELI_HEIGHT * 0.6, // Directly below helicopter
             zIndex: 99998,
           }}
           animate={{
@@ -292,6 +326,7 @@ export default function HelicopterSuperLikeAnimation({
           marginLeft: -HELI_WIDTH / 2,
           marginTop: -HELI_HEIGHT / 2,
           willChange: "transform",
+          backgroundColor: "transparent",
         }}
       >
         {/* Helicopter image */}
@@ -303,6 +338,8 @@ export default function HelicopterSuperLikeAnimation({
             height: "100%",
             objectFit: "contain",
             filter: "drop-shadow(0 8px 20px rgba(0,0,0,0.5))",
+            backgroundColor: "transparent",
+            mixBlendMode: "normal",
           }}
         />
 
@@ -333,78 +370,3 @@ export default function HelicopterSuperLikeAnimation({
     </div>
   );
 }
-
-// ── Rotor SVG ────────────────────────────────────────────────────────────────
-const RotorSvg = () => (
-  <svg
-    width="80"
-    height="12"
-    viewBox="0 0 80 12"
-    className="rotor-blade"
-    style={{ filter: "blur(0.5px)" }}
-  >
-    <ellipse cx="40" cy="6" rx="38" ry="3.5"
-      fill="rgba(40,40,40,0.85)"
-      stroke="rgba(255,255,255,0.2)"
-      strokeWidth="0.5"
-    />
-    <ellipse cx="40" cy="6" rx="3.5" ry="38"
-      fill="rgba(40,40,40,0.85)"
-      stroke="rgba(255,255,255,0.2)"
-      strokeWidth="0.5"
-      transform="rotate(45 40 6)"
-    />
-    <circle cx="40" cy="6" r="4" fill="#333" stroke="#555" strokeWidth="1"/>
-    <circle cx="40" cy="6" r="2" fill="#666"/>
-  </svg>
-);
-
-// ── Star SVG ─────────────────────────────────────────────────────────────────
-const StarSvg = ({ size }: { size: number }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 50 50"
-    style={{ filter: "drop-shadow(0 2px 8px rgba(255,215,0,0.8))" }}
-  >
-    <defs>
-      <radialGradient id="starGrad" cx="40%" cy="35%" r="65%">
-        <stop offset="0%" stopColor="#FFF176"/>
-        <stop offset="50%" stopColor="#FFD700"/>
-        <stop offset="100%" stopColor="#FFA000"/>
-      </radialGradient>
-    </defs>
-    <polygon
-      points="25,4 30,18 45,18 33,27 38,42 25,33 12,42 17,27 5,18 20,18"
-      fill="url(#starGrad)"
-      stroke="#FF8F00"
-      strokeWidth="1"
-    />
-    <polygon
-      points="25,8 28,16 36,16 30,21 32,30 25,25 18,30 20,21 14,16 22,16"
-      fill="rgba(255,255,255,0.25)"
-    />
-    <text
-      x="25"
-      y="24"
-      textAnchor="middle"
-      fontSize="6"
-      fontWeight="bold"
-      fill="white"
-      style={{ fontFamily: "sans-serif" }}
-    >
-      SUPER
-    </text>
-    <text
-      x="25"
-      y="31"
-      textAnchor="middle"
-      fontSize="5.5"
-      fontWeight="bold"
-      fill="white"
-      style={{ fontFamily: "sans-serif" }}
-    >
-      LIKE
-    </text>
-  </svg>
-);

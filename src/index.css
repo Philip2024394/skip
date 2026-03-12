@@ -102,11 +102,12 @@
       margin: 20px auto;
       height: calc(100vh - 40px); /* Full height before scaling */
       max-height: calc(100vh - 40px);
-      max-width: 300px; /* 428px * 0.7 = 299.6px ≈ 300px */
+      max-width: 428px; /* Use actual iPhone width instead of scaled */
       overflow-y: auto;
       background: #000000;
       position: relative;
-      transform: scale(0.7); /* Reduce entire frame by 30% */
+      /* Remove scaling to fit content properly */
+      transform: none;
       transform-origin: center center;
       
       /* iPhone-style camera notch */
@@ -141,6 +142,7 @@
       margin: 30px auto;
       height: calc(100vh - 60px); /* Full height before scaling */
       max-height: calc(100vh - 60px);
+      max-width: 428px; /* Keep consistent width */
       box-shadow: 0 0 80px rgba(236, 72, 153, 0.5);
       
       &::before {
@@ -162,6 +164,7 @@
       margin: 40px auto;
       height: calc(100vh - 80px); /* Full height before scaling */
       max-height: calc(100vh - 80px);
+      max-width: 428px; /* Keep consistent width */
       box-shadow: 0 0 100px rgba(236, 72, 153, 0.6);
       
       &::before {
@@ -192,10 +195,10 @@
     /* Desktop: fit within iPhone frame */
     @media (min-width: 429px) {
       height: 100%;
-      border-radius: 21px; /* 30px * 0.7 = 21px */
+      border-radius: 21px; /* Match frame border-radius */
       overflow: hidden;
       background: white;
-      margin-top: 20px; /* 28px * 0.7 = 19.6px ≈ 20px */
+      margin-top: 20px; /* Space for camera notch */
     }
     
     @media (min-width: 768px) {

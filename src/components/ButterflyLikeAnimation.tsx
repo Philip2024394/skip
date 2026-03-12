@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 
 const BUTTERFLY_SIZE = 56;
-const FLY_DURATION_TO_TARGET = 5.2;
-const HOVER_DURATION = 0.9;
-const EXIT_DURATION = 3.0;
+const FLY_DURATION_TO_TARGET = 8.0; // Increased from 5.2
+const HOVER_DURATION = 2.0; // Increased from 0.9
+const EXIT_DURATION = 4.5; // Increased from 3.0
 
 interface ButterflyLikeAnimationProps {
   libraryRef: React.RefObject<HTMLElement | null>;
@@ -21,7 +21,7 @@ const ButterflySvg = ({
   flapping: "slow" | "fast";
   holdingHeart: boolean;
 }) => {
-  const flapDuration = flapping === "slow" ? "0.75s" : "0.22s";
+  const flapDuration = flapping === "slow" ? "1.2s" : "0.22s"; // Increased slow flap from 0.75s
 
   return (
     <svg
@@ -374,10 +374,10 @@ export default function ButterflyLikeAnimation({
         onUpdate: (v) => updateRotation(x.get(), v),
       });
 
-      // Slow flap when approaching (70% through flight)
+      // Slow flap when approaching (60% through flight instead of 70%)
       setTimeout(() => {
         if (!cancelled) setFlapSpeed("slow");
-      }, FLY_DURATION_TO_TARGET * 700);
+      }, FLY_DURATION_TO_TARGET * 600); // Changed from 700 to 600
 
       await Promise.all([xA.finished, yA.finished]);
       if (cancelled) return;
@@ -396,8 +396,8 @@ export default function ButterflyLikeAnimation({
       onReachLibrary();
 
       // Rise slightly after dropping heart
-      animate(y, y.get() - 20, { duration: 0.5, ease: "easeOut" });
-      await new Promise((r) => setTimeout(r, 900));
+      animate(y, y.get() - 20, { duration: 0.8, ease: "easeOut" }); // Increased from 0.5
+      await new Promise((r) => setTimeout(r, 1200)); // Increased from 900
       if (cancelled) return;
 
       // Exit left — slow graceful
