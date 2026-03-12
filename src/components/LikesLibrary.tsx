@@ -56,7 +56,7 @@ interface LikesLibraryProps {
   onPurchaseFeature: (feature: PremiumFeature) => void;
 }
 
-type Tab = "sent" | "received" | "new" | "treat";
+type Tab = "sent" | "received" | "new" | "treat" | "unlock";
 type DisplayItem =
   | { type: "profile"; profile: Profile }
   | { type: "promo"; profile: null };
@@ -67,8 +67,11 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   sent:     () => "I Liked",
   received: () => "Likes Me",
   treat:    () => "Treat",
+  unlock:   () => "Unlock",
 };
-const TABS: Tab[] = ["new", "sent", "received", "treat"];
+// Home page shows New / Treat / Unlock; profile page shows the full 4
+const HOME_TABS: Tab[]    = ["new", "treat", "unlock"];
+const PROFILE_TABS: Tab[] = ["new", "sent", "received", "treat"];
 
 const TREAT_ITEMS = [
   { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage",      image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
@@ -129,6 +132,7 @@ const LikesLibrary = ({
     received: likedMe.length,
     new:      sortedNew.length,
     treat:    0,
+    unlock:   0,
   };
 
   // Scroll back to left whenever tab changes
@@ -196,14 +200,15 @@ const LikesLibrary = ({
     const dy = Math.abs(e.changedTouches[0].clientY - dragStart.current.y);
     // Only switch tabs if horizontal swipe is dominant (not a vertical scroll attempt)
     if (dy > Math.abs(dx)) { dragStart.current = null; return; }
-    const idx = TABS.indexOf(dragStart.current.tab);
-    if (dx < -50 && idx < TABS.length - 1) {
-      const next = TABS[idx + 1];
+    const activeTabs = tabLabelOverrides ? PROFILE_TABS : HOME_TABS;
+    const idx = activeTabs.indexOf(dragStart.current.tab);
+    if (dx < -50 && idx < activeTabs.length - 1) {
+      const next = activeTabs[idx + 1];
       setTab(next);
       onTabChange?.(next);
     }
     if (dx > 50  && idx > 0) {
-      const next = TABS[idx - 1];
+      const next = activeTabs[idx - 1];
       setTab(next);
       onTabChange?.(next);
     }
@@ -224,11 +229,10 @@ const LikesLibrary = ({
     tab === "new" &&
     tabLabelOverrides?.new === "Profile";
 
-  const isUnlockTab =
-    tab === "received" &&
-    tabLabelOverrides?.received === "Unlock";
-
   const isTreatTab = tab === "treat";
+  const isUnlockTab =
+    tab === "unlock" ||
+    (tab === "received" && tabLabelOverrides?.received === "Unlock");
 
   const dateIdeas = (
     (profileDatePlaces || [])
@@ -252,7 +256,8 @@ const LikesLibrary = ({
         {/* 3-tab pill */}
         <div className="relative flex gap-0 p-0.5 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
           {(() => {
-            const visibleTabs = hidePrivateTabs ? TABS.filter((t) => t !== "received") : TABS;
+            const baseTabs = tabLabelOverrides ? PROFILE_TABS : HOME_TABS;
+            const visibleTabs = hidePrivateTabs ? baseTabs.filter((t) => t !== "received") : baseTabs;
             const visibleIndex = Math.max(0, visibleTabs.indexOf(tab));
             const pct = 100 / visibleTabs.length;
             return (
@@ -410,44 +415,47 @@ const LikesLibrary = ({
                 ))}
               </div>
             ) : isUnlockTab ? (
-              <div className="pr-1">
-                <div className="flex gap-2 pb-2 min-w-max items-start">
-                  {(
-                    [
-                      { key: "unlock:single", title: "1 Unlock", price: "$1.99", sub: "Match unlock" },
-                      { key: "unlock:pack3", title: "3 Pack", price: "$4.99", sub: "Popular" },
-                      { key: "unlock:pack10", title: "10 Pack", price: "$12.99", sub: "Best value" },
-                      { key: "unlock:vip", title: "VIP", price: "$9.99/mo", sub: "10 / month" },
-                      ...PREMIUM_FEATURES.filter((f) => f.id !== "vip").map((f) => ({
-                        key: `feature:${f.id}`,
-                        title: `${f.emoji} ${f.name}`,
-                        price: f.price,
-                        sub: f.description,
-                      })),
-                    ]
-                  ).map((p, idx) => (
-                    <motion.button
-                      key={p.key}
-                      type="button"
-                      initial={{ opacity: 0, scale: 0.92 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.92 }}
-                      transition={{ delay: Math.min(idx * 0.04, 0.12) }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        onSelectUnlockItem?.(p.key);
-                      }}
-                      className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative flex-shrink-0 w-[140px] ${selectedUnlockItemKey === p.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
-                      style={{ height: 100 }}
-                      aria-label={p.title}
-                    >
-                      <p className="text-white text-[10px] font-black text-center leading-tight line-clamp-2">{p.title}</p>
-                      <p className="text-white/80 text-[12px] font-black">{p.price}</p>
-                      <p className="text-white/45 text-[9px] font-semibold text-center">{p.sub}</p>
-                    </motion.button>
-                  ))}
-                </div>
+              <div className="flex gap-2 h-full pb-2">
+                {([
+                  { key: "unlock:single",   emoji: "💬", label: "1 Unlock",   price: "$1.99" },
+                  { key: "unlock:pack3",    emoji: "💬", label: "3 Pack",     price: "$4.99" },
+                  { key: "unlock:pack10",   emoji: "💬", label: "10 Pack",    price: "$12.99" },
+                  { key: "unlock:vip",      emoji: "👑", label: "VIP",        price: "$10.99" },
+                  { key: "unlock:superlike",emoji: "⭐", label: "Super Like", price: "$1.99" },
+                  { key: "unlock:boost",    emoji: "🚀", label: "Boost",      price: "$1.99" },
+                  { key: "unlock:verified", emoji: "✅", label: "Verified",   price: "$1.99" },
+                  { key: "unlock:incognito",emoji: "👻", label: "Incognito",  price: "$2.99" },
+                  { key: "unlock:spotlight",emoji: "🌟", label: "Spotlight",  price: "$4.99" },
+                ] as const).map((p, idx) => (
+                  <motion.button
+                    key={p.key}
+                    type="button"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ delay: Math.min(idx * 0.04, 0.24) }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSelectUnlockItem?.(p.key);
+                    }}
+                    className={`flex flex-col items-center justify-between p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.03] bg-black/50 backdrop-blur-md flex-shrink-0 ${selectedUnlockItemKey === p.key ? "ring-2 ring-fuchsia-400/60" : ""}`}
+                    style={{
+                      width: 80, height: 104,
+                      border: selectedUnlockItemKey === p.key
+                        ? "1.5px solid rgba(232,72,199,0.7)"
+                        : "1.5px solid rgba(232,72,199,0.35)",
+                    }}
+                    aria-label={p.label}
+                  >
+                    <span style={{ fontSize: 28, marginTop: 4 }}>{p.emoji}</span>
+                    <div className="flex flex-col items-center gap-0.5">
+                      <p className="text-white text-[9px] font-bold text-center leading-tight">{p.label}</p>
+                      <p className="text-white/80 text-[9px] font-black">{p.price}</p>
+                      <span style={{ background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))", color: "#fff", fontSize: 7, fontWeight: 700, padding: "1.5px 6px", borderRadius: 20, whiteSpace: "nowrap", marginBottom: 2 }}>Get</span>
+                    </div>
+                  </motion.button>
+                ))}
               </div>
             ) : isDateIdeasTab ? (
               dateIdeas.length === 0 && !profileFirstDateIdea ? (

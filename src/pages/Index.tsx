@@ -90,6 +90,47 @@ const saveLocalLikedMeProfiles = (profiles: Profile[]) => {
 };
 
 
+// ── Home page package detail (shown in bottom card when unlock item selected) ──
+const HOME_UNLOCK_PACKAGES = [
+  { key: "unlock:single", emoji: "💬", name: "1 Match Unlock", price: "$1.99", desc: "Unlock WhatsApp after you both match. Fast, simple, direct.", sub: "Requires a mutual match", btn: "Unlock now" },
+  { key: "unlock:pack3",  emoji: "💬", name: "3 Unlock Pack",  price: "$4.99", desc: "Perfect for a week of real connections. Save vs singles.",      sub: "Best for casual + active users", btn: "Get pack" },
+  { key: "unlock:pack10", emoji: "💬", name: "10 Unlock Pack", price: "$12.99", desc: "Best value for heavy matching. Lowest cost per unlock.",      sub: "Best value package", btn: "Get pack" },
+  { key: "unlock:vip",    emoji: "👑", name: "VIP Monthly",    price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.",        sub: "Renews monthly", btn: "Go VIP" },
+  { key: "unlock:superlike", emoji: "⭐", name: "Super Like",  price: "$1.99", desc: "Flash in their library first! They get notified.",             sub: "One-time purchase", btn: "Get" },
+  { key: "unlock:boost",  emoji: "🚀", name: "Profile Boost",  price: "$1.99", desc: "Top of swipe stack for 1 hour. 5–10× more views!",            sub: "Valid for 1 hour", btn: "Boost now" },
+  { key: "unlock:verified", emoji: "✅", name: "Verified Badge", price: "$1.99", desc: "Get verified. Rank higher & build trust.",                  sub: "Permanent badge", btn: "Get verified" },
+  { key: "unlock:incognito", emoji: "👻", name: "Incognito Mode", price: "$2.99", desc: "Browse profiles invisibly for 24 hours.",                  sub: "Valid 24 hours", btn: "Go incognito" },
+  { key: "unlock:spotlight", emoji: "🌟", name: "Spotlight",   price: "$4.99", desc: "Featured at top of everyone's stack for 24 hours!",           sub: "Valid 24 hours", btn: "Get spotlight" },
+];
+
+function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClose: () => void }) {
+  const pkg = HOME_UNLOCK_PACKAGES.find((p) => p.key === packageKey);
+  if (!pkg) return null;
+  return (
+    <div className="h-full w-full flex flex-col relative" style={{ background: "linear-gradient(160deg, #0a0014 0%, #1a0030 50%, #050008 100%)" }}>
+      <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,72,199,0.2) 0%, transparent 70%)", pointerEvents: "none" }} />
+      <button onClick={onClose} className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 text-xs font-black">✕</button>
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center gap-3">
+        <span style={{ fontSize: 42 }}>{pkg.emoji}</span>
+        <p className="text-white font-black text-lg leading-tight">{pkg.name}</p>
+        <p className="text-white/65 text-xs leading-relaxed max-w-xs">{pkg.desc}</p>
+        <div className="w-full max-w-xs flex items-center justify-between mt-2 px-1">
+          <p className="text-white font-black text-2xl">{pkg.price}</p>
+          <button
+            className="px-5 py-2.5 rounded-xl font-black text-sm text-white shadow-lg"
+            style={{ background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))" }}
+          >
+            {pkg.btn}
+          </button>
+        </div>
+        <div className="w-full max-w-xs rounded-xl bg-white/5 border border-white/10 px-3 py-2 mt-1">
+          <p className="text-white/55 text-[11px] font-semibold">{pkg.sub}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const Index = () => {
   const { t, toggleLocale, locale } = useLanguage();
   const navigate = useNavigate();
@@ -283,7 +324,8 @@ const Index = () => {
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
-  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat">("new");
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "unlock">("new");
+  const [homeUnlockKey, setHomeUnlockKey] = useState<string>("");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
   const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
@@ -786,10 +828,13 @@ const Index = () => {
                 if (!isProfileRoute) return;
                 setSelectedProfileSection(s as any);
               }}
-              selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : undefined}
+              selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : homeUnlockKey}
               onSelectUnlockItem={(key) => {
-                if (!isProfileRoute) return;
-                setSelectedUnlockItemKey(key);
+                if (isProfileRoute) {
+                  setSelectedUnlockItemKey(key);
+                } else {
+                  setHomeUnlockKey(key);
+                }
               }}
               selectedTreatItem={selectedTreatItem}
               onSelectTreatItem={(key) => {
@@ -908,7 +953,9 @@ const Index = () => {
 
         {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
         <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
-          {isProfileRoute ? (
+          {!isProfileRoute && homeUnlockKey ? (
+            <HomePackageDetail packageKey={homeUnlockKey} onClose={() => setHomeUnlockKey("")} />
+          ) : isProfileRoute ? (
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
               <ProfileBottomSheet
