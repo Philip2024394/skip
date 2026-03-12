@@ -20,6 +20,7 @@ interface ProfileBottomSheetProps {
   selectedDatePlace: any;
   setSelectedDatePlace: (v: any) => void;
   selectedTreatItem: "massage" | "beautician" | "flowers" | "jewelry" | null;
+  onSelectTreatItem?: (key: "massage" | "beautician" | "flowers" | "jewelry") => void;
   // Unlock
   selectedUnlockItemKey: string;
   setSelectedUnlockItemKey: (v: string) => void;
@@ -199,41 +200,36 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                   ) : props.aboutMeTab === "treat" ? (
                     <div className="h-full w-full flex flex-col">
                       <p className="text-white/90 text-sm font-bold text-center pb-3 border-b border-white/10">Treat That Special Person</p>
-                      <div className="flex-1 overflow-x-auto overflow-y-auto px-1 pt-3">
-                        <div className="flex gap-3 pb-2" style={{ minWidth: "max-content" }}>
-                          {[
-                            { key: "massage",    emoji: "💆", label: "Massage",    detail: "A soothing full-body massage to help her unwind and feel pampered.", btn: "Gift Massage" },
-                            { key: "beautician", emoji: "💅", label: "Beautician",  detail: "Professional nail, facial or hair treatment at a top salon.", btn: "Gift Beauty" },
-                            { key: "flowers",    emoji: "🌸", label: "Flowers",    detail: "A beautiful hand-picked bouquet delivered fresh to her door.", btn: "Send Flowers" },
-                            { key: "jewelry",    emoji: "💎", label: "Jewelry",    detail: "A sparkling piece of jewellery to make her feel truly special.", btn: "Gift Jewelry" },
-                          ].map((item) => (
-                            <div 
+                      <div className="flex-1 overflow-x-auto overflow-y-hidden px-1 pt-3">
+                        <div className="flex gap-2 pb-2 h-full">
+                          {([
+                            { key: "massage",    label: "Massage",    image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
+                            { key: "beautician", label: "Beautician", image: "https://ik.imagekit.io/7grri5v7d/beauty%20woman.png?updatedAt=1773339036755" },
+                            { key: "flowers",    label: "Flowers",    image: "https://ik.imagekit.io/7grri5v7d/flowers%20nice.png?updatedAt=1773339411434" },
+                            { key: "jewelry",    label: "Jewelry",    image: "https://ik.imagekit.io/7grri5v7d/jewerlysss.png?updatedAt=1773338936919" },
+                          ] as const).map((item) => (
+                            <button
                               key={item.key}
-                              className={`rounded-2xl bg-black/30 border border-fuchsia-300/20 px-4 py-4 flex flex-col items-center gap-2 flex-shrink-0 w-44 h-auto min-h-[180px] ${
-                                item.key === 'massage' ? 'cursor-pointer hover:bg-black/40 transition-colors' : 
-                                item.key === 'flowers' ? 'cursor-pointer hover:bg-black/40 transition-colors' : ''
-                              }`}
-                              onClick={() => {
-                                if (item.key === 'massage') {
-                                  setIsMassageDrawerOpen(true);
-                                } else if (item.key === 'flowers') {
-                                  setIsFlowersDrawerOpen(true);
-                                }
+                              type="button"
+                              onClick={() => props.onSelectTreatItem?.(item.key)}
+                              className="relative overflow-hidden rounded-xl cursor-pointer flex-shrink-0 hover:scale-[1.03] transition-transform"
+                              style={{
+                                height: 124, width: 80,
+                                backgroundImage: `url(${item.image})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                border: props.selectedTreatItem === item.key
+                                  ? "1.5px solid rgba(232,72,199,0.7)"
+                                  : "1.5px solid rgba(232,72,199,0.35)",
                               }}
+                              aria-label={item.label}
                             >
-                              <span style={{ fontSize: 32 }}>{item.emoji}</span>
-                              <p className="text-white font-black text-sm text-center">{item.label}</p>
-                              <p className="text-white/60 text-xs text-center leading-relaxed flex-1">{item.detail}</p>
-                              <button
-                                className="mt-1 w-full h-8 rounded-lg bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white text-xs font-bold shadow-[0_0_14px_rgba(255,105,180,0.4)] hover:opacity-90 transition-opacity"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // Handle button click if needed
-                                }}
-                              >
-                                🎁 {item.btn}
-                              </button>
-                            </div>
+                              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0.05) 100%)" }} />
+                              <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", height: "100%", padding: "0 4px 6px" }}>
+                                <p className="text-white text-[10px] font-bold text-center leading-tight mb-1">{item.label}</p>
+                                <span style={{ background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))", color: "#fff", fontSize: 8, fontWeight: 700, padding: "2px 7px", borderRadius: 20, whiteSpace: "nowrap" }}>View</span>
+                              </div>
+                            </button>
                           ))}
                         </div>
                       </div>

@@ -921,6 +921,10 @@ const Index = () => {
                 selectedDatePlace={selectedDatePlace}
                 setSelectedDatePlace={setSelectedDatePlace}
                 selectedTreatItem={selectedTreatItem}
+                onSelectTreatItem={(key) => {
+                  setSelectedTreatItem(key);
+                  setOpenTreatItem(key);
+                }}
                 selectedUnlockItemKey={selectedUnlockItemKey}
                 setSelectedUnlockItemKey={setSelectedUnlockItemKey}
                 onUnlockWhatsApp={() => selectedProfile && setUnlockDialog(selectedProfile)}
