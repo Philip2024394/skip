@@ -625,7 +625,12 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                       >
                         {/* Image */}
                         <img
-                          src="https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png"
+                          src={[
+                            "https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png",
+                            "https://ik.imagekit.io/7grri5v7d/dogs-removebg-preview.png?updatedAt=1773344502476",
+                            "https://ik.imagekit.io/7grri5v7d/flowers_nicesssewrwer-removebg-preview.png?updatedAt=1773344150659",
+                            "https://ik.imagekit.io/7grri5v7d/flowers_nicesss-removebg-preview.png?updatedAt=1773344048783",
+                          ][Math.floor(Date.now() / 86400000) % 4]}
                           alt=""
                           aria-hidden="true"
                           style={{
