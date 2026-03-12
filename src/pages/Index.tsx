@@ -908,7 +908,7 @@ const Index = () => {
 
         {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
         <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
-          {isProfileRoute || aboutMeTab === "treat" ? (
+          {isProfileRoute ? (
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
               <ProfileBottomSheet
