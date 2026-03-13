@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Lock, Flag, ShoppingCart } from "lucide-react";
+import ContactOverlay from "@/components/overlays/ContactOverlay";
 
 interface TreatOverlayProps {
   showTreatPage: any;
@@ -309,7 +310,7 @@ function GenericCard({ provider, index, productImages, category, accentColor, on
 }
 
 // ── Terms footer ──────────────────────────────────────────────────────────────
-function TreatFooter({ category }: { category: string }) {
+function TreatFooter({ category, onContactUs }: { category: string; onContactUs: () => void }) {
   const [expanded, setExpanded] = useState(false);
 
   const tips: { icon: string; text: string }[] = [
@@ -369,9 +370,10 @@ function TreatFooter({ category }: { category: string }) {
 
           {/* Footer links */}
           <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 14 }}>
-            {["Terms of Service", "Privacy Policy", "Contact Us"].map((link) => (
+            {["Terms of Service", "Privacy Policy"].map((link) => (
               <span key={link} style={{ color: "rgba(232,72,199,0.55)", fontSize: 9, fontWeight: 700, textDecoration: "underline", cursor: "pointer", letterSpacing: "0.03em" }}>{link}</span>
             ))}
+            <span onClick={onContactUs} style={{ color: "rgba(232,72,199,0.85)", fontSize: 9, fontWeight: 800, textDecoration: "underline", cursor: "pointer", letterSpacing: "0.03em" }}>Contact Us</span>
           </div>
         </div>
       )}
@@ -382,6 +384,7 @@ function TreatFooter({ category }: { category: string }) {
 // ── Main Overlay ──────────────────────────────────────────────────────────────
 export default function TreatOverlay({ showTreatPage, onClose, currentUser }: TreatOverlayProps) {
   const [reportingProvider, setReportingProvider] = useState<string | null>(null);
+  const [showContact,        setShowContact]        = useState(false);
 
   if (!showTreatPage) return null;
 
@@ -412,8 +415,8 @@ export default function TreatOverlay({ showTreatPage, onClose, currentUser }: Tr
           <button onClick={onClose}
             style={{ position: "fixed", top: 16, left: 16, zIndex: 10, width: 36, height: 36, borderRadius: "50%", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.28)", color: "white", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", backdropFilter: "blur(8px)" }}>←</button>
 
-          {/* Hero area — background image visible here */}
-          <div style={{ height: "46vh", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "0 16px 20px", background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.55) 100%)" }}>
+          {/* Hero area — pure background image, no colour overlay */}
+          <div style={{ height: "46vh", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "0 16px 20px" }}>
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <p style={{ color: "rgba(255,255,255,0.9)", fontWeight: 900, fontSize: 30, margin: 0, lineHeight: 1, textShadow: "0 2px 16px rgba(0,0,0,0.7)", letterSpacing: "-0.5px" }}>
                 {hero.main}
@@ -451,7 +454,7 @@ export default function TreatOverlay({ showTreatPage, onClose, currentUser }: Tr
           </div>
 
           {/* Terms footer */}
-          <TreatFooter category={showTreatPage} />
+          <TreatFooter category={showTreatPage} onContactUs={() => setShowContact(true)} />
 
           {/* Bottom padding */}
           <div style={{ height: 40 }} />
@@ -464,6 +467,9 @@ export default function TreatOverlay({ showTreatPage, onClose, currentUser }: Tr
           <ReportPopup providerName={reportingProvider} category={showTreatPage} currentUser={currentUser} onClose={() => setReportingProvider(null)} />
         )}
       </AnimatePresence>
+
+      {/* Contact overlay */}
+      <ContactOverlay show={showContact} onClose={() => setShowContact(false)} currentUser={currentUser} />
     </>
   );
 }
