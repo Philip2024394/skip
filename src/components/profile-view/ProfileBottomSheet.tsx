@@ -274,11 +274,8 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                     </div>
                   ) : props.aboutMeTab === "sent" ? (
                     <div className="h-full w-full flex flex-col gap-2 overflow-hidden">
-                      {/* Description box — no scroll, fixed at top */}
-                      <DateIdeaDescription selectedDateIdea={selectedDateIdea} className="flex-shrink-0 px-1 pt-1" />
-
                       {/* 3 equal-height date idea image cards */}
-                      <div className="flex-1 overflow-hidden flex flex-row gap-2 px-1 pb-1">
+                      <div className="flex-1 overflow-hidden flex flex-row gap-2 px-1 pt-1">
                         {(() => {
                           const places: Array<{ idea: string; url: string; google_url?: string; image_url: string | null; title: string | null }> =
                             (props.selectedProfile?.first_date_places && props.selectedProfile.first_date_places.length > 0)
@@ -350,6 +347,9 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                           ));
                         })()}
                       </div>
+
+                      {/* Description window — bottom, always visible, updates on tap */}
+                      <DateIdeaDescription selectedDateIdea={selectedDateIdea} className="flex-shrink-0 px-1 pb-1" />
                     </div>
                   ) : props.aboutMeTab === "distance" ? (
                     <DistanceTab profile={props.selectedProfile} navigate={navigate} />
