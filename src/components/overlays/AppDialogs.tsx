@@ -38,7 +38,7 @@ interface AppDialogsProps {
   setMatchedProfile: (v: any) => void;
   iLiked: any[];
   likedMe: any[];
-  handleUnlock: (profile: any) => void;
+  handleUnlock: (profile: any, packageKey?: string) => void;
   // Unlock payment
   showUnlockDialog: boolean;
   setShowUnlockDialog: (v: boolean) => void;
@@ -277,17 +277,10 @@ export default function AppDialogs(props: AppDialogsProps) {
           matchedProfile={props.matchedProfile}
           currentUser={props.user}
           onDismiss={() => props.setMatchedProfile(null)}
-          onConnect={() => {
+          onConnect={(packageKey) => {
             if (!props.matchedProfile) return;
-            const hasMutualMatch = props.iLiked.some((p: any) => p.id === props.matchedProfile.id)
-              && props.likedMe.some((p: any) => p.id === props.matchedProfile.id);
-            if (!hasMutualMatch) {
-              toast.error("WhatsApp unlock requires a mutual match");
-              props.setMatchedProfile(null);
-              return;
-            }
             props.setMatchedProfile(null);
-            props.handleUnlock(props.matchedProfile);
+            props.handleUnlock(props.matchedProfile, packageKey);
           }}
         />
       )}

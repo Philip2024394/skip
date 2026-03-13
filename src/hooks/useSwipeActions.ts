@@ -129,16 +129,10 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
     }
   }, [props.user, props.superLikesCount, props.roseAvailable, props.likedMe, props.setILiked, props.setMatchDialog, props.upsertLocalLikedProfile, props.setSuperLikesCount, props.setRoseAvailable, props.setLastRoseAt, props.toast, props.t]);
 
-  const handleUnlock = useCallback((profile: Profile) => props.setUnlockDialog(profile), [props.setUnlockDialog]);
+  const handleUnlock = useCallback((profile: Profile, _packageKey?: string) => props.setUnlockDialog(profile), [props.setUnlockDialog]);
 
   const confirmUnlock = useCallback(async () => {
     if (!props.unlockDialog) return;
-    const hasMutualMatch = props.iLiked.some((p) => p.id === props.unlockDialog.id) && props.likedMe.some((p) => p.id === props.unlockDialog.id);
-    if (!hasMutualMatch) {
-      props.toast.error("WhatsApp unlock requires a mutual match");
-      props.setUnlockDialog(null);
-      return;
-    }
     props.setPaymentLoading(true);
     const invokeCreatePayment = async () =>
       supabase.functions.invoke("create-payment", {
@@ -175,7 +169,7 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
       props.setPaymentLoading(false);
       props.setUnlockDialog(null);
     }
-  }, [props.unlockDialog, props.iLiked, props.likedMe, props.setPaymentLoading, props.setUnlockDialog, props.setGuestPrompt, props.toast, props.t]);
+  }, [props.unlockDialog, props.setPaymentLoading, props.setUnlockDialog, props.setGuestPrompt, props.toast, props.t]);
 
   const handlePurchaseFeature = useCallback((feature: PremiumFeature) => {
     if (!props.user) {
