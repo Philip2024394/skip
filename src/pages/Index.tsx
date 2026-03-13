@@ -1071,6 +1071,7 @@ const Index = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
               <ProfileBottomSheet
                 selectedProfile={selectedProfile}
+                allProfiles={allProfiles}
                 isProfileRoute={isProfileRoute}
                 aboutMeTab={aboutMeTab}
                 setAboutMeTab={setAboutMeTab}
@@ -1096,6 +1097,8 @@ const Index = () => {
                 heartDropProfileId={null}
                 onTabChange={(t) => setAboutMeTab(t)}
                 onSelectProfileSection={(s) => setSelectedProfileSection(s)}
+                onLike={handleLike}
+                onSuperLike={handleRose}
               />
             </>
           ) : (

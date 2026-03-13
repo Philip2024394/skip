@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { DateIdeaDescription } from "./DateIdeaDescription";
+import DistanceMapOverlay from "./DistanceMapOverlay";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
@@ -9,6 +11,7 @@ import { MapPin, Navigation } from "lucide-react";
 interface ProfileBottomSheetProps {
   // Profile data
   selectedProfile: any;
+  allProfiles: any[];
   isProfileRoute: boolean;
   // Tab state
   aboutMeTab: "new" | "sent" | "received" | "treat" | "distance";
@@ -33,69 +36,16 @@ interface ProfileBottomSheetProps {
   // Callbacks
   onTabChange: (tab: any) => void;
   onSelectProfileSection: (section: any) => void;
+  onLike?: (p: any) => void;
+  onSuperLike?: (p: any) => void;
 }
 
-function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
-function DistanceTab({ profile, navigate }: { profile: any; navigate: (p: string) => void }) {
-  const [distKm, setDistKm] = useState<number | null>(null);
-  const [locError, setLocError] = useState(false);
-
-  useEffect(() => {
-    if (!profile?.latitude || !profile?.longitude) return;
-    if (!navigator.geolocation) { setLocError(true); return; }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const km = haversineKm(pos.coords.latitude, pos.coords.longitude, profile.latitude, profile.longitude);
-        setDistKm(km);
-      },
-      () => setLocError(true),
-      { timeout: 6000 }
-    );
-  }, [profile]);
-
-  const hasCoords = !!(profile?.latitude && profile?.longitude);
-  const distLabel = distKm !== null
-    ? distKm < 1 ? "Less than 1 km away" : `${Math.round(distKm)} km away`
-    : null;
-
-  return (
-    <div className="h-full w-full flex flex-col items-center justify-center gap-3 px-4">
-      <div className="w-full rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col items-center gap-2">
-        <MapPin className="w-7 h-7 text-pink-400" />
-        <p className="text-white font-bold text-base text-center">
-          {profile?.city}, {profile?.country}
-        </p>
-        {hasCoords && distLabel && (
-          <p className="text-pink-300 text-sm font-semibold">{distLabel}</p>
-        )}
-        {hasCoords && distKm === null && !locError && (
-          <p className="text-white/40 text-xs">Calculating distance…</p>
-        )}
-        {(!hasCoords || locError) && (
-          <p className="text-white/40 text-xs text-center">Enable location to see exact distance</p>
-        )}
-      </div>
-      <button
-        onClick={() => navigate("/map")}
-        className="w-full h-10 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all active:scale-95"
-        style={{ background: "linear-gradient(135deg,#e879f9,#a855f7)" }}
-      >
-        <Navigation className="w-4 h-4" /> View on Map
-      </button>
-    </div>
-  );
-}
 
 export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
   const navigate = useNavigate();
   const [selectedDateIdea, setSelectedDateIdea] = useState<string | null>(null);
+  const [showMapOverlay, setShowMapOverlay] = useState(false);
 
   return (
     <>
@@ -352,7 +302,21 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       <DateIdeaDescription selectedDateIdea={selectedDateIdea} className="flex-shrink-0 px-1 pb-1" />
                     </div>
                   ) : props.aboutMeTab === "distance" ? (
-                    <DistanceTab profile={props.selectedProfile} navigate={navigate} />
+                    <div className="h-full w-full flex flex-col items-center justify-center gap-3 px-4">
+                      <div className="w-full rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col items-center gap-2">
+                        <MapPin className="w-7 h-7 text-pink-400" />
+                        <p className="text-white font-bold text-base text-center">
+                          {props.selectedProfile?.city}, {props.selectedProfile?.country}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowMapOverlay(true)}
+                        className="w-full h-12 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all active:scale-95"
+                        style={{ background: "linear-gradient(135deg,#e879f9,#a855f7)" }}
+                      >
+                        <Navigation className="w-4 h-4" /> Open Map View
+                      </button>
+                    </div>
                   ) : (
                     <div className="h-full w-full overflow-y-auto" style={{ padding: "4px 0" }}>
                       {(() => {
@@ -529,7 +493,19 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                   )}
                 </div>
       </div>
-      
+
+      {/* Full-screen distance map overlay */}
+      <AnimatePresence>
+        {showMapOverlay && (
+          <DistanceMapOverlay
+            profile={props.selectedProfile}
+            allProfiles={props.allProfiles}
+            onClose={() => setShowMapOverlay(false)}
+            onLike={props.onLike ?? (() => {})}
+            onSuperLike={props.onSuperLike ?? (() => {})}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
