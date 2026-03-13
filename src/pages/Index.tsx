@@ -182,7 +182,10 @@ const Index = () => {
   const params = useParams();
   const isProfileRoute = location.pathname.startsWith("/profile/");
   const profileRouteId = isProfileRoute ? (params as any).id : undefined;
-  const [user, setUser] = useState<any>(null);
+  const DEV_MOCK_USER = import.meta.env.DEV
+    ? { id: "dev-user-001", email: "admin@2dateme.com", user_metadata: { name: "Dev Admin" } }
+    : null;
+  const [user, setUser] = useState<any>(() => import.meta.env.DEV ? DEV_MOCK_USER : null);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
     if (import.meta.env.DEV) return false;
@@ -370,6 +373,7 @@ const Index = () => {
 
   // Check if current user has admin role — used to show admin button in header
   useEffect(() => {
+    if (import.meta.env.DEV) { setIsAdmin(true); return; }
     if (!user) { setIsAdmin(false); return; }
     supabase
       .from("user_roles")

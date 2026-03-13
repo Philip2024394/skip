@@ -278,8 +278,12 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
     window.addEventListener("storage", handleStorage);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) props.setUser(null);
-      else props.setUser(session.user);
+      if (!session) {
+        // In dev, keep the mock user active — don't wipe it on Supabase auth change
+        if (!import.meta.env.DEV) props.setUser(null);
+      } else {
+        props.setUser(session.user);
+      }
     });
 
     return () => {

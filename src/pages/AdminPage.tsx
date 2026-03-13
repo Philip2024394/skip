@@ -398,6 +398,14 @@ const AdminPage = () => {
 
   useEffect(() => {
     const init = async () => {
+      // Dev bypass — skip auth/role check, load mock-friendly admin view
+      if (import.meta.env.DEV) {
+        setIsAdmin(true);
+        await loadData();
+        setLoading(false);
+        return;
+      }
+
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/"); return; }
 
