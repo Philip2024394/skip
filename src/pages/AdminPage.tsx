@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Shield, Users, DollarSign, Ban, RefreshCw, Search,
-  TrendingUp, Heart, Star, Zap, Eye, Trash2, CheckCircle, AlertTriangle,
+  TrendingUp, Heart, Star, Zap, Eye, Trash2, CheckCircle,
   Download, ChevronUp, ChevronDown, X, MessageSquare, UserCheck,
-  Activity, Calendar, Globe, BarChart2,
+  Activity, Calendar, Globe, BarChart2, BadgeCheck,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,7 +43,7 @@ interface Payment {
   stripe_session_id: string;
 }
 
-type Tab = "overview" | "users" | "income";
+type Tab = "overview" | "users" | "income" | "verify";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const startOf = (unit: "day" | "week" | "month") => {
@@ -247,6 +246,136 @@ const UserDrawer = ({
   );
 };
 
+// ── Verify Tab ────────────────────────────────────────────────────────────────
+const VerifyTab = ({
+  profiles,
+  onApprove,
+  onReject,
+}: {
+  profiles: AdminProfile[];
+  onApprove: (id: string) => Promise<void>;
+  onReject: (id: string) => Promise<void>;
+}) => {
+  const pending = profiles.filter((p: any) => (p as any).verification_status === "pending");
+  const approved = profiles.filter((p: any) => (p as any).verification_status === "approved");
+  const rejected = profiles.filter((p: any) => (p as any).verification_status === "rejected");
+  const [acting, setActing] = useState<string | null>(null);
+
+  const act = async (id: string, fn: (id: string) => Promise<void>) => {
+    setActing(id);
+    await fn(id);
+    setActing(null);
+  };
+
+  const Card = ({ p, showActions }: { p: AdminProfile; showActions: boolean }) => (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center gap-3">
+        {(p as any).avatar_url ? (
+          <img src={(p as any).avatar_url} className="w-12 h-12 rounded-full object-cover ring-2 ring-white/10 flex-shrink-0" alt={p.name} />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 text-white/30" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-sm flex items-center gap-1.5">
+            {(p as any).is_verified && <BadgeCheck className="w-4 h-4 text-sky-400 flex-shrink-0" />}
+            {p.name}, {p.age}
+          </p>
+          <p className="text-white/40 text-xs">{p.city}, {p.country}</p>
+          <p className="text-white/30 text-[10px] mt-0.5">{p.whatsapp}</p>
+        </div>
+      </div>
+
+      {/* Submitted ID info */}
+      <div className="bg-white/5 rounded-xl p-3 space-y-1.5 text-xs">
+        <div className="flex gap-2">
+          <span className="text-white/40 w-20 flex-shrink-0">ID Type</span>
+          <span className="text-white/80 font-medium uppercase">{(p as any).verification_id_type || "—"}</span>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-white/40 w-20 flex-shrink-0">Name on ID</span>
+          <span className="text-white/80 font-medium">{(p as any).verification_name || "—"}</span>
+        </div>
+        <div className="flex gap-2">
+          <span className="text-white/40 w-20 flex-shrink-0">Age on ID</span>
+          <span className={`font-semibold ${(p as any).verification_age && Math.abs((p as any).verification_age - p.age) > 1 ? "text-red-400" : "text-white/80"}`}>
+            {(p as any).verification_age || "—"}
+            {(p as any).verification_age && Math.abs((p as any).verification_age - p.age) > 1 && " ⚠️ mismatch"}
+          </span>
+        </div>
+      </div>
+
+      {/* ID photo */}
+      {(p as any).verification_id_url && (
+        <a href={(p as any).verification_id_url} target="_blank" rel="noreferrer" className="block rounded-xl overflow-hidden border border-white/10">
+          <img src={(p as any).verification_id_url} alt="ID" className="w-full h-32 object-cover" />
+          <p className="text-white/30 text-[10px] text-center py-1">Tap to open full size</p>
+        </a>
+      )}
+
+      {showActions && (
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => act(p.id, onApprove)}
+            disabled={acting === p.id}
+            className="h-10 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 bg-sky-500/20 border border-sky-400/50 text-sky-300 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <BadgeCheck className="w-4 h-4" /> Approve
+          </button>
+          <button
+            onClick={() => act(p.id, onReject)}
+            disabled={acting === p.id}
+            className="h-10 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 bg-red-500/20 border border-red-400/50 text-red-400 active:scale-95 transition-all disabled:opacity-50"
+          >
+            <X className="w-4 h-4" /> Reject
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <BadgeCheck className="w-4 h-4 text-sky-400" />
+        <p className="text-white font-semibold text-sm">ID Verification Requests</p>
+      </div>
+
+      {pending.length === 0 && (
+        <p className="text-white/30 text-sm text-center py-6">No pending verification requests</p>
+      )}
+
+      {pending.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider">
+            Pending ({pending.length})
+          </p>
+          {pending.map(p => <Card key={p.id} p={p} showActions />)}
+        </div>
+      )}
+
+      {approved.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-sky-400/60 text-[10px] font-semibold uppercase tracking-wider">
+            Approved ({approved.length})
+          </p>
+          {approved.map(p => <Card key={p.id} p={p} showActions={false} />)}
+        </div>
+      )}
+
+      {rejected.length > 0 && (
+        <div className="space-y-3">
+          <p className="text-red-400/60 text-[10px] font-semibold uppercase tracking-wider">
+            Rejected ({rejected.length})
+          </p>
+          {rejected.map(p => <Card key={p.id} p={p} showActions={false} />)}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Main component ────────────────────────────────────────────────────────────
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -256,6 +385,8 @@ const AdminPage = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [likesCount, setLikesCount] = useState(0);
   const [superLikesCount, setSuperLikesCount] = useState(0);
+  const [whatsappLeadsCount, setWhatsappLeadsCount] = useState(0);
+  const [reportsCount, setReportsCount] = useState(0);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
   const [userFilter, setUserFilter] = useState<"all" | "active" | "banned" | "hidden" | "spotlight">("all");
@@ -286,12 +417,14 @@ const AdminPage = () => {
 
   const loadData = async () => {
     setRefreshing(true);
-    const [profilesRes, paymentsRes, likesRes] = await Promise.all([
+    const [profilesRes, paymentsRes, likesRes, leadsRes, reportsRes] = await Promise.all([
       supabase.from("profiles")
-        .select("id,name,age,country,city,gender,whatsapp,is_active,is_banned,is_spotlight,hidden_until,created_at,last_seen_at,avatar_url,looking_for,bio")
-        .limit(1000),
-      supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(500),
+        .select("id,name,age,country,city,gender,whatsapp,is_active,is_banned,is_spotlight,is_verified,hidden_until,created_at,last_seen_at,avatar_url,looking_for,bio,verification_status,verification_id_type,verification_name,verification_age,verification_id_url")
+        .limit(2000),
+      supabase.from("payments").select("*").order("created_at", { ascending: false }).limit(1000),
       supabase.from("likes").select("id, is_rose", { count: "exact" }),
+      supabase.from("whatsapp_leads").select("id", { count: "exact", head: true }),
+      supabase.from("reports").select("id", { count: "exact", head: true }),
     ]);
     if (profilesRes.data) setProfiles(profilesRes.data as AdminProfile[]);
     if (paymentsRes.data) setPayments(paymentsRes.data as Payment[]);
@@ -299,8 +432,17 @@ const AdminPage = () => {
       setLikesCount(likesRes.data.length);
       setSuperLikesCount(likesRes.data.filter((l: any) => l.is_rose).length);
     }
+    if (leadsRes.count !== null) setWhatsappLeadsCount(leadsRes.count);
+    if (reportsRes.count !== null) setReportsCount(reportsRes.count);
     setRefreshing(false);
   };
+
+  // Auto-refresh overview every 60 seconds
+  useEffect(() => {
+    const id = setInterval(() => { if (!refreshing) loadData(); }, 60_000);
+    return () => clearInterval(id);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshing]);
 
   // ── Revenue calcs ────────────────────────────────────────────────
   const revTotal  = rev(payments);
@@ -346,12 +488,30 @@ const AdminPage = () => {
   const spotlightCount = profiles.filter(p => p.is_spotlight).length;
   const onlineNow      = profiles.filter(p => isOnlineNow(p.last_seen_at)).length;
   const newToday       = profiles.filter(p => isNewToday(p.created_at)).length;
+  const verifiedCount  = profiles.filter(p => (p as any).is_verified).length;
+  const pendingVerifyCount2 = profiles.filter((p: any) => p.verification_status === "pending").length;
 
-  // Country breakdown (top 5)
-  const countryBreakdown = useMemo(() => {
+  // Feature revenue breakdown
+  const featureRevByType = useMemo(() => {
     const map: Record<string, number> = {};
-    profiles.forEach(p => { map[p.country] = (map[p.country] || 0) + 1; });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    payments.filter(p => p.status === "paid" && !p.target_user_id).forEach(p => {
+      const key = (p as any).feature_id || "other";
+      map[key] = (map[key] || 0) + p.amount_cents / 100;
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
+  }, [payments]);
+
+  // Country breakdown (all countries, with online count per country)
+  const countryBreakdown = useMemo(() => {
+    const totals: Record<string, number> = {};
+    const online: Record<string, number> = {};
+    profiles.forEach(p => {
+      totals[p.country] = (totals[p.country] || 0) + 1;
+      if (isOnlineNow(p.last_seen_at)) online[p.country] = (online[p.country] || 0) + 1;
+    });
+    return Object.entries(totals)
+      .sort((a, b) => b[1] - a[1])
+      .map(([country, count]) => ({ country, count, onlineNow: online[country] || 0 }));
   }, [profiles]);
 
   // ── Filtered + sorted users ──────────────────────────────────────
@@ -491,10 +651,13 @@ const AdminPage = () => {
   );
 
   // ── Render ───────────────────────────────────────────────────────
+  const pendingVerifyCount = profiles.filter((p: any) => (p as any).verification_status === "pending").length;
+
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: "overview", label: "Overview", icon: <BarChart2 className="w-3.5 h-3.5" /> },
     { id: "users",    label: `Users (${profiles.length})`, icon: <Users className="w-3.5 h-3.5" /> },
     { id: "income",   label: `Income`, icon: <DollarSign className="w-3.5 h-3.5" /> },
+    { id: "verify",   label: `Verify${pendingVerifyCount > 0 ? ` (${pendingVerifyCount})` : ""}`, icon: <UserCheck className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -575,6 +738,24 @@ const AdminPage = () => {
               </div>
             </div>
 
+            {/* Feature revenue breakdown */}
+            {featureRevByType.length > 0 && (
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
+                <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider mb-2">Revenue by Feature</p>
+                <div className="space-y-2">
+                  {featureRevByType.map(([key, val]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <span className="text-white/60 text-xs capitalize flex-1">{key.replace(/_/g, " ")}</span>
+                      <div className="w-24 bg-white/5 rounded-full h-1.5 overflow-hidden">
+                        <div className="h-full bg-amber-400/70 rounded-full" style={{ width: `${(val / (featureRevByType[0]?.[1] || 1)) * 100}%` }} />
+                      </div>
+                      <span className="text-amber-400 text-xs font-bold w-12 text-right">${val.toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 7-day revenue chart */}
             <div className="bg-white/5 border border-white/10 rounded-2xl p-3">
               <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider mb-2">Revenue — Last 7 Days</p>
@@ -586,12 +767,16 @@ const AdminPage = () => {
               <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wider mb-2">Users</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { label: "Online Now",  value: onlineNow,      icon: <Activity className="w-3.5 h-3.5" />,     color: "text-green-400" },
-                  { label: "New Today",   value: newToday,       icon: <Calendar className="w-3.5 h-3.5" />,     color: "text-blue-400" },
-                  { label: "Active",      value: activeCount,    icon: <Users className="w-3.5 h-3.5" />,        color: "text-primary" },
-                  { label: "Banned",      value: bannedCount,    icon: <Ban className="w-3.5 h-3.5" />,          color: "text-red-400" },
-                  { label: "Spotlight",   value: spotlightCount, icon: <Star className="w-3.5 h-3.5" />,         color: "text-amber-400" },
-                  { label: "Hidden",      value: hiddenCount,    icon: <Eye className="w-3.5 h-3.5" />,          color: "text-white/40" },
+                  { label: "Online Now",   value: onlineNow,           icon: <Activity className="w-3.5 h-3.5" />,    color: "text-green-400" },
+                  { label: "New Today",    value: newToday,            icon: <Calendar className="w-3.5 h-3.5" />,   color: "text-blue-400" },
+                  { label: "Active",       value: activeCount,         icon: <Users className="w-3.5 h-3.5" />,      color: "text-primary" },
+                  { label: "Verified",     value: verifiedCount,       icon: <BadgeCheck className="w-3.5 h-3.5" />, color: "text-sky-400" },
+                  { label: "ID Pending",   value: pendingVerifyCount2, icon: <UserCheck className="w-3.5 h-3.5" />,  color: "text-yellow-400" },
+                  { label: "WA Leads",     value: whatsappLeadsCount,  icon: <MessageSquare className="w-3.5 h-3.5" />, color: "text-emerald-400" },
+                  { label: "Banned",       value: bannedCount,         icon: <Ban className="w-3.5 h-3.5" />,         color: "text-red-400" },
+                  { label: "Spotlight",    value: spotlightCount,      icon: <Star className="w-3.5 h-3.5" />,        color: "text-amber-400" },
+                  { label: "Hidden",       value: hiddenCount,         icon: <Eye className="w-3.5 h-3.5" />,         color: "text-white/40" },
+                  { label: "Reports",      value: reportsCount,        icon: <TrendingUp className="w-3.5 h-3.5" />,   color: "text-orange-400" },
                 ].map(({ label, value, icon, color }) => (
                   <div key={label} className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-center">
                     <span className={`${color} flex justify-center`}>{icon}</span>
@@ -628,13 +813,14 @@ const AdminPage = () => {
                 <Globe className="w-3 h-3 inline mr-1" />Top Countries
               </p>
               <div className="space-y-2">
-                {countryBreakdown.map(([country, count]) => (
+                {countryBreakdown.map(({ country, count, onlineNow: cOnline }) => (
                   <div key={country} className="flex items-center gap-2">
-                    <span className="text-white/70 text-xs flex-1">{country}</span>
+                    <span className="text-white/70 text-xs w-24 truncate">{country}</span>
                     <div className="flex-1 bg-white/5 rounded-full h-1.5 overflow-hidden">
                       <div className="h-full gradient-love rounded-full" style={{ width: `${(count / profiles.length) * 100}%` }} />
                     </div>
-                    <span className="text-white/40 text-[10px] w-8 text-right">{count}</span>
+                    <span className="text-white/40 text-[10px] w-6 text-right">{count}</span>
+                    {cOnline > 0 && <span className="text-green-400 text-[10px] w-10 text-right">●{cOnline}</span>}
                   </div>
                 ))}
               </div>
@@ -802,6 +988,19 @@ const AdminPage = () => {
               <p className="text-white/30 text-sm text-center py-10">No payments yet</p>
             )}
           </>
+        )}
+
+        {/* ══ VERIFY TAB ════════════════════════════════════════════ */}
+        {tab === "verify" && (
+          <VerifyTab profiles={profiles} onApprove={async (id) => {
+            await supabase.from("profiles").update({ is_verified: true, verification_status: "approved" } as any).eq("id", id);
+            toast.success("Profile verified ✓");
+            await loadData();
+          }} onReject={async (id) => {
+            await supabase.from("profiles").update({ is_verified: false, verification_status: "rejected" } as any).eq("id", id);
+            toast.success("Verification rejected");
+            await loadData();
+          }} />
         )}
       </div>
 

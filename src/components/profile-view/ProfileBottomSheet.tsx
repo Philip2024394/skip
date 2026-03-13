@@ -1,18 +1,18 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import { DateIdeaDescription } from "./DateIdeaDescription";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { toast } from "sonner";
+import { MapPin, Navigation } from "lucide-react";
 
 interface ProfileBottomSheetProps {
   // Profile data
   selectedProfile: any;
   isProfileRoute: boolean;
   // Tab state
-  aboutMeTab: "new" | "sent" | "received" | "treat";
-  setAboutMeTab: (v: "new" | "sent" | "received" | "treat") => void;
+  aboutMeTab: "new" | "sent" | "received" | "treat" | "distance";
+  setAboutMeTab: (v: "new" | "sent" | "received" | "treat" | "distance") => void;
   selectedProfileSection: "basic" | "lifestyle" | "interests" | null;
   setSelectedProfileSection: (v: "basic" | "lifestyle" | "interests" | null) => void;
   selectedDatePlace: any;
@@ -33,6 +33,64 @@ interface ProfileBottomSheetProps {
   // Callbacks
   onTabChange: (tab: any) => void;
   onSelectProfileSection: (section: any) => void;
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function DistanceTab({ profile, navigate }: { profile: any; navigate: (p: string) => void }) {
+  const [distKm, setDistKm] = useState<number | null>(null);
+  const [locError, setLocError] = useState(false);
+
+  useEffect(() => {
+    if (!profile?.latitude || !profile?.longitude) return;
+    if (!navigator.geolocation) { setLocError(true); return; }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const km = haversineKm(pos.coords.latitude, pos.coords.longitude, profile.latitude, profile.longitude);
+        setDistKm(km);
+      },
+      () => setLocError(true),
+      { timeout: 6000 }
+    );
+  }, [profile]);
+
+  const hasCoords = !!(profile?.latitude && profile?.longitude);
+  const distLabel = distKm !== null
+    ? distKm < 1 ? "Less than 1 km away" : `${Math.round(distKm)} km away`
+    : null;
+
+  return (
+    <div className="h-full w-full flex flex-col items-center justify-center gap-3 px-4">
+      <div className="w-full rounded-2xl bg-white/5 border border-white/10 p-4 flex flex-col items-center gap-2">
+        <MapPin className="w-7 h-7 text-pink-400" />
+        <p className="text-white font-bold text-base text-center">
+          {profile?.city}, {profile?.country}
+        </p>
+        {hasCoords && distLabel && (
+          <p className="text-pink-300 text-sm font-semibold">{distLabel}</p>
+        )}
+        {hasCoords && distKm === null && !locError && (
+          <p className="text-white/40 text-xs">Calculating distance…</p>
+        )}
+        {(!hasCoords || locError) && (
+          <p className="text-white/40 text-xs text-center">Enable location to see exact distance</p>
+        )}
+      </div>
+      <button
+        onClick={() => navigate("/map")}
+        className="w-full h-10 rounded-xl flex items-center justify-center gap-2 text-sm font-bold text-white transition-all active:scale-95"
+        style={{ background: "linear-gradient(135deg,#e879f9,#a855f7)" }}
+      >
+        <Navigation className="w-4 h-4" /> View on Map
+      </button>
+    </div>
+  );
 }
 
 export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
@@ -215,74 +273,86 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       </div>
                     </div>
                   ) : props.aboutMeTab === "sent" ? (
-                    <div className="h-full w-full overflow-y-auto">
-                      <DateIdeaDescription 
-                        selectedDateIdea={selectedDateIdea}
-                        className="px-4 py-4"
-                      />
-                      
-                      {/* Date ideas selection area */}
-                      <div className="px-4 py-4">
-                        {/* Show user's selected date ideas if available, otherwise show default date ideas */}
-                        {(props.selectedProfile?.selected_date_ideas && 
-                         Array.isArray(props.selectedProfile.selected_date_ideas) && 
-                         props.selectedProfile.selected_date_ideas.length > 0) ? (
-                          <div className="space-y-3">
-                            <h4 className="text-white/80 font-medium text-sm">
-                              Your Selected Date Ideas:
-                            </h4>
-                            <div className="grid grid-cols-1 gap-2">
-                              {props.selectedProfile.selected_date_ideas.map((idea: string, index: number) => (
-                                <button
-                                  key={index}
-                                  onClick={() => setSelectedDateIdea(idea)}
-                                  className={`text-left p-3 rounded-lg border transition-all ${
-                                    selectedDateIdea === idea
-                                      ? "bg-pink-500/20 border-pink-500/50 text-pink-300"
-                                      : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
-                                  }`}
+                    <div className="h-full w-full flex flex-col gap-2 overflow-hidden">
+                      {/* Description box — no scroll, fixed at top */}
+                      <DateIdeaDescription selectedDateIdea={selectedDateIdea} className="flex-shrink-0 px-1 pt-1" />
+
+                      {/* 3 equal-height date idea image cards */}
+                      <div className="flex-1 overflow-hidden flex flex-row gap-2 px-1 pb-1">
+                        {(() => {
+                          const places: Array<{ idea: string; url: string; google_url?: string; image_url: string | null; title: string | null }> =
+                            (props.selectedProfile?.first_date_places && props.selectedProfile.first_date_places.length > 0)
+                              ? props.selectedProfile.first_date_places.slice(0, 3)
+                              : [];
+                          if (places.length === 0) return (
+                            <p className="text-white/30 text-xs self-center mx-auto">No date ideas listed</p>
+                          );
+                          return places.map((place, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setSelectedDateIdea(place.idea === selectedDateIdea ? null : place.idea)}
+                              style={{
+                                flex: 1,
+                                position: "relative",
+                                borderRadius: 14,
+                                overflow: "hidden",
+                                border: selectedDateIdea === place.idea
+                                  ? "2px solid rgba(236,72,153,0.85)"
+                                  : "1.5px solid rgba(255,255,255,0.12)",
+                                background: "#0a0018",
+                                cursor: "pointer",
+                                padding: 0,
+                                transition: "border-color 0.15s",
+                              }}
+                            >
+                              {/* Image */}
+                              {place.image_url && (
+                                <img
+                                  src={place.image_url}
+                                  alt={place.idea}
+                                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                />
+                              )}
+                              {/* Gradient overlay */}
+                              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.08) 100%)" }} />
+                              {/* Selected highlight */}
+                              {selectedDateIdea === place.idea && (
+                                <div style={{ position: "absolute", inset: 0, background: "rgba(236,72,153,0.18)" }} />
+                              )}
+                              {/* Label */}
+                              <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "8px 6px 7px", textAlign: "center" }}>
+                                <p style={{ color: "#fff", fontSize: 9, fontWeight: 800, lineHeight: 1.3, margin: 0, textShadow: "0 1px 4px rgba(0,0,0,0.9)" }}>
+                                  {place.idea}
+                                </p>
+                              </div>
+                              {/* Maps link */}
+                              {(place.google_url || place.url) && (
+                                <a
+                                  href={place.google_url || place.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  style={{
+                                    position: "absolute", top: 6, right: 6,
+                                    background: "rgba(0,0,0,0.6)",
+                                    borderRadius: 8, padding: "3px 5px",
+                                    fontSize: 8, color: "rgba(255,255,255,0.75)",
+                                    fontWeight: 700, textDecoration: "none",
+                                    backdropFilter: "blur(4px)",
+                                    border: "1px solid rgba(255,255,255,0.15)",
+                                  }}
                                 >
-                                  <p className="text-sm font-medium">{idea}</p>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            <h4 className="text-white/80 font-medium text-sm">
-                              Popular Date Ideas:
-                            </h4>
-                            <div className="grid grid-cols-1 gap-2">
-                              {[
-                                "Coffee At A Cozy Café ☕",
-                                "Dinner At A Nice Restaurant 🍝",
-                                "Walk In The Park 🌳",
-                                "Night At The Cinema 🎬",
-                                "Bowling Night Together 🎳",
-                                "Watching The Stars Together ⭐"
-                              ].map((idea, index) => (
-                                <button
-                                  key={index}
-                                  onClick={() => setSelectedDateIdea(idea)}
-                                  className={`text-left p-3 rounded-lg border transition-all ${
-                                    selectedDateIdea === idea
-                                      ? "bg-pink-500/20 border-pink-500/50 text-pink-300"
-                                      : "bg-white/5 border-white/10 text-white/80 hover:bg-white/10"
-                                  }`}
-                                >
-                                  <p className="text-sm font-medium">{idea}</p>
-                                </button>
-                              ))}
-                            </div>
-                            <div className="text-center pt-2">
-                              <p className="text-white/40 text-xs">
-                                This user hasn't selected their date ideas yet
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                                  📍
+                                </a>
+                              )}
+                            </button>
+                          ));
+                        })()}
                       </div>
                     </div>
+                  ) : props.aboutMeTab === "distance" ? (
+                    <DistanceTab profile={props.selectedProfile} navigate={navigate} />
                   ) : (
                     <div className="h-full w-full overflow-y-auto" style={{ padding: "4px 0" }}>
                       {(() => {

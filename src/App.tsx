@@ -3,9 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
@@ -24,6 +25,30 @@ import { useServiceWorkerUpdate } from "./hooks/useServiceWorkerUpdate";
 import AddToHomeScreen from "./components/AddToHomeScreen";
 
 const queryClient = new QueryClient();
+
+/**
+ * LandingGuard: unauthenticated users who haven't submitted a WhatsApp number
+ * are sent to /auth (the landing / sign-in page) first.
+ * Once they have a session OR have already entered their WhatsApp number they
+ * see the main app as normal.
+ */
+const LandingGuard = ({ children }: { children: React.ReactNode }) => {
+  const [ready, setReady] = useState(false);
+  const [redirect, setRedirect] = useState(false);
+
+  useEffect(() => {
+    const hasWA = !!localStorage.getItem("landing_whatsapp_e164");
+    if (hasWA) { setReady(true); return; }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) setRedirect(true);
+      setReady(true);
+    });
+  }, []);
+
+  if (!ready) return null;
+  if (redirect) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+};
 
 /** Handle Android hardware back button */
 const AndroidBackHandler = () => {
@@ -65,7 +90,7 @@ const AppContent = () => {
       <ErrorBoundary>
         <AndroidBackHandler />
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<LandingGuard><Index /></LandingGuard>} />
           <Route path="/home" element={<Index />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/profile/:id" element={<Index />} />

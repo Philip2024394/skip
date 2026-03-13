@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Share } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const DISMISS_KEY = "2DateMe_pwa_prompt_dismissed";
+// How long the banner stays visible before auto-hiding (ms)
+const SHOW_DURATION_MS = 30_000;
+// How often the banner re-appears for unauthenticated users (ms)
+const REPEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
 const isIOS = () =>
   /iphone|ipad|ipod/i.test(navigator.userAgent) ||
   (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-
-const isAndroid = () => /android/i.test(navigator.userAgent);
 
 const isInStandaloneMode = () =>
   ("standalone" in navigator && (navigator as any).standalone) ||
@@ -18,42 +20,73 @@ export const AddToHomeScreen = () => {
   const [visible, setVisible] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [platform, setPlatform] = useState<"ios" | "android" | null>(null);
+  const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null); // null = unknown
+  const repeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Check auth state — never show banner for signed-in users
   useEffect(() => {
-    // Don't show if already installed or dismissed
-    if (isInStandaloneMode()) return;
-    if (sessionStorage.getItem(DISMISS_KEY)) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsSignedIn(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsSignedIn(!!session);
+      if (session) setVisible(false); // hide immediately if user logs in
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
-    // Capture Android/Chrome install prompt — single handler
+  // Capture Android install prompt early (before auth check resolves)
+  useEffect(() => {
+    if (isInStandaloneMode()) return;
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      clearTimeout(timer);
-      if (!sessionStorage.getItem(DISMISS_KEY)) {
-        setPlatform("android");
-        setVisible(true);
-      }
     };
     window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
 
-    // iOS / delayed fallback — show after 30s if no prompt fired
-    const timer = setTimeout(() => {
-      if (sessionStorage.getItem(DISMISS_KEY)) return;
-      if (isIOS()) {
+  // Schedule the repeating banner once we know user is NOT signed in
+  useEffect(() => {
+    if (isSignedIn !== false) return; // wait until we know, and skip if signed in
+    if (isInStandaloneMode()) return;
+
+    const showBanner = () => {
+      // Determine platform
+      if (deferredPrompt) {
+        setPlatform("android");
+      } else if (isIOS()) {
         setPlatform("ios");
-        setVisible(true);
+      } else {
+        // Desktop Chrome / others — still show if we have a deferred prompt
+        setPlatform("android");
       }
-    }, 30000);
+      setVisible(true);
+
+      // Auto-hide after SHOW_DURATION_MS
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      hideTimerRef.current = setTimeout(() => setVisible(false), SHOW_DURATION_MS);
+
+      // Schedule next appearance
+      if (repeatTimerRef.current) clearTimeout(repeatTimerRef.current);
+      repeatTimerRef.current = setTimeout(showBanner, REPEAT_INTERVAL_MS);
+    };
+
+    // Show after a short initial delay so the app can finish rendering
+    const initialTimer = setTimeout(showBanner, 2000);
 
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("beforeinstallprompt", handler);
+      clearTimeout(initialTimer);
+      if (repeatTimerRef.current) clearTimeout(repeatTimerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
-  }, []);
+  }, [isSignedIn, deferredPrompt]);
 
   const handleDismiss = () => {
     setVisible(false);
-    sessionStorage.setItem(DISMISS_KEY, "1");
+    // Clear auto-hide; repeat timer continues so it re-shows in 5 min
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
   };
 
   const handleInstall = async () => {
@@ -62,10 +95,15 @@ export const AddToHomeScreen = () => {
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
         setVisible(false);
+        if (repeatTimerRef.current) clearTimeout(repeatTimerRef.current);
+        if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
       }
       setDeferredPrompt(null);
     }
   };
+
+  // Don't render anything for signed-in users or installed app
+  if (isSignedIn || isInStandaloneMode()) return null;
 
   return (
     <AnimatePresence mode="sync">

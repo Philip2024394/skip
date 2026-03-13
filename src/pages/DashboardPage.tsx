@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle } from "lucide-react";
+import VerificationSubmitDialog from "@/components/overlays/VerificationSubmitDialog";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +36,18 @@ const DashboardPage = () => {
   const { t, toggleLocale, locale } = useLanguage();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [tab, setTab] = useState<"profile" | "powerups">("profile");
+  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
+  const [verifyFeature, setVerifyFeature] = useState<PremiumFeature | null>(null);
+  const [userAge, setUserAge] = useState<number | null>(null);
+
+  // Load current user's age for the verification age-match check
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return;
+      const { data } = await supabase.from("profiles").select("age").eq("id", session.user.id).single();
+      if (data) setUserAge((data as any).age ?? null);
+    });
+  }, []);
   const [autoOpenFeatureId, setAutoOpenFeatureId] = useState<string | null>(null);
   const [navigationHistory, setNavigationHistory] = useState<("profile" | "powerups")[]>([]);
 
@@ -413,7 +426,14 @@ const DashboardPage = () => {
                     )}
 
                     <Button
-                      onClick={() => handlePurchase(feature)}
+                      onClick={() => {
+                        if (feature.id === "verified") {
+                          setVerifyFeature(feature);
+                          setShowVerifyDialog(true);
+                        } else {
+                          handlePurchase(feature);
+                        }
+                      }}
                       disabled={loadingId === feature.id}
                       className="w-full bg-black/30 hover:bg-black/40 backdrop-blur-sm text-white border border-white/30 font-black h-12 rounded-xl text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
@@ -426,6 +446,18 @@ const DashboardPage = () => {
           </>
         )}
       </div>
+
+      {/* Verification ID submission dialog */}
+      {showVerifyDialog && verifyFeature && (
+        <VerificationSubmitDialog
+          userAge={userAge}
+          onClose={() => setShowVerifyDialog(false)}
+          onSubmitted={() => {
+            setShowVerifyDialog(false);
+            handlePurchase(verifyFeature);
+          }}
+        />
+      )}
     </div>
   );
 };

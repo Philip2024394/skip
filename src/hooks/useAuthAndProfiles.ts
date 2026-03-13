@@ -182,6 +182,10 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
               fitness: (p as any).fitness ?? null,
               pets: (p as any).pets ?? null,
               interests: (p as any).interests ?? null,
+              basic_info: (p as any).basic_info ?? null,
+              lifestyle_info: (p as any).lifestyle_info ?? null,
+              relationship_goals: (p as any).relationship_goals ?? null,
+              selected_date_ideas: (p as any).selected_date_ideas ?? null,
             }));
           // Sort spotlight profiles to front
           mapped.sort((a, b) => (spotlightIds.has(b.id) ? 1 : 0) - (spotlightIds.has(a.id) ? 1 : 0));
@@ -273,7 +277,7 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
     };
     window.addEventListener("storage", handleStorage);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) props.setUser(null);
       else props.setUser(session.user);
     });

@@ -1,5 +1,5 @@
 import { motion, animate } from "framer-motion";
-import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight, BadgeCheck } from "lucide-react";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
 import ProfileBadge from "@/components/ProfileBadge";
 import { isOnline } from "@/hooks/useOnlineStatus";
@@ -18,6 +18,7 @@ interface TopCardProps {
   t: any;
   isAnimatingTopCardRef: any;
   selectedList: any[];
+  selectedProfileSection: "basic" | "lifestyle" | "interests" | null;
   setSelectedIndex: (fn: (i: number) => number) => void;
   setProfileImageIndex: (fn: (i: number) => number) => void;
   setProfileImageDirection: (v: 1 | -1) => void;
@@ -30,6 +31,7 @@ interface TopCardProps {
   setSessionTick: (fn: (v: number) => number) => void;
   persistSessionBehavior: () => void;
 }
+
 
 export default function TopCard(props: TopCardProps) {
   return (
@@ -62,6 +64,11 @@ export default function TopCard(props: TopCardProps) {
             style={{
               objectPosition: props.selectedProfile.main_image_pos || "50% 50%",
               transform: props.selectedProfile.main_image_zoom ? `scale(${props.selectedProfile.main_image_zoom / 100})` : undefined,
+            }}
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              const fallback = props.selectedProfile.avatar_url || "/placeholder.svg";
+              if (img.src !== fallback) img.src = fallback;
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
@@ -152,9 +159,13 @@ export default function TopCard(props: TopCardProps) {
             <Heart className="w-5 h-5 text-white" fill="white" />
           </button>
 
+          {/* Name / location footer — always visible */}
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <h3 className="font-display font-bold text-xl text-white flex items-center gap-2">
               {/* No badge duplicate here — badge locked to top-left via ProfileBadge */}
+              {props.selectedProfile.is_verified && (
+                <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
+              )}
               {props.selectedProfile.name}, {props.selectedProfile.age}
               {isOnline(props.selectedProfile.last_seen_at) && (
                 <span className="relative flex h-3 w-3">

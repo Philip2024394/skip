@@ -1,4 +1,4 @@
-import { Profile } from "@/components/SwipeCard";
+import { Profile, BasicInfo, LifestyleInfo, RelationshipGoals } from "@/types/profile";
 import indoGirl1 from "@/assets/indo-girl-1.png";
 import indoGirl2 from "@/assets/indo-girl-2.png";
 import indoGirl3 from "@/assets/indo-girl-3.png";
@@ -146,20 +146,20 @@ const FEMALE_IMAGES_UNSPLASH = [
   "https://images.unsplash.com/photo-1611403119860-57c4353a1d07?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1614520616468-b61c01f23b90?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1595152772835-219674b2a163?w=400&h=500&fit=crop&face",
-  "https://images.unsplash.com/photo-1609948543911-3b74a8b3e09f?w=400&h=500&fit=crop&face",
+  "https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1586987405340-044dfaf9cf85?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1589156191108-c762ff4b96ab?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1614624532983-4ce03382d63d?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1582142306909-195724d33fcc?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1625716411024-d8f4b47aabb8?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1626957341926-98752fc2ba21?w=400&h=500&fit=crop&face",
-  "https://images.unsplash.com/photo-1617019114583-afflicted-7c91?w=400&h=500&fit=crop&face",
+  "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1618641986557-1ecd230959aa?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1602233158242-3ba0ac4d2167?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1619895862022-09114b41f16f?w=400&h=500&fit=crop&face",
-  "https://images.unsplash.com/photo-1620872526940-5a3c95cf29e7?w=400&h=500&fit=crop&face",
-  "https://images.unsplash.com/photo-1622495966027-e0173070c8d5?w=400&h=500&fit=crop&face",
+  "https://images.unsplash.com/photo-1598550874175-4d0ef436c909?w=400&h=500&fit=crop&face",
+  "https://images.unsplash.com/photo-1619895862022-09114b41f16f?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1623609163859-ca93c959b98a?w=400&h=500&fit=crop&face",
 ];
 
@@ -178,8 +178,8 @@ const MALE_IMAGES_UNSPLASH = [
   "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1557862921-37829c790f19?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=500&fit=crop&face",
-  "https://images.unsplash.com/photo-1548449112-96a38a643324?w=400&h=500&fit=crop&face",
-  "https://images.unsplash.com/photo-1611749769610-4c14d4f5f49d?w=400&h=500&fit=crop&face",
+  "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=400&h=500&fit=crop&face",
+  "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1613297694015-7c4e0b7ebc9c?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1629425733761-caae3b5f2e50?w=400&h=500&fit=crop&face",
   "https://images.unsplash.com/photo-1631947430066-48c30d57b943?w=400&h=500&fit=crop&face",
@@ -325,18 +325,18 @@ const buildGoogleMapsSearchUrl = (query: string, lat: number, lng: number) => {
 };
 
 const DATE_IDEAS = [
-  { idea: "Coffee At A Cozy Café ☕", key: "cafe" },
-  { idea: "Dinner At A Nice Restaurant 🍝", key: "restaurant" },
-  { idea: "Walk In The Park 🌳", key: "park" },
-  { idea: "Drinks At A Rooftop Bar 🍸", key: "rooftop bar" },
-  { idea: "Dessert And Late Night Walk 🍰", key: "dessert cafe" },
-  { idea: "Visit A Night Market 🌙", key: "night market" },
-  { idea: "Art Gallery Together 🎨", key: "art gallery" },
-  { idea: "Cooking Class For Two 👨‍🍳", key: "cooking class" },
-  { idea: "Sunset Picnic 🌅", key: "scenic viewpoint" },
-  { idea: "Karaoke Night 🎤", key: "karaoke" },
-  { idea: "Beach Walk At Dusk 🏖️", key: "beach" },
-  { idea: "Explore Local Street Food 🍜", key: "street food" },
+  { idea: "Coffee At A Cozy Café ☕",       key: "cafe",           image_url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=220&fit=crop" },
+  { idea: "Dinner At A Nice Restaurant 🍝", key: "restaurant",     image_url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=220&fit=crop" },
+  { idea: "Walk In The Park 🌳",            key: "park",           image_url: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&h=220&fit=crop" },
+  { idea: "Drinks At A Rooftop Bar 🍸",     key: "rooftop bar",    image_url: "https://images.unsplash.com/photo-1527769929938-b77e7fb4c0f3?w=400&h=220&fit=crop" },
+  { idea: "Dessert And Late Night Walk 🍰", key: "dessert cafe",   image_url: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&h=220&fit=crop" },
+  { idea: "Visit A Night Market 🌙",        key: "night market",   image_url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=220&fit=crop" },
+  { idea: "Art Gallery Together 🎨",        key: "art gallery",    image_url: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&h=220&fit=crop" },
+  { idea: "Cooking Class For Two 👨‍🍳",      key: "cooking class",  image_url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=220&fit=crop" },
+  { idea: "Sunset Picnic 🌅",               key: "scenic viewpoint", image_url: "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=400&h=220&fit=crop" },
+  { idea: "Karaoke Night 🎤",               key: "karaoke",        image_url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=220&fit=crop" },
+  { idea: "Beach Walk At Dusk 🏖️",          key: "beach",          image_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=220&fit=crop" },
+  { idea: "Explore Local Street Food 🍜",   key: "street food",    image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=220&fit=crop" },
 ];
 
 const buildFirstDatePlaces = (city: string, lat: number, lng: number, seed: number): DatePlace[] => {
@@ -357,10 +357,110 @@ const buildFirstDatePlaces = (city: string, lat: number, lng: number, seed: numb
     idea: p.idea,
     url: buildGoogleMapsSearchUrl(p.key, lat, lng),
     google_url: buildGoogleMapsSearchUrl(p.key, lat, lng),
-    image_url: null,
+    image_url: p.image_url,
     title: `${p.idea.split(" ").slice(0, 3).join(" ")} in ${city}`,
   }));
 };
+
+// ─── About Me data pools ────────────────────────────────────────────────────
+
+const FEMALE_HEIGHTS = ["155cm","157cm","158cm","160cm","162cm","163cm","165cm","167cm","168cm","170cm"];
+const MALE_HEIGHTS   = ["168cm","170cm","172cm","174cm","175cm","177cm","178cm","180cm","182cm","185cm"];
+
+const FEMALE_BODY_TYPES = ["Slim","Petite","Athletic","Curvy","Average"];
+const MALE_BODY_TYPES   = ["Slim","Athletic","Muscular","Average","Lean"];
+
+const ETHNICITIES_F = ["Javanese","Sundanese","Balinese","Minangkabau","Betawi","Bugis","Madurese","Chinese-Indonesian","Mixed","Batak"];
+const ETHNICITIES_M = ["Javanese","Sundanese","Balinese","Minangkabau","Betawi","Bugis","Makassarese","Chinese-Indonesian","Mixed","Malay"];
+
+const EDUCATIONS = ["High School","Diploma","Bachelor's Degree","Bachelor's Degree","Bachelor's Degree","Master's Degree","Master's Degree","Doctorate","Vocational","Professional Degree"];
+
+const INCOMES = ["< Rp 5M/mo","Rp 5–10M/mo","Rp 10–20M/mo","Rp 20–40M/mo","Rp 40M+/mo","Prefer not to say"];
+
+const LIVES_WITH = ["Lives alone","With family","With housemates","With partner","Own home"];
+
+const CHILDREN_OPTIONS = ["No children","1 child","2 children","3+ children","No children, open to having","No children, not planning to"];
+
+const SMOKING_OPTIONS   = ["Non-smoker","Non-smoker","Social smoker","Light smoker","Non-smoker","Quit smoking"];
+const DRINKING_OPTIONS  = ["Non-drinker","Social drinker","Non-drinker","Light drinker","Rarely drinks","Non-drinker","Social drinker"];
+const EXERCISE_OPTIONS  = ["Daily","4–5×/week","2–3×/week","Occasionally","Rarely","Weekly gym","Yoga & pilates","Running & cycling"];
+const DIET_OPTIONS      = ["No preference","Halal only","Vegetarian","Mostly healthy","Loves street food","Home-cooked meals"];
+const SLEEP_OPTIONS     = ["Night owl","Early bird","Flexible","Late sleeper","Varies by week","Usually by midnight"];
+const SOCIAL_STYLES     = ["Introvert","Ambivert","Extrovert","Social but selective","Homebody","Outgoing"];
+const LOVE_LANGUAGES    = ["Quality time","Words of affirmation","Acts of service","Physical touch","Gift giving","Quality time","Words of affirmation"];
+const PETS_OPTIONS      = ["Cat lover","Dog person","Has cats","Has a dog","No pets","Animal lover","Allergic to pets","Open to pets"];
+
+const HOBBIES_POOL: string[][] = [
+  ["Cooking","Hiking","Reading"],
+  ["Travel","Photography","Yoga"],
+  ["Music","Dancing","Cooking"],
+  ["Gaming","Movies","Gym"],
+  ["Painting","Cycling","Coffee"],
+  ["Surfing","Swimming","Food tours"],
+  ["Badminton","Running","Karaoke"],
+  ["Gardening","Baking","Journaling"],
+  ["Diving","Motorbike trips","Street photography"],
+  ["Crafts","Watching K-dramas","Board games"],
+];
+
+const RELIGIONS_F  = ["Muslim","Muslim","Muslim","Muslim","Muslim","Christian","Hindu","Buddhist","Catholic","Muslim"];
+const RELIGIONS_M  = ["Muslim","Muslim","Muslim","Muslim","Muslim","Christian","Hindu","Buddhist","Catholic","Muslim"];
+const PRAYER_OPTS  = ["5× daily","Regularly","Occasionally","Fridays only","Trying to improve","Not practicing"];
+const HIJAB_OPTS   = ["Yes, full hijab","Yes, sometimes","No","Syari","Prefer not to say"];
+const DATE_TYPES   = ["Traditional courtship","Modern casual dating","Getting to know first","Halal approach","Open to both"];
+const TIMELINES    = ["Ready when it feels right","Within 1 year","1–2 years","Not rushing","Serious about marriage"];
+const MARITAL_OPTS = ["Never married","Divorced","Widowed","Prefer not to say"];
+const DOWRY_OPTS   = ["Open to discussion","Important to my family","Flexible","Symbolic amount","Not required"];
+const FAMILY_OPTS  = ["Very important","Somewhat involved","Independent decision","Meet the family first"];
+const ABOUT_PARTNER_POOL = [
+  "Someone who is honest, kind, and values family. I appreciate a person who communicates openly.",
+  "Looking for someone with a good sense of humour and a warm heart. Ambition is attractive.",
+  "Loyalty and faith are most important to me. I want someone who is ready to grow together.",
+  "I'd love someone who enjoys simple pleasures — a walk, good food, and real conversations.",
+  "Someone grounded, caring, and who isn't afraid of commitment. Maturity matters more than age.",
+  "I'm looking for a partner who respects my independence while building something beautiful together.",
+  "Faith, family, and kindness. If those are your priorities too, let's talk.",
+  "An emotionally available person who makes time for the people they love.",
+  "Someone who shares my curiosity about the world and isn't afraid to be vulnerable.",
+  "Genuine, patient, and supportive. I want a partner, not just a companion.",
+];
+
+const buildBasicInfo = (i: number, gender: string, languages: string[]): BasicInfo => ({
+  height: gender === "Female" ? FEMALE_HEIGHTS[i % FEMALE_HEIGHTS.length] : MALE_HEIGHTS[i % MALE_HEIGHTS.length],
+  body_type: gender === "Female" ? FEMALE_BODY_TYPES[i % FEMALE_BODY_TYPES.length] : MALE_BODY_TYPES[i % MALE_BODY_TYPES.length],
+  ethnicity: gender === "Female" ? ETHNICITIES_F[i % ETHNICITIES_F.length] : ETHNICITIES_M[i % ETHNICITIES_M.length],
+  education: EDUCATIONS[i % EDUCATIONS.length],
+  occupation: undefined, // derived from bio naturally
+  income: INCOMES[i % INCOMES.length],
+  lives_with: LIVES_WITH[i % LIVES_WITH.length],
+  children: CHILDREN_OPTIONS[i % CHILDREN_OPTIONS.length],
+  languages,
+});
+
+const buildLifestyleInfo = (i: number): LifestyleInfo => ({
+  smoking: SMOKING_OPTIONS[i % SMOKING_OPTIONS.length],
+  drinking: DRINKING_OPTIONS[i % DRINKING_OPTIONS.length],
+  exercise: EXERCISE_OPTIONS[i % EXERCISE_OPTIONS.length],
+  diet: DIET_OPTIONS[i % DIET_OPTIONS.length],
+  sleep: SLEEP_OPTIONS[i % SLEEP_OPTIONS.length],
+  social_style: SOCIAL_STYLES[i % SOCIAL_STYLES.length],
+  love_language: LOVE_LANGUAGES[i % LOVE_LANGUAGES.length],
+  pets: PETS_OPTIONS[i % PETS_OPTIONS.length],
+  hobbies: HOBBIES_POOL[i % HOBBIES_POOL.length],
+});
+
+const buildRelationshipGoals = (i: number, gender: string, lookingFor: string): RelationshipGoals => ({
+  looking_for: lookingFor,
+  timeline: TIMELINES[i % TIMELINES.length],
+  date_type: DATE_TYPES[i % DATE_TYPES.length],
+  marital_status: MARITAL_OPTS[i % MARITAL_OPTS.length],
+  religion: gender === "Female" ? RELIGIONS_F[i % RELIGIONS_F.length] : RELIGIONS_M[i % RELIGIONS_M.length],
+  prayer: PRAYER_OPTS[i % PRAYER_OPTS.length],
+  ...(gender === "Female" ? { hijab: HIJAB_OPTS[i % HIJAB_OPTS.length] } : {}),
+  dowry: DOWRY_OPTS[i % DOWRY_OPTS.length],
+  family_involvement: FAMILY_OPTS[i % FAMILY_OPTS.length],
+  about_partner: ABOUT_PARTNER_POOL[i % ABOUT_PARTNER_POOL.length],
+});
 
 // Determine if a profile is "online" based on an 18-hour window per day.
 // Each profile gets a unique 6-hour offline block so they stagger naturally.
@@ -396,6 +496,8 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     const imgUrl = FEMALE_IMAGES_UNSPLASH[fi % FEMALE_IMAGES_UNSPLASH.length];
     const extraLangs = EXTRA_LANGS_POOL[fi % EXTRA_LANGS_POOL.length];
 
+    const femaleLangs = ["Indonesian", ...(extraLangs || [])];
+    const femaleLookingFor = LOOKING_FOR_FEMALE[fi % LOOKING_FOR_FEMALE.length];
     profiles.push({
       id: `indo-f-${fi}`,
       name: FEMALE_NAMES[fi % FEMALE_NAMES.length],
@@ -409,9 +511,9 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       latitude,
       longitude,
       available_tonight: fi % 3 === 0,
-      looking_for: LOOKING_FOR_FEMALE[fi % LOOKING_FOR_FEMALE.length],
+      looking_for: femaleLookingFor,
       last_seen_at,
-      languages: ["Indonesian", ...(extraLangs || [])],
+      languages: femaleLangs,
       first_date_places: buildFirstDatePlaces(CITIES[cityIdx], latitude, longitude, fi * 31 + 7),
       main_image_pos: "50% 20%",
       is_plusone: fi % 5 === 1,
@@ -419,6 +521,10 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       weekend_plans: fi % 7 === 1,
       late_night_chat: fi % 8 === 3,
       no_drama: fi % 9 === 0,
+      is_verified: fi % 10 < 7,
+      basic_info: buildBasicInfo(fi, "Female", femaleLangs),
+      lifestyle_info: buildLifestyleInfo(fi),
+      relationship_goals: buildRelationshipGoals(fi, "Female", femaleLookingFor),
     });
   }
 
@@ -433,6 +539,8 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     const imgUrl = MALE_IMAGES_UNSPLASH[mi % MALE_IMAGES_UNSPLASH.length];
     const extraLangs = EXTRA_LANGS_POOL[mi % EXTRA_LANGS_POOL.length];
 
+    const maleLangs = ["Indonesian", ...(extraLangs || [])];
+    const maleLookingFor = LOOKING_FOR_MALE[mi % LOOKING_FOR_MALE.length];
     profiles.push({
       id: `indo-m-${mi}`,
       name: MALE_NAMES[mi % MALE_NAMES.length],
@@ -446,9 +554,9 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       latitude,
       longitude,
       available_tonight: mi % 4 === 0,
-      looking_for: LOOKING_FOR_MALE[mi % LOOKING_FOR_MALE.length],
+      looking_for: maleLookingFor,
       last_seen_at,
-      languages: ["Indonesian", ...(extraLangs || [])],
+      languages: maleLangs,
       first_date_places: buildFirstDatePlaces(CITIES[cityIdx], latitude, longitude, mi * 47 + 13),
       main_image_pos: "50% 20%",
       is_plusone: mi % 6 === 2,
@@ -456,6 +564,10 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       weekend_plans: mi % 5 === 3,
       late_night_chat: mi % 8 === 0,
       no_drama: mi % 9 === 4,
+      is_verified: mi % 10 < 7,
+      basic_info: buildBasicInfo(mi, "Male", maleLangs),
+      lifestyle_info: buildLifestyleInfo(mi),
+      relationship_goals: buildRelationshipGoals(mi, "Male", maleLookingFor),
     });
   }
 

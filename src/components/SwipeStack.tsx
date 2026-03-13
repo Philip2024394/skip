@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
-import { Heart, MapPin, Fingerprint } from "lucide-react";
+import { Heart, MapPin, Fingerprint, BadgeCheck } from "lucide-react";
 import type { Profile } from "./SwipeCard";
 import { isOnline } from "@/hooks/useOnlineStatus";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
@@ -283,7 +283,7 @@ const SwipeStack = ({
           <div className="absolute inset-0 overflow-hidden">
             <img
               key={profile.image}
-              src={profile.image}
+              src={profile.image || profile.avatar_url || "/placeholder.svg"}
               alt={profile.name}
               className="absolute w-full h-full object-cover"
               style={{
@@ -292,6 +292,14 @@ const SwipeStack = ({
                 transformOrigin: profile.main_image_pos || "center center",
               }}
               draggable={false}
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (img.src !== window.location.origin + "/placeholder.svg") {
+                  img.src = profile.avatar_url && img.src !== profile.avatar_url
+                    ? profile.avatar_url
+                    : "/placeholder.svg";
+                }
+              }}
             />
           </div>
 
@@ -360,7 +368,10 @@ const SwipeStack = ({
           <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
             <div className="flex items-center gap-2">
               {/* No badge here — badge is locked to top-left via ProfileBadge only */}
-              <h3 className="font-display font-bold text-xl text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
+              <h3 className="font-display font-bold text-xl text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] flex items-center gap-1.5">
+                {profile.is_verified && (
+                  <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
+                )}
                 {profile.name}, {profile.age}
               </h3>
               {isOnline(profile.last_seen_at) && (

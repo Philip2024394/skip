@@ -111,9 +111,13 @@ export default function LikesCarousel(props: LikesCarouselProps) {
 
             <div className="relative mt-1">
               <img
-                src={profile.avatar_url || profile.image}
+                src={profile.avatar_url || profile.image || "/placeholder.svg"}
                 alt={profile.name}
                 className="w-12 h-12 rounded-full object-cover border-2 border-white/10 relative z-10"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (img.src !== window.location.origin + "/placeholder.svg") img.src = "/placeholder.svg";
+                }}
               />
               {/* Heart when I liked this profile */}
               {iLikedThis && (

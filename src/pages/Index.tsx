@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
-import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home, ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home, ChevronLeft, ChevronRight, Star, ShieldCheck } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
@@ -358,6 +358,17 @@ const Index = () => {
 
   const [devFeaturesEnabled, setDevFeaturesEnabled] = useDevFeatures();
   const [devPanelOpen, setDevPanelOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if current user has admin role — used to show admin button in header
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .then(({ data }) => setIsAdmin(!!data?.some((r: any) => r.role === "admin")));
+  }, [user]);
 
   // Daily match suggestion
   const [dailyMatchProfile, setDailyMatchProfile] = useState<any | null>(null);
@@ -368,7 +379,7 @@ const Index = () => {
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
-  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "unlock">("new");
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "unlock" | "distance">("new");
   const [homeUnlockKey, setHomeUnlockKey] = useState<string>("");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
@@ -448,12 +459,13 @@ const Index = () => {
   }, [isProfileRoute, profileRouteId, topProfiles]);
 
   
-  // Show daily match suggestion once per day after profiles are available
+  // Show daily match suggestion once per day — only picks someone not yet swiped on
   useEffect(() => {
     if (filteredProfiles.length === 0) return;
     if (!shouldShowDailyMatch()) return;
-    // Pick a random profile from the pool
-    const pick = filteredProfiles[Math.floor(Math.random() * filteredProfiles.length)];
+    const unseen = filteredProfiles.filter(p => !seenIdsRef.current.has(p.id));
+    const pool = unseen.length > 0 ? unseen : filteredProfiles;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
     const t = setTimeout(() => setDailyMatchProfile(pick), 1800);
     return () => clearTimeout(t);
   }, [filteredProfiles]);
@@ -784,9 +796,14 @@ const Index = () => {
                   <button onClick={() => navigate("/dashboard")} aria-label={t("nav.powerups")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.powerups")}>
                     <Zap className="w-4 h-4" />
                   </button>
+                  {isAdmin && (
+                    <button onClick={() => navigate("/admin")} aria-label="Admin" className="w-8 h-8 rounded-full bg-rose-500/20 backdrop-blur-md border border-rose-400/40 flex items-center justify-center text-rose-300 hover:text-white hover:bg-rose-500/40 transition-colors" title="Admin Dashboard">
+                      <ShieldCheck className="w-4 h-4" />
+                    </button>
+                  )}
                 </>
               ) : (
-                <button onClick={() => navigate("/?signin=1")} className="bg-black/50 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-white/80 hover:text-white transition-colors flex items-center gap-1" title={t("nav.signIn")}>
+                <button onClick={() => navigate("/auth?signin=1")} className="bg-black/50 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-white/80 hover:text-white transition-colors flex items-center gap-1" title={t("nav.signIn")}>
                   <LogIn className="w-4 h-4" />
                   <span className="text-xs font-medium">{t("nav.signIn")}</span>
                 </button>
@@ -812,6 +829,7 @@ const Index = () => {
           t={t}
           isAnimatingTopCardRef={isAnimatingTopCardRef}
           selectedList={selectedList}
+          selectedProfileSection={isProfileRoute ? selectedProfileSection : null}
           setSelectedIndex={setSelectedIndex}
           setProfileImageIndex={setProfileImageIndex}
           setProfileImageDirection={setProfileImageDirection}
@@ -857,10 +875,10 @@ const Index = () => {
               tabLabelOverrides={
                 isProfileRoute
                   ? {
-                      new: "Profile",
+                      new: "About Me",
                       sent: "Date Ideas",
                       received: "Unlock",
-                      treat: "Treat",
+                      distance: "Distance",
                     }
                   : undefined
               }
@@ -874,7 +892,7 @@ const Index = () => {
                 // On home page: switching away from unlock tab clears the package detail
                 if (!isProfileRoute) {
                   setAboutMeTab(t);
-                  if (t !== "received") setHomeUnlockKey("");
+                  if (t !== "unlock") setHomeUnlockKey("");
                   return;
                 }
                 setAboutMeTab(t);
@@ -893,6 +911,7 @@ const Index = () => {
                   setSelectedUnlockItemKey(key);
                 } else {
                   setHomeUnlockKey(key);
+                  setAboutMeTab("unlock");
                 }
               }}
               selectedTreatItem={selectedTreatItem}
@@ -1032,8 +1051,9 @@ const Index = () => {
 
         {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
         <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
-          {!isProfileRoute && homeUnlockKey ? (
-            <HomePackageDetail packageKey={homeUnlockKey} onClose={() => setHomeUnlockKey("")} />
+          {/* RULE (permanent): unlock tab → unlock cards in bottom; all other home tabs → profiles in bottom */}
+          {!isProfileRoute && aboutMeTab === "unlock" ? (
+            <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} />
           ) : isProfileRoute ? (
             <>
               <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
@@ -1057,7 +1077,7 @@ const Index = () => {
                 libraryRef={libraryRef}
                 tabLabelOverrides={
                   isProfileRoute
-                    ? { new: "Profile", sent: "Date Ideas", received: "Unlock", treat: "Treat" }
+                    ? { new: "About Me", sent: "Date Ideas", received: "Unlock", distance: "Distance" }
                     : undefined
                 }
                 likedMe={likedMe}
@@ -1155,7 +1175,15 @@ const Index = () => {
           onConnect={(p) => {
             markDailyMatchShown();
             setDailyMatchProfile(null);
-            setUnlockDialog(p);
+            // Unlock only available when both users have liked each other
+            const userLikedThem = iLiked.some(l => l.id === p.id);
+            const theyLikedUser = likedMe.some(l => l.id === p.id);
+            if (userLikedThem && theyLikedUser) {
+              setUnlockDialog(p);
+            } else {
+              // Trigger like so the user's intent is recorded; unlock will appear via normal match flow
+              handleLike(p);
+            }
           }}
         />
       )}

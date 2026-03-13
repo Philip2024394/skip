@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MapPin, Sparkles, X } from "lucide-react";
+import { Heart, MapPin, Sparkles } from "lucide-react";
 
 interface DailyMatchSuggestionProps {
   profile: any;
@@ -28,31 +28,29 @@ export function markDailyMatchShown(): void {
   } catch {}
 }
 
-// ─── Star particle background ──────────────────────────────────────────────
-function StarParticles() {
-  const particles = useRef(
-    Array.from({ length: 16 }, (_, i) => ({
+// ─── Floating hearts ────────────────────────────────────────────────────────
+function FloatingHearts() {
+  const hearts = useRef(
+    Array.from({ length: 10 }, (_, i) => ({
       id: i,
       left: 5 + Math.random() * 90,
-      top: 5 + Math.random() * 90,
       delay: Math.random() * 3,
-      duration: 1.5 + Math.random() * 2,
-      emoji: ["✨", "⭐", "💫", "🌟"][Math.floor(Math.random() * 4)],
-      size: 10 + Math.random() * 14,
+      duration: 2 + Math.random() * 2,
+      size: 8 + Math.random() * 10,
     }))
   ).current;
 
   return (
     <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0 }}>
-      {particles.map((p) => (
+      {hearts.map((h) => (
         <motion.span
-          key={p.id}
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: [0, 0.9, 0], scale: [0.5, 1.2, 0.5] }}
-          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, repeatDelay: Math.random() * 2 }}
-          style={{ position: "absolute", left: `${p.left}%`, top: `${p.top}%`, fontSize: p.size }}
+          key={h.id}
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: [0, 0.7, 0], y: -120 }}
+          transition={{ duration: h.duration, delay: h.delay, repeat: Infinity, repeatDelay: Math.random() * 2 }}
+          style={{ position: "absolute", left: `${h.left}%`, bottom: 20, fontSize: h.size, color: "#e848c7" }}
         >
-          {p.emoji}
+          ♥
         </motion.span>
       ))}
     </div>
@@ -84,118 +82,114 @@ export default function DailyMatchSuggestion({ profile, onConnect, onDismiss }: 
         transition={{ duration: 0.35 }}
         style={{
           position: "fixed", inset: 0, zIndex: 295,
-          background: "rgba(0,0,0,0.85)",
-          backdropFilter: "blur(16px)",
+          background: "rgba(4,0,16,0.88)",
+          backdropFilter: "blur(18px)",
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: "0 20px",
         }}
-        onClick={(e) => { if (e.target === e.currentTarget) onDismiss(); }}
       >
-        <StarParticles />
+        <FloatingHearts />
 
         <motion.div
-          initial={{ scale: 0.75, opacity: 0, y: 50 }}
+          initial={{ scale: 0.78, opacity: 0, y: 48 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          exit={{ scale: 0.88, opacity: 0, y: 30 }}
-          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          exit={{ scale: 0.9, opacity: 0, y: 24 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22 }}
           style={{
             position: "relative",
             width: "100%", maxWidth: 340,
-            borderRadius: 30,
+            borderRadius: 28,
             overflow: "hidden",
-            background: "rgba(4,0,16,0.97)",
-            border: "1.5px solid rgba(195,60,255,0.45)",
-            boxShadow: "0 0 55px rgba(195,60,255,0.3), 0 0 110px rgba(232,72,199,0.15)",
-            paddingBottom: 26,
+            background: "linear-gradient(145deg, rgba(10,0,24,0.98) 0%, rgba(20,4,40,0.98) 100%)",
+            border: "1.5px solid rgba(232,72,199,0.4)",
+            boxShadow: "0 0 0 1px rgba(139,92,246,0.15), 0 8px 40px rgba(232,72,199,0.25), 0 0 80px rgba(139,92,246,0.12)",
+            paddingBottom: 24,
             textAlign: "center",
           }}
         >
-          {/* glow bg */}
-          <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
-            background: "radial-gradient(ellipse at 50% 30%, rgba(195,60,255,0.18) 0%, transparent 65%)" }} />
+          {/* App-theme radial glow */}
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none",
+            background: "radial-gradient(ellipse at 50% 20%, rgba(232,72,199,0.14) 0%, rgba(139,92,246,0.08) 45%, transparent 70%)",
+          }} />
 
-          {/* Dismiss */}
-          <button
-            onClick={onDismiss}
-            style={{ position: "absolute", top: 14, right: 14, zIndex: 20,
-              width: 30, height: 30, borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "rgba(255,255,255,0.5)" }}
-          >
-            <X size={14} />
-          </button>
+          {/* Top accent bar — matches app gradient */}
+          <div style={{
+            height: 3, width: "100%",
+            background: "linear-gradient(90deg, #ec4899, #a855f7, #ec4899)",
+          }} />
 
           {/* Header */}
-          <div style={{ position: "relative", zIndex: 10, padding: "22px 24px 0" }}>
+          <div style={{ position: "relative", zIndex: 10, padding: "18px 24px 0" }}>
             <motion.div
-              initial={{ y: -10, opacity: 0 }}
+              initial={{ y: -8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
               style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 4 }}
             >
-              <Sparkles size={16} style={{ color: "#e848c7" }} />
-              <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 2,
-                textTransform: "uppercase", color: "rgba(232,72,199,0.85)" }}>
+              <Sparkles size={14} style={{ color: "#e848c7" }} />
+              <span style={{
+                fontSize: 10, fontWeight: 800, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "rgba(232,72,199,0.9)",
+              }}>
                 Daily Match
               </span>
-              <Sparkles size={16} style={{ color: "#e848c7" }} />
+              <Sparkles size={14} style={{ color: "#e848c7" }} />
             </motion.div>
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.15 }}
-              style={{ margin: "0 0 18px", fontSize: 20, fontWeight: 900,
-                background: "linear-gradient(135deg, #ff6eb4, #e848c7, #c060ff)",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}
+              style={{
+                margin: "0 0 16px", fontSize: 18, fontWeight: 900,
+                background: "linear-gradient(135deg, #f472b6, #e848c7, #a855f7)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+              }}
             >
-              We found someone for you ✨
+              Someone new for you today ✨
             </motion.h2>
           </div>
 
-          {/* Profile image — tall card */}
+          {/* Profile image */}
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 240, damping: 18 }}
-            style={{ position: "relative", zIndex: 10, margin: "0 18px", borderRadius: 20, overflow: "hidden",
-              height: 200, background: "#0a0018" }}
+            style={{
+              position: "relative", zIndex: 10, margin: "0 16px",
+              borderRadius: 18, overflow: "hidden", height: 210,
+              background: "#0a0018",
+              border: "1px solid rgba(232,72,199,0.25)",
+            }}
           >
             <img
               src={avatar}
               alt={name}
               onLoad={() => setImgLoaded(true)}
               onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
-              style={{ width: "100%", height: "100%", objectFit: "cover",
-                opacity: imgLoaded ? 1 : 0, transition: "opacity 0.3s" }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", opacity: imgLoaded ? 1 : 0, transition: "opacity 0.3s" }}
             />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(4,0,16,0.92) 0%, transparent 55%)" }} />
 
-            {/* Bottom gradient on image */}
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(4,0,16,0.9) 0%, transparent 55%)" }} />
-
-            {/* Name + location on image */}
+            {/* Name + city */}
             <div style={{ position: "absolute", bottom: 12, left: 14, right: 14, textAlign: "left" }}>
-              <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: "#fff" }}>{name}{age}</p>
+              <p style={{ margin: 0, fontSize: 17, fontWeight: 900, color: "#fff" }}>{name}{age}</p>
               {city && (
-                <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.6)",
-                  display: "flex", alignItems: "center", gap: 3 }}>
+                <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", gap: 3 }}>
                   <MapPin size={10} /> {city}
                 </p>
               )}
             </div>
 
-            {/* Compatibility badge */}
-            <motion.div
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 300 }}
-              style={{ position: "absolute", top: 10, right: 10,
-                background: "linear-gradient(135deg, #e848c7, #c060ff)",
-                borderRadius: 12, padding: "4px 10px", fontSize: 10, fontWeight: 800,
-                color: "#fff", boxShadow: "0 2px 12px rgba(232,72,199,0.5)" }}
-            >
-              ✨ 94% Match
-            </motion.div>
+            {/* New badge */}
+            <div style={{
+              position: "absolute", top: 10, right: 10,
+              background: "linear-gradient(135deg, #ec4899, #a855f7)",
+              borderRadius: 10, padding: "3px 9px", fontSize: 9, fontWeight: 800,
+              color: "#fff", boxShadow: "0 2px 10px rgba(232,72,199,0.45)",
+            }}>
+              🌟 New Today
+            </div>
           </motion.div>
 
           {/* Bio */}
@@ -203,58 +197,66 @@ export default function DailyMatchSuggestion({ profile, onConnect, onDismiss }: 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            style={{ position: "relative", zIndex: 10,
-              color: "rgba(255,255,255,0.6)", fontSize: 12, lineHeight: 1.55,
-              margin: "12px 24px 6px", fontStyle: "italic" }}
+            style={{
+              position: "relative", zIndex: 10,
+              color: "rgba(255,255,255,0.55)", fontSize: 11, lineHeight: 1.55,
+              margin: "10px 22px 4px", fontStyle: "italic",
+            }}
           >
             "{bio.length > 80 ? bio.slice(0, 80) + "…" : bio}"
           </motion.p>
 
-          {/* Sentiment */}
+          {/* Like-first hint */}
           <motion.p
-            initial={{ opacity: 0, y: 6 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.38 }}
-            style={{ position: "relative", zIndex: 10,
-              color: "rgba(255,255,255,0.72)", fontSize: 12, fontWeight: 700,
-              margin: "8px 20px 18px", lineHeight: 1.5 }}
+            style={{
+              position: "relative", zIndex: 10,
+              color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 600,
+              margin: "6px 20px 14px", lineHeight: 1.5,
+            }}
           >
-            Connect while the feelings are{" "}
-            <span style={{ color: "#e848c7" }}>fresh and energized</span> 💫
+            Like to show interest — when you{" "}
+            <span style={{ color: "#e848c7" }}>both like each other</span>
+            {" "}you can unlock WhatsApp contact 💬
           </motion.p>
 
-          {/* Pulsing heart divider */}
+          {/* Pulsing heart */}
           {pulse && (
             <motion.div
-              animate={{ scale: [1, 1.15, 1] }}
-              transition={{ repeat: Infinity, duration: 0.85, ease: "easeInOut" }}
-              style={{ position: "relative", zIndex: 10, marginBottom: 16,
-                display: "flex", justifyContent: "center" }}
+              animate={{ scale: [1, 1.18, 1] }}
+              transition={{ repeat: Infinity, duration: 0.9, ease: "easeInOut" }}
+              style={{ position: "relative", zIndex: 10, marginBottom: 14, display: "flex", justifyContent: "center" }}
             >
-              <Heart size={22} style={{ color: "#e848c7" }} fill="#e848c7" />
+              <Heart size={20} style={{ color: "#e848c7" }} fill="#e848c7" />
             </motion.div>
           )}
 
           {/* Buttons */}
-          <div style={{ position: "relative", zIndex: 10, display: "flex", gap: 10, padding: "0 20px" }}>
+          <div style={{ position: "relative", zIndex: 10, display: "flex", gap: 10, padding: "0 18px" }}>
             <button
               onClick={onDismiss}
-              style={{ flex: 1, padding: "11px 0", borderRadius: 18, fontSize: 12, fontWeight: 700,
-                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-                color: "rgba(255,255,255,0.5)", cursor: "pointer" }}
+              style={{
+                flex: 1, padding: "11px 0", borderRadius: 16, fontSize: 12, fontWeight: 700,
+                background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "rgba(255,255,255,0.45)", cursor: "pointer",
+              }}
             >
               Skip Today
             </button>
             <motion.button
               whileTap={{ scale: 0.96 }}
               onClick={() => onConnect(profile)}
-              style={{ flex: 2, padding: "11px 0", borderRadius: 18, fontSize: 13, fontWeight: 900,
-                background: "linear-gradient(135deg, #e848c7, #c060ff)",
+              style={{
+                flex: 2, padding: "11px 0", borderRadius: 16, fontSize: 13, fontWeight: 900,
+                background: "linear-gradient(135deg, #ec4899, #a855f7)",
                 border: "none", color: "#fff", cursor: "pointer",
-                boxShadow: "0 4px 20px rgba(232,72,199,0.5)",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                boxShadow: "0 4px 18px rgba(232,72,199,0.45)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              }}
             >
-              <Heart size={14} fill="currentColor" /> Connect Now
+              <Heart size={14} fill="currentColor" /> Like
             </motion.button>
           </div>
         </motion.div>

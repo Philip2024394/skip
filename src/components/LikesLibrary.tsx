@@ -56,7 +56,7 @@ interface LikesLibraryProps {
   onPurchaseFeature: (feature: PremiumFeature) => void;
 }
 
-type Tab = "sent" | "received" | "new" | "treat" | "unlock";
+type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance";
 type DisplayItem =
   | { type: "profile"; profile: Profile }
   | { type: "promo"; profile: null };
@@ -68,10 +68,11 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   received: () => "Likes Me",
   treat:    () => "Treat",
   unlock:   () => "Unlock",
+  distance: () => "Distance",
 };
-// Home page shows New / Treat / Unlock; profile page shows the full 4
+// Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
 const HOME_TABS: Tab[]    = ["new", "treat", "unlock"];
-const PROFILE_TABS: Tab[] = ["new", "sent", "received", "treat"];
+const PROFILE_TABS: Tab[] = ["new", "sent", "received", "distance"];
 
 const TREAT_ITEMS = [
   { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage",      image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
@@ -133,6 +134,7 @@ const LikesLibrary = ({
     new:      sortedNew.length,
     treat:    0,
     unlock:   0,
+    distance: 0,
   };
 
   // Scroll back to left whenever tab changes

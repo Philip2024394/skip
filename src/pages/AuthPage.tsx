@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, MessageCircle, Home } from "lucide-react";
+import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,14 +47,9 @@ const buildLandingBgSrc = (url: string, version: string, extra?: Record<string, 
   return appendQueryParams(url, { v: version, ...(extra || {}) });
 };
 
-const getDailyOnlineCount = () => {
-  const base = 135_692;
-  const key = new Date().toDateString();
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  const delta = (hash % 9000) - 4500; // +/- 4.5k
-  return base + delta;
-};
+// Cached so we don't re-fetch on every render
+let _cachedOnlineCount: number | null = null;
+const getDailyOnlineCount = () => _cachedOnlineCount ?? 1_247; // shown before Supabase resolves
 
 const AuthPage = () => {
   const { t, locale, toggleLocale } = useLanguage();
@@ -68,6 +63,24 @@ const AuthPage = () => {
   const [landingPrefix, setLandingPrefix] = useState<string>(COUNTRY_CODES["Indonesia"] || "+62");
   const [landingNumber, setLandingNumber] = useState<string>("");
   const [landingSubmitting, setLandingSubmitting] = useState(false);
+  const [onlineCount, setOnlineCount] = useState(getDailyOnlineCount());
+
+  // Fetch real online user count from Supabase (last 5 min)
+  useEffect(() => {
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .eq("is_active", true)
+      .eq("is_banned", false)
+      .gte("last_seen_at", fiveMinAgo)
+      .then(({ count }) => {
+        if (count !== null && count > 0) {
+          _cachedOnlineCount = count;
+          setOnlineCount(count);
+        }
+      });
+  }, []);
 
   // If a session already exists (user navigated here while logged in), send them home
   // Also listens for SIGNED_IN event so the header on Index updates immediately
@@ -150,11 +163,22 @@ const AuthPage = () => {
   const handleLogin = async () => {
     if (!form.email || !form.password) { toast.error(t("auth.fillAllFields")); return; }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
     setLoading(false);
     if (error) { toast.error(getLoginErrorMessage(error)); return; }
     toast.success(t("auth.welcomeBack"));
     await processPendingReferral();
+    // Check if user has admin role — if so, go directly to admin dashboard
+    if (data.session) {
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.session.user.id);
+      if (roles?.some((r: any) => r.role === "admin")) {
+        navigate("/admin");
+        return;
+      }
+    }
     navigate("/home");
   };
 
@@ -331,7 +355,7 @@ const AuthPage = () => {
           <div className="rounded-3xl bg-yellow-400 p-4 shadow-[0_0_40px_rgba(250,204,21,0.3)] border border-yellow-300/60">
             <p className="text-black text-[17px] font-black text-center leading-tight">Get Started Free</p>
             <p className="text-black/65 text-[11px] font-semibold text-center mt-0.5">
-              🔥 {getDailyOnlineCount().toLocaleString()} Online Looking For You
+              🔥 {onlineCount.toLocaleString()} Online Looking For You
             </p>
 
             <div className="mt-3 space-y-2.5">
