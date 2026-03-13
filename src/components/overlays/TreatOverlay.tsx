@@ -206,38 +206,54 @@ function ImageGrid({ images, accentColor }: { images: string[]; accentColor: str
 
 // ── Front card shared layout ──────────────────────────────────────────────────
 function CardFront({
-  provider, accentColor, borderColor, avatarBorder, extraStyle, onFlip, onReport, children,
+  provider, index, accentColor, borderColor, avatarBorder, extraStyle, onFlip, onReport, children,
 }: {
-  provider: Provider; accentColor: string; borderColor: string; avatarBorder: string;
+  provider: Provider; index: number; accentColor: string; borderColor: string; avatarBorder: string;
   extraStyle?: React.CSSProperties; onFlip: () => void; onReport: () => void;
   children?: React.ReactNode;
 }) {
+  // Stable discount per provider: 10–15% based on index
+  const discount = 10 + (index % 6);
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 12px", borderRadius: 16, background: GLASS_BG, border: `1.5px solid ${borderColor}`, backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR, ...extraStyle }}>
-      {/* Avatar + pink fingerprint */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flexShrink: 0 }}>
-        <img src={provider.avatar} alt={provider.name} style={{ width: 50, height: 50, borderRadius: "50%", objectFit: "cover", border: `2px solid ${avatarBorder}` }} />
-        <button onClick={onFlip} title="View details"
-          style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(232,72,199,0.12)", border: `1.5px solid ${PINK_FP_DIM}`, color: PINK_FP, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-          <FingerprintIcon size={13} color={PINK_FP} />
-        </button>
+    <div style={{ position: "relative", borderRadius: 16, background: GLASS_BG, border: `1.5px solid ${borderColor}`, backdropFilter: GLASS_BLUR, WebkitBackdropFilter: GLASS_BLUR, overflow: "hidden", ...extraStyle }}>
+      {/* 🚩 Report flag — top-right absolute */}
+      <button onClick={onReport} title="Report provider"
+        style={{ position: "absolute", top: 6, right: 6, zIndex: 10, width: 24, height: 24, borderRadius: "50%", background: "rgba(220,40,40,0.12)", border: "1px solid rgba(220,40,40,0.35)", color: "rgba(255,90,90,0.75)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+        <Flag size={11} strokeWidth={2} />
+      </button>
+
+      {/* Card body */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 36px 8px 12px" }}>
+        {/* Avatar + pink fingerprint */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, flexShrink: 0 }}>
+          <img src={provider.avatar} alt={provider.name} style={{ width: 50, height: 50, borderRadius: "50%", objectFit: "cover", border: `2px solid ${avatarBorder}` }} />
+          <button onClick={onFlip} title="View details"
+            style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(232,72,199,0.12)", border: `1.5px solid ${PINK_FP_DIM}`, color: PINK_FP, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
+            <FingerprintIcon size={13} color={PINK_FP} />
+          </button>
+        </div>
+        {/* Text */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{provider.name}</p>
+          <p style={{ color: "rgba(255,255,255,0.47)", fontSize: 10, margin: "2px 0 0", lineHeight: 1.4 }}>{provider.bio}</p>
+          {children}
+        </div>
+        {/* Unlock button */}
+        <div style={{ flexShrink: 0 }}>
+          <button onClick={() => {}}
+            style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 20, background: `rgba(232,72,199,0.12)`, border: `1.5px solid ${GLASS_RIM2}`, color: PINK_FP, fontSize: 10, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>
+            <Lock size={9} strokeWidth={2.5} />Unlock
+          </button>
+        </div>
       </div>
-      {/* Text */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{provider.name}</p>
-        <p style={{ color: "rgba(255,255,255,0.47)", fontSize: 10, margin: "2px 0 0", lineHeight: 1.4 }}>{provider.bio}</p>
-        {children}
-      </div>
-      {/* Actions */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
-        <button onClick={onReport} title="Report"
-          style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(255,40,40,0.07)", border: "1px solid rgba(255,40,40,0.22)", color: "rgba(255,90,90,0.65)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-          <Flag size={10} strokeWidth={2} />
-        </button>
-        <button onClick={() => {}}
-          style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 20, background: `rgba(232,72,199,0.12)`, border: `1.5px solid ${GLASS_RIM2}`, color: PINK_FP, fontSize: 10, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>
-          <Lock size={9} strokeWidth={2.5} />Unlock
-        </button>
+
+      {/* 2DateMe discount stripe — bottom of card */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 5, padding: "5px 12px 6px", background: "rgba(232,72,199,0.09)", borderTop: "1px solid rgba(232,72,199,0.18)" }}>
+        <span style={{ fontSize: 9 }}>🏷️</span>
+        <p style={{ color: "rgba(232,72,199,0.9)", fontSize: 9, fontWeight: 800, margin: 0, letterSpacing: "0.04em" }}>
+          2DateMe — {discount}% Discount for App Users
+        </p>
       </div>
     </div>
   );
@@ -254,7 +270,7 @@ function MassageCard({ provider, index, menu, onReport }: {
       <AnimatePresence mode="wait">
         {!flipped ? (
           <motion.div key="front" initial={{ rotateY: -90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} exit={{ rotateY: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
-            <CardFront provider={provider} accentColor={accent} borderColor={GLASS_RIM} avatarBorder="rgba(212,168,83,0.4)"
+            <CardFront provider={provider} index={index} accentColor={accent} borderColor={GLASS_RIM} avatarBorder="rgba(212,168,83,0.4)"
               extraStyle={{ boxShadow: "inset 3px 0 0 rgba(212,168,83,0.3)" }} onFlip={() => setFlipped(true)} onReport={onReport}>
               <p style={{ color: "rgba(212,168,83,0.75)", fontSize: 8, fontWeight: 700, margin: "4px 0 0", letterSpacing: "0.04em" }}>♂ ACCEPTS MALES</p>
             </CardFront>
@@ -295,7 +311,7 @@ function GenericCard({ provider, index, productImages, category, accentColor, on
       <AnimatePresence mode="wait">
         {!flipped ? (
           <motion.div key="front" initial={{ rotateY: -90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} exit={{ rotateY: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
-            <CardFront provider={provider} accentColor={accentColor} borderColor={GLASS_RIM} avatarBorder={GLASS_RIM} onFlip={() => setFlipped(true)} onReport={onReport} />
+            <CardFront provider={provider} index={index} accentColor={accentColor} borderColor={GLASS_RIM} avatarBorder={GLASS_RIM} onFlip={() => setFlipped(true)} onReport={onReport} />
           </motion.div>
         ) : (
           <motion.div key="back" initial={{ rotateY: 90, opacity: 0 }} animate={{ rotateY: 0, opacity: 1 }} exit={{ rotateY: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
