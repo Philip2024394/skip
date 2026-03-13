@@ -110,7 +110,7 @@ const UNLOCK_BG_KEYS = new Set(["unlock:single", "unlock:pack3", "unlock:pack10"
 const UNLOCK_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
 
 function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClose: () => void }) {
-  const [showTerms, setShowTerms] = React.useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const pkg = HOME_UNLOCK_PACKAGES.find((p) => p.key === packageKey);
   if (!pkg) return null;
 
