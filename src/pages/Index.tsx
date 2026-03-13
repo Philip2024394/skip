@@ -871,7 +871,12 @@ const Index = () => {
                   setSelectedTreatItem("massage");
                   return;
                 }
-                if (!isProfileRoute) return;
+                // On home page: switching away from unlock tab clears the package detail
+                if (!isProfileRoute) {
+                  setAboutMeTab(t);
+                  if (t !== "received") setHomeUnlockKey("");
+                  return;
+                }
                 setAboutMeTab(t);
                 setSelectedProfileSection(null);
                 setSelectedDatePlace(null);

@@ -286,8 +286,8 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               zIndex: 99999,
               borderRadius: "20px 20px 0 0",
               overflow: "hidden",
-              height: "92vh",
-              maxHeight: "92vh",
+              height: "92dvh",
+              maxHeight: "92dvh",
               display: "flex",
               flexDirection: "column",
               background: "transparent",
@@ -319,7 +319,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 position: "relative",
                 width: "100%",
                 overflow: "hidden",
-                height: 260,
+                height: 200,
                 flexShrink: 0,
                 zIndex: 1,
               }}
@@ -330,11 +330,11 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               <div
                 style={{
                   position: "absolute",
-                  bottom: 80, // Moved up 80px from bottom: 0
+                  bottom: 0,
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: 220, // Increased from 110 to 220 (1x larger)
-                  height: 220, // Increased from 110 to 220 (1x larger)
+                  width: 180,
+                  height: 180,
                   zIndex: 5,
                   WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
                   maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
@@ -366,7 +366,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   <CrowAnimation
                     key={crowId}
                     containerWidth={crowContainerWidth}
-                    containerHeight={260}
+                    containerHeight={200}
                     onDone={() => setActiveCrows((prev) => prev.filter((id) => id !== crowId))}
                   />
                 ))}
@@ -489,12 +489,11 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                padding: "8px 16px 90px", // Increased bottom padding from 10px to 90px to move content up
-                overflowY: "hidden",
+                padding: "12px 16px 24px",
+                overflowY: "auto",
                 flex: 1,
                 minHeight: 0,
-                overflow: "hidden",
-                transform: "translateY(-80px)", // Move entire content up 80px
+                WebkitOverflowScrolling: "touch",
               }}
             >
               {/* Progress steps */}

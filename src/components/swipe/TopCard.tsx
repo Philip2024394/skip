@@ -1,6 +1,7 @@
 import { motion, animate } from "framer-motion";
 import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight } from "lucide-react";
-import { getPrimaryBadgeKey } from "@/utils/profileBadges";
+// Badge rendering is centralised in ProfileBadge — do not add badge logic here
+import ProfileBadge from "@/components/ProfileBadge";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import SwipeStack from "@/components/SwipeStack";
 
@@ -65,63 +66,8 @@ export default function TopCard(props: TopCardProps) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
 
-          {/* ── Single badge display ─────────────────────────── */}
-          {(() => {
-            const key = getPrimaryBadgeKey(props.selectedProfile as any);
-            if (!key) return null;
-
-            if (key === "available_tonight") {
-              return (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
-                  <span className="text-yellow-400">🌙</span>
-                  {props.t("popup.freeTonight")}
-                </div>
-              );
-            }
-
-            if (key === "is_plusone") {
-              return (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(250,204,21,0.45)]">
-                  <span className="text-yellow-300 font-black">+1</span>
-                  Plus One
-                </div>
-              );
-            }
-
-            if (key === "generous_lifestyle") {
-              return (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-amber-400/70 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.45)]">
-                  <span className="text-amber-400">🎁</span> Generous
-                </div>
-              );
-            }
-
-            if (key === "weekend_plans") {
-              return (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-primary/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  <span className="text-primary">📅</span> Weekend
-                </div>
-              );
-            }
-
-            if (key === "late_night_chat") {
-              return (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-indigo-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  <span className="text-indigo-400">🌙</span> Late Night
-                </div>
-              );
-            }
-
-            if (key === "no_drama") {
-              return (
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-black/80 backdrop-blur-md border border-yellow-400/60 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
-                  <span className="text-yellow-400">✨</span> No Drama
-                </div>
-              );
-            }
-
-            return null;
-          })()}
+          {/* ── Single badge — locked: yellow, top-left only (ProfileBadge) ── */}
+          <ProfileBadge profile={props.selectedProfile} t={props.t} />
 
           {!props.isProfileRoute ? (
             <button
@@ -208,9 +154,7 @@ export default function TopCard(props: TopCardProps) {
 
           <div className="absolute bottom-0 left-0 right-0 p-4">
             <h3 className="font-display font-bold text-xl text-white flex items-center gap-2">
-              {(props.selectedProfile as any).is_plusone && (
-                <span className="flex items-center gap-0.5 bg-black/60 backdrop-blur-sm border border-yellow-400/50 rounded-md px-1.5 py-0.5 text-yellow-300 font-black text-[10px] leading-none">+1</span>
-              )}
+              {/* No badge duplicate here — badge locked to top-left via ProfileBadge */}
               {props.selectedProfile.name}, {props.selectedProfile.age}
               {isOnline(props.selectedProfile.last_seen_at) && (
                 <span className="relative flex h-3 w-3">
