@@ -90,44 +90,84 @@ const saveLocalLikedMeProfiles = (profiles: Profile[]) => {
 };
 
 
+import PackageTermsOverlay from "@/components/overlays/PackageTermsOverlay";
+
 // ── Home page package detail (shown in bottom card when unlock item selected) ──
 const HOME_UNLOCK_PACKAGES = [
-  { key: "unlock:single", emoji: "💬", name: "1 Match Unlock", price: "$1.99", desc: "Unlock WhatsApp after you both match. Fast, simple, direct.", sub: "Requires a mutual match", btn: "Unlock now" },
-  { key: "unlock:pack3",  emoji: "💬", name: "3 Unlock Pack",  price: "$4.99", desc: "Perfect for a week of real connections. Save vs singles.",      sub: "Best for casual + active users", btn: "Get pack" },
-  { key: "unlock:pack10", emoji: "💬", name: "10 Unlock Pack", price: "$12.99", desc: "Best value for heavy matching. Lowest cost per unlock.",      sub: "Best value package", btn: "Get pack" },
-  { key: "unlock:vip",    emoji: "👑", name: "VIP Monthly",    price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.",        sub: "Renews monthly", btn: "Go VIP" },
-  { key: "unlock:superlike", emoji: "⭐", name: "Super Like",  price: "$1.99", desc: "Flash in their library first! They get notified.",             sub: "One-time purchase", btn: "Get" },
-  { key: "unlock:boost",  emoji: "🚀", name: "Profile Boost",  price: "$1.99", desc: "Top of swipe stack for 1 hour. 5–10× more views!",            sub: "Valid for 1 hour", btn: "Boost now" },
-  { key: "unlock:verified", emoji: "✅", name: "Verified Badge", price: "$1.99", desc: "Get verified. Rank higher & build trust.",                  sub: "Permanent badge", btn: "Get verified" },
-  { key: "unlock:incognito", emoji: "👻", name: "Incognito Mode", price: "$2.99", desc: "Browse profiles invisibly for 24 hours.",                  sub: "Valid 24 hours", btn: "Go incognito" },
-  { key: "unlock:spotlight", emoji: "🌟", name: "Spotlight",   price: "$4.99", desc: "Featured at top of everyone's stack for 24 hours!",           sub: "Valid 24 hours", btn: "Get spotlight" },
+  { key: "unlock:single",   emoji: "💬", name: "1 Match Unlock",  price: "$1.99",     desc: "Unlock WhatsApp after you both match. Fast, simple, direct.",       sub: "Requires a mutual match",      btn: "Unlock Now" },
+  { key: "unlock:pack3",    emoji: "💬", name: "3 Unlock Pack",    price: "$4.99",     desc: "Perfect for a week of real connections. Save vs singles.",           sub: "Best for active users",        btn: "Get Pack" },
+  { key: "unlock:pack10",   emoji: "💬", name: "10 Unlock Pack",   price: "$12.99",    desc: "Best value for heavy matching. Lowest cost per unlock.",             sub: "Best value · never expire",    btn: "Get Pack" },
+  { key: "unlock:vip",      emoji: "👑", name: "VIP Monthly",      price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.",                  sub: "Auto-renews monthly",          btn: "Go VIP" },
+  { key: "unlock:superlike",emoji: "⭐", name: "Super Like",       price: "$1.99",     desc: "Flash in their library first! They get notified.",                  sub: "One-time purchase",            btn: "Get" },
+  { key: "unlock:boost",    emoji: "🚀", name: "Profile Boost",    price: "$1.99",     desc: "Top of swipe stack for 1 hour. 5–10× more views!",                  sub: "Activates immediately · 1 hr", btn: "Boost Now" },
+  { key: "unlock:verified", emoji: "✅", name: "Verified Badge",   price: "$1.99",     desc: "Get verified. Rank higher & build trust.",                          sub: "Permanent badge",              btn: "Get Verified" },
+  { key: "unlock:incognito",emoji: "👻", name: "Incognito Mode",   price: "$2.99",     desc: "Browse profiles invisibly for 24 hours.",                           sub: "Activates immediately · 24 hr",btn: "Go Incognito" },
+  { key: "unlock:spotlight",emoji: "🌟", name: "Spotlight",        price: "$4.99",     desc: "Featured at top of everyone's stack for 24 hours!",                 sub: "Activates immediately · 24 hr",btn: "Get Spotlight" },
 ];
 
+// Packages that show the unlock background image
+const UNLOCK_BG_KEYS = new Set(["unlock:single", "unlock:pack3", "unlock:pack10"]);
+const UNLOCK_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
+
 function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClose: () => void }) {
+  const [showTerms, setShowTerms] = React.useState(false);
   const pkg = HOME_UNLOCK_PACKAGES.find((p) => p.key === packageKey);
   if (!pkg) return null;
+
+  const useUnlockBg = UNLOCK_BG_KEYS.has(packageKey);
+
   return (
-    <div className="h-full w-full flex flex-col relative" style={{ background: "linear-gradient(160deg, #0a0014 0%, #1a0030 50%, #050008 100%)" }}>
-      <div style={{ position: "absolute", top: 60, left: "50%", transform: "translateX(-50%)", width: 220, height: 220, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,72,199,0.2) 0%, transparent 70%)", pointerEvents: "none" }} />
-      <button onClick={onClose} className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/70 text-xs font-black">✕</button>
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-6 text-center gap-3">
-        <span style={{ fontSize: 42 }}>{pkg.emoji}</span>
-        <p className="text-white font-black text-lg leading-tight">{pkg.name}</p>
-        <p className="text-white/65 text-xs leading-relaxed max-w-xs">{pkg.desc}</p>
-        <div className="w-full max-w-xs flex items-center justify-between mt-2 px-1">
-          <p className="text-white font-black text-2xl">{pkg.price}</p>
-          <button
-            className="px-5 py-2.5 rounded-xl font-black text-sm text-white shadow-lg"
-            style={{ background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))" }}
-          >
-            {pkg.btn}
-          </button>
-        </div>
-        <div className="w-full max-w-xs rounded-xl bg-white/5 border border-white/10 px-3 py-2 mt-1">
-          <p className="text-white/55 text-[11px] font-semibold">{pkg.sub}</p>
+    <>
+      <div
+        className="h-full w-full flex flex-col relative overflow-hidden"
+        style={useUnlockBg
+          ? { backgroundImage: `url(${UNLOCK_BG_IMAGE})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
+          : { background: "linear-gradient(160deg, #0a0014 0%, #1a0030 50%, #050008 100%)" }
+        }
+      >
+        {/* glow orb for non-image packages */}
+        {!useUnlockBg && (
+          <div style={{ position: "absolute", top: 40, left: "50%", transform: "translateX(-50%)", width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,72,199,0.22) 0%, transparent 70%)", pointerEvents: "none" }} />
+        )}
+
+        {/* dark overlay for readability on image */}
+        {useUnlockBg && (
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.1) 100%)", pointerEvents: "none" }} />
+        )}
+
+        {/* close */}
+        <button onClick={onClose} className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white/70 text-xs font-black" style={{ backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>✕</button>
+
+        {/* content */}
+        <div className="relative z-10 h-full flex flex-col items-center justify-end px-5 pb-4 text-center gap-2">
+          <span style={{ fontSize: useUnlockBg ? 36 : 40 }}>{pkg.emoji}</span>
+          <p className="text-white font-black leading-tight" style={{ fontSize: 17, margin: 0 }}>{pkg.name}</p>
+          <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.5, margin: 0, maxWidth: 260 }}>{pkg.desc}</p>
+
+          {/* price + buy */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", maxWidth: 280, marginTop: 4 }}>
+            <p style={{ color: "#fff", fontWeight: 900, fontSize: 22, margin: 0 }}>{pkg.price}</p>
+            <button
+              style={{ padding: "8px 18px", borderRadius: 22, fontWeight: 900, fontSize: 12, color: "#fff", border: "none", cursor: "pointer", background: "linear-gradient(135deg, rgba(232,72,199,0.95), rgba(195,60,255,0.95))", boxShadow: "0 4px 18px rgba(195,60,255,0.4)" }}
+            >
+              {pkg.btn}
+            </button>
+          </div>
+
+          {/* sub label + T&C */}
+          <div style={{ width: "100%", maxWidth: 280, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <p style={{ color: "rgba(255,255,255,0.42)", fontSize: 9.5, fontWeight: 600, margin: 0 }}>{pkg.sub}</p>
+            <button onClick={() => setShowTerms(true)}
+              style={{ color: "rgba(232,72,199,0.75)", fontSize: 9, fontWeight: 700, background: "none", border: "none", cursor: "pointer", textDecoration: "underline", whiteSpace: "nowrap", padding: 0 }}>
+              Terms &amp; Conditions
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* T&C overlay */}
+      <PackageTermsOverlay show={showTerms} onClose={() => setShowTerms(false)} highlightPackage={packageKey} />
+    </>
   );
 }
 
