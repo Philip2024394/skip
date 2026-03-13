@@ -20,6 +20,7 @@ import GuestAuthPrompt from "@/components/GuestAuthPrompt";
 import TermsAcceptanceDialog from "@/components/TermsAcceptanceDialog";
 import TreatOverlay from "@/components/overlays/TreatOverlay";
 import AppDialogs from "@/components/overlays/AppDialogs";
+import DailyMatchSuggestion, { shouldShowDailyMatch, markDailyMatchShown } from "@/components/overlays/DailyMatchSuggestion";
 import ProfileBottomSheet from "@/components/profile-view/ProfileBottomSheet";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/lib/constants";
@@ -358,6 +359,9 @@ const Index = () => {
   const [devFeaturesEnabled, setDevFeaturesEnabled] = useDevFeatures();
   const [devPanelOpen, setDevPanelOpen] = useState(false);
 
+  // Daily match suggestion
+  const [dailyMatchProfile, setDailyMatchProfile] = useState<any | null>(null);
+
   const POST_LOGIN_LANDING_KEY = "post_login_landing_dismissed";
   const [showPostLoginLanding, setShowPostLoginLanding] = useState(false);
 
@@ -444,6 +448,16 @@ const Index = () => {
   }, [isProfileRoute, profileRouteId, topProfiles]);
 
   
+  // Show daily match suggestion once per day after profiles are available
+  useEffect(() => {
+    if (filteredProfiles.length === 0) return;
+    if (!shouldShowDailyMatch()) return;
+    // Pick a random profile from the pool
+    const pick = filteredProfiles[Math.floor(Math.random() * filteredProfiles.length)];
+    const t = setTimeout(() => setDailyMatchProfile(pick), 1800);
+    return () => clearTimeout(t);
+  }, [filteredProfiles]);
+
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
   const showGuestPrompt = (trigger: typeof guestPrompt["trigger"]) => setGuestPrompt({ open: true, trigger });
@@ -985,6 +999,26 @@ const Index = () => {
                   >
                     ⭐ Trigger Super Like
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mock = filteredProfiles[0] || { id: "mock-match", name: "Jessica", avatar_url: "https://i.pravatar.cc/150?img=47", age: 24, city: "Yogyakarta" };
+                      setMatchDialog(mock);
+                    }}
+                    className="w-full flex items-center gap-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    💞 Test Match Popup
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const mock = filteredProfiles[Math.floor(Math.random() * Math.max(1, filteredProfiles.length))] || { id: "mock-daily", name: "Sari", avatar_url: "https://i.pravatar.cc/150?img=32", age: 22, city: "Yogyakarta", bio: "Love coffee, sunsets and genuine connections ☕" };
+                      setDailyMatchProfile(mock);
+                    }}
+                    className="w-full flex items-center gap-2 bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    ✨ Test Daily Match
+                  </button>
                 </div>
               </div>
             )}
@@ -1104,6 +1138,22 @@ const Index = () => {
         onClose={() => setOpenTreatItem(null)}
         currentUser={currentUser}
       />
+
+      {/* Daily Match Suggestion — once per day */}
+      {dailyMatchProfile && (
+        <DailyMatchSuggestion
+          profile={dailyMatchProfile}
+          onDismiss={() => {
+            markDailyMatchShown();
+            setDailyMatchProfile(null);
+          }}
+          onConnect={(p) => {
+            markDailyMatchShown();
+            setDailyMatchProfile(null);
+            setUnlockDialog(p);
+          }}
+        />
+      )}
 
     </div>
   );
