@@ -97,6 +97,8 @@ import PackageTermsOverlay from "@/components/overlays/PackageTermsOverlay";
 const UNLOCK_BG_IMAGE    = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
 const VIP_BG_IMAGE       = "https://ik.imagekit.io/7grri5v7d/vip%20matches.png?updatedAt=1773414288279";
 const BOOST_BG_IMAGE     = "https://ik.imagekit.io/7grri5v7d/rocket%20boost.png?updatedAt=1773414413248";
+const VERIFIED_BG_IMAGE  = "https://ik.imagekit.io/7grri5v7d/vip%20profiles.png";
+const SPOTLIGHT_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/spot%20light.png";
 
 const HOME_UNLOCK_PACKAGES = [
   { key: "unlock:single",   emoji: "💬", name: "1 Match Unlock",  price: "$1.99",     desc: "Unlock WhatsApp after you both match. Fast, simple, direct.",       sub: "Requires a mutual match",      btn: "Unlock Now",   bgImage: UNLOCK_BG_IMAGE },
@@ -105,9 +107,9 @@ const HOME_UNLOCK_PACKAGES = [
   { key: "unlock:vip",      emoji: "👑", name: "VIP Monthly",      price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.",                  sub: "Auto-renews monthly",          btn: "Go VIP",       bgImage: VIP_BG_IMAGE },
   { key: "unlock:superlike",emoji: "⭐", name: "Super Like",       price: "$1.99",     desc: "Flash in their library first! They get notified.",                  sub: "One-time purchase",            btn: "Get",          bgImage: null },
   { key: "unlock:boost",    emoji: "🚀", name: "Profile Boost",    price: "$1.99",     desc: "Top of swipe stack for 1 hour. 5–10× more views!",                  sub: "Activates immediately · 1 hr", btn: "Boost Now",    bgImage: BOOST_BG_IMAGE },
-  { key: "unlock:verified", emoji: "✅", name: "Verified Badge",   price: "$1.99",     desc: "Get verified. Rank higher & build trust.",                          sub: "Permanent badge",              btn: "Get Verified", bgImage: null },
+  { key: "unlock:verified", emoji: "✅", name: "Verified Badge",   price: "$1.99",     desc: "Get verified. Rank higher & build trust.",                          sub: "Permanent badge",              btn: "Get Verified", bgImage: VERIFIED_BG_IMAGE },
   { key: "unlock:incognito",emoji: "👻", name: "Incognito Mode",   price: "$2.99",     desc: "Browse profiles invisibly for 24 hours.",                           sub: "Activates immediately · 24 hr",btn: "Go Incognito", bgImage: null },
-  { key: "unlock:spotlight",emoji: "🌟", name: "Spotlight",        price: "$4.99",     desc: "Featured at top of everyone's stack for 24 hours!",                 sub: "Activates immediately · 24 hr",btn: "Get Spotlight",bgImage: null },
+  { key: "unlock:spotlight",emoji: "🌟", name: "Spotlight",        price: "$4.99",     desc: "Featured at top of everyone's stack for 24 hours!",                 sub: "Activates immediately · 24 hr",btn: "Get Spotlight",bgImage: SPOTLIGHT_BG_IMAGE },
 ];
 
 function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClose: () => void }) {

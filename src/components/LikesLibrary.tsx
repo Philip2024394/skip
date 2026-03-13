@@ -219,7 +219,6 @@ const LikesLibrary = ({
 
   // ── Empty-state copy ────────────────────────────────────────────
   const emptyText =
-    tab === "new"      ? "Loading profiles..." :
     tab === "sent"     ? "Swipe up or down to like!" :
     "No likes yet — keep swiping!";
 

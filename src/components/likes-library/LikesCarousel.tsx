@@ -8,7 +8,7 @@ import { isOnline } from "@/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 import { CountdownBadge } from "@/components/likes-library/CountdownBadge";
 
-type Tab = "sent" | "received" | "new" | "treat";
+type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance";
 
 interface LikesCarouselProps {
   displayItemsWithTarot: any[];
