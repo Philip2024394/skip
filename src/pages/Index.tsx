@@ -99,6 +99,7 @@ const VIP_BG_IMAGE       = "https://ik.imagekit.io/7grri5v7d/vip%20matches.png?u
 const BOOST_BG_IMAGE     = "https://ik.imagekit.io/7grri5v7d/rocket%20boost.png?updatedAt=1773414413248";
 const VERIFIED_BG_IMAGE  = "https://ik.imagekit.io/7grri5v7d/vip%20profiles.png";
 const SPOTLIGHT_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/spot%20light.png";
+const INCOGNITO_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/incognito.png";
 
 const HOME_UNLOCK_PACKAGES = [
   { key: "unlock:single",   emoji: "💬", name: "1 Match Unlock",  price: "$1.99",     desc: "Unlock WhatsApp after you both match. Fast, simple, direct.",       sub: "Requires a mutual match",      btn: "Unlock Now",   bgImage: UNLOCK_BG_IMAGE },
@@ -108,7 +109,7 @@ const HOME_UNLOCK_PACKAGES = [
   { key: "unlock:superlike",emoji: "⭐", name: "Super Like",       price: "$1.99",     desc: "Flash in their library first! They get notified.",                  sub: "One-time purchase",            btn: "Get",          bgImage: null },
   { key: "unlock:boost",    emoji: "🚀", name: "Profile Boost",    price: "$1.99",     desc: "Top of swipe stack for 1 hour. 5–10× more views!",                  sub: "Activates immediately · 1 hr", btn: "Boost Now",    bgImage: BOOST_BG_IMAGE },
   { key: "unlock:verified", emoji: "✅", name: "Verified Badge",   price: "$1.99",     desc: "Get verified. Rank higher & build trust.",                          sub: "Permanent badge",              btn: "Get Verified", bgImage: VERIFIED_BG_IMAGE },
-  { key: "unlock:incognito",emoji: "👻", name: "Incognito Mode",   price: "$2.99",     desc: "Browse profiles invisibly for 24 hours.",                           sub: "Activates immediately · 24 hr",btn: "Go Incognito", bgImage: null },
+  { key: "unlock:incognito",emoji: "👻", name: "Incognito Mode",   price: "$2.99",     desc: "Browse profiles invisibly for 24 hours.",                           sub: "Activates immediately · 24 hr",btn: "Go Incognito", bgImage: INCOGNITO_BG_IMAGE },
   { key: "unlock:spotlight",emoji: "🌟", name: "Spotlight",        price: "$4.99",     desc: "Featured at top of everyone's stack for 24 hours!",                 sub: "Activates immediately · 24 hr",btn: "Get Spotlight",bgImage: SPOTLIGHT_BG_IMAGE },
 ];
 
@@ -303,16 +304,21 @@ const Index = () => {
 
   // Derive ordered top/bottom from the stable queue, skipping seen profiles
   const { topProfiles, bottomProfiles } = useMemo(() => {
-    const unseen = shuffledQueueRef.current.filter(p => !seenIdsRef.current.has(p.id));
-    // If all seen (race condition before advanceQueue fires), use full queue
-    const pool = unseen.length > 0 ? unseen : shuffledQueueRef.current;
+    // Use filteredProfiles as immediate fallback before queue is built (first render)
+    const queue = shuffledQueueRef.current.length > 0 ? shuffledQueueRef.current : filteredProfiles;
+    const unseen = queue.filter(p => !seenIdsRef.current.has(p.id));
+    // If all seen (race condition), use full queue
+    const pool = unseen.length > 0 ? unseen : queue;
     const top: Profile[] = [];
     const bottom: Profile[] = [];
     pool.forEach((p, i) => {
       if (i % 2 === 0) top.push(p);
       else bottom.push(p);
     });
-    return { topProfiles: top, bottomProfiles: bottom };
+    // Guarantee neither stack is ever blank — fall back to the other (reversed) if empty
+    const safeTop    = top.length > 0    ? top    : bottom.slice().reverse();
+    const safeBottom = bottom.length > 0 ? bottom : top.slice().reverse();
+    return { topProfiles: safeTop, bottomProfiles: safeBottom };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredProfiles, queueTick]);
 
