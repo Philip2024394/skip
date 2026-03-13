@@ -179,7 +179,7 @@ export default function TopCard(props: TopCardProps) {
             </p>
           </div>
         </motion.div>
-      ) : props.topProfiles.length > 0 ? (
+      ) : (
         <SwipeStack
           profiles={props.topProfiles}
           direction="up"
@@ -197,10 +197,6 @@ export default function TopCard(props: TopCardProps) {
             props.advanceQueue(p.id);
           }}
         />
-      ) : (
-        <div className="flex items-center justify-center h-full">
-          <p className="text-white/50 text-sm">{props.t("swipe.noMore")}</p>
-        </div>
       )}
     </div>
   );

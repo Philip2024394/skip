@@ -1086,7 +1086,7 @@ const Index = () => {
                 onSelectProfileSection={(s) => setSelectedProfileSection(s)}
               />
             </>
-          ) : bottomProfiles.length > 0 ? (
+          ) : (
             <SwipeStack
               key="bottom-stack"
               profiles={bottomProfiles}
@@ -1104,10 +1104,6 @@ const Index = () => {
                 advanceQueue(p.id);
               }}
             />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-white/50 text-sm">{t("swipe.noMore")}</p>
-            </div>
           )}
         </div>
       </div>
