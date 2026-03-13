@@ -94,45 +94,45 @@ const saveLocalLikedMeProfiles = (profiles: Profile[]) => {
 import PackageTermsOverlay from "@/components/overlays/PackageTermsOverlay";
 
 // ── Home page package detail (shown in bottom card when unlock item selected) ──
-const HOME_UNLOCK_PACKAGES = [
-  { key: "unlock:single",   emoji: "💬", name: "1 Match Unlock",  price: "$1.99",     desc: "Unlock WhatsApp after you both match. Fast, simple, direct.",       sub: "Requires a mutual match",      btn: "Unlock Now" },
-  { key: "unlock:pack3",    emoji: "💬", name: "3 Unlock Pack",    price: "$4.99",     desc: "Perfect for a week of real connections. Save vs singles.",           sub: "Best for active users",        btn: "Get Pack" },
-  { key: "unlock:pack10",   emoji: "💬", name: "10 Unlock Pack",   price: "$12.99",    desc: "Best value for heavy matching. Lowest cost per unlock.",             sub: "Best value · never expire",    btn: "Get Pack" },
-  { key: "unlock:vip",      emoji: "👑", name: "VIP Monthly",      price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.",                  sub: "Auto-renews monthly",          btn: "Go VIP" },
-  { key: "unlock:superlike",emoji: "⭐", name: "Super Like",       price: "$1.99",     desc: "Flash in their library first! They get notified.",                  sub: "One-time purchase",            btn: "Get" },
-  { key: "unlock:boost",    emoji: "🚀", name: "Profile Boost",    price: "$1.99",     desc: "Top of swipe stack for 1 hour. 5–10× more views!",                  sub: "Activates immediately · 1 hr", btn: "Boost Now" },
-  { key: "unlock:verified", emoji: "✅", name: "Verified Badge",   price: "$1.99",     desc: "Get verified. Rank higher & build trust.",                          sub: "Permanent badge",              btn: "Get Verified" },
-  { key: "unlock:incognito",emoji: "👻", name: "Incognito Mode",   price: "$2.99",     desc: "Browse profiles invisibly for 24 hours.",                           sub: "Activates immediately · 24 hr",btn: "Go Incognito" },
-  { key: "unlock:spotlight",emoji: "🌟", name: "Spotlight",        price: "$4.99",     desc: "Featured at top of everyone's stack for 24 hours!",                 sub: "Activates immediately · 24 hr",btn: "Get Spotlight" },
-];
+const UNLOCK_BG_IMAGE    = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
+const VIP_BG_IMAGE       = "https://ik.imagekit.io/7grri5v7d/vip%20matches.png?updatedAt=1773414288279";
+const BOOST_BG_IMAGE     = "https://ik.imagekit.io/7grri5v7d/rocket%20boost.png?updatedAt=1773414413248";
 
-// Packages that show the unlock background image
-const UNLOCK_BG_KEYS = new Set(["unlock:single", "unlock:pack3", "unlock:pack10"]);
-const UNLOCK_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
+const HOME_UNLOCK_PACKAGES = [
+  { key: "unlock:single",   emoji: "💬", name: "1 Match Unlock",  price: "$1.99",     desc: "Unlock WhatsApp after you both match. Fast, simple, direct.",       sub: "Requires a mutual match",      btn: "Unlock Now",   bgImage: UNLOCK_BG_IMAGE },
+  { key: "unlock:pack3",    emoji: "💬", name: "3 Unlock Pack",    price: "$4.99",     desc: "Perfect for a week of real connections. Save vs singles.",           sub: "Best for active users",        btn: "Get Pack",     bgImage: UNLOCK_BG_IMAGE },
+  { key: "unlock:pack10",   emoji: "💬", name: "10 Unlock Pack",   price: "$12.99",    desc: "Best value for heavy matching. Lowest cost per unlock.",             sub: "Best value · never expire",    btn: "Get Pack",     bgImage: UNLOCK_BG_IMAGE },
+  { key: "unlock:vip",      emoji: "👑", name: "VIP Monthly",      price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.",                  sub: "Auto-renews monthly",          btn: "Go VIP",       bgImage: VIP_BG_IMAGE },
+  { key: "unlock:superlike",emoji: "⭐", name: "Super Like",       price: "$1.99",     desc: "Flash in their library first! They get notified.",                  sub: "One-time purchase",            btn: "Get",          bgImage: null },
+  { key: "unlock:boost",    emoji: "🚀", name: "Profile Boost",    price: "$1.99",     desc: "Top of swipe stack for 1 hour. 5–10× more views!",                  sub: "Activates immediately · 1 hr", btn: "Boost Now",    bgImage: BOOST_BG_IMAGE },
+  { key: "unlock:verified", emoji: "✅", name: "Verified Badge",   price: "$1.99",     desc: "Get verified. Rank higher & build trust.",                          sub: "Permanent badge",              btn: "Get Verified", bgImage: null },
+  { key: "unlock:incognito",emoji: "👻", name: "Incognito Mode",   price: "$2.99",     desc: "Browse profiles invisibly for 24 hours.",                           sub: "Activates immediately · 24 hr",btn: "Go Incognito", bgImage: null },
+  { key: "unlock:spotlight",emoji: "🌟", name: "Spotlight",        price: "$4.99",     desc: "Featured at top of everyone's stack for 24 hours!",                 sub: "Activates immediately · 24 hr",btn: "Get Spotlight",bgImage: null },
+];
 
 function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClose: () => void }) {
   const [showTerms, setShowTerms] = useState(false);
   const pkg = HOME_UNLOCK_PACKAGES.find((p) => p.key === packageKey);
   if (!pkg) return null;
 
-  const useUnlockBg = UNLOCK_BG_KEYS.has(packageKey);
+  const bgImage = pkg.bgImage;
 
   return (
     <>
       <div
         className="h-full w-full flex flex-col relative overflow-hidden"
-        style={useUnlockBg
-          ? { backgroundImage: `url(${UNLOCK_BG_IMAGE})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
+        style={bgImage
+          ? { backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center", backgroundRepeat: "no-repeat" }
           : { background: "linear-gradient(160deg, #0a0014 0%, #1a0030 50%, #050008 100%)" }
         }
       >
         {/* glow orb for non-image packages */}
-        {!useUnlockBg && (
+        {!bgImage && (
           <div style={{ position: "absolute", top: 40, left: "50%", transform: "translateX(-50%)", width: 180, height: 180, borderRadius: "50%", background: "radial-gradient(circle, rgba(232,72,199,0.22) 0%, transparent 70%)", pointerEvents: "none" }} />
         )}
 
         {/* dark overlay for readability on image */}
-        {useUnlockBg && (
+        {bgImage && (
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.1) 100%)", pointerEvents: "none" }} />
         )}
 
@@ -141,7 +141,7 @@ function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClos
 
         {/* content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-end px-5 pb-4 text-center gap-2">
-          <span style={{ fontSize: useUnlockBg ? 36 : 40 }}>{pkg.emoji}</span>
+          <span style={{ fontSize: bgImage ? 36 : 40 }}>{pkg.emoji}</span>
           <p className="text-white font-black leading-tight" style={{ fontSize: 17, margin: 0 }}>{pkg.name}</p>
           <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.5, margin: 0, maxWidth: 260 }}>{pkg.desc}</p>
 
