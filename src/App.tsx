@@ -22,7 +22,6 @@ import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useServiceWorkerUpdate } from "./hooks/useServiceWorkerUpdate";
-import AddToHomeScreen from "./components/AddToHomeScreen";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +97,7 @@ const AppContent = () => {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/2dtm-control-panel" element={<AdminPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
@@ -116,7 +116,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <AppContent />
-        <AddToHomeScreen />
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>

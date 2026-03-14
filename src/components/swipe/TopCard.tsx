@@ -2,7 +2,9 @@ import { motion, animate } from "framer-motion";
 import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight, BadgeCheck } from "lucide-react";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
 import ProfileBadge from "@/components/ProfileBadge";
+import ContactPreferenceBadge from "@/components/ContactPreferenceBadge";
 import { isOnline } from "@/hooks/useOnlineStatus";
+import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
 import SwipeStack from "@/components/SwipeStack";
 
 interface TopCardProps {
@@ -18,7 +20,7 @@ interface TopCardProps {
   t: any;
   isAnimatingTopCardRef: any;
   selectedList: any[];
-  selectedProfileSection: "basic" | "lifestyle" | "interests" | null;
+  selectedProfileSection: "basic" | "lifestyle" | "interests" | "images" | null;
   setSelectedIndex: (fn: (i: number) => number) => void;
   setProfileImageIndex: (fn: (i: number) => number) => void;
   setProfileImageDirection: (v: 1 | -1) => void;
@@ -167,7 +169,9 @@ export default function TopCard(props: TopCardProps) {
                 <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
               )}
               {props.selectedProfile.name}, {props.selectedProfile.age}
-              {isOnline(props.selectedProfile.last_seen_at) && (
+              {(props.selectedProfile.is_mock && (props.selectedProfile as any).mock_online_hours
+                ? isMockCurrentlyOnline(props.selectedProfile.id, props.selectedProfile.country, (props.selectedProfile as any).mock_online_hours, (props.selectedProfile as any).mock_offline_days)
+                : isOnline(props.selectedProfile.last_seen_at)) && (
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
@@ -177,6 +181,11 @@ export default function TopCard(props: TopCardProps) {
             <p className="text-white/60 text-sm flex items-center gap-1 mt-1">
               <MapPin className="w-3 h-3" /> {props.selectedProfile.city}, {props.selectedProfile.country}
             </p>
+            {props.selectedProfile.contact_preference && (
+              <div className="mt-1.5">
+                <ContactPreferenceBadge preference={props.selectedProfile.contact_preference} />
+              </div>
+            )}
           </div>
         </motion.div>
       ) : (

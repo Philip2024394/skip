@@ -22,6 +22,10 @@ import TreatOverlay from "@/components/overlays/TreatOverlay";
 import AppDialogs from "@/components/overlays/AppDialogs";
 import DailyMatchSuggestion, { shouldShowDailyMatch, markDailyMatchShown } from "@/components/overlays/DailyMatchSuggestion";
 import ProfileBottomSheet from "@/components/profile-view/ProfileBottomSheet";
+import ProfileInfoPanel from "@/components/profile-view/ProfileInfoOverlay";
+import ProfileImagesPanel from "@/components/profile-view/ProfileImagesPanel";
+import DateIdeaDetailPanel from "@/components/profile-view/DateIdeaDetailPanel";
+import TreatDetailPanel from "@/components/profile-view/TreatDetailPanel";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/lib/constants";
 import { isNetworkError } from "@/utils/payments";
@@ -35,6 +39,9 @@ import { useDailyTarot } from "@/hooks/useDailyTarot";
 import { InfoChip, Section, ContainerBlock } from "@/components/ui/SwipeUIComponents";
 import { getTarotCardById } from "@/data/tarotCards";
 import TopCard from "@/components/swipe/TopCard";
+import { useVideoCall } from "@/hooks/useVideoCall";
+import VideoCallScreen from "@/components/VideoCallScreen";
+import IncomingCallScreen from "@/components/video/IncomingCallScreen";
 import logoHeart from "@/assets/logo-heart.png";
 import {
   Dialog,
@@ -369,18 +376,9 @@ const Index = () => {
 
   const [devFeaturesEnabled, setDevFeaturesEnabled] = useDevFeatures();
   const [devPanelOpen, setDevPanelOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check if current user has admin role — used to show admin button in header
-  useEffect(() => {
-    if (import.meta.env.DEV) { setIsAdmin(true); return; }
-    if (!user) { setIsAdmin(false); return; }
-    supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .then(({ data }) => setIsAdmin(!!data?.some((r: any) => r.role === "admin")));
-  }, [user]);
+  // Video call system
+  const videoCall = useVideoCall(user?.id || null);
 
   // Daily match suggestion
   const [dailyMatchProfile, setDailyMatchProfile] = useState<any | null>(null);
@@ -395,8 +393,9 @@ const Index = () => {
   const [homeUnlockKey, setHomeUnlockKey] = useState<string>("");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
-  const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState(0);
-  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests" | null>(null);
+  const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState<number | null>(null);
+  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests" | "images" | null>(null);
+  const [profileImageViewIndex, setProfileImageViewIndex] = useState(0);
   const [selectedDatePlace, setSelectedDatePlace] = useState<any | null>(null);
   const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
 
@@ -779,12 +778,6 @@ const Index = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {user && (
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/80">
-              <Star className="w-4 h-4 text-yellow-300" />
-              <span className="text-[11px] font-black">{superLikesCount}</span>
-            </div>
-          )}
           {isProfileRoute ? (
             <button
               type="button"
@@ -808,11 +801,6 @@ const Index = () => {
                   <button onClick={() => navigate("/dashboard")} aria-label={t("nav.powerups")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.powerups")}>
                     <Zap className="w-4 h-4" />
                   </button>
-                  {isAdmin && (
-                    <button onClick={() => navigate("/admin")} aria-label="Admin" className="w-8 h-8 rounded-full bg-rose-500/20 backdrop-blur-md border border-rose-400/40 flex items-center justify-center text-rose-300 hover:text-white hover:bg-rose-500/40 transition-colors" title="Admin Dashboard">
-                      <ShieldCheck className="w-4 h-4" />
-                    </button>
-                  )}
                 </>
               ) : (
                 <button onClick={() => navigate("/auth?signin=1")} className="bg-black/50 backdrop-blur-md border border-white/10 rounded-full px-3 py-1.5 text-white/80 hover:text-white transition-colors flex items-center gap-1" title={t("nav.signIn")}>
@@ -826,149 +814,200 @@ const Index = () => {
       </header>
 
       {/* Main 3-container layout */}
-      <div className="flex-1 grid grid-rows-[1fr_auto_1fr] gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))` }}>
-        <TopCard
-          key="top-card"
-          selectedProfile={selectedProfile}
-          isProfileRoute={isProfileRoute}
-          topProfiles={topProfiles}
-          topCardX={topCardX}
-          profileImageIndex={profileImageIndex}
-          profileImageDirection={profileImageDirection}
-          iLiked={iLiked}
-          roseAvailable={roseAvailable}
-          user={user}
-          t={t}
-          isAnimatingTopCardRef={isAnimatingTopCardRef}
-          selectedList={selectedList}
-          selectedProfileSection={isProfileRoute ? selectedProfileSection : null}
-          setSelectedIndex={setSelectedIndex}
-          setProfileImageIndex={setProfileImageIndex}
-          setProfileImageDirection={setProfileImageDirection}
-          handleLike={handleLike}
-          handleRose={handleRose}
-          handleLibraryCardDrag={handleLibraryCardDrag}
-          advanceQueue={advanceQueue}
-          navigate={navigate}
-          sessionStatsRef={sessionStatsRef}
-          setSessionTick={setSessionTick}
-          persistSessionBehavior={persistSessionBehavior}
-        />
-        
-        {/* Center - Likes Library */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-2xl p-3 h-48 overflow-hidden relative border-2 border-white/20"
-        >
-          {/* Solid edge background */}
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-md rounded-2xl pointer-events-none" />
-          {/* Floating red hearts animation */}
-          {[...Array(6)].map((_, i) => (
-            <motion.span
-              key={`heart-${i}`}
-              className="absolute pointer-events-none select-none"
-              style={{ left: `${10 + i * 15}%`, bottom: 0, fontSize: `${10 + (i % 3) * 4}px`, color: 'hsl(320, 50%, 50%)' }}
-              animate={{ y: [0, -160], opacity: [0.7, 0] }}
-              transition={{
-                duration: 3 + i * 0.5,
-                repeat: Infinity,
-                delay: i * 0.8,
-                ease: "easeOut",
-              }}
-            >
-              ♥
-            </motion.span>
-          ))}
-          <div className="relative z-10 h-full" ref={libraryRef}>
-            <LikesLibrary
-              title={isProfileRoute ? "About Me" : undefined}
-              tabLabelOverrides={
-                isProfileRoute
-                  ? {
-                      new: "About Me",
-                      sent: "Date Ideas",
-                      received: "Unlock",
-                      distance: "Distance",
-                    }
-                  : undefined
-              }
-              onTabChange={(t) => {
-                // Allow treat tab on both home and profile pages
-                if (t === "treat") {
-                  setAboutMeTab(t);
-                  setSelectedTreatItem("massage");
-                  return;
-                }
-                // On home page: switching away from unlock tab clears the package detail
-                if (!isProfileRoute) {
-                  setAboutMeTab(t);
-                  if (t !== "unlock") setHomeUnlockKey("");
-                  return;
-                }
-                setAboutMeTab(t);
-                setSelectedProfileSection(null);
-                setSelectedDatePlace(null);
-                if (t === "received") setSelectedUnlockItemKey("unlock:single");
-              }}
-              selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
-              onSelectProfileSection={(s) => {
-                if (!isProfileRoute) return;
-                setSelectedProfileSection(s as any);
-              }}
-              selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : homeUnlockKey}
-              onSelectUnlockItem={(key) => {
-                if (isProfileRoute) {
-                  setSelectedUnlockItemKey(key);
-                } else {
-                  setHomeUnlockKey(key);
-                  setAboutMeTab("unlock");
-                }
-              }}
-              selectedTreatItem={selectedTreatItem}
-              onSelectTreatItem={(key) => {
-                // Allow treat selection on both home and profile pages
-                setSelectedTreatItem(key);
-                setOpenTreatItem(key);
-              }}
-              selectedDateIdeaIndex={isProfileRoute ? selectedDateIdeaIndex : undefined}
-              onSelectDateIdea={(idx) => {
-                if (!isProfileRoute) return;
-                setSelectedDateIdeaIndex(idx);
-              }}
-              profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
-              profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
+      <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? ((aboutMeTab === "new" && selectedProfileSection !== null) ? "1fr" : "1fr auto") : "1fr auto 1fr" }}>
+        {/* When profile info/images is active, replace all 3 panels with 1 single container */}
+        {isProfileRoute && aboutMeTab === "new" && selectedProfileSection !== null ? (
+          selectedProfileSection === "images" ? (
+            <ProfileImagesPanel
+              profile={selectedProfile}
+              imageIndex={profileImageViewIndex}
+              setImageIndex={setProfileImageViewIndex}
+              onClose={() => setSelectedProfileSection(null)}
               iLiked={iLiked}
-              likedMe={likedMe}
-              newProfiles={libraryNewProfiles}
-              filterCountry={filters.country}
-              dailyTarot={
-                dailyTarot
-                  ? {
-                      cardId: dailyTarot.card.id,
-                      cardName: dailyTarot.card.name,
-                      cardEmoji: dailyTarot.card.emoji,
-                      reading: dailyTarot.reading,
-                      shown: dailyTarot.shown,
-                    }
-                  : null
-              }
-              hidePrivateTabs={isProfileRoute}
-              onRevealDailyTarot={() => {
-                markDailyCardShown();
-              }}
-              receivedHighlightProfileId={null}
-              heartDropProfileId={null}
-              superLikeGlowProfileId={superLikeGlowProfileId}
-              onUnlock={handleUnlock}
-              onSelectProfile={(profile, sourceList) => {
-                handleSelectProfile(profile, sourceList);
-              }}
-              onPurchaseFeature={handlePurchaseFeature}
+              handleLike={handleLike}
             />
-          </div>
-        </motion.div>
+          ) : (
+            <ProfileInfoPanel
+              profile={selectedProfile}
+              onClose={() => setSelectedProfileSection(null)}
+            />
+          )
+        ) : (
+          <>
+            <TopCard
+              key="top-card"
+              selectedProfile={selectedProfile}
+              isProfileRoute={isProfileRoute}
+              topProfiles={topProfiles}
+              topCardX={topCardX}
+              profileImageIndex={profileImageIndex}
+              profileImageDirection={profileImageDirection}
+              iLiked={iLiked}
+              roseAvailable={roseAvailable}
+              user={user}
+              t={t}
+              isAnimatingTopCardRef={isAnimatingTopCardRef}
+              selectedList={selectedList}
+              selectedProfileSection={isProfileRoute ? selectedProfileSection : null}
+              setSelectedIndex={setSelectedIndex}
+              setProfileImageIndex={setProfileImageIndex}
+              setProfileImageDirection={setProfileImageDirection}
+              handleLike={handleLike}
+              handleRose={handleRose}
+              handleLibraryCardDrag={handleLibraryCardDrag}
+              advanceQueue={advanceQueue}
+              navigate={navigate}
+              sessionStatsRef={sessionStatsRef}
+              setSessionTick={setSessionTick}
+              persistSessionBehavior={persistSessionBehavior}
+            />
+
+            {/* Center - Likes Library */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="rounded-2xl p-3 h-48 overflow-hidden relative border-2 border-white/20"
+            >
+              {/* Solid edge background */}
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-md rounded-2xl pointer-events-none" />
+              {/* Floating red hearts animation */}
+              {[...Array(6)].map((_, i) => (
+                <motion.span
+                  key={`heart-${i}`}
+                  className="absolute pointer-events-none select-none"
+                  style={{ left: `${10 + i * 15}%`, bottom: 0, fontSize: `${10 + (i % 3) * 4}px`, color: 'hsl(320, 50%, 50%)' }}
+                  animate={{ y: [0, -160], opacity: [0.7, 0] }}
+                  transition={{
+                    duration: 3 + i * 0.5,
+                    repeat: Infinity,
+                    delay: i * 0.8,
+                    ease: "easeOut",
+                  }}
+                >
+                  ♥
+                </motion.span>
+              ))}
+              <div className="relative z-10 h-full" ref={libraryRef}>
+                <LikesLibrary
+                  title={isProfileRoute ? "About Me" : undefined}
+                  tabLabelOverrides={
+                    isProfileRoute
+                      ? {
+                          new: "Profile",
+                          sent: "Date Ideas",
+                          treat: "Treat",
+                          distance: "Distance",
+                        }
+                      : undefined
+                  }
+                  onTabChange={(t) => {
+                    // Allow treat tab on both home and profile pages
+                    if (t === "treat") {
+                      setAboutMeTab(t);
+                      setSelectedTreatItem("massage");
+                      return;
+                    }
+                    // On home page: switching away from unlock tab clears the package detail
+                    if (!isProfileRoute) {
+                      setAboutMeTab(t);
+                      if (t !== "unlock") setHomeUnlockKey("");
+                      return;
+                    }
+                    // Only reset selections when actually switching tabs (not on re-render)
+                    if (t !== aboutMeTab) {
+                      setSelectedProfileSection(null);
+                      setSelectedDatePlace(null);
+                      setSelectedDateIdeaIndex(null);
+                      if (isProfileRoute) setSelectedTreatItem(null);
+                    }
+                    setAboutMeTab(t);
+                  }}
+                  selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
+                  onSelectProfileSection={(s) => {
+                    if (!isProfileRoute) return;
+                    setSelectedProfileSection(s as any);
+                  }}
+                  selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : homeUnlockKey}
+                  onSelectUnlockItem={(key) => {
+                    if (isProfileRoute) {
+                      setSelectedUnlockItemKey(key);
+                    } else {
+                      setHomeUnlockKey(key);
+                      setAboutMeTab("unlock");
+                    }
+                  }}
+                  selectedTreatItem={selectedTreatItem}
+                  onSelectTreatItem={(key) => {
+                    setSelectedTreatItem(key);
+                    setOpenTreatItem(key);
+                  }}
+                  selectedDateIdeaIndex={isProfileRoute ? (selectedDateIdeaIndex ?? undefined) : undefined}
+                  onSelectDateIdea={(idx) => {
+                    if (!isProfileRoute) return;
+                    setSelectedDateIdeaIndex(idx);
+                  }}
+                  profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
+                  profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
+                  iLiked={iLiked}
+                  likedMe={likedMe}
+                  newProfiles={libraryNewProfiles}
+                  filterCountry={filters.country}
+                  dailyTarot={
+                    dailyTarot
+                      ? {
+                          cardId: dailyTarot.card.id,
+                          cardName: dailyTarot.card.name,
+                          cardEmoji: dailyTarot.card.emoji,
+                          reading: dailyTarot.reading,
+                          shown: dailyTarot.shown,
+                        }
+                      : null
+                  }
+                  hidePrivateTabs={!isProfileRoute && !user}
+                  onRevealDailyTarot={() => {
+                    markDailyCardShown();
+                  }}
+                  receivedHighlightProfileId={null}
+                  heartDropProfileId={null}
+                  superLikeGlowProfileId={superLikeGlowProfileId}
+                  onUnlock={handleUnlock}
+                  onSelectProfile={(profile, sourceList) => {
+                    handleSelectProfile(profile, sourceList);
+                  }}
+                  onPurchaseFeature={handlePurchaseFeature}
+                />
+              </div>
+            </motion.div>
+
+            {/* Bottom Card — only on home page, not profile page */}
+            {!isProfileRoute && (
+              <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
+                {aboutMeTab === "unlock" ? (
+                  <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} />
+                ) : (
+                  <SwipeStack
+                    key="bottom-stack"
+                    profiles={bottomProfiles}
+                    direction="down"
+                    roseAvailable={roseAvailable}
+                    onRose={handleRose}
+                    onLike={(p) => {
+                      handleLike(p);
+                      advanceQueue(p.id);
+                      if (user) navigate(`/profile/${p.id}`);
+                    }}
+                    onPass={(p) => {
+                      sessionStatsRef.current.passed += 1;
+                      setSessionTick((v) => v + 1);
+                      advanceQueue(p.id);
+                    }}
+                  />
+                )}
+              </div>
+            )}
+          </>
+        )}
 
         <FloatingLikeParticles
           active={likeParticlesActive}
@@ -1018,7 +1057,7 @@ const Index = () => {
                 <p className="text-white/40 text-[10px]">
                   Off = same as production: only real events trigger like particles.
                 </p>
-                
+
                 {/* Animation Trigger Buttons */}
                 <div className="space-y-2 pt-2 border-t border-amber-500/30">
                   <button
@@ -1060,67 +1099,6 @@ const Index = () => {
             )}
           </>
         )}
-
-        {/* Bottom Card — isolation so top transform cannot affect this; 100% independent from top stack */}
-        <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
-          {/* RULE (permanent): unlock tab → unlock cards in bottom; all other home tabs → profiles in bottom */}
-          {!isProfileRoute && aboutMeTab === "unlock" ? (
-            <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} />
-          ) : isProfileRoute ? (
-            <>
-              <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/70 via-black/70 to-purple-950/70" />
-              <ProfileBottomSheet
-                selectedProfile={selectedProfile}
-                allProfiles={allProfiles}
-                isProfileRoute={isProfileRoute}
-                aboutMeTab={aboutMeTab}
-                setAboutMeTab={setAboutMeTab}
-                selectedProfileSection={selectedProfileSection}
-                setSelectedProfileSection={setSelectedProfileSection}
-                selectedDatePlace={selectedDatePlace}
-                setSelectedDatePlace={setSelectedDatePlace}
-                selectedTreatItem={selectedTreatItem}
-                onSelectTreatItem={(key) => {
-                  setSelectedTreatItem(key);
-                  setOpenTreatItem(key);
-                }}
-                selectedUnlockItemKey={selectedUnlockItemKey}
-                setSelectedUnlockItemKey={setSelectedUnlockItemKey}
-                onUnlockWhatsApp={() => selectedProfile && setUnlockDialog(selectedProfile)}
-                libraryRef={libraryRef}
-                tabLabelOverrides={
-                  isProfileRoute
-                    ? { new: "About Me", sent: "Date Ideas", received: "Unlock", distance: "Distance" }
-                    : undefined
-                }
-                likedMe={likedMe}
-                heartDropProfileId={null}
-                onTabChange={(t) => setAboutMeTab(t)}
-                onSelectProfileSection={(s) => setSelectedProfileSection(s)}
-                onLike={handleLike}
-                onSuperLike={handleRose}
-              />
-            </>
-          ) : (
-            <SwipeStack
-              key="bottom-stack"
-              profiles={bottomProfiles}
-              direction="down"
-              roseAvailable={roseAvailable}
-              onRose={handleRose}
-              onLike={(p) => {
-                handleLike(p);
-                advanceQueue(p.id);
-                if (user) navigate(`/profile/${p.id}`);
-              }}
-              onPass={(p) => {
-                sessionStatsRef.current.passed += 1;
-                setSessionTick((v) => v + 1);
-                advanceQueue(p.id);
-              }}
-            />
-          )}
-        </div>
       </div>
 
       {/* Profile page is now routed to /profile/:id and clones Home layout */}
@@ -1198,6 +1176,31 @@ const Index = () => {
           }}
         />
       )}
+
+      {/* ── Video Call Overlays ────────────────────────────────────── */}
+      <AnimatePresence>
+        {videoCall.incomingCall && !videoCall.activeCall && (
+          <IncomingCallScreen
+            callerName={videoCall.incomingCall.callerName}
+            callerPhoto={videoCall.incomingCall.callerPhoto}
+            onAccept={videoCall.acceptCall}
+            onDecline={videoCall.declineCall}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {videoCall.activeCall && (
+          <VideoCallScreen
+            matchId={videoCall.activeCall.matchId}
+            callId={videoCall.activeCall.callId}
+            partnerName={videoCall.activeCall.partnerName}
+            partnerId={videoCall.activeCall.partnerId}
+            isCaller={videoCall.activeCall.isCaller}
+            onEnd={videoCall.endCall}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );

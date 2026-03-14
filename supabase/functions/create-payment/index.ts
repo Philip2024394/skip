@@ -44,10 +44,12 @@ serve(async (req) => {
 
     let targetUserId: string | undefined;
     let targetHasBadges: boolean | undefined;
+    let connectionType: string | undefined;
     try {
       const body = await req.json();
       targetUserId = body?.targetUserId;
       targetHasBadges = body?.targetHasBadges === true;
+      connectionType = body?.connectionType; // 'whatsapp' | 'video' | 'both'
     } catch {
       return new Response(JSON.stringify({ error: "Missing or invalid request body" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -129,6 +131,7 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
         target_user_id: targetUserId,
+        connection_type: connectionType || "whatsapp",
       },
     });
 

@@ -87,4 +87,7 @@ export interface Profile {
   lifestyle_info?: LifestyleInfo;
   relationship_goals?: RelationshipGoals;
   selected_date_ideas?: string[];
+  is_mock?: boolean;
+  mock_online_hours?: number | null;
+  mock_offline_days?: number[] | null;
 }

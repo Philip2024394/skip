@@ -20,9 +20,12 @@ import { HelpCircle, Languages, Plus, X as XIcon } from "lucide-react";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { BIO_MAX_LENGTH } from "@/lib/constants";
 import { sanitizeBio } from "@/utils/bio";
+import { CONTACT_PREFERENCE_OPTIONS, type ContactPreference } from "@/utils/contactPreference";
 import { BasicInfoEditor } from "@/components/profile-editor/BasicInfoEditor";
 import { LifestyleEditor } from "@/components/profile-editor/LifestyleEditor";
 import { RelationshipGoalsEditor } from "@/components/profile-editor/RelationshipGoalsEditor";
+import { ALL_COUNTRIES } from "@/data/countries";
+import { detectCountryFromPhone, getDialCode } from "@/lib/phoneCountry";
 
 const GENDERS = ["Male", "Female", "Non-binary", "Other"];
 const LOOKING_FOR = ["Men", "Women", "Everyone"];
@@ -66,6 +69,7 @@ interface ProfileData {
   pets: string;
   interests: string[];
   orientation: string;
+  contact_preference: string;
   basic_info: Record<string, unknown>;
   lifestyle_info: Record<string, unknown>;
   relationship_goals: Record<string, unknown>;
@@ -88,6 +92,8 @@ const ProfileEditor = () => {
   const [userId, setUserId] = useState<string>("");
   const [schemaHasBadgeColumns, setSchemaHasBadgeColumns] = useState(true);
   const [showBadgesHelp, setShowBadgesHelp] = useState(false);
+  const [countryOverrideApproved, setCountryOverrideApproved] = useState(false);
+  const [countryOverrideRequested, setCountryOverrideRequested] = useState(false);
 
   // Check if Free Tonight has expired and auto-clear it (runs whenever userId is set)
   useEffect(() => {
@@ -171,6 +177,9 @@ const ProfileEditor = () => {
         no_drama: keepBadge === "no_drama" ? no_drama : false,
       };
 
+      setCountryOverrideApproved(!!(row.country_override_approved as boolean));
+      setCountryOverrideRequested(!!(row.country_override_requested as boolean));
+
       setProfile({
         name: (row.name as string) || "",
         age: (row.age as number) || 18,
@@ -196,6 +205,7 @@ const ProfileEditor = () => {
         pets: (row.pets as string) || "",
         interests: ((row.interests as string[]) || []).slice(0, 8),
         orientation: (row.orientation as string) || "",
+        contact_preference: (row.contact_preference as string) || "whatsapp",
         basic_info: (row.basic_info as Record<string, unknown>) || {},
         lifestyle_info: (row.lifestyle_info as Record<string, unknown>) || {},
         relationship_goals: (row.relationship_goals as Record<string, unknown>) || {},
@@ -317,8 +327,20 @@ const ProfileEditor = () => {
     );
   };
 
+  const detectedPhoneCountry = detectCountryFromPhone(profile?.whatsapp ?? "");
+  const phoneCountryMismatch =
+    !!detectedPhoneCountry &&
+    !!profile?.country &&
+    detectedPhoneCountry !== profile.country &&
+    !countryOverrideApproved;
+
   const handleSave = async () => {
     if (!profile || !userId) return;
+
+    if (!profile.country) {
+      toast.error("Please select your country.");
+      return;
+    }
 
     // Validation: require at least 2 images
     if (profile.images.length < 2) {
@@ -329,6 +351,9 @@ const ProfileEditor = () => {
       toast.error("Please set a main image");
       return;
     }
+
+    const overrideRequested = phoneCountryMismatch;
+    setCountryOverrideRequested(overrideRequested);
 
     setSaving(true);
 
@@ -373,9 +398,12 @@ const ProfileEditor = () => {
           late_night_chat: profile.late_night_chat,
           no_drama: profile.no_drama,
         }),
+        contact_preference: profile.contact_preference || "whatsapp",
         main_image_pos: `${mainPos.x}% ${mainPos.y}%`,
         updated_at: new Date().toISOString(),
-      })
+        phone_country_code: detectedPhoneCountry ?? null,
+        country_override_requested: phoneCountryMismatch,
+      } as any)
       .eq("id", userId);
 
     setSaving(false);
@@ -713,14 +741,48 @@ const ProfileEditor = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-muted-foreground text-xs mb-1 block">Country</Label>
-              <Input value={profile.country} onChange={(e) => update("country", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
+              <Label className="text-muted-foreground text-xs mb-1 block">Country *</Label>
+              <Select value={profile.country} onValueChange={(v) => {
+                update("country", v);
+                const dialCode = getDialCode(v);
+                if (!profile.whatsapp || profile.whatsapp === "+" || profile.whatsapp.trim() === "") {
+                  update("whatsapp", dialCode + " ");
+                }
+              }}>
+                <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none">
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {ALL_COUNTRIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-muted-foreground text-xs mb-1 block">City</Label>
               <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
             </div>
           </div>
+
+          {/* Phone–country mismatch warning */}
+          {phoneCountryMismatch && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 space-y-1">
+              <p className="font-semibold">⚠️ Country mismatch detected</p>
+              <p>Your phone prefix (<strong>{getDialCode(detectedPhoneCountry!)}</strong>) is registered to <strong>{detectedPhoneCountry}</strong>, but your profile is set to <strong>{profile.country}</strong>.</p>
+              <p>Your profile will be listed in <strong>{detectedPhoneCountry}</strong> until an admin approves the change. Your request will be saved automatically.</p>
+            </div>
+          )}
+          {countryOverrideRequested && !phoneCountryMismatch && !countryOverrideApproved && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+              ⏳ Country override request pending admin approval.
+            </div>
+          )}
+          {countryOverrideApproved && (
+            <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-xs text-green-700">
+              ✅ Admin has approved your country listing.
+            </div>
+          )}
 
           {/* About Section */}
           <div className="mt-6">
@@ -1111,6 +1173,72 @@ const ProfileEditor = () => {
               if (checked) clearOtherBadges("no_drama");
             }}
           />
+        </div>
+      </div>
+
+      {/* ── First Contact Preference ─────────────────────────────── */}
+      <div>
+        <Label className="text-muted-foreground text-xs mb-2 block flex items-center gap-1">
+          📱📹 First Contact Preference
+        </Label>
+        <p className="text-muted-foreground text-[10px] mb-3">
+          How would you like matches to connect with you?
+        </p>
+        <div className="space-y-2">
+          {CONTACT_PREFERENCE_OPTIONS.map((opt) => {
+            const isSelected = profile.contact_preference === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => update("contact_preference", opt.value)}
+                className="w-full text-left transition-all"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "12px 14px",
+                  borderRadius: 14,
+                  border: isSelected
+                    ? "2px solid rgba(236,72,153,0.7)"
+                    : "1.5px solid rgba(0,0,0,0.08)",
+                  background: isSelected
+                    ? "linear-gradient(135deg, rgba(236,72,153,0.08), rgba(168,85,247,0.05))"
+                    : "rgba(0,0,0,0.02)",
+                  cursor: "pointer",
+                }}
+              >
+                <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{opt.icon}</span>
+                <div style={{ flex: 1 }}>
+                  <p style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: isSelected ? "#ec4899" : "#333",
+                    margin: 0,
+                  }}>
+                    {opt.label}
+                  </p>
+                  <p style={{
+                    fontSize: 10,
+                    color: "rgba(0,0,0,0.45)",
+                    margin: "2px 0 0",
+                  }}>
+                    {opt.description}
+                  </p>
+                </div>
+                {isSelected && (
+                  <span style={{
+                    width: 20, height: 20, borderRadius: "50%",
+                    background: "linear-gradient(135deg, #ec4899, #a855f7)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, color: "white", fontWeight: 800, flexShrink: 0,
+                  }}>
+                    ✓
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -74,22 +74,34 @@ export default function DistanceMapOverlay({
     [allProfiles, featuredId, profile]
   );
 
-  // Nearby profiles (have coords, sorted by distance from user or featured)
+  // Nearby profiles (have coords, sorted by distance from user or featured profile)
   const nearbyProfiles = useMemo(() => {
-    const src = userPos
-      ? allProfiles.filter(p => p.latitude && p.longitude && p.id !== featuredId)
-          .map(p => ({ ...p, _km: haversineKm(userPos[0], userPos[1], p.latitude, p.longitude) }))
-          .sort((a, b) => a._km - b._km)
-      : allProfiles.filter(p => p.latitude && p.longitude && p.id !== featuredId).slice(0, 20);
-    return src;
-  }, [allProfiles, userPos, featuredId]);
+    const withCoords = allProfiles.filter(p => p.latitude && p.longitude && p.id !== featuredId);
+    const refLat = userPos?.[0] ?? featuredProfile?.latitude;
+    const refLon = userPos?.[1] ?? featuredProfile?.longitude;
+    if (refLat && refLon) {
+      return withCoords
+        .map(p => ({ ...p, _km: haversineKm(refLat, refLon, p.latitude, p.longitude) }))
+        .sort((a, b) => a._km - b._km);
+    }
+    return withCoords.slice(0, 20);
+  }, [allProfiles, userPos, featuredId, featuredProfile]);
 
-  // Distance from user to featured profile
+  // Distance from user to featured profile (fallback: distance from profile prop if no geolocation)
   const distToFeatured = useMemo(() => {
-    if (!userPos || !featuredProfile?.latitude) return null;
-    const km = haversineKm(userPos[0], userPos[1], featuredProfile.latitude, featuredProfile.longitude);
-    return km < 1 ? `${Math.round(km * 1000)}m` : `${Math.round(km)}km`;
-  }, [userPos, featuredProfile]);
+    if (!featuredProfile?.latitude) return null;
+    // Use user geolocation if available
+    if (userPos) {
+      const km = haversineKm(userPos[0], userPos[1], featuredProfile.latitude, featuredProfile.longitude);
+      return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+    }
+    // Fallback: distance from the originally-selected profile
+    if (profile?.latitude && profile.id !== featuredProfile.id) {
+      const km = haversineKm(profile.latitude, profile.longitude, featuredProfile.latitude, featuredProfile.longitude);
+      return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+    }
+    return null;
+  }, [userPos, featuredProfile, profile]);
 
   // Carousel: featured + 4 nearest
   const carouselProfiles = useMemo(() => {
@@ -97,14 +109,26 @@ export default function DistanceMapOverlay({
     return [featuredProfile, ...nearest].filter(Boolean);
   }, [featuredProfile, nearbyProfiles]);
 
-  // Geolocation
+  // Geolocation — fallback to a position near the featured profile if denied/unavailable
   useEffect(() => {
-    if (!navigator.geolocation) { setLocError(true); return; }
+    if (!navigator.geolocation) {
+      setLocError(true);
+      if (profile?.latitude) {
+        setUserPos([profile.latitude + 0.015, profile.longitude - 0.012]);
+      }
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       pos => setUserPos([pos.coords.latitude, pos.coords.longitude]),
-      () => setLocError(true),
+      () => {
+        setLocError(true);
+        if (profile?.latitude) {
+          setUserPos([profile.latitude + 0.015, profile.longitude - 0.012]);
+        }
+      },
       { timeout: 8000 }
     );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Init map once
@@ -117,13 +141,25 @@ export default function DistanceMapOverlay({
     const map = L.map(mapRef.current, {
       center,
       zoom: 12,
+      minZoom: 3,
       zoomControl: false,
       attributionControl: false,
+      maxBoundsViscosity: 1.0,
+      maxBounds: L.latLngBounds([-85, -180], [85, 180]),
     });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 18 }).addTo(map);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 18,
+      noWrap: true,
+    }).addTo(map);
     mapInst.current = map;
 
+    // Force Leaflet to recalculate container size after portal renders
+    const t1 = setTimeout(() => map.invalidateSize(), 100);
+    const t2 = setTimeout(() => map.invalidateSize(), 400);
+
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
       map.remove();
       mapInst.current = null;
       layersRef.current = [];
@@ -200,13 +236,17 @@ export default function DistanceMapOverlay({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPos, featuredProfile, nearbyProfiles, radiusKm, activeFilter]);
 
-  // Badge label suffix
-  const badgeLabel = activeFilter
-    ? BADGE_FILTERS.find(f => f.key === activeFilter)?.label
+  // Badge label with icon
+  const activeBadge = activeFilter
+    ? BADGE_FILTERS.find(f => f.key === activeFilter)
     : null;
+  const badgeLabel = activeBadge ? `${activeBadge.icon} ${activeBadge.label}` : null;
+
+  // Profile name — try common field names
+  const featuredName = featuredProfile?.name || featuredProfile?.full_name || featuredProfile?.first_name || "Unknown";
 
   const topLabel = [
-    featuredProfile?.name,
+    featuredName,
     distToFeatured,
     badgeLabel,
   ].filter(Boolean).join(" · ");
@@ -236,16 +276,21 @@ export default function DistanceMapOverlay({
           100% { box-shadow: 0 0 0 0 rgba(236,72,153,0); }
         }
         .leaflet-container { background: #06000f !important; }
+        .leaflet-tile-pane { z-index: 2 !important; }
+        .leaflet-overlay-pane { z-index: 4 !important; }
+        .leaflet-marker-pane { z-index: 6 !important; }
+        .leaflet-popup-pane { z-index: 7 !important; }
         .custom-map-marker { background: none !important; border: none !important; }
+        .leaflet-control-container { pointer-events: none !important; }
       `}</style>
 
       {/* ── Map ── */}
-      <div ref={mapRef} style={{ flex: 1, position: "relative" }} />
+      <div ref={mapRef} style={{ flex: 1, width: "100%", minHeight: 0, position: "relative", background: "#06000f", zIndex: 1 }} />
 
       {/* ── Top badge + slider ── */}
       <div style={{
         position: "absolute", top: 12, left: 12, right: 52,
-        display: "flex", flexDirection: "column", gap: 8, zIndex: 10,
+        display: "flex", flexDirection: "column", gap: 8, zIndex: 20,
         pointerEvents: "none",
       }}>
         {/* Name + distance badge */}
@@ -294,25 +339,26 @@ export default function DistanceMapOverlay({
 
       {/* ── Close button ── */}
       <button
-        onClick={onClose}
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
         style={{
-          position: "absolute", top: 12, right: 12, zIndex: 11,
+          position: "absolute", top: 12, right: 12, zIndex: 9999,
           width: 36, height: 36, borderRadius: "50%",
-          background: "rgba(10,0,24,0.82)",
-          border: "1px solid rgba(255,255,255,0.15)",
+          background: "rgba(10,0,24,0.92)",
+          border: "1.5px solid rgba(255,255,255,0.25)",
           display: "flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer", color: "#fff",
           backdropFilter: "blur(8px)",
+          pointerEvents: "auto",
         }}
         aria-label="Close map"
       >
-        <X size={16} />
+        <X size={18} />
       </button>
 
       {/* ── Right-side badge filter buttons ── */}
       <div style={{
         position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-        display: "flex", flexDirection: "column", gap: 8, zIndex: 10,
+        display: "flex", flexDirection: "column", gap: 8, zIndex: 20,
       }}>
         {BADGE_FILTERS.map(f => (
           <button
@@ -342,7 +388,7 @@ export default function DistanceMapOverlay({
 
       {/* ── Bottom carousel + actions ── */}
       <div style={{
-        position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 10,
+        position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 20,
         background: "linear-gradient(to top, rgba(6,0,15,0.97) 0%, rgba(6,0,15,0.85) 80%, transparent 100%)",
         padding: "12px 12px 20px",
         display: "flex", flexDirection: "column", gap: 10,

@@ -39,7 +39,7 @@ export const BasicInfoEditor = ({
     label: string; field: keyof BasicInfo; options: string[]; multi?: boolean;
   }) => (
     <div className="mb-4">
-      <p style={{ color: "#EC4899", fontSize: 9, fontWeight: 700, marginBottom: 8 }}>{label}</p>
+      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 8 }}>{label}</p>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const selected = multi
@@ -78,23 +78,24 @@ export const BasicInfoEditor = ({
   );
 
   return (
-    <div className="rounded-2xl overflow-hidden mb-4" style={{ background: "white", border: "1px solid rgba(236,72,153,0.15)", boxShadow: "0 2px 8px rgba(236,72,153,0.06)" }}>
+    <div className="rounded-2xl overflow-hidden mb-4" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.08)" }}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between p-4 bg-white"
+        className="w-full flex items-center justify-between p-4"
+        style={{ background: "transparent" }}
       >
         <div className="flex items-center gap-3">
           <span className="text-xl">👤</span>
           <div className="text-left">
-            <p style={{ color: "#1F2937", fontWeight: 700, fontSize: 14, margin: 0 }}>Basic Info</p>
-            <p style={{ color: "#9CA3AF", fontSize: 11, margin: 0 }}>Height, education, background</p>
+            <p style={{ color: "rgba(255,255,255,0.9)", fontWeight: 700, fontSize: 14, margin: 0 }}>Basic Info</p>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, margin: 0 }}>Height, education, background</p>
           </div>
         </div>
         {open ? <ChevronUp className="w-4 h-4 text-white/40" /> : <ChevronDown className="w-4 h-4 text-white/40" />}
       </button>
 
       {open && (
-        <div className="px-4 pb-4 border-t border-white/10 pt-4">
+        <div className="px-4 pb-4 border-t pt-4" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
           {/* Height */}
           <div className="mb-4">
             <p className="text-white/60 text-xs mb-2 font-medium">📏 Height</p>

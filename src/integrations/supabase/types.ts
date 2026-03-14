@@ -237,6 +237,7 @@ export type Database = {
           no_drama: boolean
           voice_intro_url: string | null
           whatsapp: string
+          contact_preference: string
           whatsapp_connections_count: number
         }
         Insert: {
@@ -283,6 +284,7 @@ export type Database = {
           weekend_plans?: boolean
           no_drama?: boolean
           voice_intro_url?: string | null
+          contact_preference?: string
           whatsapp: string
           whatsapp_connections_count?: number
         }
@@ -330,10 +332,110 @@ export type Database = {
           weekend_plans?: boolean
           no_drama?: boolean
           voice_intro_url?: string | null
+          contact_preference?: string
           whatsapp?: string
           whatsapp_connections_count?: number
         }
         Relationships: []
+      }
+      video_calls: {
+        Row: {
+          id: string
+          match_id: string
+          caller_id: string
+          receiver_id: string
+          status: string
+          started_at: string | null
+          ended_at: string | null
+          duration_seconds: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          match_id: string
+          caller_id: string
+          receiver_id: string
+          status?: string
+          started_at?: string | null
+          ended_at?: string | null
+          duration_seconds?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          match_id?: string
+          caller_id?: string
+          receiver_id?: string
+          status?: string
+          started_at?: string | null
+          ended_at?: string | null
+          duration_seconds?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_calls_caller_id_fkey"
+            columns: ["caller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_calls_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_unlocks: {
+        Row: {
+          id: string
+          match_id: string | null
+          user1_id: string
+          user2_id: string
+          connection_type: string
+          paid_at: string
+          amount: number
+        }
+        Insert: {
+          id?: string
+          match_id?: string | null
+          user1_id: string
+          user2_id: string
+          connection_type: string
+          paid_at?: string
+          amount: number
+        }
+        Update: {
+          id?: string
+          match_id?: string | null
+          user1_id?: string
+          user2_id?: string
+          connection_type?: string
+          paid_at?: string
+          amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_unlocks_user1_id_fkey"
+            columns: ["user1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contact_unlocks_user2_id_fkey"
+            columns: ["user2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       referrals: {
         Row: {
@@ -490,6 +592,7 @@ export type Database = {
           name: string | null
           no_drama: boolean | null
           spotlight_until: string | null
+          contact_preference: string | null
           whatsapp_connections_count: number | null
           weekend_plans: boolean | null
           voice_intro_url: string | null
@@ -522,6 +625,7 @@ export type Database = {
           languages?: Json | null
           name?: string | null
           no_drama?: boolean | null
+          contact_preference?: string | null
           spotlight_until?: string | null
           whatsapp_connections_count?: number | null
           weekend_plans?: boolean | null
@@ -555,6 +659,7 @@ export type Database = {
           languages?: Json | null
           name?: string | null
           no_drama?: boolean | null
+          contact_preference?: string | null
           spotlight_until?: string | null
           whatsapp_connections_count?: number | null
           weekend_plans?: boolean | null

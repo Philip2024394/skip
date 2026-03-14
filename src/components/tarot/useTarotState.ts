@@ -1,18 +1,11 @@
 import { useRef, useState } from "react";
 
 // ── Tarot image constants ─────────────────────────────────────────────────────
-export const GRAVEYARD_BG = "https://ik.imagekit.io/7grri5v7d/grave%20yard.png?updatedAt=1773169904335";
+export const GRAVEYARD_BG = "https://ik.imagekit.io/7grri5v7d/arot%20card.png?updatedAt=1773487551052";
 
-export const TAROT_READER_SEQUENCE = [
-  { src: "https://ik.imagekit.io/7grri5v7d/old_woman-removebg-preview.png", duration: 4000 },
-  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_2-removebg-preview.png", duration: 3000 },
-  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_4-removebg-preview.png", duration: 2000 },
-  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_5-removebg-preview.png", duration: 2000 },
-  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_6-removebg-preview.png", duration: 2000 },
-  { src: "https://ik.imagekit.io/7grri5v7d/tarot_card_woman_7-removebg-preview.png", duration: 2000 },
-];
+export const TAROT_READER_SEQUENCE = [];
 
-export const TAROT_READER_IMAGE_URL = TAROT_READER_SEQUENCE[0].src;
+export const TAROT_READER_IMAGE_URL = "";
 
 export const TAROT_CARD_BACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 280'%3E%3Crect width='200' height='280' fill='%231a1a2e'/%3E%3Crect x='10' y='10' width='180' height='260' fill='%23162841' stroke='%23d4af37' stroke-width='2'/%3E%3Ccircle cx='100' cy='140' r='60' fill='none' stroke='%23d4af37' stroke-width='3'/%3E%3Cpath d='M100 80 L100 200 M40 140 L160 140' stroke='%23d4af37' stroke-width='2'/%3E%3Ctext x='100' y='250' text-anchor='middle' fill='%23d4af37' font-family='serif' font-size='14'%3ETAROT%3C/text%3E%3C/svg%3E";
 

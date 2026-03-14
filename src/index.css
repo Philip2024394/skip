@@ -202,6 +202,17 @@
   }
   .scroll-touch::-webkit-scrollbar { display: none; }
 
+  /* ── Pink thin scrollbar for profile info ── */
+  .scrollbar-pink::-webkit-scrollbar { width: 3px; }
+  .scrollbar-pink::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-pink::-webkit-scrollbar-thumb {
+    background: rgba(236,72,153,0.4);
+    border-radius: 4px;
+  }
+  .scrollbar-pink::-webkit-scrollbar-thumb:hover {
+    background: rgba(236,72,153,0.6);
+  }
+
   /* ── Safe-area helpers ── */
   .pt-safe  { padding-top:    env(safe-area-inset-top,    0px); }
   .pb-safe  { padding-bottom: env(safe-area-inset-bottom, 0px); }

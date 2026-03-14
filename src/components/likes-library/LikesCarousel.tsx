@@ -36,36 +36,57 @@ export default function LikesCarousel(props: LikesCarouselProps) {
         // ── Tarot card injection (uses the promo slot shape) ──
         if (props.dailyTarot && props.tab === "new" && item.type === "promo") {
           return (
-            <motion.button
-              key={`tarot-${props.dailyTarot.cardId}-${props.dailyTarot.shown ? "shown" : "new"}-${idx}`}
-              type="button"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ delay: Math.min(idx * 0.04, 0.3) }}
+            <div
+              key={`tarot-${props.dailyTarot.cardId}-${idx}`}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 props.onTarotOpen();
                 window.setTimeout(() => props.onRevealDailyTarot?.(), 0);
               }}
-              className="flex-shrink-0 cursor-pointer transition-all hover:scale-105 relative overflow-visible bg-transparent border-0"
+              className="flex-shrink-0 cursor-pointer relative"
               style={{ width: 80, height: 104 }}
               aria-label="Open your Daily Love Reading"
             >
-              <div className="absolute inset-0 -z-10 blur-xl opacity-70">
-                <div className="w-full h-full rounded-[18px] bg-[radial-gradient(circle_at_50%_70%,rgba(250,204,21,0.55),rgba(250,204,21,0.10),rgba(0,0,0,0)_70%)]" />
-              </div>
-              <motion.img
-                src="https://ik.imagekit.io/7grri5v7d/T_1ddrrr-removebg-preview.png"
-                alt="Tarot card"
-                className="absolute inset-0 w-full h-full object-contain"
-                decoding="async"
-                loading="lazy"
-                animate={{ scale: [1, 1.03, 1] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              {/* Pink glow pulse — outside overflow so it's visible */}
+              <motion.div
+                className="absolute inset-0 rounded-xl"
+                animate={{
+                  boxShadow: [
+                    "0 0 14px 4px rgba(255,20,147,0.85), 0 0 28px 8px rgba(255,20,147,0.5)",
+                    "0 0 22px 8px rgba(255,20,147,1),   0 0 44px 14px rgba(255,20,147,0.7)",
+                    "0 0 14px 4px rgba(255,20,147,0.85), 0 0 28px 8px rgba(255,20,147,0.5)",
+                  ],
+                }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                style={{ zIndex: 0 }}
               />
-            </motion.button>
+              {/* Background image */}
+              <div className="absolute inset-0 rounded-xl overflow-hidden" style={{ zIndex: 1 }}>
+                <img
+                  src="https://ik.imagekit.io/7grri5v7d/arot%20card.png?updatedAt=1773487551052"
+                  alt=""
+                  className="w-full h-full object-cover"
+                  decoding="async"
+                  loading="eager"
+                />
+              </div>
+              {/* Tarot card with heartbeat scale pulse */}
+              <motion.div
+                className="absolute inset-0"
+                style={{ zIndex: 2 }}
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <img
+                  src="https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png?updatedAt=1773138352916"
+                  alt="Tarot card"
+                  className="w-full h-full object-contain"
+                  decoding="async"
+                  loading="eager"
+                />
+              </motion.div>
+            </div>
           );
         }
 

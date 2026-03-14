@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MessageCircle, ChevronLeft } from "lucide-react";
+import { Heart, MessageCircle, ChevronLeft, Video, Phone } from "lucide-react";
+import { resolveConnectionType, getPreferenceIcon, getPreferenceLabel } from "@/utils/contactPreference";
 
 interface MatchCelebrationOverlayProps {
   matchedProfile: any;
   currentUser: any;
-  onConnect: (packageKey: string) => void;
+  onConnect: (packageKey: string, connectionType?: string) => void;
   onDismiss: () => void;
 }
 
@@ -106,7 +107,20 @@ function CountdownRing({ duration }: { duration: number }) {
   );
 }
 
-// ─── WhatsApp package options ─────────────────────────────────────────────────
+// ─── Connection type icons ──────────────────────────────────────────────────
+function ConnectionIcon({ type }: { type: string }) {
+  if (type === "video") return <Video size={16} />;
+  if (type === "both") return <><Phone size={14} /><Video size={14} /></>;
+  return <MessageCircle size={16} />;
+}
+
+function connectionLabel(type: string): string {
+  if (type === "video") return "Video Call";
+  if (type === "both") return "WhatsApp + Video";
+  return "WhatsApp";
+}
+
+// ─── WhatsApp package options (kept for fallback) ────────────────────────────
 const PACKAGES = [
   {
     key: "unlock:single",
@@ -137,8 +151,9 @@ const PACKAGES = [
   },
 ];
 
-function PackagePicker({ theirName, onSelect, onBack }: {
+function PackagePicker({ theirName, connectionType, onSelect, onBack }: {
   theirName: string;
+  connectionType: string;
   onSelect: (key: string) => void;
   onBack: () => void;
 }) {
@@ -164,14 +179,42 @@ function PackagePicker({ theirName, onSelect, onBack }: {
       </button>
 
       <p style={{ fontSize: 13, fontWeight: 900, color: "#fff", margin: "0 0 2px", textAlign: "center" }}>
-        Unlock {theirName}'s WhatsApp
+        Connect with {theirName}
       </p>
-      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", margin: "0 0 16px", textAlign: "center" }}>
-        Choose a package to get their contact
+      <p style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", margin: "0 0 6px", textAlign: "center" }}>
+        via {connectionLabel(connectionType)}
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {PACKAGES.map((pkg) => (
+      {/* Single connect button — $1.99 */}
+      <button
+        onClick={() => onSelect("unlock:single")}
+        style={{
+          width: "100%",
+          background: "linear-gradient(135deg, #ec4899, #a855f7)",
+          border: "none",
+          borderRadius: 16,
+          padding: "16px 14px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 10,
+          marginBottom: 12,
+          boxShadow: "0 4px 22px rgba(236,72,153,0.5)",
+        }}
+      >
+        <ConnectionIcon type={connectionType} />
+        <span style={{ color: "#fff", fontWeight: 900, fontSize: 15 }}>
+          Connect Now — $1.99
+        </span>
+      </button>
+
+      {/* Bundle options */}
+      <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 8px", textAlign: "center" }}>
+        Or save with bundles
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {PACKAGES.slice(1).map((pkg) => (
           <button
             key={pkg.key}
             onClick={() => onSelect(pkg.key)}
@@ -179,8 +222,8 @@ function PackagePicker({ theirName, onSelect, onBack }: {
               width: "100%",
               background: "rgba(255,255,255,0.05)",
               border: "1.5px solid rgba(236,72,153,0.3)",
-              borderRadius: 16,
-              padding: "12px 14px",
+              borderRadius: 14,
+              padding: "10px 14px",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -191,20 +234,20 @@ function PackagePicker({ theirName, onSelect, onBack }: {
             onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(236,72,153,0.12)")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
           >
-            <span style={{ fontSize: 24, lineHeight: 1 }}>{pkg.emoji}</span>
+            <span style={{ fontSize: 20, lineHeight: 1 }}>{pkg.emoji}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
-                <span style={{ color: "#fff", fontWeight: 800, fontSize: 13 }}>{pkg.name}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 1 }}>
+                <span style={{ color: "#fff", fontWeight: 800, fontSize: 12 }}>{pkg.name}</span>
                 <span style={{
                   background: pkg.badgeColor,
                   borderRadius: 20, padding: "1px 7px",
-                  fontSize: 9, fontWeight: 800, color: "#fff",
+                  fontSize: 8, fontWeight: 800, color: "#fff",
                 }}>{pkg.badge}</span>
               </div>
-              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, margin: 0 }}>{pkg.desc}</p>
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, margin: 0 }}>{pkg.desc}</p>
             </div>
             <span style={{
-              color: "#fff", fontWeight: 900, fontSize: 15,
+              color: "#fff", fontWeight: 900, fontSize: 14,
               background: "linear-gradient(135deg,#ec4899,#a855f7)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               backgroundClip: "text", flexShrink: 0,
@@ -213,8 +256,8 @@ function PackagePicker({ theirName, onSelect, onBack }: {
         ))}
       </div>
 
-      <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, textAlign: "center", marginTop: 12 }}>
-        Unlocks are one-time — WhatsApp shared instantly after payment
+      <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, textAlign: "center", marginTop: 10 }}>
+        One-time payment — connection shared instantly
       </p>
     </motion.div>
   );
@@ -238,6 +281,17 @@ export default function MatchCelebrationOverlay({
   const myAvatar = currentUser?.user_metadata?.avatar_url || currentUser?.avatar_url || "/placeholder.svg";
   const theirAvatar = matchedProfile?.avatar_url || matchedProfile?.image || "/placeholder.svg";
   const theirName = matchedProfile?.name || "Someone";
+
+  // Contact preference resolution
+  const myPref = currentUser?.contact_preference || currentUser?.user_metadata?.contact_preference || "whatsapp";
+  const theirPref = matchedProfile?.contact_preference || "whatsapp";
+  const resolvedType = resolveConnectionType(myPref, theirPref);
+
+  // Preference display for match screen
+  const theirPrefLabel = getPreferenceLabel(theirPref);
+  const theirPrefIcon = getPreferenceIcon(theirPref);
+  const theirGender = matchedProfile?.gender;
+  const pronoun = theirGender === "Female" ? "She" : theirGender === "Male" ? "He" : "They";
 
   return (
     <AnimatePresence>
@@ -328,10 +382,29 @@ export default function MatchCelebrationOverlay({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.28 }}
-                  style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "6px 0 18px", lineHeight: 1.5 }}
+                  style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: "6px 0 10px", lineHeight: 1.5 }}
                 >
                   You and <strong style={{ color: "#ec4899" }}>{theirName}</strong> liked each other!
                 </motion.p>
+
+                {/* Their preference badge */}
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: 6,
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 20, padding: "5px 14px 5px 10px",
+                    marginBottom: 14,
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>{theirPrefIcon}</span>
+                  <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, fontWeight: 700 }}>
+                    {pronoun} prefers {theirPrefLabel}
+                  </span>
+                </motion.div>
 
                 {/* Avatars */}
                 <motion.div
@@ -377,7 +450,7 @@ export default function MatchCelebrationOverlay({
                   </div>
                 </motion.div>
 
-                {/* Connect button */}
+                {/* Connect button — single $1.99 */}
                 <motion.button
                   whileTap={{ scale: 0.96 }}
                   onClick={() => setShowPackages(true)}
@@ -390,14 +463,19 @@ export default function MatchCelebrationOverlay({
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   }}
                 >
-                  <MessageCircle size={16} /> Connect Now
+                  <ConnectionIcon type={resolvedType} /> Connect Now — $1.99
                 </motion.button>
+
+                {/* Connection type indicator */}
+                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, margin: "8px 0 0", fontWeight: 600 }}>
+                  via {connectionLabel(resolvedType)}
+                </p>
 
                 <button
                   onClick={onDismiss}
                   style={{
                     background: "none", border: "none", color: "rgba(255,255,255,0.3)",
-                    fontSize: 11, cursor: "pointer", marginTop: 10, width: "100%",
+                    fontSize: 11, cursor: "pointer", marginTop: 8, width: "100%",
                   }}
                 >
                   Maybe later
@@ -406,7 +484,8 @@ export default function MatchCelebrationOverlay({
             ) : (
               <PackagePicker
                 theirName={theirName}
-                onSelect={(key) => onConnect(key)}
+                connectionType={resolvedType}
+                onSelect={(key) => onConnect(key, resolvedType)}
                 onBack={() => setShowPackages(false)}
               />
             )}

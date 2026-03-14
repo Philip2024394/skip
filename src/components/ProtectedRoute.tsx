@@ -8,6 +8,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    // In dev mode, bypass auth check so dashboard/admin work with placeholder credentials
+    if (import.meta.env.DEV) {
+      setAuthenticated(true);
+      setLoading(false);
+      return;
+    }
     // Check existing session immediately
     supabase.auth.getSession().then(({ data: { session } }) => {
       setAuthenticated(!!session);

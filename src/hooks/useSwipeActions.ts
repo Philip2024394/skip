@@ -129,7 +129,12 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
     }
   }, [props.user, props.superLikesCount, props.roseAvailable, props.likedMe, props.setILiked, props.setMatchDialog, props.upsertLocalLikedProfile, props.setSuperLikesCount, props.setRoseAvailable, props.setLastRoseAt, props.toast, props.t]);
 
-  const handleUnlock = useCallback((profile: Profile, _packageKey?: string) => props.setUnlockDialog(profile), [props.setUnlockDialog]);
+  // Store pending connection type for the current unlock flow
+  let pendingConnectionType = "whatsapp";
+  const handleUnlock = useCallback((profile: Profile, _packageKey?: string, connectionType?: string) => {
+    pendingConnectionType = connectionType || "whatsapp";
+    props.setUnlockDialog(profile);
+  }, [props.setUnlockDialog]);
 
   const confirmUnlock = useCallback(async () => {
     if (!props.unlockDialog) return;
@@ -139,6 +144,7 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
         body: {
           targetUserId: props.unlockDialog!.id,
           targetHasBadges: hasUnlockBadges(props.unlockDialog),
+          connectionType: pendingConnectionType,
         },
       });
     try {

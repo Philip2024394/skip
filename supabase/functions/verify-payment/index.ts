@@ -25,8 +25,9 @@ async function activateFeature(session: Stripe.Checkout.Session) {
 
   if (!userId) return;
 
-  // WhatsApp connection payment (create-payment flow)
+  // WhatsApp / Video / Both connection payment (create-payment flow)
   if (targetUserId && !featureId) {
+    const connectionType = session.metadata?.connection_type || "whatsapp";
     const hiddenUntil = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
 
     const existing = await supabaseAdmin
@@ -57,6 +58,14 @@ async function activateFeature(session: Stripe.Checkout.Session) {
         status: "paid",
         connection_id: connection?.id,
         target_user_id: targetUserId,
+      });
+
+      // Save to contact_unlocks table
+      await supabaseAdmin.from("contact_unlocks").insert({
+        user1_id: userId,
+        user2_id: targetUserId,
+        connection_type: connectionType,
+        amount: session.amount_total ?? 199,
       });
 
       await supabaseAdmin.from("profiles").update({ hidden_until: hiddenUntil }).eq("id", userId);
@@ -267,6 +276,7 @@ serve(async (req) => {
     // Return WhatsApp details for connection payments
     let whatsapp = null;
     let name = null;
+    const connectionType = session.metadata?.connection_type || "whatsapp";
     if (targetUserId) {
       const { data: targetProfile } = await supabaseAdmin
         .from("profiles")
@@ -278,7 +288,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, whatsapp, name }),
+      JSON.stringify({ success: true, whatsapp, name, connectionType }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

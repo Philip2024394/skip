@@ -324,22 +324,150 @@ const buildGoogleMapsSearchUrl = (query: string, lat: number, lng: number) => {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 };
 
-const DATE_IDEAS = [
-  { idea: "Coffee At A Cozy Café ☕",       key: "cafe",           image_url: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=220&fit=crop" },
-  { idea: "Dinner At A Nice Restaurant 🍝", key: "restaurant",     image_url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=220&fit=crop" },
-  { idea: "Walk In The Park 🌳",            key: "park",           image_url: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&h=220&fit=crop" },
-  { idea: "Drinks At A Rooftop Bar 🍸",     key: "rooftop bar",    image_url: "https://images.unsplash.com/photo-1527769929938-b77e7fb4c0f3?w=400&h=220&fit=crop" },
-  { idea: "Dessert And Late Night Walk 🍰", key: "dessert cafe",   image_url: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&h=220&fit=crop" },
-  { idea: "Visit A Night Market 🌙",        key: "night market",   image_url: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=220&fit=crop" },
-  { idea: "Art Gallery Together 🎨",        key: "art gallery",    image_url: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=400&h=220&fit=crop" },
-  { idea: "Cooking Class For Two 👨‍🍳",      key: "cooking class",  image_url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=220&fit=crop" },
-  { idea: "Sunset Picnic 🌅",               key: "scenic viewpoint", image_url: "https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=400&h=220&fit=crop" },
-  { idea: "Karaoke Night 🎤",               key: "karaoke",        image_url: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=220&fit=crop" },
-  { idea: "Beach Walk At Dusk 🏖️",          key: "beach",          image_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=220&fit=crop" },
-  { idea: "Explore Local Street Food 🍜",   key: "street food",    image_url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=220&fit=crop" },
-];
+// ── Category image pools — each date idea picks from its category's images ──
+const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=400&h=220&fit=crop`;
+const CATEGORY_IMAGES: Record<string, string[]> = {
+  cafe:       [IMG("1501339847302-ac426a4a7cbb"), IMG("1509042239860-f550ce710b93"), IMG("1445116572660-236099ec97a0"), IMG("1495474472287-4d71bcdd2085"), IMG("1442512595331-e89e73853f31"), IMG("1521017432531-fbd92d768814")],
+  food:       [IMG("1414235077428-338989a2e8c0"), IMG("1517248135467-4c7edcad34c4"), IMG("1550966871-3ed3cdb51f3a"), IMG("1504674900247-0877df9cc836"), IMG("1565299624946-b28f40a0ae38"), IMG("1476224203421-9ac39bcb3327")],
+  dessert:    [IMG("1551024601-bec78aea704b"), IMG("1488477181946-6428a0291777"), IMG("1563729784474-d77dbb933a9e"), IMG("1587314168485-3236d6710814"), IMG("1486427944299-d1955d23e34d"), IMG("1567206563064-6f60f40a2b57")],
+  park:       [IMG("1500534314209-a25ddb2bd429"), IMG("1476673160081-cf065607f449"), IMG("1510270929905-aa8d499cf5fc"), IMG("1473448912268-2022ce9509d8"), IMG("1441974231531-c6227db76b6e"), IMG("1502082553048-f009c37129b9")],
+  beach:      [IMG("1507525428034-b723cf961d3e"), IMG("1519046904884-53103b34b206"), IMG("1471922694854-ff1b63b20054"), IMG("1520454974749-611b7248ffdb"), IMG("1506953823976-0678e0aaf346"), IMG("1468413253725-0d5181091126")],
+  sunset:     [IMG("1508193638397-1c4234db14d8"), IMG("1473116763249-2faaef81ccda"), IMG("1414609245224-afa02bfb3fda"), IMG("1506354666786-959d6d497f1a"), IMG("1495616811223-4d98c6e9c869"), IMG("1472120435266-95a3f747eb08")],
+  nightlife:  [IMG("1527769929938-b77e7fb4c0f3"), IMG("1470337458703-46ad1756a187"), IMG("1566417713940-fe7c737a9ef2"), IMG("1572116469696-31de0f17cc34"), IMG("1516450360452-9312f5e86fc7"), IMG("1429962714451-bb934ecdc4ec")],
+  market:     [IMG("1555939594-58d7cb561ad1"), IMG("1504544750208-dc0358e63f7f"), IMG("1567521464027-f127ff144326"), IMG("1514933651103-005eec06c04b"), IMG("1529692236671-f1f6cf9683ba"), IMG("1533777857889-4be7d998efb0")],
+  art:        [IMG("1518998053901-5348d3961a04"), IMG("1531243269054-5ebf6f34081e"), IMG("1544967082-d9d25d867d66"), IMG("1460661419201-fd4cecdf8a8b"), IMG("1513364776144-60967b0f800f"), IMG("1561214115-f2f134cc4912")],
+  cooking:    [IMG("1556909114-f6e7ad7d3136"), IMG("1507048331197-7d4ac70811cf"), IMG("1466637574441-749b8f19452f"), IMG("1528712306091-ed0763094c98"), IMG("1556910103-1c02745aae4d"), IMG("1551218808-94e220e084d2")],
+  music:      [IMG("1493225457124-a3eb161ffa5f"), IMG("1501612780327-45045538702b"), IMG("1459749411175-04bf5292ceea"), IMG("1524368535928-5b5e00ddc76b"), IMG("1470229722913-7c0e2dbbafd3"), IMG("1511671782779-c97d3d27a1d4")],
+  cinema:     [IMG("1489599849927-2ee91cede3ba"), IMG("1536440136628-849c177e76a1"), IMG("1478720568477-152d9b164e26"), IMG("1517604931442-7e0c8ed2963c")],
+  active:     [IMG("1545232979-a9ba987ce37c"), IMG("1558618666-fcd25c85f82e"), IMG("1596464716388-e3c15a40e69a"), IMG("1544551763-46a013bb70d5"), IMG("1571019614242-c5c5dee9f50c"), IMG("1540479859555-17af45c78602")],
+  water:      [IMG("1544551763-46a013bb70d5"), IMG("1530053969600-cacd2598338c"), IMG("1516728778615-2d590ea1855e"), IMG("1559827260-dc66d6f5e3a5"), IMG("1504458174710-8ef9f463798f"), IMG("1537519646099-2ee971dcefc0")],
+  romantic:   [IMG("1470252649378-9c29740c9fa8"), IMG("1475738198235-4b30fc2fca88"), IMG("1507400492013-162706c8c05e"), IMG("1474524955719-b9f87c50ce47"), IMG("1505765050516-f72dcac9c60e"), IMG("1519681393784-d120267933ba")],
+  nature:     [IMG("1441974231531-c6227db76b6e"), IMG("1472396961693-142e6e269027"), IMG("1518173946687-1e1e4b4d15b7"), IMG("1475113548554-5a36f1f523d6"), IMG("1469474968028-56623f02e42e"), IMG("1426604966848-d7adac402bff")],
+  playful:    [IMG("1558618666-fcd25c85f82e"), IMG("1596464716388-e3c15a40e69a"), IMG("1571019614242-c5c5dee9f50c"), IMG("1540479859555-17af45c78602"), IMG("1560448204-e02f11c3d0e2"), IMG("1541532713592-79a0317b6b77")],
+};
 
-const buildFirstDatePlaces = (city: string, lat: number, lng: number, seed: number): DatePlace[] => {
+// Map each of the 135 date ideas to a search key and image category
+import { FIRST_DATE_IDEAS } from "./firstDateIdeas";
+
+const IDEA_CATEGORY: Record<string, { key: string; cat: string }> = {};
+const assignCat = (ideas: string[], key: string, cat: string) => ideas.forEach(i => { IDEA_CATEGORY[i] = { key, cat }; });
+
+assignCat([
+  "Coffee At A Cozy Café ☕", "Coffee And Deep Conversation ☕", "Morning Coffee Date ☀️",
+  "Iced Coffee And A Walk 🧋", "Tea House Date 🍵", "Smoothies And Fresh Juice Date 🥤",
+  "Coffee And Bookstore Browsing 📚", "Rooftop Café Sunset Drinks 🌇",
+  "Sharing Dessert At A Café 🍰", "Late Night Café Chat ☕",
+], "cafe", "cafe");
+
+assignCat([
+  "Dinner At A Nice Restaurant 🍝", "Casual Lunch Date 🍽️", "Trying A New Restaurant Together 🍽️",
+  "Sushi Night Together 🍣", "Pizza And A Movie Night 🍕", "Brunch On A Lazy Weekend 🥐",
+  "Food Market Exploration 🛒", "Cooking Together At Home 🧑‍🍳", "BBQ Night Together 🔥",
+  "Breakfast Date ☀️", "Trying Indonesian Local Food 🍜",
+  "Family Friendly Restaurant Dinner 🍽️",
+], "restaurant", "food");
+
+assignCat([
+  "Street Food Adventure 🍜", "Night Market Street Food 🌙", "Visit A Night Market 🌙",
+  "Explore Local Street Food 🍜",
+], "street food", "market");
+
+assignCat([
+  "Dessert And Late Night Walk 🍰", "Ice Cream And A Stroll 🍦", "Ice Cream And Conversation 🍦",
+], "dessert cafe", "dessert");
+
+assignCat([
+  "Walk In The Park 🌳", "Picnic In The Park 🧺", "Visiting A City Park 🌳",
+  "Botanical Garden Visit 🌺", "Feeding Ducks By The Lake 🦆", "Lakeside Picnic 🦢",
+], "park", "park");
+
+assignCat([
+  "Beach Sunset Walk 🌅", "Walk Along The Beach 🏖️", "Moonlight Beach Walk 🌙",
+  "Beach Walk At Dusk 🏖️", "Watching The Ocean Waves 🌊",
+  "Watching The Sunset At The Beach 🌅",
+], "beach", "beach");
+
+assignCat([
+  "Watching The Sunset Together 🌇", "Sunset Picnic 🌅", "Sunrise Walk Before The World Wakes ☀️",
+  "Sunrise Mountain View ⛰️", "Mountain View Picnic ⛰️",
+], "scenic viewpoint", "sunset");
+
+assignCat([
+  "Hiking A Scenic Trail 🥾", "Waterfall Hike 💧", "Nature Forest Walk 🌿",
+], "hiking trail", "nature");
+
+assignCat([
+  "Night At The Cinema 🎬", "Outdoor Movie Night 🎬", "Pizza And A Movie Night 🍕",
+  "Cozy Movie Night At Home 🛋️",
+], "cinema", "cinema");
+
+assignCat([
+  "Live Music Night 🎵", "Jazz Bar And Conversation 🎷", "Comedy Night Out 😂",
+  "Karaoke Night 🎤", "Theatre Or Dance Show 💃", "Cultural Festival 🎭",
+  "Watching A Sports Game Together ⚽",
+], "entertainment venue", "music");
+
+assignCat([
+  "Art Gallery Visit 🎨", "Art Gallery Together 🎨", "Museum Visit 🏛️",
+  "Photography Walk 📷", "Drawing Or Painting Together 🎨",
+], "art gallery", "art");
+
+assignCat([
+  "Cooking Class For Two 👨‍🍳", "Baking Cookies Together 🍪",
+], "cooking class", "cooking");
+
+assignCat([
+  "Bowling Night Together 🎳", "Mini Golf Or Arcade Fun 🎯", "Escape Room Challenge 🔐",
+  "Ice Skating Together ⛸️", "Go Kart Racing 🏎️", "Amusement Park Adventure 🎢",
+  "Playing Pool Together 🎱", "Table Tennis Match 🏓", "Badminton Game 🏸",
+  "Beach Volleyball 🏐", "Rock Climbing Gym 🧗", "Yoga In The Park 🧘",
+  "Board Game Café 🎲",
+], "fun activities", "active");
+
+assignCat([
+  "Kayaking Together 🚣", "Paddleboarding 🌊", "Jet Ski Adventure 🏄",
+  "Snorkeling Together 🤿", "Surfing At The Beach 🏄", "Parasailing Over The Ocean 🪂",
+  "Banana Boat Ride 🍌🚤", "Romantic Boat Ride 🚤", "Sunset Boat Cruise 🌅",
+  "Fishing By The Lake 🎣", "Fishing By The Ocean 🌊🎣",
+], "water sports", "water");
+
+assignCat([
+  "Watching The City Lights Together 🌃", "Watching The Stars Together ⭐",
+  "Wine And Stargazing ✨", "Firepit And Good Conversation 🔥",
+  "Long Drive With Music 🎶", "Sharing Stories Under The Stars ✨",
+  "Balcony Dinner Together 🕯️", "Slow Dancing Together 💃",
+], "romantic spot", "romantic");
+
+assignCat([
+  "Drinks At A Rooftop Bar 🍸", "Rooftop Bar Drinks 🍸",
+  "Dancing At A Nightclub 🕺", "Clubbing All Night 💃", "DJ Party Night 🎧",
+  "Cocktails And Good Vibes 🍹", "Craft Beer At A Local Brewery 🍺",
+  "Champagne Celebration 🍾", "Dancing Until Sunrise 🌅",
+  "Wine Tasting Evening 🍷",
+], "rooftop bar", "nightlife");
+
+assignCat([
+  "Camping Under The Stars ⛺", "Road Trip Adventure 🚗",
+  "Exploring A New Town Together 🏘️",
+], "campsite", "nature");
+
+assignCat([
+  "Walk Around The Mall 🛍️", "Bookstore Date 📚",
+  "Café Chat After Maghrib ☕", "Casual Afternoon Tea 🍵",
+], "cafe", "cafe");
+
+assignCat([
+  "Pet Café Visit 🐶", "Cat Café Date 🐱", "Trying Weird Snacks Together 🍬",
+  "Flying A Kite 🪁",
+], "fun activities", "playful");
+
+// Build the full DATE_IDEAS array from all 135 ideas
+const DATE_IDEAS = FIRST_DATE_IDEAS.map((idea) => {
+  const info = IDEA_CATEGORY[idea] ?? { key: "cafe", cat: "cafe" };
+  return { idea, key: info.key, cat: info.cat };
+});
+
+const buildFirstDatePlaces = (_city: string, lat: number, lng: number, seed: number): DatePlace[] => {
   // Pick 3 deterministic ideas based on seed so they don't shuffle on every render
   const picks: typeof DATE_IDEAS = [];
   const used = new Set<number>();
@@ -353,13 +481,18 @@ const buildFirstDatePlaces = (city: string, lat: number, lng: number, seed: numb
     }
   }
 
-  return picks.map((p) => ({
-    idea: p.idea,
-    url: buildGoogleMapsSearchUrl(p.key, lat, lng),
-    google_url: buildGoogleMapsSearchUrl(p.key, lat, lng),
-    image_url: p.image_url,
-    title: `${p.idea.split(" ").slice(0, 3).join(" ")} in ${city}`,
-  }));
+  return picks.map((p, i) => {
+    // Use seed + index to pick a different image variant per profile from the category pool
+    const catImages = CATEGORY_IMAGES[p.cat] ?? CATEGORY_IMAGES.cafe;
+    const imgIdx = ((seed + i * 7) & 0x7fffffff) % catImages.length;
+    return {
+      idea: p.idea,
+      url: buildGoogleMapsSearchUrl(p.key, lat, lng),
+      google_url: buildGoogleMapsSearchUrl(p.key, lat, lng),
+      image_url: catImages[imgIdx],
+      title: null,
+    };
+  });
 };
 
 // ─── About Me data pools ────────────────────────────────────────────────────

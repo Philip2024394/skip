@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageCircle, Loader2, EyeOff, Star, Shield, Heart, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageCircle, Loader2, EyeOff, Star, Shield, Heart, ChevronDown, ChevronUp, Video } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 
 // ── Confetti particle ─────────────────────────────────────────────────────────
@@ -142,7 +142,7 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState<{ whatsapp: string; name: string } | null>(null);
+  const [result, setResult] = useState<{ whatsapp: string; name: string; connectionType?: string } | null>(null);
   const [featureActivated, setFeatureActivated] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -180,11 +180,15 @@ const PaymentSuccess = () => {
           if (!data?.success) throw new Error(data?.error || "Payment verification failed");
           setFeatureActivated(feature);
         } else {
-          // WhatsApp connection unlock
+          // Connection unlock (WhatsApp / Video / Both)
           const { data, error } = await supabase.functions.invoke("verify-payment", { body: { sessionId } });
           if (error) throw error;
           if (!data.success) throw new Error(data.error);
-          setResult({ whatsapp: data.whatsapp, name: data.name });
+          setResult({
+            whatsapp: data.whatsapp,
+            name: data.name,
+            connectionType: data.connectionType,
+          });
         }
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 4500);
@@ -256,6 +260,11 @@ const PaymentSuccess = () => {
       icon: <span className="text-4xl">🎫</span>,
       headline: "Plus-One Premium Activated!",
       sub: "Your Plus-One badge is now on your profile. Others can see you're open to events and outings — connect via WhatsApp to coordinate plans.",
+    },
+    video_extend: {
+      icon: <Video className="w-8 h-8 text-purple-400" />,
+      headline: "Call Extended! 📹",
+      sub: "15 more minutes have been added to your video call. Enjoy your conversation!",
     },
   };
 
@@ -353,17 +362,32 @@ const PaymentSuccess = () => {
                   <p className="text-white font-mono font-semibold text-base">{result.whatsapp}</p>
                 </motion.div>
 
-                {/* Open WhatsApp CTA */}
-                <motion.button
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.05 }}
-                  onClick={openWhatsApp}
-                  className="w-full h-13 py-3.5 rounded-2xl gradient-love text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(180,80,150,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
-                >
-                  <MessageCircle className="w-5 h-5" fill="white" />
-                  Message {result.name} on WhatsApp
-                </motion.button>
+                {/* Connection CTA buttons */}
+                {(result.connectionType === "video" || result.connectionType === "both") && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.02 }}
+                    onClick={() => navigate("/?startVideoCall=true")}
+                    className="w-full h-13 py-3.5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(139,92,246,0.4)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                  >
+                    <Video className="w-5 h-5" />
+                    Video Call {result.name}
+                  </motion.button>
+                )}
+
+                {result.connectionType !== "video" && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1.05 }}
+                    onClick={openWhatsApp}
+                    className="w-full h-13 py-3.5 rounded-2xl gradient-love text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(180,80,150,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
+                  >
+                    <MessageCircle className="w-5 h-5" fill="white" />
+                    Message {result.name} on WhatsApp
+                  </motion.button>
+                )}
 
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -371,7 +395,11 @@ const PaymentSuccess = () => {
                   transition={{ delay: 1.1 }}
                   className="text-white/30 text-[10px]"
                 >
-                  A warm intro message has been pre-filled for you ✨
+                  {result.connectionType === "video"
+                    ? "15 minutes of video calling included — start from the home screen"
+                    : result.connectionType === "both"
+                    ? "Video call + WhatsApp both available for this connection"
+                    : "A warm intro message has been pre-filled for you ✨"}
                 </motion.p>
               </>
             ) : fc ? (

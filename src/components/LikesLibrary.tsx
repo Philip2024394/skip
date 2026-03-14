@@ -27,8 +27,8 @@ interface LikesLibraryProps {
   profileFirstDateIdea?: string | null;
   profileDatePlaces?: Profile["first_date_places"];
   onTabChange?: (tab: Tab) => void;
-  selectedProfileSection?: "basic" | "lifestyle" | "interests";
-  onSelectProfileSection?: (section: "basic" | "lifestyle" | "interests") => void;
+  selectedProfileSection?: "basic" | "lifestyle" | "interests" | "images";
+  onSelectProfileSection?: (section: "basic" | "lifestyle" | "interests" | "images") => void;
   selectedUnlockItemKey?: string;
   onSelectUnlockItem?: (key: string) => void;
   selectedTreatItem?: TreatKey | null;
@@ -71,8 +71,8 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   distance: () => "Distance",
 };
 // Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
-const HOME_TABS: Tab[]    = ["new", "treat", "unlock"];
-const PROFILE_TABS: Tab[] = ["new", "sent", "received", "distance"];
+const HOME_TABS: Tab[]    = ["new", "sent", "received", "unlock"];
+const PROFILE_TABS: Tab[] = ["new", "sent", "treat", "distance"];
 
 const TREAT_ITEMS = [
   { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage",      image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
@@ -140,8 +140,8 @@ const LikesLibrary = ({
   // Scroll back to left whenever tab changes
   useEffect(() => {
     scrollRef.current?.scrollTo({ left: 0, behavior: "smooth" });
-    onTabChange?.(tab);
-  }, [onTabChange, tab]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   // When butterfly is flying to a profile, show "Likes Me" so the user sees who liked them
   useEffect(() => {
@@ -180,13 +180,21 @@ const LikesLibrary = ({
   }, [currentList, activePromoIndex, promoPosition, tab]);
 
   const displayItemsWithTarot = useMemo(() => {
-    if (!dailyTarot) return displayItems;
-    if (tab !== "new") return displayItems;
+    if (!dailyTarot) {
+      console.log("No dailyTarot, returning displayItems");
+      return displayItems;
+    }
+    if (tab !== "new") {
+      console.log("Tab is not 'new', returning displayItems. Current tab:", tab);
+      return displayItems;
+    }
 
     // Always show exactly 1 tarot tile in the New carousel until the user reveals it.
-    // Insert it near the start so new identities see it immediately.
+    // Insert it at a random position in the first few items so it's visible
     const items: DisplayItem[] = [...displayItems];
-    const insertAt = Math.min(1, items.length);
+    const maxPos = Math.min(3, items.length); // Insert within first 4 positions
+    const insertAt = Math.floor(Math.random() * (maxPos + 1));
+    console.log("Inserting tarot card at position:", insertAt, "of", items.length, "items");
     items.splice(insertAt, 0, { type: "promo" as const, profile: null } as any);
     return items;
   }, [dailyTarot, displayItems, tab]);
@@ -258,7 +266,7 @@ const LikesLibrary = ({
         <div className="relative flex gap-0 p-0.5 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
           {(() => {
             const baseTabs = tabLabelOverrides ? PROFILE_TABS : HOME_TABS;
-            const visibleTabs = hidePrivateTabs ? baseTabs.filter((t) => t !== "received") : baseTabs;
+            const visibleTabs = hidePrivateTabs ? baseTabs.filter((t) => t !== "received" && t !== "sent") : baseTabs;
             const visibleIndex = Math.max(0, visibleTabs.indexOf(tab));
             const pct = 100 / visibleTabs.length;
             return (
@@ -336,12 +344,13 @@ const LikesLibrary = ({
             className={(isDateIdeasTab || isProfileInfoTab || isTreatTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
             {isProfileInfoTab ? (
-              <div className="grid grid-cols-3 gap-2 h-full pb-2">
+              <div className="grid grid-cols-4 gap-2 h-full pb-2">
                 {(
                   [
-                    { key: "basic" as const, label: "Basic Info" },
+                    { key: "basic" as const, label: "Profile" },
                     { key: "lifestyle" as const, label: "Lifestyle" },
                     { key: "interests" as const, label: "Interests" },
+                    { key: "images" as const, label: "Images" },
                   ]
                 ).map((s, idx) => (
                   <motion.button
@@ -356,8 +365,11 @@ const LikesLibrary = ({
                       e.stopPropagation();
                       onSelectProfileSection?.(s.key);
                     }}
-                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${selectedProfileSection === s.key ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
-                    style={{ height: 124 }}
+                    className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] backdrop-blur-md border relative w-full ${selectedProfileSection === s.key ? "border-pink-500/70 ring-2 ring-pink-500/40 bg-pink-950/40" : "bg-black/50 border-white/10"}`}
+                    style={{
+                      height: 124,
+                      ...(selectedProfileSection === s.key ? { boxShadow: "0 0 16px rgba(236,72,153,0.45), 0 0 4px rgba(236,72,153,0.3) inset" } : {}),
+                    }}
                     aria-label={s.label}
                   >
                     <p className="text-white text-[11px] font-bold text-center leading-tight">{s.label}</p>
@@ -478,11 +490,13 @@ const LikesLibrary = ({
                         e.stopPropagation();
                         onSelectDateIdea?.(idx);
                       }}
-                      className={`flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] bg-black/50 backdrop-blur-md border relative w-full ${selectedDateIdeaIndex === idx ? "border-fuchsia-300/50 ring-2 ring-fuchsia-300/20" : "border-white/10"}`}
-                      style={{ height: 124 }}
+                      className={`flex flex-col items-center gap-1.5 p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.02] backdrop-blur-md border relative w-full ${selectedDateIdeaIndex === idx ? "border-pink-500/70 ring-2 ring-pink-500/40 bg-pink-950/40" : "bg-black/50 border-white/10"}`}
+                      style={{
+                        ...(selectedDateIdeaIndex === idx ? { boxShadow: "0 0 16px rgba(236,72,153,0.45), 0 0 4px rgba(236,72,153,0.3) inset" } : {}),
+                      }}
                       aria-label={place.idea || "Date idea"}
                     >
-                      <div className="relative w-full flex-1 rounded-lg overflow-hidden">
+                      <div className="relative w-full rounded-lg overflow-hidden" style={{ height: 70, width: "100%" }}>
                         <img
                           src={place.image_url || "/placeholder.svg"}
                           alt={place.idea}
@@ -492,13 +506,22 @@ const LikesLibrary = ({
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                       </div>
 
-                      <p className="text-white text-[9px] font-semibold leading-tight line-clamp-2 text-center w-full">
-                        {place.idea || "Date idea"}
-                      </p>
+                      <div style={{ height: 24, display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
+                        <p className="text-white text-[9px] font-semibold leading-tight line-clamp-2 text-center w-full" style={{ margin: 0 }}>
+                          {place.idea || "Date idea"}
+                        </p>
+                      </div>
 
-                      <p className="text-white/50 text-[8px] truncate w-full text-center">
-                        {place.title || (place.url ? "Open" : "")}
-                      </p>
+                      <span style={{
+                        background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))",
+                        color: "#fff",
+                        fontSize: 7,
+                        fontWeight: 700,
+                        padding: "2px 8px",
+                        borderRadius: 20,
+                        letterSpacing: "0.03em",
+                        whiteSpace: "nowrap",
+                      }}>View</span>
                     </motion.button>
                   ))}
 

@@ -38,7 +38,7 @@ interface AppDialogsProps {
   setMatchedProfile: (v: any) => void;
   iLiked: any[];
   likedMe: any[];
-  handleUnlock: (profile: any, packageKey?: string) => void;
+  handleUnlock: (profile: any, packageKey?: string, connectionType?: string) => void;
   // Unlock payment
   showUnlockDialog: boolean;
   setShowUnlockDialog: (v: boolean) => void;
@@ -277,10 +277,10 @@ export default function AppDialogs(props: AppDialogsProps) {
           matchedProfile={props.matchedProfile}
           currentUser={props.user}
           onDismiss={() => props.setMatchedProfile(null)}
-          onConnect={(packageKey) => {
+          onConnect={(packageKey, connectionType) => {
             if (!props.matchedProfile) return;
             props.setMatchedProfile(null);
-            props.handleUnlock(props.matchedProfile, packageKey);
+            props.handleUnlock(props.matchedProfile, packageKey, connectionType);
           }}
         />
       )}

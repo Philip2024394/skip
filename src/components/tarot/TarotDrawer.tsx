@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import CrowAnimation from "./CrowAnimation";
 import {
   GRAVEYARD_BG,
   TAROT_READER_SEQUENCE,
@@ -95,12 +94,6 @@ interface TarotDrawerProps {
 export default function TarotDrawer(props: TarotDrawerProps) {
   // paste the complete tarot drawer JSX here
   // all the useEffects for the tarot sequence go here too
-
-  const [activeCrows, setActiveCrows] = useState<number[]>([]);
-  const [crowContainerWidth, setCrowContainerWidth] = useState(390);
-  const crowContainerRef = useRef<HTMLDivElement | null>(null);
-  const crowSchedulerRef = useRef<number | null>(null);
-  const crowIdRef = useRef(0);
 
   const generateMadamZofeeReward = () => {
     const roll = Math.random();
@@ -220,47 +213,6 @@ export default function TarotDrawer(props: TarotDrawerProps) {
     };
   }, [props.showTarotDrawer]);
 
-  // ── Crow scheduler ───────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!props.showTarotDrawer) {
-      if (crowSchedulerRef.current) clearTimeout(crowSchedulerRef.current);
-      setActiveCrows([]);
-      return;
-    }
-
-    if (crowContainerRef.current) {
-      setCrowContainerWidth(crowContainerRef.current.offsetWidth);
-    }
-
-    const spawnCrow = () => {
-      const spawnDouble = Math.random() < 0.15;
-
-      setActiveCrows((prev) => {
-        const newId = ++crowIdRef.current;
-        return [...prev, newId];
-      });
-
-      if (spawnDouble) {
-        setTimeout(() => {
-          setActiveCrows((prev) => {
-            const newId = ++crowIdRef.current;
-            return [...prev, newId];
-          });
-        }, 1200 + Math.random() * 800);
-      }
-
-      const nextIn = 18000 + Math.random() * 22000;
-      crowSchedulerRef.current = window.setTimeout(spawnCrow, nextIn);
-    };
-
-    const firstDelay = 10000 + Math.random() * 4000;
-    crowSchedulerRef.current = window.setTimeout(spawnCrow, firstDelay);
-
-    return () => {
-      if (crowSchedulerRef.current) clearTimeout(crowSchedulerRef.current);
-    };
-  }, [props.showTarotDrawer]);
-
   return (
     <>
       {props.showTarotDrawer && (
@@ -312,9 +264,8 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               }}
             />
 
-            {/* Hero area — crow flies here */}
+            {/* Hero area */}
             <div
-              ref={crowContainerRef}
               style={{
                 position: "relative",
                 width: "100%",
@@ -326,50 +277,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
             >
               
               
-              {/* Tarot woman — blends into background via mask */}
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 0,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  width: 180,
-                  height: 180,
-                  zIndex: 5,
-                  WebkitMaskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
-                  maskImage: "linear-gradient(to bottom, black 60%, transparent 100%)",
-                }}
-              >
-                <AnimatePresence mode="wait">
-                  <motion.img
-                    key={props.tarotReaderSrc}
-                    src={props.tarotReaderSrc}
-                    alt="Tarot reader"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      objectPosition: "bottom",
-                    }}
-                    loading="lazy"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4 }}
-                  />
-                </AnimatePresence>
-              </div>
 
-              {/* Crow animations */}
-              {props.showTarotDrawer &&
-                activeCrows.map((crowId) => (
-                  <CrowAnimation
-                    key={crowId}
-                    containerWidth={crowContainerWidth}
-                    containerHeight={200}
-                    onDone={() => setActiveCrows((prev) => prev.filter((id) => id !== crowId))}
-                  />
-                ))}
             </div>
 
             {/* Right side vertical buttons */}
@@ -399,8 +307,8 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   width: 36,
                   height: 36,
                   borderRadius: "50%",
-                  background: "rgba(37,211,102,0.2)",
-                  border: "1px solid rgba(37,211,102,0.5)",
+                  background: "rgba(0,0,0,0.8)",
+                  border: "1px solid rgba(255,255,255,0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -409,7 +317,9 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 }}
                 title="Share on WhatsApp"
               >
-                💚
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#25D366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                </svg>
               </button>
 
               {/* Close */}
@@ -419,8 +329,8 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   width: 36,
                   height: 36,
                   borderRadius: "50%",
-                  background: "rgba(180,80,180,0.2)",
-                  border: "1px solid rgba(180,80,180,0.5)",
+                  background: "rgba(0,0,0,0.8)",
+                  border: "1px solid rgba(255,255,255,0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -429,7 +339,10 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   color: "white",
                 }}
               >
-                ✕
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
               </button>
 
               {/* Premium Reading */}
@@ -442,7 +355,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   width: 36,
                   height: 36,
                   borderRadius: "50%",
-                  background: "rgba(255,215,0,0.15)",
+                  background: "rgba(0,0,0,0.8)",
                   border: "1px solid rgba(255,215,0,0.5)",
                   display: "flex",
                   alignItems: "center",
@@ -452,7 +365,10 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 }}
                 title="Premium Reading"
               >
-                🔮
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 6v6l4 2"></path>
+                </svg>
               </button>
             </div>
 
@@ -496,48 +412,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 WebkitOverflowScrolling: "touch",
               }}
             >
-              {/* Progress steps */}
-              {!props.showDailyTarotFront ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 14, width: "100%", maxWidth: 220 }}>
-                  {([
-                    { step: 1, label: "Preparing Spread" },
-                    { step: 2, label: "Channelling" },
-                    { step: 3, label: "Connected" },
-                    { step: 4, label: "Your Card Awaits ✨" },
-                  ] as { step: number; label: string }[]).map(({ step, label }) => {
-                    const done = props.tarotProgressStep > step;
-                    const active = props.tarotProgressStep === step;
-                    return (
-                      <div key={step} style={{ display: "flex", alignItems: "center", gap: 8, opacity: props.tarotProgressStep >= step ? 1 : 0.3, transition: "opacity 0.4s" }}>
-                        <div style={{
-                          width: 18, height: 18, borderRadius: "50%",
-                          background: done ? "#FFD700" : active ? "rgba(255,215,0,0.3)" : "rgba(255,255,255,0.1)",
-                          border: active ? "2px solid #FFD700" : done ? "2px solid #FFD700" : "2px solid rgba(255,255,255,0.2)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          flexShrink: 0,
-                          boxShadow: active ? "0 0 10px rgba(255,215,0,0.6)" : "none",
-                          transition: "all 0.4s",
-                        }}>
-                          {done && <span style={{ fontSize: 9, color: "#000", fontWeight: "bold" }}>✓</span>}
-                          {active && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#FFD700", display: "block" }} />}
-                        </div>
-                        <span style={{
-                          fontSize: 11,
-                          color: active ? "#FFD700" : done ? "rgba(255,215,0,0.7)" : "rgba(255,255,255,0.4)",
-                          fontWeight: active ? "bold" : "normal",
-                          letterSpacing: "0.04em",
-                          textShadow: active ? "0 0 8px rgba(255,215,0,0.5)" : "none",
-                          transition: "all 0.4s",
-                        }}>{label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p style={{ color: "#FFD700", fontSize: 13, fontWeight: "bold", letterSpacing: "0.1em", marginBottom: 12, textShadow: "0 0 12px rgba(255,215,0,0.5)" }}>
-                  🔮 {props.tarotHeader}
-                </p>
-              )}
+              {/* Progress steps removed */}
 
               {/* Tarot card — face down until reveal */}
               {props.dailyTarot && (
@@ -605,81 +480,6 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {/* Grave digger + card text — image with text centered over it */}
-                  <AnimatePresence>
-                    {props.showDailyTarotFront && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
-                        style={{
-                          position: "relative",
-                          width: "100%",
-                          maxWidth: 300,
-                          marginTop: 8,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {/* Image */}
-                        <img
-                          src={[
-                            "https://ik.imagekit.io/7grri5v7d/grave_digger-removebg-preview.png",
-                            "https://ik.imagekit.io/7grri5v7d/dogs-removebg-preview.png?updatedAt=1773344502476",
-                            "https://ik.imagekit.io/7grri5v7d/flowers_nicesssewrwer-removebg-preview.png?updatedAt=1773344150659",
-                            "https://ik.imagekit.io/7grri5v7d/flowers_nicesss-removebg-preview.png?updatedAt=1773344048783",
-                          ][Math.floor(Date.now() / 86400000) % 4]}
-                          alt=""
-                          aria-hidden="true"
-                          style={{
-                            width: "100%",
-                            height: 180,
-                            objectFit: "contain",
-                            objectPosition: "bottom center",
-                            pointerEvents: "none",
-                            display: "block",
-                          }}
-                        />
-                        {/* Text centered over the image */}
-                        <div
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "0 20px",
-                            textAlign: "center",
-                            transform: "translateY(5px)",
-                          }}
-                        >
-                          <p
-                            style={{
-                              color: "#FFD700",
-                              fontWeight: "bold",
-                              fontSize: 13,
-                              marginBottom: 6,
-                              textShadow: "0 0 10px rgba(0,0,0,0.9), 0 0 8px rgba(255,215,0,0.4)",
-                            }}
-                          >
-                            {props.dailyTarot.cardName}
-                          </p>
-                          <p
-                            style={{
-                              color: "rgba(255,255,255,0.92)",
-                              fontSize: 11,
-                              lineHeight: 1.6,
-                              textShadow: "0 1px 4px rgba(0,0,0,0.9)",
-                            }}
-                          >
-                            {props.dailyTarot.reading}
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
               )}
             </div>
@@ -717,29 +517,6 @@ export default function TarotDrawer(props: TarotDrawerProps) {
             }}
             className="premium-reading-selection"
           >
-            {/* Crow animation on premium pages */}
-            <div
-              ref={crowContainerRef}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                height: 180,
-                overflow: "hidden",
-                pointerEvents: "none",
-                zIndex: 1,
-              }}
-            >
-              {activeCrows.map((crowId) => (
-                <CrowAnimation
-                  key={crowId}
-                  containerWidth={crowContainerWidth}
-                  containerHeight={180}
-                  onDone={() => setActiveCrows(prev => prev.filter(id => id !== crowId))}
-                />
-              ))}
-            </div>
             <style>{`.premium-reading-selection{scrollbar-width:none;-ms-overflow-style:none}.premium-reading-selection::-webkit-scrollbar{width:0;height:0}`}</style>
             {/* Close button */}
             <button
@@ -769,18 +546,20 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               ✕
             </button>
 
-            <div style={{
-  position: "relative",
-  zIndex: 2,
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  padding: "8px 16px 24px",
-  overflowY: "auto",
-  flex: 1,
-  minHeight: 0,
-  WebkitOverflowScrolling: "touch",
-}}>
+            <div
+              style={{
+                position: "relative",
+                zIndex: 2,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: "8px 16px 24px",
+                overflowY: "auto",
+                flex: 1,
+                minHeight: 0,
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
               <p style={{ fontSize: 40, marginBottom: 8 }}>🔮</p>
               <h2
                 style={{
@@ -894,29 +673,6 @@ export default function TarotDrawer(props: TarotDrawerProps) {
             gap: 16,
           }}
         >
-          {/* Crow animation on premium pages */}
-          <div
-            ref={crowContainerRef}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 180,
-              overflow: "hidden",
-              pointerEvents: "none",
-              zIndex: 1,
-            }}
-          >
-            {activeCrows.map((crowId) => (
-              <CrowAnimation
-                key={crowId}
-                containerWidth={crowContainerWidth}
-                containerHeight={180}
-                onDone={() => setActiveCrows(prev => prev.filter(id => id !== crowId))}
-              />
-            ))}
-          </div>
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -943,29 +699,6 @@ export default function TarotDrawer(props: TarotDrawerProps) {
             color: "white",
           }}
         >
-          {/* Crow animation on premium pages */}
-          <div
-            ref={crowContainerRef}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: 180,
-              overflow: "hidden",
-              pointerEvents: "none",
-              zIndex: 1,
-            }}
-          >
-            {activeCrows.map((crowId) => (
-              <CrowAnimation
-                key={crowId}
-                containerWidth={crowContainerWidth}
-                containerHeight={180}
-                onDone={() => setActiveCrows(prev => prev.filter(id => id !== crowId))}
-              />
-            ))}
-          </div>
           {/* Background graveyard subtle */}
           <div
             style={{
@@ -973,7 +706,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
               inset: 0,
               backgroundImage: "url('https://ik.imagekit.io/7grri5v7d/grave%20yardssssss.png?updatedAt=1773171437105')",
               backgroundSize: "cover",
-              backgroundPosition: "center calc(50% - 80px)", // Move background up 80px
+              backgroundPosition: "center calc(50% - 80px)",
               opacity: 1,
               zIndex: 0,
             }}
@@ -1013,6 +746,7 @@ export default function TarotDrawer(props: TarotDrawerProps) {
 
           {/* Content */}
           <div style={{ position: "relative", zIndex: 1, padding: "48px 20px 60px" }}>
+            {/* Content wrapper */}
             {/* Title */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}

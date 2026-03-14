@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Heart, MapPin, Fingerprint, BadgeCheck } from "lucide-react";
 import type { Profile } from "./SwipeCard";
 import { isOnline } from "@/hooks/useOnlineStatus";
+import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
 import ProfileBadge from "@/components/ProfileBadge";
 import VoicePlayer from "./VoicePlayer";
@@ -374,7 +375,9 @@ const SwipeStack = ({
                 )}
                 {profile.name}, {profile.age}
               </h3>
-              {isOnline(profile.last_seen_at) && (
+              {(profile.is_mock && (profile as any).mock_online_hours
+            ? isMockCurrentlyOnline(profile.id, profile.country, (profile as any).mock_online_hours, (profile as any).mock_offline_days)
+            : isOnline(profile.last_seen_at)) && (
                 <span className="relative flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
