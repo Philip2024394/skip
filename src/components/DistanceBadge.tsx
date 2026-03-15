@@ -6,19 +6,17 @@ interface DistanceBadgeProps {
 }
 
 export default function DistanceBadge({ profile, onClick }: DistanceBadgeProps) {
-  // Calculate distance if profile has coordinates
+  // Calculate distance - always show something for demo purposes
   const getDistance = () => {
-    if (!profile?.latitude || !profile?.longitude) return null;
-    
-    // For now, show a placeholder distance
-    // In a real implementation, you'd calculate from user's location
-    const distanceKm = Math.floor(Math.random() * 20) + 1; // 1-20 km
+    // For now, show a placeholder distance for all profiles
+    // In a real implementation, you'd calculate from user's location if coordinates exist
+    // For demo, generate a consistent distance based on profile ID
+    const seed = profile?.id ? profile.id.charCodeAt(0) : Math.random() * 100;
+    const distanceKm = (seed % 20) + 1; // 1-20 km based on profile
     return distanceKm < 1 ? `${Math.round(distanceKm * 1000)}m` : `${distanceKm}km`;
   };
 
   const distance = getDistance();
-  
-  if (!distance) return null;
 
   return (
     <button
