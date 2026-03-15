@@ -15,6 +15,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import WhatsAppLeadsPage from "./pages/admin/WhatsAppLeadsPage";
 import WorldMapDashboard from "./pages/admin/WorldMapDashboardSimple";
+import TestPage from "./pages/TestPage";
 console.log('🚀 App.tsx loaded - WorldMapDashboard imported:', typeof WorldMapDashboard);
 import MapPage from "./pages/MapPage";
 import TermsPage from "./pages/TermsPage";
@@ -103,6 +104,7 @@ const AppContent = () => {
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><WhatsAppLeadsPage /></ProtectedRoute>} />
           <Route path="/admin/world-map" element={<ProtectedRoute><WorldMapDashboard /></ProtectedRoute>} />
+          <Route path="/test" element={<TestPage />} />
           <Route path="/2dtm-control-panel" element={<AdminPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/terms" element={<TermsPage />} />
