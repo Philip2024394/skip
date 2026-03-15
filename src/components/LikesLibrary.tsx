@@ -180,21 +180,13 @@ const LikesLibrary = ({
   }, [currentList, activePromoIndex, promoPosition, tab]);
 
   const displayItemsWithTarot = useMemo(() => {
-    if (!dailyTarot) {
-      console.log("No dailyTarot, returning displayItems");
-      return displayItems;
-    }
-    if (tab !== "new") {
-      console.log("Tab is not 'new', returning displayItems. Current tab:", tab);
-      return displayItems;
-    }
+    if (!dailyTarot || dailyTarot.shown) return displayItems;
+    if (tab !== "new") return displayItems;
 
-    // Always show exactly 1 tarot tile in the New carousel until the user reveals it.
-    // Insert it at a random position in the first few items so it's visible
+    // Insert tarot card at a random position among the profiles
     const items: DisplayItem[] = [...displayItems];
-    const maxPos = Math.min(3, items.length); // Insert within first 4 positions
+    const maxPos = Math.min(items.length, 6);
     const insertAt = Math.floor(Math.random() * (maxPos + 1));
-    console.log("Inserting tarot card at position:", insertAt, "of", items.length, "items");
     items.splice(insertAt, 0, { type: "promo" as const, profile: null } as any);
     return items;
   }, [dailyTarot, displayItems, tab]);
@@ -344,7 +336,16 @@ const LikesLibrary = ({
             className={(isDateIdeasTab || isProfileInfoTab || isTreatTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
             {isProfileInfoTab ? (
-              <div className="grid grid-cols-4 gap-2 h-full pb-2">
+              <div 
+                className="grid grid-cols-4 gap-2 h-full pb-2 rounded-xl p-2 border border-white/10"
+                style={{
+                  backgroundImage: "url(https://ik.imagekit.io/7grri5v7d/vip%20jhh33.png)",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  backgroundBlendMode: "overlay",
+                  backgroundColor: "rgba(0,0,0,0.4)"
+                }}
+              >
                 {(
                   [
                     { key: "basic" as const, label: "Profile" },

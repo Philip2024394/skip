@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { BasicInfoEditor } from "@/components/profile-editor/BasicInfoEditor";
 import { LifestyleEditor } from "@/components/profile-editor/LifestyleEditor";
 import { RelationshipGoalsEditor } from "@/components/profile-editor/RelationshipGoalsEditor";
+import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface AdminProfile {
@@ -57,12 +58,33 @@ interface AdminProfile {
   basic_info: Record<string, any> | null;
   lifestyle_info: Record<string, any> | null;
   relationship_goals: Record<string, any> | null;
+  first_date_idea: string | null;
+  date_idea_image_url: string | null;
+  second_date_idea: string | null;
+  second_date_idea_image_url: string | null;
+  third_date_idea: string | null;
+  third_date_idea_image_url: string | null;
   phone_country_code: string | null;
   country_override_requested: boolean;
   country_override_approved: boolean;
 }
 
 const DEFAULT_IMG_POS = { x: 50, y: 50, zoom: 100 };
+
+const getDateIdeaCategory = (idea: string): string => {
+  if (idea.includes("☕") || idea.includes("🍵") || idea.includes("🧋") || idea.includes("🥤")) return "Café & Drinks";
+  if (idea.includes("🍝") || idea.includes("🍽️") || idea.includes("🍣") || idea.includes("🍕") || idea.includes("🥐") || idea.includes("🍰") || idea.includes("🍦") || idea.includes("🍜") || idea.includes("🍱") || idea.includes("🔥") || idea.includes("🧑‍🍳")) return "Food & Dining";
+  if (idea.includes("🌳") || idea.includes("🧺") || idea.includes("🌅") || idea.includes("🏖️") || idea.includes("⛰️") || idea.includes("🌺") || idea.includes("🌿") || idea.includes("🦆") || idea.includes("🦢")) return "Outdoors & Nature";
+  if (idea.includes("🚣") || idea.includes("🌊") || idea.includes("🤿") || idea.includes("🏄") || idea.includes("🪂") || idea.includes("🚤")) return "Water & Beach";
+  if (idea.includes("🎬") || idea.includes("🎵") || idea.includes("🎷") || idea.includes("😂") || idea.includes("🎤") || idea.includes("🎨") || idea.includes("🏛️") || idea.includes("💃") || idea.includes("📷") || idea.includes("⚽")) return "Entertainment & Culture";
+  if (idea.includes("🎳") || idea.includes("🎯") || idea.includes("🔐") || idea.includes("⛸️") || idea.includes("🏎️") || idea.includes("🎢") || idea.includes("🎱") || idea.includes("🏓") || idea.includes("🏸") || idea.includes("🏐") || idea.includes("🧗") || idea.includes("🧘")) return "Active & Fun";
+  if (idea.includes("🌃") || idea.includes("⭐") || idea.includes("✨") || idea.includes("🎶") || idea.includes("🛋️") || idea.includes("🕯️")) return "Romantic & Relaxed";
+  if (idea.includes("🎣") || idea.includes("⛺") || idea.includes("🚗") || idea.includes("🏘️")) return "Outdoor Lifestyle";
+  if (idea.includes("🛍️") || idea.includes("🍵") || idea.includes("📚") || idea.includes("🌙")) return "Simple & Modest";
+  if (idea.includes("🕺") || idea.includes("🎧") || idea.includes("🍸") || idea.includes("🍹") || idea.includes("🍺") || idea.includes("🍾")) return "Nightlife & Party";
+  if (idea.includes("🐶") || idea.includes("🐱") || idea.includes("🎲") || idea.includes("🍪") || idea.includes("🪁")) return "Cute & Playful";
+  return "Other";
+};
 
 const COUNTRIES = [
   "Afghanistan","Albania","Algeria","Argentina","Australia","Austria","Bangladesh","Belgium",
@@ -191,6 +213,18 @@ const UserDrawer = ({
     mock_online_hours: String(profile.mock_online_hours ?? ""),
   });
   const [offlineDays, setOfflineDays] = useState<number[]>(profile.mock_offline_days ?? []);
+  const [dateIdeas, setDateIdeas] = useState<string[]>([
+    profile.first_date_idea ?? "",
+    profile.second_date_idea ?? "",
+    profile.third_date_idea ?? "",
+  ]);
+  const [dateIdeaImages, setDateIdeaImages] = useState<string[]>([
+    profile.date_idea_image_url ?? "",
+    profile.second_date_idea_image_url ?? "",
+    profile.third_date_idea_image_url ?? "",
+  ]);
+  const [dateIdeaUploading, setDateIdeaUploading] = useState<number | null>(null);
+  const dateIdeaImgRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
   const [details, setDetails] = useState({
     height_cm:   profile.height_cm ?? ("" as number | ""),
     orientation: profile.orientation ?? "",
@@ -256,6 +290,20 @@ const UserDrawer = ({
     if (imgInputRef.current) imgInputRef.current.value = "";
   };
 
+  const handleDateIdeaImgUpload = async (slot: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDateIdeaUploading(slot);
+    const ext = file.name.split(".").pop();
+    const path = `${profile.id}/date-idea-${slot}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("profile-images").upload(path, file, { upsert: true });
+    if (error) { toast.error("Upload failed: " + error.message); setDateIdeaUploading(null); return; }
+    const { data: urlData } = supabase.storage.from("profile-images").getPublicUrl(path);
+    setDateIdeaImages(imgs => { const next = [...imgs]; next[slot] = urlData.publicUrl; return next; });
+    setDateIdeaUploading(null);
+    if (dateIdeaImgRefs[slot]?.current) dateIdeaImgRefs[slot].current!.value = "";
+  };
+
   const saveImages = async () => {
     setSaving(true);
     const avatarUrl = adminImages[0] ?? profile.avatar_url;
@@ -273,6 +321,21 @@ const UserDrawer = ({
     c.toLowerCase().includes(countrySearch.toLowerCase()) && !targetCountries.includes(c)
   );
 
+  const upsertGlobalDateIdeaImages = async (ideas: string[], images: string[]) => {
+    const pairs = ideas.map((idea, i) => ({ idea, image: images[i] })).filter(p => p.idea && p.image);
+    if (pairs.length === 0) return;
+    await supabase.from("date_ideas_images").upsert(
+      pairs.map(p => ({
+        idea_name: p.idea,
+        image_url: p.image,
+        image_alt: p.idea,
+        category: getDateIdeaCategory(p.idea),
+        is_active: true,
+      })),
+      { onConflict: "idea_name" }
+    );
+  };
+
   const handleSave = async () => {
     setSaving(true);
     await onEditProfile(profile.id, {
@@ -287,8 +350,16 @@ const UserDrawer = ({
       visible_in_countries: targetCountries.length > 0 ? targetCountries : null,
       mock_online_hours: editForm.mock_online_hours !== "" ? Number(editForm.mock_online_hours) : null,
       mock_offline_days: offlineDays.length > 0 ? offlineDays : null,
+      first_date_idea: dateIdeas[0] || null,
+      date_idea_image_url: dateIdeaImages[0] || null,
+      second_date_idea: dateIdeas[1] || null,
+      second_date_idea_image_url: dateIdeaImages[1] || null,
+      third_date_idea: dateIdeas[2] || null,
+      third_date_idea_image_url: dateIdeaImages[2] || null,
+      selected_date_ideas: dateIdeas.filter(idea => idea) || null,
       ...badgeOverrides,
     });
+    await upsertGlobalDateIdeaImages(dateIdeas, dateIdeaImages);
     setBadgeOverrides({});
     setSaving(false);
   };
@@ -736,6 +807,56 @@ const UserDrawer = ({
                 )}
               </div>
 
+              {/* Date Ideas x3 */}
+              <div className="space-y-3 pt-1 border-t border-white/8">
+                <p className="text-white/60 text-xs font-bold flex items-center gap-1.5">
+                  <Heart className="w-3.5 h-3.5 text-pink-400" /> Date Ideas (up to 3)
+                </p>
+                {([0, 1, 2] as const).map(slot => (
+                  <div key={slot} className="space-y-1.5 p-2.5 rounded-xl bg-white/5 border border-white/8">
+                    <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">Idea {slot + 1}</p>
+                    <select
+                      value={dateIdeas[slot]}
+                      onChange={e => setDateIdeas(arr => { const next = [...arr]; next[slot] = e.target.value; return next; })}
+                      className="w-full h-9 px-3 rounded-xl border border-white/10 bg-[#1a1a1a] text-white text-xs focus:outline-none focus:border-pink-400 transition-colors"
+                    >
+                      <option value="">— None —</option>
+                      {FIRST_DATE_IDEAS.map(idea => (
+                        <option key={idea} value={idea}>{idea}</option>
+                      ))}
+                    </select>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        {dateIdeaImages[slot] && (
+                          <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 border border-white/10">
+                            <img src={dateIdeaImages[slot]} alt="" className="w-full h-full object-cover" />
+                            <button onClick={() => setDateIdeaImages(imgs => { const next = [...imgs]; next[slot] = ""; return next; })}
+                              className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center">
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        )}
+                        <button
+                          onClick={() => dateIdeaImgRefs[slot]?.current?.click()}
+                          disabled={dateIdeaUploading === slot}
+                          className="flex-1 h-8 rounded-xl border border-dashed border-pink-500/30 text-pink-400 text-[10px] font-semibold flex items-center justify-center gap-1 hover:bg-pink-500/10 transition-colors disabled:opacity-50"
+                        >
+                          <Camera className="w-3 h-3" />{dateIdeaUploading === slot ? "Uploading…" : dateIdeaImages[slot] ? "Replace" : "Upload Image"}
+                        </button>
+                        <input ref={dateIdeaImgRefs[slot]} type="file" accept="image/*" className="hidden" onChange={e => handleDateIdeaImgUpload(slot, e)} />
+                      </div>
+                      <input
+                        type="url"
+                        placeholder="Or paste image URL…"
+                        value={dateIdeaImages[slot]}
+                        onChange={e => setDateIdeaImages(imgs => { const next = [...imgs]; next[slot] = e.target.value; return next; })}
+                        className="w-full h-7 px-2.5 rounded-lg border border-white/8 bg-white/5 text-white text-[10px] placeholder-white/25 focus:outline-none focus:border-pink-400/50 transition-colors"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               <button onClick={handleSave} disabled={saving}
                 className="h-12 w-full rounded-2xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md transition-all active:scale-95 disabled:opacity-60 mt-2">
                 <Save className="w-4 h-4" />{saving ? "Saving…" : "Save Changes"}
@@ -1181,6 +1302,10 @@ ON CONFLICT (user_id, role) DO NOTHING;`,
 
 const SetupTab = () => {
   const [copied, setCopied] = React.useState<number | null>(null);
+  const [seeding, setSeeding]   = React.useState(false);
+  const [refreshing2, setRefreshing2] = React.useState(false);
+  const [seedResult, setSeedResult]     = React.useState<{ success: boolean; total?: number; created?: number; updated?: number; failed?: number; error?: string } | null>(null);
+  const [refreshResult, setRefreshResult] = React.useState<{ success: boolean; updated?: number; total?: number; error?: string } | null>(null);
 
   const copy = (sql: string, step: number) => {
     navigator.clipboard.writeText(sql).then(() => {
@@ -1189,8 +1314,97 @@ const SetupTab = () => {
     });
   };
 
+  const handleSeedMockProfiles = async () => {
+    setSeeding(true);
+    setSeedResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("seed-mock-profiles", { body: {} });
+      if (error) throw error;
+      setSeedResult(data);
+    } catch (err: unknown) {
+      setSeedResult({ success: false, error: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const handleRefreshOnlineStatus = async () => {
+    setRefreshing2(true);
+    setRefreshResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("refresh-mock-online-status", { body: {} });
+      if (error) throw error;
+      setRefreshResult(data);
+    } catch (err: unknown) {
+      setRefreshResult({ success: false, error: err instanceof Error ? err.message : String(err) });
+    } finally {
+      setRefreshing2(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
+      {/* ── Mock Profiles Section ─────────────────────────────── */}
+      <div className="bg-purple-500/8 border border-purple-500/20 rounded-2xl p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🤖</span>
+          <p className="text-purple-300 font-bold text-sm">Mock Profiles</p>
+        </div>
+        <p className="text-white/50 text-xs leading-relaxed">
+          Seed 90 realistic Indonesian mock profiles into Supabase (creates auth users + full profile rows with <strong className="text-white/70">basic info, lifestyle, relationship goals</strong> and Unsplash images). Safe to run multiple times — existing profiles are updated, not duplicated. After seeding, use the <strong className="text-white/70">Users → Mock</strong> filter to view and edit them.
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+          {/* Seed button */}
+          <button
+            onClick={handleSeedMockProfiles}
+            disabled={seeding}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 hover:bg-purple-500/30 hover:border-purple-500/50 transition-all font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {seeding ? (
+              <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Seeding…</>
+            ) : (
+              <><Zap className="w-3.5 h-3.5" /> Seed Mock Profiles</>
+            )}
+          </button>
+
+          {/* Refresh online status button */}
+          <button
+            onClick={handleRefreshOnlineStatus}
+            disabled={refreshing2}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-green-500/15 border border-green-500/25 text-green-400 hover:bg-green-500/25 hover:border-green-500/40 transition-all font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {refreshing2 ? (
+              <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Updating…</>
+            ) : (
+              <><Activity className="w-3.5 h-3.5" /> Refresh Online Status</>
+            )}
+          </button>
+        </div>
+
+        {/* Seed result */}
+        {seedResult && (
+          <div className={`rounded-xl px-3 py-2 text-xs font-medium border ${seedResult.success ? "bg-green-500/10 border-green-500/20 text-green-300" : "bg-red-500/10 border-red-500/20 text-red-300"}`}>
+            {seedResult.success
+              ? `✅ Done — ${seedResult.created} created, ${seedResult.updated} updated, ${seedResult.failed} failed (total ${seedResult.total})`
+              : `❌ Error: ${seedResult.error}`}
+          </div>
+        )}
+
+        {/* Refresh result */}
+        {refreshResult && (
+          <div className={`rounded-xl px-3 py-2 text-xs font-medium border ${refreshResult.success ? "bg-green-500/10 border-green-500/20 text-green-300" : "bg-red-500/10 border-red-500/20 text-red-300"}`}>
+            {refreshResult.success
+              ? `✅ Updated last_seen_at for ${refreshResult.updated}/${refreshResult.total} mock profiles`
+              : `❌ Error: ${refreshResult.error}`}
+          </div>
+        )}
+
+        <p className="text-white/30 text-[10px]">
+          ⚠️ Requires the edge functions to be deployed. Run: <code className="bg-white/8 px-1 rounded text-purple-300/80">supabase functions deploy seed-mock-profiles</code> and <code className="bg-white/8 px-1 rounded text-purple-300/80">supabase functions deploy refresh-mock-online-status</code>
+        </p>
+      </div>
+
       {/* Header */}
       <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-2">
         <div className="flex items-center gap-2">
@@ -1378,6 +1592,11 @@ const AdminPage = () => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
   const [profiles, setProfiles] = useState<AdminProfile[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [likesCount, setLikesCount] = useState(0);
@@ -1396,8 +1615,10 @@ const AdminPage = () => {
 
   useEffect(() => {
     const init = async () => {
-      // Dev bypass — skip auth/role check, load mock-friendly admin view
+      // Dev bypass — skip role check but still require Supabase session for writes
       if (import.meta.env.DEV) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) setNeedsLogin(true);
         setIsAdmin(true);
         try { await loadData(); } catch (_) {}
         setLoading(false);
@@ -1420,6 +1641,19 @@ const AdminPage = () => {
     init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleAdminLogin = async () => {
+    setLoginLoading(true);
+    setLoginError("");
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+    if (error) {
+      setLoginError(error.message);
+    } else {
+      setNeedsLogin(false);
+      toast.success("Signed in — saves will now work ✓");
+    }
+    setLoginLoading(false);
+  };
 
   const loadData = async () => {
     setRefreshing(true);
@@ -1712,9 +1946,11 @@ const AdminPage = () => {
   };
 
   const handleEditProfile = async (userId: string, updates: Partial<AdminProfile>) => {
-    const { error } = await (supabase.from("profiles").update as any)(updates).eq("id", userId);
+    const { data, error } = await (supabase.from("profiles").update as any)(updates).eq("id", userId).select("id");
     if (error) {
       rlsErr(error);
+    } else if (!data || data.length === 0) {
+      toast.error("Save blocked by database policy — please log in as admin first, then retry.");
     } else {
       toast.success("Profile updated ✓");
       setProfiles(p => p.map(u => u.id === userId ? { ...u, ...updates } : u));
@@ -1791,6 +2027,37 @@ const AdminPage = () => {
         <Shield className="w-6 h-6 text-white animate-pulse" />
       </div>
       <p className="text-white/40 text-sm font-medium">Loading Admin Dashboard…</p>
+    </div>
+  );
+
+  // ── Login overlay (no session) ───────────────────────────────────
+  if (needsLogin) return (
+    <div className="h-screen bg-[#0a0a0a] flex flex-col items-center justify-center gap-4 px-6">
+      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
+        <Shield className="w-6 h-6 text-white" />
+      </div>
+      <p className="text-white font-bold text-lg">Admin Login Required</p>
+      <p className="text-white/50 text-sm text-center">Sign in with your admin account to enable saves</p>
+      <div className="w-full max-w-sm space-y-3">
+        <input
+          type="email" placeholder="Admin email" value={loginEmail}
+          onChange={e => setLoginEmail(e.target.value)}
+          className="w-full h-12 rounded-2xl bg-white/10 border border-white/20 text-white placeholder-white/40 px-4 text-sm outline-none focus:border-pink-500"
+        />
+        <input
+          type="password" placeholder="Password" value={loginPassword}
+          onChange={e => setLoginPassword(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleAdminLogin()}
+          className="w-full h-12 rounded-2xl bg-white/10 border border-white/20 text-white placeholder-white/40 px-4 text-sm outline-none focus:border-pink-500"
+        />
+        {loginError && <p className="text-red-400 text-xs px-1">{loginError}</p>}
+        <button
+          onClick={handleAdminLogin} disabled={loginLoading || !loginEmail || !loginPassword}
+          className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold text-sm disabled:opacity-50"
+        >
+          {loginLoading ? "Signing in…" : "Sign In"}
+        </button>
+      </div>
     </div>
   );
 
