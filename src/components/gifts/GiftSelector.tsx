@@ -12,13 +12,17 @@ interface VirtualGift {
 
 interface GiftSelectorProps {
   userId: string;
-  onGiftSelected: (gift: VirtualGift) => void;
+  profileId: string;
+  profileName: string;
+  onGiftSelected?: (gift: VirtualGift) => void;
+  onGiftSent?: () => void;
 }
 
-export default function GiftSelector({ userId, onGiftSelected }: GiftSelectorProps) {
+export default function GiftSelector({ userId, profileId, profileName, onGiftSelected, onGiftSent }: GiftSelectorProps) {
   const [gifts, setGifts] = useState<VirtualGift[]>([]);
   const [selectedGifts, setSelectedGifts] = useState<VirtualGift[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingGift, setSendingGift] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGifts();
@@ -122,6 +126,29 @@ export default function GiftSelector({ userId, onGiftSelected }: GiftSelectorPro
     }
   };
 
+  const sendGiftToProfile = async (gift: VirtualGift) => {
+    setSendingGift(gift.id);
+    
+    try {
+      // TODO: Implement actual payment processing
+      // For now, we'll simulate the gift sending
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // TODO: Save to sent_gifts table
+      console.log(`Sending ${gift.name} to ${profileName} (ID: ${profileId})`);
+      
+      toast.success(`🎁 ${gift.name} sent to ${profileName}!`);
+      
+      if (onGiftSent) {
+        onGiftSent();
+      }
+    } catch (error) {
+      toast.error("Failed to send gift. Please try again.");
+    } finally {
+      setSendingGift(null);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{
@@ -144,24 +171,49 @@ export default function GiftSelector({ userId, onGiftSelected }: GiftSelectorPro
       padding: 16,
       margin: "16px 0",
     }}>
-      <h3 style={{
-        color: "rgba(236,72,153,0.9)",
-        fontSize: 14,
-        fontWeight: 700,
-        marginBottom: 12,
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-      }}>
-        Gifts That Get My Attention
-      </h3>
-      
-      <p style={{
-        color: "rgba(255,255,255,0.7)",
-        fontSize: 12,
-        marginBottom: 16,
-      }}>
-        Select up to 5 gifts that you'd love to receive. These will be highlighted on your profile for others to send you.
-      </p>
+      {profileId ? (
+        <>
+          <h3 style={{
+            color: "rgba(236,72,153,0.9)",
+            fontSize: 16,
+            fontWeight: 700,
+            marginBottom: 12,
+            textAlign: "center",
+          }}>
+            Send a Gift to {profileName}
+          </h3>
+          
+          <p style={{
+            color: "rgba(255,255,255,0.7)",
+            fontSize: 12,
+            marginBottom: 16,
+            textAlign: "center",
+          }}>
+            Choose a gift to send - $1 each
+          </p>
+        </>
+      ) : (
+        <>
+          <h3 style={{
+            color: "rgba(236,72,153,0.9)",
+            fontSize: 14,
+            fontWeight: 700,
+            marginBottom: 12,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+          }}>
+            Gifts That Get My Attention
+          </h3>
+          
+          <p style={{
+            color: "rgba(255,255,255,0.7)",
+            fontSize: 12,
+            marginBottom: 16,
+          }}>
+            Select up to 5 gifts that you'd love to receive. These will be highlighted on your profile for others to send you.
+          </p>
+        </>
+      )}
 
       <div style={{
         display: "grid",
@@ -176,7 +228,7 @@ export default function GiftSelector({ userId, onGiftSelected }: GiftSelectorPro
               key={gift.id}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => toggleGift(gift)}
+              onClick={() => profileId ? sendGiftToProfile(gift) : toggleGift(gift)}
               style={{
                 background: isSelected 
                   ? "rgba(236,72,153,0.2)" 
@@ -206,18 +258,39 @@ export default function GiftSelector({ userId, onGiftSelected }: GiftSelectorPro
                 {gift.name}
               </div>
               <div style={{
-                color: "rgba(236,72,153,0.8)",
+                color: sendingGift === gift.id 
+                  ? "rgba(255,255,255,0.5)" 
+                  : "rgba(236,72,153,0.8)",
                 fontSize: 9,
                 fontWeight: 700,
               }}>
-                ${gift.price}
+                {sendingGift === gift.id ? "Sending..." : `$${gift.price}`}
               </div>
             </motion.div>
           );
         })}
       </div>
 
-      {selectedGifts.length > 0 && (
+      {profileId ? (
+        <div>
+          <p style={{
+            color: "rgba(255,255,255,0.4)",
+            fontSize: 10,
+            textAlign: "center",
+            marginTop: 12,
+          }}>
+            Each gift costs $1 USD
+          </p>
+          <p style={{
+            color: "rgba(255,255,255,0.4)",
+            fontSize: 10,
+            textAlign: "center",
+            marginTop: 4,
+          }}>
+            Gifts will appear on their profile
+          </p>
+        </div>
+      ) : selectedGifts.length > 0 && (
         <div>
           <p style={{
             color: "rgba(255,255,255,0.6)",

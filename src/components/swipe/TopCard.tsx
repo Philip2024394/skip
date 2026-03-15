@@ -4,6 +4,7 @@ import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight, BadgeCheck } fro
 import ProfileBadge from "@/components/ProfileBadge";
 import ContactPreferenceBadge from "@/components/ContactPreferenceBadge";
 import DistanceBadge from "@/components/DistanceBadge";
+import SentGiftsDisplay from "@/components/gifts/SentGiftsDisplay";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
 import SwipeStack from "@/components/SwipeStack";
@@ -191,6 +192,7 @@ export default function TopCard(props: TopCardProps) {
             <p className="text-white/60 text-sm flex items-center gap-1 mt-1">
               <MapPin className="w-3 h-3" /> {props.selectedProfile.city}, {props.selectedProfile.country}
             </p>
+            <SentGiftsDisplay profileId={props.selectedProfile.id} />
             {props.selectedProfile.contact_preference && (
               <div className="mt-1.5">
                 <ContactPreferenceBadge preference={props.selectedProfile.contact_preference} />

@@ -8,6 +8,7 @@ import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { toast } from "sonner";
 import { getDateIdeaDescription } from "@/data/dateIdeaDescriptions";
 import { getDateIdeaMetadata } from "@/data/dateIdeaMetadata";
+import GiftSelector from "@/components/gifts/GiftSelector";
 
 interface ProfileBottomSheetProps {
   // Profile data
@@ -469,9 +470,15 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       })()}
                     </div>
                   ) : props.aboutMeTab === "gifts" ? (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <p className="text-white/30 text-xs">Gifts coming soon…</p>
-                    </div>
+                    <GiftSelector
+                      userId={props.selectedProfile?.id || ""}
+                      profileId={props.selectedProfile?.id || ""}
+                      profileName={props.selectedProfile?.name || ""}
+                      onGiftSent={() => {
+                        // Refresh profile data or update UI
+                        console.log("Gift sent to profile");
+                      }}
+                    />
                   ) : (
                     <div
                       className="h-full w-full overflow-y-auto scrollbar-pink"
