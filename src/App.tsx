@@ -14,6 +14,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import WhatsAppLeadsPage from "./pages/admin/WhatsAppLeadsPage";
+import WorldMapDashboard from "./pages/admin/WorldMapDashboard";
 import MapPage from "./pages/MapPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -100,6 +101,7 @@ const AppContent = () => {
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><WhatsAppLeadsPage /></ProtectedRoute>} />
+          <Route path="/admin/world-map" element={<ProtectedRoute><WorldMapDashboard /></ProtectedRoute>} />
           <Route path="/2dtm-control-panel" element={<AdminPage />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/terms" element={<TermsPage />} />
