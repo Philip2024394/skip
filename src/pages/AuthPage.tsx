@@ -201,8 +201,6 @@ const AuthPage = () => {
               national_number: whatsappDigits,
               source: "registration",
               last_seen_at: new Date().toISOString(),
-              signup_time: new Date().toISOString(),
-              modified_time: new Date().toISOString(),
             },
             { onConflict: "whatsapp_e164" }
           );
@@ -288,8 +286,6 @@ const AuthPage = () => {
                 national_number: nationalDigits,
                 source: "landing",
                 last_seen_at: new Date().toISOString(),
-                signup_time: new Date().toISOString(),
-                modified_time: new Date().toISOString(),
               },
               { onConflict: "whatsapp_e164" }
             );
@@ -327,8 +323,6 @@ const AuthPage = () => {
               national_number: nationalDigits,
               source: "landing",
               last_seen_at: new Date().toISOString(),
-              signup_time: new Date().toISOString(),
-              modified_time: new Date().toISOString(),
             },
             { onConflict: "whatsapp_e164" }
           );

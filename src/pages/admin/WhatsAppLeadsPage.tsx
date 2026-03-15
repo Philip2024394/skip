@@ -75,7 +75,7 @@ export default function WhatsAppLeadsPage() {
       const { data, error } = await supabase
         .from("whatsapp_leads")
         .select("*")
-        .order("signup_time", { ascending: false });
+        .order("first_seen_at", { ascending: false });
 
       if (error) throw error;
       setLeads(data || []);
