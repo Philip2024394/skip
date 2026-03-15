@@ -21,6 +21,7 @@ import MapPage from "./pages/MapPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import FaqPage from "./pages/FaqPage";
+import VideoPlaylistPage from "./pages/VideoPlaylistPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -110,6 +111,7 @@ const AppContent = () => {
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/faq" element={<FaqPage />} />
+          <Route path="/video-playlist/:id" element={<VideoPlaylistPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </ErrorBoundary>

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { getDateIdeaDescription } from "@/data/dateIdeaDescriptions";
 import { getDateIdeaMetadata } from "@/data/dateIdeaMetadata";
 import GiftSelector from "@/components/gifts/GiftSelector";
+import VideoContainer from "@/components/video/VideoContainer";
 
 interface ProfileBottomSheetProps {
   // Profile data
@@ -470,15 +471,18 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       })()}
                     </div>
                   ) : props.aboutMeTab === "gifts" ? (
-                    <GiftSelector
-                      userId={props.selectedProfile?.id || ""}
-                      profileId={props.selectedProfile?.id || ""}
-                      profileName={props.selectedProfile?.name || ""}
-                      onGiftSent={() => {
-                        // Refresh profile data or update UI
-                        console.log("Gift sent to profile");
-                      }}
-                    />
+                    <>
+                      {console.log('ProfileBottomSheet: Rendering gifts tab for profile:', props.selectedProfile?.id)}
+                      <GiftSelector
+                        userId={props.selectedProfile?.id || ""}
+                        profileId={props.selectedProfile?.id || ""}
+                        profileName={props.selectedProfile?.name || ""}
+                        onGiftSent={() => {
+                          // Refresh profile data or update UI
+                          console.log("Gift sent to profile");
+                        }}
+                      />
+                    </>
                   ) : (
                     <div
                       className="h-full w-full overflow-y-auto scrollbar-pink"

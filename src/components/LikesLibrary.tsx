@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Unlock, Clock, Sparkles, MapPin, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Profile } from "./SwipeCard";
@@ -12,6 +12,10 @@ import { isOnline } from "@/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
 // import GiftsTab from "@/components/gifts/GiftsTab";
 import { supabase } from "@/integrations/supabase/client";
+import GiftSelector from "@/components/gifts/GiftSelector";
+import VideoContainer from "@/components/video/VideoContainer";
+import CountdownBadge from "@/components/likes-library/CountdownBadge";
+import { useNavigate } from "react-router-dom";
 
 // ── How "new" a profile is (joined in last 7 days) ────────────────────────────
 const isNewProfile = (p: Profile) => {
@@ -37,6 +41,10 @@ interface LikesLibraryProps {
   onSelectTreatItem?: (key: TreatKey) => void;
   selectedDateIdeaIndex?: number;
   onSelectDateIdea?: (index: number) => void;
+  // Gifts tab props
+  selectedProfile?: Profile | null;
+  allProfiles?: Profile[];
+  onGiftSent?: () => void;
   iLiked: Profile[];
   likedMe: Profile[];
   newProfiles: Profile[];       // new: all profiles from Index, pre-filtered
@@ -101,6 +109,10 @@ const LikesLibrary = ({
   onSelectTreatItem,
   selectedDateIdeaIndex,
   onSelectDateIdea,
+  // Gifts tab props
+  selectedProfile,
+  allProfiles,
+  onGiftSent,
   iLiked, likedMe, newProfiles, filterCountry,
   dailyTarot,
   onRevealDailyTarot,
@@ -108,7 +120,8 @@ const LikesLibrary = ({
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
- }: LikesLibraryProps) => {
+}: LikesLibraryProps) => {
+  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
   const [promoPosition, setPromoPosition] = useState(0);
@@ -346,7 +359,7 @@ const LikesLibrary = ({
           >
             {isProfileInfoTab ? (
               <div 
-                className="grid grid-cols-4 gap-2 h-full pb-2 rounded-xl p-2 border border-white/10"
+                className="grid grid-cols-3 gap-2 h-full pb-2 rounded-xl p-2 border border-white/10"
                 style={{
                   backgroundImage: "url(https://ik.imagekit.io/7grri5v7d/vip%20jhh33.png)",
                   backgroundSize: "cover",
@@ -358,9 +371,8 @@ const LikesLibrary = ({
                 {(
                   [
                     { key: "basic" as const, label: "Profile" },
-                    { key: "lifestyle" as const, label: "Lifestyle" },
-                    { key: "interests" as const, label: "Interests" },
                     { key: "images" as const, label: "Images" },
+                    { key: "video" as const, label: "Video" },
                   ]
                 ).map((s, idx) => (
                   <motion.button
@@ -373,7 +385,13 @@ const LikesLibrary = ({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      onSelectProfileSection?.(s.key);
+                      if (s.key === "video") {
+                        // Navigate to video playlist page
+                        const profileId = selectedProfile?.id || 'default';
+                        navigate(`/video-playlist/${profileId}`);
+                      } else {
+                        onSelectProfileSection?.(s.key);
+                      }
                     }}
                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] backdrop-blur-md border relative w-full ${selectedProfileSection === s.key ? "border-pink-500/70 ring-2 ring-pink-500/40 bg-pink-950/40" : "bg-black/50 border-white/10"}`}
                     style={{
@@ -544,6 +562,15 @@ const LikesLibrary = ({
                   ) : null}
                 </div>
               )
+            ) : tab === "gifts" ? (
+              <div className="h-full">
+                <GiftSelector
+                  userId={selectedProfile?.id || ""}
+                  profileId={selectedProfile?.id || ""}
+                  profileName={selectedProfile?.name || ""}
+                  onGiftSent={onGiftSent}
+                />
+              </div>
             ) : displayItemsWithTarot.length === 0 ? (
               <div className="flex items-center justify-center flex-1 px-4">
                 <p className="text-white/40 text-xs text-center">{emptyText}</p>

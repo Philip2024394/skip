@@ -264,6 +264,11 @@ const Index = () => {
   // only when every profile has been seen (endless loop feel).
   const shuffledQueueRef = useRef<Profile[]>([]);
   const seenIdsRef = useRef<Set<string>>(new Set());
+  // Independent queues for top and bottom stacks
+  const topShuffledQueueRef = useRef<Profile[]>([]);
+  const topSeenIdsRef = useRef<Set<string>>(new Set());
+  const bottomShuffledQueueRef = useRef<Profile[]>([]);
+  const bottomSeenIdsRef = useRef<Set<string>>(new Set());
   // Increment to force topProfiles/bottomProfiles to recompute after queue changes
   const [queueTick, setQueueTick] = useState(0);
 
@@ -276,66 +281,89 @@ const Index = () => {
     return a;
   };
 
-  // Build/restore the queue whenever filteredProfiles changes
+  // Build/restore independent queues for top and bottom whenever filteredProfiles changes
   useEffect(() => {
     if (filteredProfiles.length === 0) return;
-    const storageKey = "swipe_queue_ids";
-    const stored = sessionStorage.getItem(storageKey);
-    if (stored) {
-      // Restore order from session, mapping ids back to current profiles
-      const ids: string[] = JSON.parse(stored);
-      const profileMap = new Map(filteredProfiles.map(p => [p.id, p]));
-      const restored = ids.map(id => profileMap.get(id)).filter(Boolean) as Profile[];
-      // Add any new profiles not in the stored queue at random positions
-      const newProfiles = filteredProfiles.filter(p => !ids.includes(p.id));
-      const combined = [...restored, ...fisherYates(newProfiles)];
-      shuffledQueueRef.current = combined;
-    } else {
-      // First visit this session — shuffle fresh
-      shuffledQueueRef.current = fisherYates(filteredProfiles);
-      sessionStorage.setItem(storageKey, JSON.stringify(shuffledQueueRef.current.map(p => p.id)));
-    }
 
-    // Restore seen ids from sessionStorage
-    const seenStored = sessionStorage.getItem("swipe_seen_ids");
-    if (seenStored) seenIdsRef.current = new Set(JSON.parse(seenStored));
+    // Initialize independent queues for top and bottom
+    const topStored = sessionStorage.getItem("top_swipe_queue_ids");
+    const topSeenStored = sessionStorage.getItem("top_swipe_seen_ids");
+    if (topStored) topShuffledQueueRef.current = filteredProfiles.filter(p => JSON.parse(topStored).includes(p.id));
+    if (topSeenStored) topSeenIdsRef.current = new Set(JSON.parse(topSeenStored));
+
+    const bottomStored = sessionStorage.getItem("bottom_swipe_queue_ids");
+    const bottomSeenStored = sessionStorage.getItem("bottom_swipe_seen_ids");
+    if (bottomStored) bottomShuffledQueueRef.current = filteredProfiles.filter(p => JSON.parse(bottomStored).includes(p.id));
+    if (bottomSeenStored) bottomSeenIdsRef.current = new Set(JSON.parse(bottomSeenStored));
+
+    // If no stored queues, create fresh independent shuffles
+    if (topShuffledQueueRef.current.length === 0) {
+      topShuffledQueueRef.current = fisherYates(filteredProfiles);
+      sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
+    }
+    if (bottomShuffledQueueRef.current.length === 0) {
+      bottomShuffledQueueRef.current = fisherYates(filteredProfiles);
+      sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
+    }
 
     // Trigger recompute of topProfiles/bottomProfiles
     setQueueTick(t => t + 1);
   }, [filteredProfiles]);
 
-  // Advance the queue — called by SwipeStack on each pass/like
-  const advanceQueue = useCallback((profileId: string) => {
-    seenIdsRef.current.add(profileId);
+  // Advance the top queue — called by SwipeStack on each pass/like
+  const advanceTopQueue = useCallback((profileId: string) => {
+    topSeenIdsRef.current.add(profileId);
     // Persist seen ids
-    sessionStorage.setItem("swipe_seen_ids", JSON.stringify([...seenIdsRef.current]));
+    sessionStorage.setItem("top_swipe_seen_ids", JSON.stringify([...topSeenIdsRef.current]));
     // If all profiles seen, reset seen list and re-shuffle for a fresh loop
-    if (seenIdsRef.current.size >= shuffledQueueRef.current.length) {
-      seenIdsRef.current = new Set();
-      sessionStorage.removeItem("swipe_seen_ids");
-      shuffledQueueRef.current = fisherYates(filteredProfiles);
-      sessionStorage.setItem("swipe_queue_ids", JSON.stringify(shuffledQueueRef.current.map(p => p.id)));
+    if (topSeenIdsRef.current.size >= topShuffledQueueRef.current.length) {
+      topSeenIdsRef.current = new Set();
+      sessionStorage.removeItem("top_swipe_seen_ids");
+      topShuffledQueueRef.current = fisherYates(filteredProfiles);
+      sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
     }
-    // Trigger re-render so topProfiles/bottomProfiles recompute
+    // Trigger re-render so topProfiles recompute
     setQueueTick(t => t + 1);
   }, [filteredProfiles]);
 
-  // Derive ordered top/bottom from the stable queue, skipping seen profiles
+  // Advance the bottom queue — called by SwipeStack on each pass/like
+  const advanceBottomQueue = useCallback((profileId: string) => {
+    bottomSeenIdsRef.current.add(profileId);
+    // Persist seen ids
+    sessionStorage.setItem("bottom_swipe_seen_ids", JSON.stringify([...bottomSeenIdsRef.current]));
+    // If all profiles seen, reset seen list and re-shuffle for a fresh loop
+    if (bottomSeenIdsRef.current.size >= bottomShuffledQueueRef.current.length) {
+      bottomSeenIdsRef.current = new Set();
+      sessionStorage.removeItem("bottom_swipe_seen_ids");
+      bottomShuffledQueueRef.current = fisherYates(filteredProfiles);
+      sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
+    }
+    // Trigger re-render so bottomProfiles recompute
+    setQueueTick(t => t + 1);
+  }, [filteredProfiles]);
+
+  // Legacy advanceQueue for compatibility
+  const advanceQueue = useCallback((profileId: string) => {
+    // This is no longer used since we have independent queues
+  }, []);
+
+  // Derive ordered top/bottom from independent queues, skipping seen profiles
   const { topProfiles, bottomProfiles } = useMemo(() => {
-    // Use filteredProfiles as immediate fallback before queue is built (first render)
-    const queue = shuffledQueueRef.current.length > 0 ? shuffledQueueRef.current : filteredProfiles;
-    const unseen = queue.filter(p => !seenIdsRef.current.has(p.id));
-    // If all seen (race condition), use full queue
-    const pool = unseen.length > 0 ? unseen : queue;
-    const top: Profile[] = [];
-    const bottom: Profile[] = [];
-    pool.forEach((p, i) => {
-      if (i % 2 === 0) top.push(p);
-      else bottom.push(p);
-    });
+    // Use filteredProfiles as immediate fallback before queues are built (first render)
+    const topQueue = topShuffledQueueRef.current.length > 0 ? topShuffledQueueRef.current : filteredProfiles;
+    const bottomQueue = bottomShuffledQueueRef.current.length > 0 ? bottomShuffledQueueRef.current : filteredProfiles;
+    
+    const topUnseen = topQueue.filter(p => !topSeenIdsRef.current.has(p.id));
+    const bottomUnseen = bottomQueue.filter(p => !bottomSeenIdsRef.current.has(p.id));
+    
+    // If all seen (race condition), use full queues
+    const topPool = topUnseen.length > 0 ? topUnseen : topQueue;
+    const bottomPool = bottomUnseen.length > 0 ? bottomUnseen : bottomQueue;
+    
     // Guarantee neither stack is ever blank — fall back to the other (reversed) if empty
-    const safeTop    = top.length > 0    ? top    : bottom.slice().reverse();
-    const safeBottom = bottom.length > 0 ? bottom : top.slice().reverse();
+    const safeTop = topPool.length > 0 ? topPool : bottomPool.slice().reverse();
+    const safeBottom = bottomPool.length > 0 ? bottomPool : topPool.slice().reverse();
+    
     return { topProfiles: safeTop, bottomProfiles: safeBottom };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredProfiles, queueTick]);
@@ -397,7 +425,7 @@ const Index = () => {
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
-  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "unlock" | "distance">("new");
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "gifts" | "unlock" | "distance">("new");
   const [homeUnlockKey, setHomeUnlockKey] = useState<string>("");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
@@ -879,7 +907,7 @@ const Index = () => {
               handleLike={handleLike}
               handleRose={handleRose}
               handleLibraryCardDrag={handleLibraryCardDrag}
-              advanceQueue={advanceQueue}
+              advanceQueue={advanceTopQueue}
               navigate={navigate}
               sessionStatsRef={sessionStatsRef}
               setSessionTick={setSessionTick}
@@ -973,6 +1001,12 @@ const Index = () => {
                   }}
                   profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
                   profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
+                  // Gifts tab props
+                  selectedProfile={isProfileRoute ? selectedProfile : null}
+                  allProfiles={allProfiles}
+                  onGiftSent={() => {
+                    console.log("Gift sent in Index");
+                  }}
                   iLiked={iLiked}
                   likedMe={likedMe}
                   newProfiles={libraryNewProfiles}
@@ -1019,13 +1053,13 @@ const Index = () => {
                     onRose={handleRose}
                     onLike={(p) => {
                       handleLike(p);
-                      advanceQueue(p.id);
+                      advanceBottomQueue(p.id);
                       if (user) navigate(`/profile/${p.id}`);
                     }}
                     onPass={(p) => {
                       sessionStatsRef.current.passed += 1;
                       setSessionTick((v) => v + 1);
-                      advanceQueue(p.id);
+                      advanceBottomQueue(p.id);
                     }}
                   />
                 )}
