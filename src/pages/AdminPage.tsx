@@ -1644,6 +1644,9 @@ const AlertsTab = ({ alerts, dbConnected }: { alerts: AlertItem[]; dbConnected: 
 const AdminPage = () => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  // DEBUG: Verify latest code is loading
+  console.log('🚀 AdminPage loaded with World Map button -', new Date().toISOString());
   const [loading, setLoading] = useState(true);
   const [needsLogin, setNeedsLogin] = useState(false);
   const [loginEmail, setLoginEmail] = useState("");
@@ -2147,17 +2150,17 @@ const AdminPage = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => navigate("/admin/whatsapp-leads")}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600/20 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 border border-green-500 rounded-lg hover:bg-green-700 transition-colors"
           >
-            <MessageSquare className="w-3.5 h-3.5 text-green-400" />
-            <span className="text-green-400 text-xs font-medium">WhatsApp Leads</span>
+            <MessageSquare className="w-4 h-4 text-white" />
+            <span className="text-white text-sm font-bold">WhatsApp Leads</span>
           </button>
           <button
             onClick={() => navigate("/admin/world-map")}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 border border-blue-500 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            <Globe className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-blue-400 text-xs font-medium">World Map</span>
+            <Globe className="w-4 h-4 text-white" />
+            <span className="text-white text-sm font-bold">World Map</span>
           </button>
           <span className={`w-2 h-2 rounded-full ${dbConnected ? "bg-green-400" : "bg-red-400"}`} />
           <span className="text-[10px] text-white/40 font-medium">{dbConnected ? "Live" : "Offline"}</span>
