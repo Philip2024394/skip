@@ -137,6 +137,7 @@ const getCountryFlag = (country: string) => {
 };
 
 const WorldMapDashboard = () => {
+  console.log('🗺️ WorldMapDashboard component loading...');
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [realTimeEnabled, setRealTimeEnabled] = useState(true);

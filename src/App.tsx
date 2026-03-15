@@ -15,6 +15,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import WhatsAppLeadsPage from "./pages/admin/WhatsAppLeadsPage";
 import WorldMapDashboard from "./pages/admin/WorldMapDashboardSimple";
+console.log('🚀 App.tsx loaded - WorldMapDashboard imported:', typeof WorldMapDashboard);
 import MapPage from "./pages/MapPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
