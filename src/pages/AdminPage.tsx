@@ -67,6 +67,8 @@ interface AdminProfile {
   phone_country_code: string | null;
   country_override_requested: boolean;
   country_override_approved: boolean;
+  residing_country: string | null;
+  visited_countries: string[] | null;
 }
 
 const DEFAULT_IMG_POS = { x: 50, y: 50, zoom: 100 };
@@ -225,6 +227,8 @@ const UserDrawer = ({
   ]);
   const [dateIdeaUploading, setDateIdeaUploading] = useState<number | null>(null);
   const dateIdeaImgRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
+  const [residingCountry, setResidingCountry] = useState<string>(profile.residing_country ?? "");
+  const [visitedCountries, setVisitedCountries] = useState<string[]>(profile.visited_countries ?? []);
   const [details, setDetails] = useState({
     height_cm:   profile.height_cm ?? ("" as number | ""),
     orientation: profile.orientation ?? "",
@@ -357,6 +361,8 @@ const UserDrawer = ({
       third_date_idea: dateIdeas[2] || null,
       third_date_idea_image_url: dateIdeaImages[2] || null,
       selected_date_ideas: dateIdeas.filter(idea => idea) || null,
+      residing_country: residingCountry || null,
+      visited_countries: visitedCountries.length > 0 ? visitedCountries : null,
       ...badgeOverrides,
     });
     await upsertGlobalDateIdeaImages(dateIdeas, dateIdeaImages);
@@ -633,6 +639,53 @@ const UserDrawer = ({
                 <label className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">WhatsApp</label>
                 <input value={editForm.whatsapp} onChange={e => field("whatsapp")(e.target.value)}
                   className="w-full h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:border-white/30 transition-colors" />
+              </div>
+
+              {/* Travel Information */}
+              <div className="space-y-3 pt-1 border-t border-white/8">
+                <p className="text-white/60 text-xs font-bold flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-blue-400" /> Travel Information
+                </p>
+                <div className="space-y-1">
+                  <label className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">Residing Country (if different)</label>
+                  <select value={residingCountry} onChange={e => setResidingCountry(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:border-blue-400/50 transition-colors">
+                    <option value="">— Same as country —</option>
+                    {COUNTRIES.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">Visited Countries</label>
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-1">
+                      {visitedCountries.map(c => (
+                        <span key={c} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs">
+                          {c}
+                          <button onClick={() => setVisitedCountries(prev => prev.filter(x => x !== c))}
+                            className="w-3 h-3 rounded-full bg-blue-500/25 hover:bg-blue-500/40 flex items-center justify-center">
+                            <X className="w-2 h-2" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <select
+                      value=""
+                      onChange={e => {
+                        if (e.target.value && !visitedCountries.includes(e.target.value)) {
+                          setVisitedCountries(prev => [...prev, e.target.value]);
+                        }
+                        e.target.value = "";
+                      }}
+                      className="w-full h-9 px-3 rounded-xl border border-white/10 bg-white/5 text-white text-sm focus:outline-none focus:border-blue-400/50 transition-colors">
+                      <option value="">— Add visited country —</option>
+                      {COUNTRIES.filter(c => !visitedCountries.includes(c)).map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
               {/* Online schedule — mock profiles only */}

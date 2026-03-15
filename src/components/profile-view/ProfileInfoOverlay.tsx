@@ -11,20 +11,20 @@ const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: 
   value ? (
     <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0" }}>
       <span style={{ fontSize: 14, width: 22, textAlign: "center", flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", fontWeight: 600, minWidth: 60, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 12, color: "white", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>{value}</span>
+      <span style={{ fontSize: 11, color: "rgba(236,72,153,0.9)", fontWeight: 600, minWidth: 60, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "white", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>{value.replace(/🧑‍🍳/g, '').replace(/🎨/g, '').replace(/🐱/g, '').replace(/🦉/g, '').trim()}</span>
     </div>
   ) : null;
 
 const SectionTitle = ({ title }: { title: string }) => (
   <p style={{
-    color: "rgba(255,255,255,0.85)",
+    color: "rgba(236,72,153,0.9)",
     fontSize: 9,
     fontWeight: 700,
     letterSpacing: "0.12em",
     textTransform: "uppercase",
     margin: "10px 0 4px 0",
-    borderBottom: "1px solid rgba(255,255,255,0.3)",
+    borderBottom: "1px solid rgba(236,72,153,0.4)",
     paddingBottom: 4,
   }}>{title}</p>
 );
@@ -49,12 +49,12 @@ const SectionHeader = ({ title }: { title: string }) => (
 const MatchRow = ({ icon, label, value }: { icon: string; label: string; value: string }) => (
   <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0" }}>
     <span style={{ fontSize: 16, width: 28, textAlign: "center", flexShrink: 0 }}>{icon}</span>
-    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.9)", fontWeight: 600, minWidth: 80, flexShrink: 0 }}>{label}</span>
-    <span style={{ fontSize: 12, color: "white", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>{value}</span>
+    <span style={{ fontSize: 11, color: "rgba(236,72,153,0.9)", fontWeight: 600, minWidth: 80, flexShrink: 0 }}>{label}</span>
+    <span style={{ fontSize: 13, color: "white", fontWeight: 600, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>{value}</span>
   </div>
 );
 
-const CompatibilityBar = ({ percent }: { percent: number }) => (
+const CompatibilityBar = ({ percent, insight }: { percent: number; insight: string }) => (
   <div style={{ marginTop: 4 }}>
     <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 6 }}>
       <span style={{ fontSize: 28, fontWeight: 900, color: "white", lineHeight: 1 }}>{percent}%</span>
@@ -67,9 +67,19 @@ const CompatibilityBar = ({ percent }: { percent: number }) => (
     }}>
       <div style={{
         width: `${percent}%`, height: "100%", borderRadius: 3,
-        background: "linear-gradient(90deg, rgba(236,72,153,0.9), rgba(168,85,247,0.9))",
+        background: "linear-gradient(90deg, rgba(236,72,153,0.9), rgba(255,182,193,0.8), rgba(255,105,180,0.9))",
       }} />
     </div>
+    <p style={{ 
+      fontSize: 9, 
+      color: "rgba(236,72,153,0.7)", 
+      fontWeight: 600, 
+      fontStyle: "italic",
+      margin: "4px 0 0 0",
+      textAlign: "center"
+    }}>
+      {insight}
+    </p>
   </div>
 );
 
@@ -112,6 +122,59 @@ const BADGE_INFO: Record<string, { icon: string; label: string; meaning: string;
   },
 };
 
+const RELATIONSHIP_INSIGHTS = [
+  "Similar Energy Matters",
+  "Opposites Can Attract", 
+  "Common Ground Wins",
+  "Shared Values First",
+  "Chemistry Beats Math",
+  "Timing Is Everything",
+  "Small Things Matter",
+  "Balance Feels Right",
+  "Kindness Over Perfection",
+  "Vibes Tell The Truth",
+  "Effort Speaks Loud",
+  "Curiosity Is Attractive",
+  "Humor Helps A Lot",
+  "Respect Is Essential",
+  "Honesty Feels Safe",
+  "Growth Beats Comfort",
+  "Passion Sparks Magic",
+  "Listening Builds Bonds",
+  "Trust Builds Slowly",
+  "Playfulness Is Powerful",
+  "Depth Over Surface",
+  "Calm Over Chaos",
+  "Loyalty Feels Rare",
+  "Adventure Is Welcome",
+  "Patience Shows Care",
+  "Simplicity Feels Good",
+  "Confidence Is Magnetic",
+  "Warmth Feels Home",
+  "Friendship Comes First",
+  "Understanding Matters Most",
+  "Communication Changes Everything",
+  "Effort Creates Connection",
+  "Similar Dreams Help",
+  "Differences Teach Us",
+  "Support Feels Powerful",
+  "Presence Beats Promises",
+  "Real Beats Perfect",
+  "Energy Must Match",
+  "Curiosity Keeps Interest",
+  "Time Reveals Truth",
+  "Authenticity Wins Always",
+  "Actions Show Intent",
+  "Hearts Need Safety",
+  "Attraction Needs Depth",
+  "Good Talks Matter",
+  "Shared Laughs Connect",
+  "Comfort Builds Love",
+  "Values Shape Futures",
+  "Honesty Builds Trust",
+  "Genuine Feels Right"
+];
+
 function computeMatchStats(profile: any) {
   const id = profile?.id || "";
   // Deterministic seed from profile id
@@ -132,7 +195,9 @@ function computeMatchStats(profile: any) {
   const langs = basicInfo.languages || [];
   const langMatch = langs.length > 0 ? langs[0] : "English";
 
-  return { compatibility, distanceKm, sharedInterests, activeTime, langMatch };
+  const insight = RELATIONSHIP_INSIGHTS[seed % RELATIONSHIP_INSIGHTS.length];
+
+  return { compatibility, distanceKm, sharedInterests, activeTime, langMatch, insight };
 }
 
 export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelProps) {
@@ -159,31 +224,44 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
         backgroundColor: "rgba(236,72,153,0.7)"
       }}
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        style={{
-          position: "absolute", top: 10, right: 10, zIndex: 10,
-          width: 32, height: 32, borderRadius: "50%",
-          background: "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: "rgba(255,255,255,0.7)",
-        }}
-        aria-label="Close"
-      >
-        <X size={14} />
-      </button>
-
+      
       {/* Header */}
       <div style={{
         padding: "12px 16px 8px",
         borderBottom: "1px solid rgba(255,255,255,0.08)",
         flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
       }}>
-        <p style={{ color: "white", fontSize: 14, fontWeight: 800, margin: 0 }}>
-          About {profileName}
-        </p>
+        {profile?.avatar_url && (
+          <div style={{
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            overflow: "hidden",
+            flexShrink: 0,
+            border: "2px solid rgba(236,72,153,0.6)",
+          }}>
+            <img
+              src={profile.avatar_url}
+              alt={profileName}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+        )}
+        <div>
+          <p style={{ color: "white", fontSize: 14, fontWeight: 800, margin: 0 }}>
+            Hi I'm {profileName}
+          </p>
+          <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 11, fontWeight: 600, margin: "2px 0 0 0" }}>
+            Living in {profile?.country || "Indonesia"}
+          </p>
+        </div>
       </div>
 
       {/* Scrollable content — all 3 sections */}
@@ -252,6 +330,19 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
           </>
         )}
 
+        {/* -- Travel -- */}
+        {(profile?.visited_countries?.length > 0 || profile?.residing_country !== profile?.country) && (
+          <>
+            <SectionHeader title="Travel" />
+            {profile?.residing_country && profile?.residing_country !== profile?.country && (
+              <InfoRow icon="🏠" label="Residing in" value={profile.residing_country} />
+            )}
+            {profile?.visited_countries?.length > 0 && (
+              <InfoRow icon="✈️" label="Visited" value={profile.visited_countries.join(", ")} />
+            )}
+          </>
+        )}
+
         {/* -- Interests / Relationship Goals -- */}
         <SectionHeader title="Interests" />
         {(relationshipGoals.looking_for || relationshipGoals.timeline || relationshipGoals.date_type || relationshipGoals.marital_status) && (
@@ -283,14 +374,20 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
         )}
         {relationshipGoals.about_partner && (
           <div style={{
-            background: "rgba(245,158,11,0.15)",
-            border: "1px solid rgba(245,158,11,0.4)",
-            borderRadius: 10,
-            padding: "8px 12px",
+            background: "rgba(0,0,0,0.6)",
+            border: "2px solid rgba(236,72,153,0.8)",
+            borderRadius: 12,
+            padding: "2px",
             marginTop: 8,
           }}>
-            <p style={{ color: "rgba(245,158,11,0.95)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>Looking for in a partner</p>
-            <p style={{ color: "white", fontSize: 12, lineHeight: 1.5, margin: 0, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>{relationshipGoals.about_partner}</p>
+            <div style={{
+              background: "rgba(236,72,153,0.15)",
+              borderRadius: 10,
+              padding: "8px 12px",
+            }}>
+              <p style={{ color: "rgba(236,72,153,0.95)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>Looking for in a partner</p>
+              <p style={{ color: "white", fontSize: 12, lineHeight: 1.5, margin: 0, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>{relationshipGoals.about_partner}</p>
+            </div>
           </div>
         )}
 
@@ -303,7 +400,7 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
           padding: "14px 14px 10px",
           marginTop: 6,
         }}>
-          <CompatibilityBar percent={matchStats.compatibility} />
+          <CompatibilityBar percent={matchStats.compatibility} insight={matchStats.insight} />
           <div style={{ marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 6 }}>
             <MatchRow icon="📍" label="Distance" value={`${matchStats.distanceKm} km away`} />
             <MatchRow icon="🎯" label="Shared Interests" value={String(matchStats.sharedInterests)} />
@@ -315,42 +412,48 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
         {/* -- Active Badge Explanation -- */}
         {badgeInfo && (
           <div style={{
-            background: "rgba(0,0,0,0.8)",
-            border: "1px solid rgba(250,204,21,0.6)",
+            background: "rgba(0,0,0,0.6)",
+            border: "2px solid rgba(236,72,153,0.8)",
             borderRadius: 12,
-            padding: "14px 14px 12px",
+            padding: "2px",
             marginTop: 14,
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <span style={{
-                fontSize: 18, width: 32, height: 32, borderRadius: "50%",
-                background: "rgba(250,204,21,0.9)",
-                border: "1px solid rgba(250,204,21,1)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                flexShrink: 0,
-              }}>{badgeInfo.icon}</span>
-              <div>
-                <p style={{ color: "rgba(250,204,21,1)", fontSize: 13, fontWeight: 800, margin: 0 }}>
-                  {badgeInfo.label}
-                </p>
-                <p style={{ color: "rgba(250,204,21,0.8)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "1px 0 0" }}>
-                  Active Badge
+            <div style={{
+              background: "rgba(236,72,153,0.15)",
+              borderRadius: 10,
+              padding: "12px 14px 10px",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{
+                  fontSize: 18, width: 32, height: 32, borderRadius: "50%",
+                  background: "rgba(236,72,153,0.8)",
+                  border: "2px solid rgba(236,72,153,1)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>{badgeInfo.icon}</span>
+                <div>
+                  <p style={{ color: "rgba(236,72,153,1)", fontSize: 13, fontWeight: 800, margin: 0 }}>
+                    {badgeInfo.label}
+                  </p>
+                  <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "1px 0 0" }}>
+                    Active Badge
+                  </p>
+                </div>
+              </div>
+              <p style={{ color: "rgba(236,72,153,0.95)", fontSize: 12, lineHeight: 1.6, margin: "0 0 8px", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>
+                {badgeInfo.meaning}
+              </p>
+              <div style={{
+                background: "rgba(0,0,0,0.4)",
+                borderRadius: 8,
+                padding: "8px 10px",
+                display: "flex", alignItems: "flex-start", gap: 6,
+              }}>
+                <span style={{ fontSize: 12, flexShrink: 0 }}>💡</span>
+                <p style={{ color: "rgba(236,72,153,0.9)", fontSize: 11, fontWeight: 600, lineHeight: 1.5, margin: 0 }}>
+                  {badgeInfo.tip}
                 </p>
               </div>
-            </div>
-            <p style={{ color: "rgba(250,204,21,0.95)", fontSize: 12, lineHeight: 1.6, margin: "0 0 8px", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>
-              {badgeInfo.meaning}
-            </p>
-            <div style={{
-              background: "rgba(0,0,0,0.6)",
-              borderRadius: 8,
-              padding: "8px 10px",
-              display: "flex", alignItems: "flex-start", gap: 6,
-            }}>
-              <span style={{ fontSize: 12, flexShrink: 0 }}>💡</span>
-              <p style={{ color: "rgba(250,204,21,0.9)", fontSize: 11, fontWeight: 600, lineHeight: 1.5, margin: 0 }}>
-                {badgeInfo.tip}
-              </p>
             </div>
           </div>
         )}

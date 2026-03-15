@@ -67,6 +67,8 @@ interface ProfileData {
   smoking: string;
   fitness: string;
   pets: string;
+  residing_country: string | null;
+  visited_countries: string[];
   interests: string[];
   orientation: string;
   contact_preference: string;
@@ -386,6 +388,8 @@ const ProfileEditor = () => {
         smoking: profile.smoking || null,
         fitness: profile.fitness || null,
         pets: profile.pets || null,
+        residing_country: profile.residing_country || null,
+        visited_countries: profile.visited_countries as unknown as import("@/integrations/supabase/types").Json || [],
         interests: profile.interests as unknown as import("@/integrations/supabase/types").Json,
         orientation: profile.orientation || null,
         basic_info: profile.basic_info as unknown as import("@/integrations/supabase/types").Json,
@@ -456,7 +460,7 @@ const ProfileEditor = () => {
   }
 
   if (!profile) {
-    return <p className="text-muted-foreground text-xs text-center py-8">Profile not found</p>;
+    return <p className="text-white/40 text-xs text-center py-8">Profile not found</p>;
   }
 
   const mainIdx = profile.images.indexOf(profile.avatar_url || "");
@@ -476,10 +480,9 @@ const ProfileEditor = () => {
         position: "sticky",
         top: 0,
         zIndex: 50,
-        background: "white",
-        borderBottom: "1px solid rgba(236,72,153,0.12)",
+        background: "#0a0a0a",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
         padding: "8px 12px 6px",
-        boxShadow: "0 2px 12px rgba(236,72,153,0.08)",
       }}>
         <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
           {[
@@ -495,11 +498,11 @@ const ProfileEditor = () => {
                 borderRadius: 999,
                 border: editorStep === key
                   ? "none"
-                  : "1px solid rgba(236,72,153,0.15)",
+                  : "1px solid rgba(255,255,255,0.1)",
                 background: editorStep === key
                   ? "linear-gradient(135deg, #EC4899, #8B5CF6)"
-                  : "white",
-                color: editorStep === key ? "white" : "#9CA3AF",
+                  : "rgba(255,255,255,0.06)",
+                color: editorStep === key ? "white" : "rgba(255,255,255,0.5)",
                 fontSize: 10,
                 fontWeight: editorStep === key ? 700 : 500,
                 cursor: "pointer",
@@ -521,10 +524,10 @@ const ProfileEditor = () => {
         <>
           {/* Photo Gallery */}
           <div>
-            <Label className="text-muted-foreground text-xs mb-1 block">
+            <Label className="text-white/50 text-xs mb-1 block">
               Photos (min 2, max 5) — tap image to adjust position
             </Label>
-            <p className="text-[10px] text-muted-foreground mb-2">⭐ = set as main swipe card image</p>
+            <p className="text-[10px] text-white/40 mb-2">⭐ = set as main swipe card image</p>
             <div className="grid grid-cols-5 gap-2">
               {Array.from({ length: 5 }).map((_, idx) => {
                 const img = profile.images[idx];
@@ -537,7 +540,7 @@ const ProfileEditor = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.05 }}
                       className={`aspect-square w-full rounded-xl overflow-hidden relative cursor-pointer group ${
-                        isEditing ? "ring-2 ring-secondary" : isMain ? "ring-2 ring-primary" : "glass"
+                        isEditing ? "ring-2 ring-violet-500" : isMain ? "ring-2 ring-pink-500" : "bg-white/5 border border-white/10"
                       }`}
                       onClick={() => {
                         if (!img) {
@@ -574,7 +577,7 @@ const ProfileEditor = () => {
                           {!isMain && (
                             <button
                               onClick={(e) => { e.stopPropagation(); setAsMain(idx); }}
-                              className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-muted/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                               title="Set as main"
                             >
                               <Star className="w-3 h-3 text-secondary" />
@@ -582,14 +585,14 @@ const ProfileEditor = () => {
                           )}
                         </>
                       ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white/40">
                           <Camera className="w-4 h-4" />
                           <span className="text-[8px] mt-0.5">{idx === 0 ? "Main" : idx === 1 ? "Profile" : "Add"}</span>
                         </div>
                       )}
                     </motion.div>
                     {img && (
-                      <span className={`text-[8px] font-medium leading-tight text-center ${isMain ? "text-primary" : "text-muted-foreground"}`}>
+                      <span className={`text-[8px] font-medium leading-tight text-center ${isMain ? "text-primary" : "text-white/40"}`}>
                         {isMain ? "Main" : idx === 0 ? "Profile" : `Photo ${idx + 1}`}
                       </span>
                     )}
@@ -602,15 +605,15 @@ const ProfileEditor = () => {
 
           {/* Image Position Editor */}
           {editingImageIdx !== null && profile.images[editingImageIdx] && (
-            <div className="space-y-3 p-3 rounded-xl border border-border bg-muted/30">
+            <div className="space-y-3 p-3 rounded-xl border border-white/10 bg-white/5">
               <div className="flex items-center justify-between">
-                <Label className="text-foreground text-xs font-semibold">
+                <Label className="text-white text-xs font-semibold">
                   {isMainImage(editingImageIdx) ? "📸 Main Image (Swipe Card)" : `📸 ${getImageLabel(editingImageIdx)}`}
                 </Label>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 text-[10px] px-2 text-muted-foreground"
+                  className="h-6 text-[10px] px-2 text-white/40"
                   onClick={() => {
                     updateImagePos(editingImageIdx, "x", 50);
                     updateImagePos(editingImageIdx, "y", 50);
@@ -655,8 +658,8 @@ const ProfileEditor = () => {
               {/* Sliders */}
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <MoveHorizontal className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-[10px] text-muted-foreground w-6">L/R</span>
+                  <MoveHorizontal className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
+                  <span className="text-[10px] text-white/40 w-6">L/R</span>
                   <Slider
                     value={[getPos(editingImageIdx).x]}
                     onValueChange={([v]) => updateImagePos(editingImageIdx, "x", v)}
@@ -667,8 +670,8 @@ const ProfileEditor = () => {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <MoveVertical className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-[10px] text-muted-foreground w-6">U/D</span>
+                  <MoveVertical className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
+                  <span className="text-[10px] text-white/40 w-6">U/D</span>
                   <Slider
                     value={[getPos(editingImageIdx).y]}
                     onValueChange={([v]) => updateImagePos(editingImageIdx, "y", v)}
@@ -679,8 +682,8 @@ const ProfileEditor = () => {
                   />
                 </div>
                 <div className="flex items-center gap-2">
-                  <ZoomIn className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <span className="text-[10px] text-muted-foreground w-6">Zoom</span>
+                  <ZoomIn className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
+                  <span className="text-[10px] text-white/40 w-6">Zoom</span>
                   <Slider
                     value={[getPos(editingImageIdx).zoom]}
                     onValueChange={([v]) => updateImagePos(editingImageIdx, "zoom", v)}
@@ -695,7 +698,7 @@ const ProfileEditor = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full h-8 text-xs"
+                className="w-full h-8 text-xs border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
                 onClick={() => setEditingImageIdx(null)}
               >
                 Done Positioning
@@ -713,27 +716,27 @@ const ProfileEditor = () => {
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-3 mt-6">
             <div>
-              <Label className="text-muted-foreground text-xs mb-1 block">Name</Label>
-              <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
+              <Label className="text-white/50 text-xs mb-1 block">Name</Label>
+              <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none" />
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs mb-1 block">Age</Label>
-              <Input type="number" min={18} max={99} value={profile.age} onChange={(e) => update("age", parseInt(e.target.value) || 18)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
+              <Label className="text-white/50 text-xs mb-1 block">Age</Label>
+              <Input type="number" min={18} max={99} value={profile.age} onChange={(e) => update("age", parseInt(e.target.value) || 18)} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-muted-foreground text-xs mb-1 block">Gender</Label>
+              <Label className="text-white/50 text-xs mb-1 block">Gender</Label>
               <Select value={profile.gender} onValueChange={(v) => update("gender", v)}>
-                <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue /></SelectTrigger>
                 <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs mb-1 block">Looking for</Label>
+              <Label className="text-white/50 text-xs mb-1 block">Looking for</Label>
               <Select value={profile.looking_for} onValueChange={(v) => update("looking_for", v)}>
-                <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue /></SelectTrigger>
                 <SelectContent>{LOOKING_FOR.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
               </Select>
             </div>
@@ -741,7 +744,7 @@ const ProfileEditor = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-muted-foreground text-xs mb-1 block">Country *</Label>
+              <Label className="text-white/50 text-xs mb-1 block">Country *</Label>
               <Select value={profile.country} onValueChange={(v) => {
                 update("country", v);
                 const dialCode = getDialCode(v);
@@ -749,7 +752,7 @@ const ProfileEditor = () => {
                   update("whatsapp", dialCode + " ");
                 }
               }}>
-                <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none">
+                <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none">
                   <SelectValue placeholder="Select country" />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
@@ -760,48 +763,98 @@ const ProfileEditor = () => {
               </Select>
             </div>
             <div>
-              <Label className="text-muted-foreground text-xs mb-1 block">City</Label>
-              <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
+              <Label className="text-white/50 text-xs mb-1 block">City</Label>
+              <Input value={profile.city} onChange={(e) => update("city", e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none" />
+            </div>
+            <div>
+              <Label className="text-white/50 text-xs mb-1 block">Residing Country (if different)</Label>
+              <Select value={profile.residing_country || ""} onValueChange={(v) => update("residing_country", v || null)}>
+                <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none">
+                  <SelectValue placeholder="Same as country" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  <SelectItem value="">Same as country</SelectItem>
+                  {ALL_COUNTRIES.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-white/50 text-xs mb-1 block">Visited Countries</Label>
+              <div className="space-y-2">
+                <div className="flex flex-wrap gap-1">
+                  {profile.visited_countries?.map((c) => (
+                    <span key={c} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-400 text-xs">
+                      {c}
+                      <button
+                        onClick={() => update("visited_countries", profile.visited_countries?.filter((x) => x !== c) || [])}
+                        className="w-3 h-3 rounded-full bg-blue-500/25 hover:bg-blue-500/40 flex items-center justify-center"
+                      >
+                        <X className="w-2 h-2" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+                <Select
+                  value=""
+                  onValueChange={(v) => {
+                    if (v && !profile.visited_countries?.includes(v)) {
+                      update("visited_countries", [...(profile.visited_countries || []), v]);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none">
+                    <SelectValue placeholder="Add visited country" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    <SelectItem value="">Add visited country</SelectItem>
+                    {ALL_COUNTRIES.filter((c) => !profile.visited_countries?.includes(c)).map((c) => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
           {/* Phone–country mismatch warning */}
           {phoneCountryMismatch && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 space-y-1">
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-300 space-y-1">
               <p className="font-semibold">⚠️ Country mismatch detected</p>
               <p>Your phone prefix (<strong>{getDialCode(detectedPhoneCountry!)}</strong>) is registered to <strong>{detectedPhoneCountry}</strong>, but your profile is set to <strong>{profile.country}</strong>.</p>
               <p>Your profile will be listed in <strong>{detectedPhoneCountry}</strong> until an admin approves the change. Your request will be saved automatically.</p>
             </div>
           )}
           {countryOverrideRequested && !phoneCountryMismatch && !countryOverrideApproved && (
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-700">
+            <div className="rounded-xl border border-blue-400/30 bg-blue-500/10 p-3 text-xs text-blue-300">
               ⏳ Country override request pending admin approval.
             </div>
           )}
           {countryOverrideApproved && (
-            <div className="rounded-xl border border-green-200 bg-green-50 p-3 text-xs text-green-700">
+            <div className="rounded-xl border border-green-400/30 bg-green-500/10 p-3 text-xs text-green-300">
               ✅ Admin has approved your country listing.
             </div>
           )}
 
           {/* About Section */}
           <div className="mt-6">
-            <Label className="text-muted-foreground text-xs mb-1 block">Bio</Label>
+            <Label className="text-white/50 text-xs mb-1 block">Bio</Label>
             <Textarea
               value={profile.bio}
               onChange={(e) => update("bio", sanitizeBio(e.target.value))}
               rows={3}
-              className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none resize-none"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none resize-none"
               placeholder="About you (no emoji or phone numbers, max 250 characters)"
             />
-            <p className="text-muted-foreground text-[10px] mt-1 text-right">
+            <p className="text-white/40 text-[10px] mt-1 text-right">
               {profile.bio.length}/{BIO_MAX_LENGTH}
             </p>
           </div>
 
           <div className="mt-4">
-            <Label className="text-muted-foreground text-xs mb-1 block">WhatsApp</Label>
-            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none" />
+            <Label className="text-white/50 text-xs mb-1 block">WhatsApp</Label>
+            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none" />
           </div>
 
           {/* Voice Intro */}
@@ -838,23 +891,23 @@ const ProfileEditor = () => {
 
           {/* Dating Preferences */}
           <div>
-            <Label className="text-muted-foreground text-xs mb-1 block flex items-center gap-1">
+            <Label className="text-white/50 text-xs mb-1 block flex items-center gap-1">
               <Languages className="w-3 h-3" /> Languages I Speak
             </Label>
             <div className="space-y-2">
           {/* Native language (auto from country) */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 border border-border">
-            <span className="text-sm text-foreground flex-1 flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+            <span className="text-sm text-white flex-1 flex items-center gap-2">
               <span className="text-base leading-none">{getCountryFlag(profile.country)}</span>
               {getNativeLanguage(profile.country)}
             </span>
-            <span className="text-[10px] text-muted-foreground bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">Native</span>
+            <span className="text-[10px] bg-pink-500/15 text-pink-400 px-2 py-0.5 rounded-full font-medium">Native</span>
           </div>
           
           {/* Extra languages */}
           {profile.languages.map((lang, idx) => (
-            <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 border border-border">
-              <span className="text-sm text-foreground flex-1 flex items-center gap-2">
+            <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+              <span className="text-sm text-white flex-1 flex items-center gap-2">
                 <span className="text-base leading-none">{getLanguageFlag(lang)}</span>
                 {lang}
               </span>
@@ -880,8 +933,8 @@ const ProfileEditor = () => {
                 }
               }}
             >
-              <SelectTrigger className="bg-muted border-border h-9 text-sm border-dashed">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
+              <SelectTrigger className="bg-white/5 border-white/10 h-9 text-sm border-dashed text-white">
+                <div className="flex items-center gap-1.5 text-white/40">
                   <Plus className="w-3.5 h-3.5" />
                   <span>Add a language ({2 - profile.languages.length} remaining)</span>
                 </div>
@@ -900,7 +953,7 @@ const ProfileEditor = () => {
 
           {/* Orientation */}
           <div>
-            <Label className="text-muted-foreground text-xs mb-1 block">Orientation (optional)</Label>
+            <Label className="text-white/50 text-xs mb-1 block">Orientation (optional)</Label>
             <div className="flex gap-2">
           {[
             { value: "", label: "Not specified" },
@@ -913,8 +966,8 @@ const ProfileEditor = () => {
               onClick={() => update("orientation", o.value)}
               className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
                 profile.orientation === o.value
-                  ? "bg-primary text-primary-foreground border-primary shadow-md"
-                  : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/50"
+                  ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white border-pink-500/50 shadow-md"
+                  : "bg-white/5 text-white/50 border-white/10 hover:border-pink-500/30"
               }`}
             >
               {o.label}
@@ -925,12 +978,12 @@ const ProfileEditor = () => {
 
           {/* Location */}
           <div>
-            <Label className="text-muted-foreground text-xs mb-1 block">Map Location</Label>
+            <Label className="text-white/50 text-xs mb-1 block">Map Location</Label>
             <Button
           variant="outline"
           onClick={handleSetLocation}
           disabled={locating}
-          className="w-full h-9 text-sm border-border rounded-xl"
+          className="w-full h-9 text-sm border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white rounded-xl"
         >
           {locating ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Getting location...</>
@@ -941,69 +994,69 @@ const ProfileEditor = () => {
           )}
         </Button>
         {profile.latitude && (
-          <p className="text-[10px] text-muted-foreground mt-1 text-center">
+          <p className="text-[10px] text-white/40 mt-1 text-center">
             📍 Approx: {profile.latitude.toFixed(2)}°, {profile.longitude?.toFixed(2)}°
           </p>
         )}
           </div>
 
           <div className="flex items-center justify-between">
-            <p className="text-muted-foreground text-xs font-semibold">Badges</p>
+            <p className="text-white/40 text-xs font-semibold">Badges</p>
             <button
           type="button"
           onClick={() => setShowBadgesHelp(true)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white transition-colors"
         >
           <HelpCircle className="w-4 h-4" /> Help
             </button>
           </div>
 
           <Dialog open={showBadgesHelp} onOpenChange={setShowBadgesHelp}>
-            <DialogContent className="bg-white border-gray-200 text-gray-900 max-w-sm rounded-2xl">
+            <DialogContent className="bg-[#111] border-white/10 text-white max-w-sm rounded-2xl">
               <DialogHeader>
-                <DialogTitle className="text-gray-900">Badge meanings</DialogTitle>
-                <DialogDescription className="text-gray-500">
+                <DialogTitle className="text-white">Badge meanings</DialogTitle>
+                <DialogDescription className="text-white/50">
                   You can select 1 badge at a time (or none). Badges help others understand your vibe.
                 </DialogDescription>
               </DialogHeader>
 
           <div className="space-y-3 text-sm">
             <div>
-              <p className="font-semibold text-gray-900">Free Tonight</p>
-              <p className="text-gray-600 text-xs mt-0.5">Shows you're available tonight. Auto-clears at midnight.</p>
+              <p className="font-semibold text-white">Free Tonight</p>
+              <p className="text-white/50 text-xs mt-0.5">Shows you're available tonight. Auto-clears at midnight.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Plus-One Premium</p>
-              <p className="text-gray-600 text-xs mt-0.5">Signals you're open to events and social outings.</p>
+              <p className="font-semibold text-white">Plus-One Premium</p>
+              <p className="text-white/50 text-xs mt-0.5">Signals you're open to events and social outings.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Generous Lifestyle</p>
-              <p className="text-gray-600 text-xs mt-0.5">You enjoy treating companions to dinners, events, or experiences.</p>
+              <p className="font-semibold text-white">Generous Lifestyle</p>
+              <p className="text-white/50 text-xs mt-0.5">You enjoy treating companions to dinners, events, or experiences.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Weekend Plans</p>
-              <p className="text-gray-600 text-xs mt-0.5">Usually available on weekends for meetups and social plans.</p>
+              <p className="font-semibold text-white">Weekend Plans</p>
+              <p className="text-white/50 text-xs mt-0.5">Usually available on weekends for meetups and social plans.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900">Late Night Chat</p>
-              <p className="text-gray-600 text-xs mt-0.5">Prefer nighttime conversations and late evening activity.</p>
+              <p className="font-semibold text-white">Late Night Chat</p>
+              <p className="text-white/50 text-xs mt-0.5">Prefer nighttime conversations and late evening activity.</p>
             </div>
             <div>
-              <p className="font-semibold text-gray-900">No Drama</p>
-              <p className="text-gray-600 text-xs mt-0.5">Prefer calm, positive, and respectful connections.</p>
+              <p className="font-semibold text-white">No Drama</p>
+              <p className="text-white/50 text-xs mt-0.5">Prefer calm, positive, and respectful connections.</p>
             </div>
           </div>
             </DialogContent>
           </Dialog>
 
       {/* Free Tonight */}
-      <div className="glass rounded-xl p-3 space-y-2">
+      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Moon className="w-4 h-4 text-yellow-400" fill="currentColor" />
             <div>
-              <p className="text-foreground text-sm font-medium">Free Tonight</p>
-              <p className="text-muted-foreground text-[10px]">
+              <p className="text-white text-sm font-medium">Free Tonight</p>
+              <p className="text-white/40 text-[10px]">
                 {freeTonightUntil
                   ? `Auto-clears at midnight · expires ${freeTonightUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
                   : "Shows a badge on your profile until midnight"}
@@ -1049,16 +1102,16 @@ const ProfileEditor = () => {
       </div>
 
       {/* Plus-One Premium */}
-      <div className="glass rounded-xl p-3 space-y-2">
+      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-yellow-400" />
             <div>
               <div className="flex items-center gap-1.5">
-                <p className="text-foreground text-sm font-medium">Plus-One Premium</p>
+                <p className="text-white text-sm font-medium">Plus-One Premium</p>
                 <span className="bg-yellow-500/20 border border-yellow-400/40 text-yellow-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">$19.99</span>
               </div>
-              <p className="text-muted-foreground text-[10px]">Show you're open to events & social outings</p>
+              <p className="text-white/40 text-[10px]">Show you're open to events & social outings</p>
             </div>
           </div>
           <Switch
@@ -1089,13 +1142,13 @@ const ProfileEditor = () => {
       </div>
 
       {/* Generous Lifestyle badge */}
-      <div className="glass rounded-xl p-3 space-y-2">
+      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Gift className="w-4 h-4 text-amber-400" />
             <div>
-              <p className="text-foreground text-sm font-medium">Generous Lifestyle</p>
-              <p className="text-muted-foreground text-[10px]">You enjoy treating companions to dinners, events & memorable experiences</p>
+              <p className="text-white text-sm font-medium">Generous Lifestyle</p>
+              <p className="text-white/40 text-[10px]">You enjoy treating companions to dinners, events & memorable experiences</p>
             </div>
           </div>
           <Switch
@@ -1117,13 +1170,13 @@ const ProfileEditor = () => {
       </div>
 
       {/* Weekend Plans badge */}
-      <div className="glass rounded-xl p-3 space-y-2">
+      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarDays className="w-4 h-4 text-primary" />
             <div>
-              <p className="text-foreground text-sm font-medium">Weekend Plans</p>
-              <p className="text-muted-foreground text-[10px]">Usually available on weekends for meetups & social plans</p>
+              <p className="text-white text-sm font-medium">Weekend Plans</p>
+              <p className="text-white/40 text-[10px]">Usually available on weekends for meetups & social plans</p>
             </div>
           </div>
           <Switch
@@ -1137,13 +1190,13 @@ const ProfileEditor = () => {
       </div>
 
       {/* Late Night Chat badge */}
-      <div className="glass rounded-xl p-3 space-y-2">
+      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MoonStar className="w-4 h-4 text-indigo-400" />
             <div>
-              <p className="text-foreground text-sm font-medium">Late Night Chat</p>
-              <p className="text-muted-foreground text-[10px]">Typically active later in the evening; prefer nighttime conversations</p>
+              <p className="text-white text-sm font-medium">Late Night Chat</p>
+              <p className="text-white/40 text-[10px]">Typically active later in the evening; prefer nighttime conversations</p>
             </div>
           </div>
           <Switch
@@ -1157,13 +1210,13 @@ const ProfileEditor = () => {
       </div>
 
       {/* No Drama badge */}
-      <div className="glass rounded-xl p-3 space-y-2">
+      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-yellow-400" />
             <div>
-              <p className="text-foreground text-sm font-medium">No Drama</p>
-              <p className="text-muted-foreground text-[10px]">Prefer relaxed, positive & respectful connections</p>
+              <p className="text-white text-sm font-medium">No Drama</p>
+              <p className="text-white/40 text-[10px]">Prefer relaxed, positive & respectful connections</p>
             </div>
           </div>
           <Switch
@@ -1178,10 +1231,10 @@ const ProfileEditor = () => {
 
       {/* ── First Contact Preference ─────────────────────────────── */}
       <div>
-        <Label className="text-muted-foreground text-xs mb-2 block flex items-center gap-1">
+        <Label className="text-white/50 text-xs mb-2 block flex items-center gap-1">
           📱📹 First Contact Preference
         </Label>
-        <p className="text-muted-foreground text-[10px] mb-3">
+        <p className="text-white/40 text-[10px] mb-3">
           How would you like matches to connect with you?
         </p>
         <div className="space-y-2">
@@ -1201,10 +1254,10 @@ const ProfileEditor = () => {
                   borderRadius: 14,
                   border: isSelected
                     ? "2px solid rgba(236,72,153,0.7)"
-                    : "1.5px solid rgba(0,0,0,0.08)",
+                    : "1.5px solid rgba(255,255,255,0.08)",
                   background: isSelected
-                    ? "linear-gradient(135deg, rgba(236,72,153,0.08), rgba(168,85,247,0.05))"
-                    : "rgba(0,0,0,0.02)",
+                    ? "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(168,85,247,0.08))"
+                    : "rgba(255,255,255,0.04)",
                   cursor: "pointer",
                 }}
               >
@@ -1213,14 +1266,14 @@ const ProfileEditor = () => {
                   <p style={{
                     fontSize: 13,
                     fontWeight: 700,
-                    color: isSelected ? "#ec4899" : "#333",
+                    color: isSelected ? "#ec4899" : "rgba(255,255,255,0.8)",
                     margin: 0,
                   }}>
                     {opt.label}
                   </p>
                   <p style={{
                     fontSize: 10,
-                    color: "rgba(0,0,0,0.45)",
+                    color: "rgba(255,255,255,0.4)",
                     margin: "2px 0 0",
                   }}>
                     {opt.description}
@@ -1244,11 +1297,11 @@ const ProfileEditor = () => {
 
       {/* First Date Idea */}
       <div>
-        <Label className="text-muted-foreground text-xs mb-1 block flex items-center gap-1">
+        <Label className="text-white/50 text-xs mb-1 block flex items-center gap-1">
           <Heart className="w-3 h-3 text-primary" /> First Date Would Be Nice...
         </Label>
         <Select value={profile.first_date_idea || ""} onValueChange={(v) => update("first_date_idea", v || null)}>
-          <SelectTrigger className="w-full bg-white border border-pink-100 rounded-xl px-3 py-2 text-gray-800 focus:border-pink-300 focus:outline-none"><SelectValue placeholder="Select your ideal first date" /></SelectTrigger>
+          <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue placeholder="Select your ideal first date" /></SelectTrigger>
           <SelectContent className="max-h-[200px]">
             {FIRST_DATE_IDEAS.map((idea) => <SelectItem key={idea} value={idea}>{idea}</SelectItem>)}
           </SelectContent>
@@ -1269,13 +1322,13 @@ const ProfileEditor = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        background: "white",
-        borderTop: "1px solid rgba(236,72,153,0.12)",
+        background: "#0a0a0a",
+        borderTop: "1px solid rgba(255,255,255,0.08)",
         padding: "12px 16px",
         paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
         display: "flex",
         gap: 8,
-        boxShadow: "0 -4px 20px rgba(236,72,153,0.08)",
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.4)",
         zIndex: 50,
       }}>
         {(() => {
@@ -1293,9 +1346,9 @@ const ProfileEditor = () => {
                     flex: 1,
                     padding: "12px",
                     borderRadius: 14,
-                    border: "1px solid rgba(236,72,153,0.25)",
-                    background: "white",
-                    color: "#EC4899",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.7)",
                     fontSize: 13,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -1363,17 +1416,17 @@ const ProfileEditor = () => {
       </div>
 
       {/* Deactivate / Delete account */}
-      <div className="pt-2 border-t border-border space-y-1">
+      <div className="pt-2 border-t border-white/10 space-y-1">
         <button
           onClick={() => setShowDeactivateConfirm(true)}
-          className="w-full py-2.5 text-xs text-muted-foreground hover:text-amber-400 transition-colors flex items-center justify-center gap-1.5"
+          className="w-full py-2.5 text-xs text-white/40 hover:text-amber-400 transition-colors flex items-center justify-center gap-1.5"
         >
           <PauseCircle className="w-3.5 h-3.5" />
           Deactivate my account
         </button>
         <button
           onClick={() => setShowDeleteConfirm(true)}
-          className="w-full py-2.5 text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center justify-center gap-1.5"
+          className="w-full py-2.5 text-xs text-white/40 hover:text-destructive transition-colors flex items-center justify-center gap-1.5"
         >
           <XIcon className="w-3.5 h-3.5" />
           Permanently delete my account
