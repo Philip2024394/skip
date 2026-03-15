@@ -25,6 +25,8 @@ interface ProfileBadgeProps {
   profile: any;
   /** Pass a translation function if you have one; otherwise badge shows English label */
   t?: (key: string) => string;
+  /** Whether to show badges on profile pages (default: false) */
+  showOnProfilePage?: boolean;
 }
 
 /**
@@ -32,9 +34,14 @@ interface ProfileBadgeProps {
  * This is the ONLY place badge styling is defined. Import this component
  * wherever a badge needs to appear on a profile card.
  */
-export default function ProfileBadge({ profile, t }: ProfileBadgeProps) {
+export default function ProfileBadge({ profile, t, showOnProfilePage = false }: ProfileBadgeProps) {
   const key = getPrimaryBadgeKey(profile);
   if (!key) return null;
+  
+  // Don't show badges on profile pages unless explicitly enabled
+  if (!showOnProfilePage) {
+    return null;
+  }
 
   const labels: Record<string, { icon: string; label: string }> = {
     available_tonight: { icon: "🌙", label: t?.("popup.freeTonight") ?? "Free Tonight" },

@@ -3,6 +3,7 @@ import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight, BadgeCheck } fro
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
 import ProfileBadge from "@/components/ProfileBadge";
 import ContactPreferenceBadge from "@/components/ContactPreferenceBadge";
+import DistanceBadge from "@/components/DistanceBadge";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
 import SwipeStack from "@/components/SwipeStack";
@@ -76,7 +77,16 @@ export default function TopCard(props: TopCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
 
           {/* ── Single badge — locked: yellow, top-left only (ProfileBadge) ── */}
-          <ProfileBadge profile={props.selectedProfile} t={props.t} />
+          <ProfileBadge profile={props.selectedProfile} t={props.t} showOnProfilePage={!props.isProfileRoute} />
+          
+          {/* ── Distance badge — top-right, opens map ── */}
+          <DistanceBadge 
+            profile={props.selectedProfile} 
+            onClick={() => {
+              // Open distance map - you'll need to implement this logic
+              console.log("Open distance map for:", props.selectedProfile);
+            }}
+          />
 
           {!props.isProfileRoute ? (
             <button

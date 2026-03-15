@@ -15,8 +15,8 @@ interface ProfileBottomSheetProps {
   allProfiles: any[];
   isProfileRoute: boolean;
   // Tab state
-  aboutMeTab: "new" | "sent" | "received" | "treat" | "distance";
-  setAboutMeTab: (v: "new" | "sent" | "received" | "treat" | "distance") => void;
+  aboutMeTab: "new" | "sent" | "received" | "treat" | "gifts";
+  setAboutMeTab: (v: "new" | "sent" | "received" | "treat" | "gifts") => void;
   selectedProfileSection: "basic" | "lifestyle" | "interests" | null;
   setSelectedProfileSection: (v: "basic" | "lifestyle" | "interests" | null) => void;
   selectedDatePlace: any;
@@ -48,13 +48,7 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
   const navigate = useNavigate();
   const [showMapOverlay, setShowMapOverlay] = useState(false);
 
-  // Auto-open map when Distance tab is selected
-  useEffect(() => {
-    if (props.aboutMeTab === "distance") {
-      setShowMapOverlay(true);
-    }
-  }, [props.aboutMeTab]);
-
+  
   return (
     <>
       <div
@@ -474,9 +468,9 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                         );
                       })()}
                     </div>
-                  ) : props.aboutMeTab === "distance" ? (
+                  ) : props.aboutMeTab === "gifts" ? (
                     <div className="h-full w-full flex items-center justify-center">
-                      <p className="text-white/30 text-xs">Opening map…</p>
+                      <p className="text-white/30 text-xs">Gifts coming soon…</p>
                     </div>
                   ) : (
                     <div

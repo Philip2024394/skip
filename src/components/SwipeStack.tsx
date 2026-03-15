@@ -8,6 +8,7 @@ import { isOnline } from "@/hooks/useOnlineStatus";
 import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
 import ProfileBadge from "@/components/ProfileBadge";
+import DistanceBadge from "@/components/DistanceBadge";
 import VoicePlayer from "./VoicePlayer";
 
 interface SwipeStackProps {
@@ -315,6 +316,15 @@ const SwipeStack = ({
 
           {/* ── Single badge — locked: yellow, top-left only (ProfileBadge) ── */}
           <ProfileBadge profile={profile} />
+          
+          {/* ── Distance badge — top-right, opens map ── */}
+          <DistanceBadge 
+            profile={profile} 
+            onClick={() => {
+              // Open distance map - you'll need to implement this logic
+              console.log("Open distance map for:", profile);
+            }}
+          />
 
           {/* ── Swipe stamps ──────────────────────────────────── */}
           <motion.div

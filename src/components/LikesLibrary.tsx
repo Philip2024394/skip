@@ -76,7 +76,7 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
 };
 // Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
 const HOME_TABS: Tab[]    = ["new", "sent", "received", "unlock", "gifts"];
-const PROFILE_TABS: Tab[] = ["new", "sent", "treat", "distance"];
+const PROFILE_TABS: Tab[] = ["new", "sent", "treat", "gifts"];
 
 const TREAT_ITEMS = [
   { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage",      image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
