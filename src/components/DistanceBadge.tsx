@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { MapPin, Eye } from "lucide-react";
 
 interface DistanceBadgeProps {
   profile: any;
@@ -23,13 +23,14 @@ export default function DistanceBadge({ profile, onClick }: DistanceBadgeProps) 
   return (
     <button
       onClick={onClick}
-      className="absolute top-2 right-2 bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-semibold px-2 py-1 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] flex items-center gap-1 hover:bg-black/90 transition-colors"
+      className="absolute top-2 left-2 bg-black/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-semibold px-2 py-1 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] flex items-center gap-1 hover:bg-black/90 transition-colors"
       style={{
         zIndex: 10,
       }}
     >
-      <MapPin className="w-3 h-3" />
-      {distance}
+      <Eye className="w-3 h-3 text-pink-400" />
+      <span>View</span>
+      <span className="text-pink-400 font-bold">Km{distance.replace('km', '')}</span>
     </button>
   );
 }
