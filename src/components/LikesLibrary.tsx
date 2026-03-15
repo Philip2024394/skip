@@ -564,7 +564,7 @@ const LikesLibrary = ({
                 dailyTarot={dailyTarot}
                 onUnlock={onUnlock}
               />
-            ) : null
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
