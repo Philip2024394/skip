@@ -37,6 +37,21 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSel
       .order('price', { ascending: true });
 
     if (error) {
+      // Handle case where table doesn't exist yet
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        console.log('virtual_gifts table not found - using fallback gifts');
+        // Use fallback gifts when database doesn't exist
+        const fallbackGifts = [
+          { id: 'rose', name: 'Rose', emoji: '🌹', price: 1 },
+          { id: 'heart', name: 'Heart', emoji: '❤️', price: 1 },
+          { id: 'diamond', name: 'Diamond', emoji: '💎', price: 1 },
+          { id: 'chocolate', name: 'Chocolate', emoji: '🍫', price: 1 },
+          { id: 'teddy', name: 'Teddy Bear', emoji: '🧸', price: 1 },
+        ];
+        setGifts(fallbackGifts);
+        setLoading(false);
+        return;
+      }
       console.error('Error fetching gifts:', error);
       return;
     }
@@ -61,6 +76,12 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSel
       .order('position', { ascending: true });
 
     if (error) {
+      // Handle case where table doesn't exist yet
+      if (error.code === '42P01' || error.message?.includes('does not exist')) {
+        console.log('user_preferred_gifts table not found - using empty selection');
+        setSelectedGifts([]);
+        return;
+      }
       console.error('Error fetching selected gifts:', error);
       return;
     }

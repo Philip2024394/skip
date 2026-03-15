@@ -45,6 +45,11 @@ export default function SentGiftsDisplay({ profileId }: SentGiftsDisplayProps) {
         .limit(5);
 
       if (error) {
+        // Handle case where table doesn't exist yet
+        if (error.code === '42P01' || error.message?.includes('does not exist')) {
+          console.log('sent_gifts table not found - database migration needed');
+          return;
+        }
         console.error('Error fetching sent gifts:', error);
         return;
       }
