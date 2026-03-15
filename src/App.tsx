@@ -13,10 +13,10 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
-import WhatsAppLeadsPage from "./pages/admin/WhatsAppLeadsPage";
-import WorldMapDashboard from "./pages/admin/WorldMapDashboardSimple";
+import DebugWhatsAppLeads from "./pages/admin/DebugWhatsAppLeads";
+import DebugWorldMap from "./pages/admin/DebugWorldMap";
 import TestPage from "./pages/TestPage";
-console.log('🚀 App.tsx loaded - WorldMapDashboard imported:', typeof WorldMapDashboard);
+console.log('🚀 App.tsx loaded - Debug components imported:', typeof DebugWhatsAppLeads, typeof DebugWorldMap);
 import MapPage from "./pages/MapPage";
 import TermsPage from "./pages/TermsPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -102,8 +102,8 @@ const AppContent = () => {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
-          <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><WhatsAppLeadsPage /></ProtectedRoute>} />
-          <Route path="/admin/world-map" element={<ProtectedRoute><WorldMapDashboard /></ProtectedRoute>} />
+          <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><DebugWhatsAppLeads /></ProtectedRoute>} />
+          <Route path="/admin/world-map" element={<ProtectedRoute><DebugWorldMap /></ProtectedRoute>} />
           <Route path="/test" element={<TestPage />} />
           <Route path="/2dtm-control-panel" element={<AdminPage />} />
           <Route path="/map" element={<MapPage />} />
