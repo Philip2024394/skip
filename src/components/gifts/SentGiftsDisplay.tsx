@@ -40,7 +40,7 @@ export default function SentGiftsDisplay({ profileId }: SentGiftsDisplayProps) {
             name
           )
         `)
-        .eq('recipient_id', profileId)
+        .eq('receiver_id', profileId)
         .order('created_at', { ascending: false })
         .limit(5);
 
