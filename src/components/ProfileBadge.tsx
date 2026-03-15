@@ -25,8 +25,8 @@ interface ProfileBadgeProps {
   profile: any;
   /** Pass a translation function if you have one; otherwise badge shows English label */
   t?: (key: string) => string;
-  /** Whether to show badges on profile pages (default: false) */
-  showOnProfilePage?: boolean;
+  /** Whether this is on a profile page (hides badges) vs home page (shows badges) */
+  isProfilePage?: boolean;
 }
 
 /**
@@ -34,12 +34,12 @@ interface ProfileBadgeProps {
  * This is the ONLY place badge styling is defined. Import this component
  * wherever a badge needs to appear on a profile card.
  */
-export default function ProfileBadge({ profile, t, showOnProfilePage = false }: ProfileBadgeProps) {
+export default function ProfileBadge({ profile, t, isProfilePage = false }: ProfileBadgeProps) {
   const key = getPrimaryBadgeKey(profile);
   if (!key) return null;
   
-  // Don't show badges on profile pages unless explicitly enabled
-  if (!showOnProfilePage) {
+  // Hide badges on profile pages, show on home page
+  if (isProfilePage) {
     return null;
   }
 

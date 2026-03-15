@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Heart, MapPin, BadgeCheck, Fingerprint } from "lucide-react";
+import DistanceBadge from "@/components/DistanceBadge";
 import { isOnline } from "@/hooks/useOnlineStatus";
 
 // Mock male likers — always shown so female profiles appear popular
@@ -134,6 +135,15 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
 
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
+
+        {/* Distance badge — top-right */}
+        <DistanceBadge 
+          profile={profile} 
+          onClick={() => {
+            // Open distance map - you'll need to implement this logic
+            console.log("Open distance map for profile:", profile);
+          }}
+        />
 
         {/* Like button — top-right, below counter */}
         {handleLike && (

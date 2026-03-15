@@ -78,7 +78,7 @@ export default function TopCard(props: TopCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
 
           {/* ── Single badge — locked: yellow, top-left only (ProfileBadge) ── */}
-          <ProfileBadge profile={props.selectedProfile} t={props.t} showOnProfilePage={!props.isProfileRoute} />
+          <ProfileBadge profile={props.selectedProfile} t={props.t} isProfilePage={props.isProfileRoute} />
           
           {/* ── Distance badge — top-right, opens map ── */}
           <DistanceBadge 

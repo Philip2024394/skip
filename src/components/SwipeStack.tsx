@@ -315,7 +315,7 @@ const SwipeStack = ({
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
 
           {/* ── Single badge — locked: yellow, top-left only (ProfileBadge) ── */}
-          <ProfileBadge profile={profile} />
+          <ProfileBadge profile={profile} isProfilePage={false} />
           
           {/* ── Distance badge — top-right, opens map ── */}
           <DistanceBadge 
