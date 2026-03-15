@@ -36,57 +36,40 @@ export default function LikesCarousel(props: LikesCarouselProps) {
         // ── Tarot card injection (uses the promo slot shape) ──
         if (props.dailyTarot && props.tab === "new" && item.type === "promo") {
           return (
-            <div
+            <motion.div
               key={`tarot-${props.dailyTarot.cardId}-${idx}`}
+              initial={{ opacity: 0, scale: 0.85 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 props.onTarotOpen();
                 window.setTimeout(() => props.onRevealDailyTarot?.(), 0);
               }}
-              className="flex-shrink-0 cursor-pointer relative"
-              style={{ width: 80, height: 104 }}
+              className="flex-shrink-0 cursor-pointer"
+              style={{ width: 68 }}
               aria-label="Open your Daily Love Reading"
             >
-              {/* Pink glow pulse — outside overflow so it's visible */}
-              <motion.div
-                className="absolute inset-0 rounded-xl"
+              {/* Card image with subtle heartbeat glow — no container */}
+              <motion.img
+                src="https://ik.imagekit.io/7grri5v7d/tarot%20card%20back.png?updatedAt=1773487777679"
+                alt="Daily Tarot"
+                className="w-full rounded-lg"
+                style={{ filter: "drop-shadow(0 0 8px rgba(255,105,180,0.5))" }}
                 animate={{
-                  boxShadow: [
-                    "0 0 14px 4px rgba(255,20,147,0.85), 0 0 28px 8px rgba(255,20,147,0.5)",
-                    "0 0 22px 8px rgba(255,20,147,1),   0 0 44px 14px rgba(255,20,147,0.7)",
-                    "0 0 14px 4px rgba(255,20,147,0.85), 0 0 28px 8px rgba(255,20,147,0.5)",
+                  filter: [
+                    "drop-shadow(0 0 6px rgba(255,105,180,0.4))",
+                    "drop-shadow(0 0 14px rgba(255,105,180,0.7))",
+                    "drop-shadow(0 0 6px rgba(255,105,180,0.4))",
                   ],
+                  scale: [1, 1.04, 1],
                 }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-                style={{ zIndex: 0 }}
+                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                decoding="async"
+                loading="eager"
               />
-              {/* Background image */}
-              <div className="absolute inset-0 rounded-xl overflow-hidden" style={{ zIndex: 1 }}>
-                <img
-                  src="https://ik.imagekit.io/7grri5v7d/arot%20card.png?updatedAt=1773487551052"
-                  alt=""
-                  className="w-full h-full object-cover"
-                  decoding="async"
-                  loading="eager"
-                />
-              </div>
-              {/* Tarot card with heartbeat scale pulse */}
-              <motion.div
-                className="absolute inset-0"
-                style={{ zIndex: 2 }}
-                animate={{ scale: [1, 1.06, 1] }}
-                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <img
-                  src="https://ik.imagekit.io/7grri5v7d/tarot_cards-removebg-preview.png?updatedAt=1773138352916"
-                  alt="Tarot card"
-                  className="w-full h-full object-contain"
-                  decoding="async"
-                  loading="eager"
-                />
-              </motion.div>
-            </div>
+            </motion.div>
           );
         }
 

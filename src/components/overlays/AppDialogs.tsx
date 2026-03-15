@@ -195,9 +195,15 @@ export default function AppDialogs(props: AppDialogsProps) {
                   >
                     {/* back */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ backfaceVisibility: "hidden" }}>
-                      <div className="absolute inset-0 opacity-70 bg-[radial-gradient(circle_at_center,rgba(250,204,21,0.18),rgba(0,0,0,0)_60%)]" />
-                      <Sparkles className="w-10 h-10 text-yellow-200 drop-shadow-[0_0_14px_rgba(250,204,21,0.5)]" />
-                      <p className="mt-3 text-white/80 text-xs font-black tracking-wide">{locale === "en" ? "Shuffling the universe…" : "Mengocok semesta…"}</p>
+                      <img
+                        src="https://ik.imagekit.io/7grri5v7d/tarot%20card%20back.png?updatedAt=1773487777679"
+                        alt="Tarot card back"
+                        className="absolute inset-0 w-full h-full object-cover rounded-3xl opacity-80"
+                      />
+                      <div className="relative z-10 flex flex-col items-center">
+                        <Sparkles className="w-8 h-8 text-yellow-200 drop-shadow-[0_0_14px_rgba(250,204,21,0.5)]" />
+                        <p className="mt-2 text-white/90 text-xs font-black tracking-wide drop-shadow-lg">{locale === "en" ? "Shuffling the universe…" : "Mengocok semesta…"}</p>
+                      </div>
                     </div>
 
                     {/* front */}

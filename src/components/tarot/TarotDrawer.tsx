@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   GRAVEYARD_BG,
@@ -405,78 +405,266 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                padding: "12px 16px 24px",
+                padding: "0 16px 32px",
                 overflowY: "auto",
                 flex: 1,
                 minHeight: 0,
                 WebkitOverflowScrolling: "touch",
               }}
+              className="tarot-content-scroll"
             >
-              {/* Progress steps removed */}
+              <style>{`.tarot-content-scroll{scrollbar-width:none;-ms-overflow-style:none}.tarot-content-scroll::-webkit-scrollbar{width:0;height:0}`}</style>
 
-              {/* Tarot card — face down until reveal */}
+              {/* ── Header ── */}
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                style={{ textAlign: "center", marginBottom: 8, width: "100%" }}
+              >
+                <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 4 }}>
+                  2DateMe Daily Love Reading
+                </p>
+                <motion.h2
+                  animate={props.showDailyTarotFront ? {} : { opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 900,
+                    margin: 0,
+                    background: "linear-gradient(135deg, #ff69b4, #ec4899, #a855f7)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {props.showDailyTarotFront
+                    ? (props.tarotHeader || "The Cards Have Spoken")
+                    : "Your Card Awaits..."}
+                </motion.h2>
+              </motion.div>
+
+              {/* ── Tarot Card ── */}
               {props.dailyTarot && (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", gap: 6 }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
                   <AnimatePresence mode="wait">
                     {!props.showDailyTarotFront ? (
                       <motion.div
                         key="card-back"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1, scale: [1, 1.03, 1] }}
-                        exit={{ opacity: 0, rotateY: 90 }}
-                        transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                        style={{ position: "relative" }}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: [1, 1.04, 1] }}
+                        exit={{ opacity: 0, rotateY: 90, scale: 0.9 }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                        style={{ position: "relative", cursor: "pointer" }}
+                        onClick={() => {
+                          props.setShowDailyTarotFront(true);
+                          props.setTarotProgressStep(4);
+                          props.setTarotHeader(TAROT_HEADERS[Math.floor(Math.random() * TAROT_HEADERS.length)]);
+                          props.onRevealDailyTarot();
+                        }}
                       >
-                        {/* Gold glow behind card */}
-                        <div
+                        {/* Pink glow behind card */}
+                        <motion.div
+                          animate={{ opacity: [0.4, 0.8, 0.4], scale: [0.95, 1.05, 0.95] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                           style={{
                             position: "absolute",
-                            inset: 0,
-                            filter: "blur(20px)",
-                            opacity: 0.6,
-                            background:
-                              "radial-gradient(circle at 50% 70%, rgba(250,204,21,0.65), transparent 70%)",
+                            inset: -20,
+                            filter: "blur(28px)",
+                            background: "radial-gradient(circle at 50% 60%, rgba(236,72,153,0.7), rgba(168,85,247,0.3) 60%, transparent 80%)",
                             zIndex: -1,
                           }}
                         />
                         <img
                           src={TAROT_CARD_BACK}
-                          alt="Card back"
-                          style={{ width: 115, height: 152, objectFit: "contain" }}
+                          alt="Tap to reveal your card"
+                          style={{
+                            width: 140,
+                            height: 210,
+                            objectFit: "contain",
+                            borderRadius: 12,
+                            filter: "drop-shadow(0 8px 24px rgba(236,72,153,0.5))",
+                          }}
                           decoding="async"
-                          loading="lazy"
+                          loading="eager"
                         />
+                        <motion.p
+                          animate={{ opacity: [0.4, 0.9, 0.4] }}
+                          transition={{ duration: 1.6, repeat: Infinity }}
+                          style={{
+                            textAlign: "center",
+                            color: "rgba(255,255,255,0.6)",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            marginTop: 10,
+                            letterSpacing: "0.05em",
+                          }}
+                        >
+                          Tap to reveal
+                        </motion.p>
                       </motion.div>
                     ) : (
                       <motion.div
                         key="card-front"
-                        initial={{ opacity: 0, rotateY: -90 }}
-                        animate={{ opacity: 1, rotateY: 0 }}
+                        initial={{ opacity: 0, rotateY: -90, scale: 0.85 }}
+                        animate={{ opacity: 1, rotateY: 0, scale: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}
                       >
-                        {TAROT_CARD_FRONT_IMAGES[1] ? (
-                          <img
-                            src={TAROT_CARD_FRONT_IMAGES[1]}
-                            alt="The Fool"
-                            style={{ width: 115, height: 152, objectFit: "contain" }}
-                            decoding="async"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div
+                        {/* Card image */}
+                        <div style={{ position: "relative", marginBottom: 6 }}>
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
                             style={{
-                              width: 140,
-                              height: 185,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 64,
+                              position: "absolute",
+                              inset: -16,
+                              filter: "blur(24px)",
+                              background: "radial-gradient(circle, rgba(236,72,153,0.5), rgba(168,85,247,0.2) 60%, transparent 80%)",
+                              zIndex: -1,
+                            }}
+                          />
+                          {(TAROT_CARD_FRONT_IMAGES[props.dailyTarot.cardId] || TAROT_CARD_FRONT_IMAGES[1]) ? (
+                            <img
+                              src={TAROT_CARD_FRONT_IMAGES[props.dailyTarot.cardId] || TAROT_CARD_FRONT_IMAGES[1]}
+                              alt={props.dailyTarot.cardName}
+                              style={{
+                                width: 130,
+                                height: 195,
+                                objectFit: "contain",
+                                borderRadius: 10,
+                                filter: "drop-shadow(0 8px 20px rgba(168,85,247,0.5))",
+                              }}
+                              decoding="async"
+                            />
+                          ) : (
+                            <div style={{
+                              width: 130, height: 195,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              fontSize: 64, borderRadius: 10,
+                              background: "linear-gradient(135deg, rgba(20,0,40,0.9), rgba(40,10,60,0.9))",
+                              border: "1.5px solid rgba(236,72,153,0.4)",
+                            }}>
+                              {props.dailyTarot.cardEmoji}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Card name */}
+                        <motion.p
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                          style={{
+                            color: "#FFD700",
+                            fontSize: 15,
+                            fontWeight: 900,
+                            textAlign: "center",
+                            marginBottom: 4,
+                            textShadow: "0 0 12px rgba(255,215,0,0.4)",
+                          }}
+                        >
+                          {props.dailyTarot.cardEmoji} {props.dailyTarot.cardName}
+                        </motion.p>
+
+                        {/* ── Pink Reading Container ── */}
+                        <motion.div
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6, duration: 0.5 }}
+                          style={{
+                            width: "100%",
+                            marginTop: 8,
+                            borderRadius: 20,
+                            background: "linear-gradient(145deg, rgba(236,72,153,0.18), rgba(168,85,247,0.12))",
+                            border: "1.5px solid rgba(236,72,153,0.35)",
+                            padding: "18px 16px",
+                            backdropFilter: "blur(12px)",
+                            boxShadow: "0 4px 24px rgba(236,72,153,0.15), inset 0 1px 0 rgba(255,255,255,0.06)",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                            <div style={{
+                              width: 3, height: 18, borderRadius: 2,
+                              background: "linear-gradient(to bottom, #ec4899, #a855f7)",
+                            }} />
+                            <p style={{
+                              color: "rgba(255,255,255,0.5)",
+                              fontSize: 10,
+                              fontWeight: 800,
+                              letterSpacing: "0.15em",
+                              textTransform: "uppercase",
+                              margin: 0,
+                            }}>
+                              Your Reading Today
+                            </p>
+                          </div>
+
+                          <p style={{
+                            color: "rgba(255,255,255,0.88)",
+                            fontSize: 14,
+                            lineHeight: 1.85,
+                            margin: 0,
+                          }}>
+                            {props.dailyTarot.reading}
+                          </p>
+
+                          <div style={{
+                            height: 1,
+                            background: "linear-gradient(to right, transparent, rgba(236,72,153,0.4), transparent)",
+                            margin: "14px 0",
+                          }} />
+
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 9, fontWeight: 700, margin: 0 }}>
+                              2DateMe Daily Love Reading
+                            </p>
+                            <p style={{ color: "rgba(236,72,153,0.6)", fontSize: 9, fontWeight: 700, margin: 0 }}>
+                              {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </p>
+                          </div>
+                        </motion.div>
+
+                        {/* Share / Premium CTA */}
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.9 }}
+                          style={{ width: "100%", display: "flex", gap: 8, marginTop: 14 }}
+                        >
+                          <button
+                            onClick={() => {
+                              const text = `🔮 My Daily Love Reading:\n\n"${props.dailyTarot?.reading}"\n\n✨ Get your free reading at 2dateme.com`;
+                              window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+                            }}
+                            style={{
+                              flex: 1, padding: "12px 0", borderRadius: 14,
+                              background: "rgba(37,211,102,0.12)",
+                              border: "1px solid rgba(37,211,102,0.35)",
+                              color: "#25D366", fontSize: 12, fontWeight: 800, cursor: "pointer",
                             }}
                           >
-                            {props.dailyTarot.cardEmoji}
-                          </div>
-                        )}
+                            Share 💚
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              props.setShowPremiumReading(true);
+                              props.setShowTarotDrawer(false);
+                            }}
+                            style={{
+                              flex: 1, padding: "12px 0", borderRadius: 14,
+                              background: "linear-gradient(135deg, rgba(236,72,153,0.25), rgba(168,85,247,0.25))",
+                              border: "1px solid rgba(236,72,153,0.4)",
+                              color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer",
+                            }}
+                          >
+                            Premium Reading 🔮
+                          </button>
+                        </motion.div>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -810,7 +998,6 @@ export default function TarotDrawer(props: TarotDrawerProps) {
                   </p>
 
                   <div
-                    ref={crowContainerRef}
                     style={{
                       position: "relative",
                       width: "100%",

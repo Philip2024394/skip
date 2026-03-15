@@ -8,6 +8,7 @@ import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ProfileEditor from "@/components/ProfileEditor";
+// import GiftSelector from "@/components/gifts/GiftSelector";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { isNetworkError } from "@/utils/payments";
 
@@ -49,45 +50,6 @@ const DashboardPage = () => {
     });
   }, []);
   const [autoOpenFeatureId, setAutoOpenFeatureId] = useState<string | null>(null);
-  const [navigationHistory, setNavigationHistory] = useState<("profile" | "powerups")[]>([]);
-
-  // Track navigation history
-  useEffect(() => {
-    const handleTabChange = (newTab: "profile" | "powerups") => {
-      setNavigationHistory(prev => {
-        const updated = [...prev, newTab];
-        // Keep only last 10 entries to prevent memory issues
-        return updated.slice(-10);
-      });
-    };
-
-    // Add initial tab to history
-    if (navigationHistory.length === 0) {
-      setNavigationHistory([tab]);
-    }
-  }, []);
-
-  // Update history when tab changes
-  useEffect(() => {
-    if (navigationHistory.length > 0) {
-      setNavigationHistory(prev => {
-        const updated = [...prev, tab];
-        return updated.slice(-10);
-      });
-    }
-  }, [tab]);
-
-  // Smart back button handler
-  const handleBack = () => {
-    // If we have navigation history and not on first tab
-    if (navigationHistory.length > 1) {
-      const previousTab = navigationHistory[navigationHistory.length - 2];
-      setTab(previousTab);
-    } else {
-      // On first tab, go to home page
-      navigate("/");
-    }
-  };
 
   // Handle ?purchase=featureId param from ProfileEditor redirect
   useEffect(() => {
@@ -176,7 +138,7 @@ const DashboardPage = () => {
     <div className="h-screen-safe bg-[#0a0a0a] text-white flex flex-col overflow-hidden max-w-full mx-auto">
       <header className="flex items-center justify-between px-3 py-2.5 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/8" style={{ paddingTop: `max(0.5rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-2">
-          <button onClick={handleBack} className="w-7 h-7 rounded-full bg-white/8 flex items-center justify-center text-white/50 hover:text-white transition-colors" title="Back">
+          <button onClick={() => navigate("/")} className="w-7 h-7 rounded-full bg-white/8 flex items-center justify-center text-white/50 hover:text-white transition-colors" title="Back">
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <span className="font-display font-bold text-white text-xs sm:text-sm">{t("dash.title")}</span>
@@ -225,7 +187,13 @@ const DashboardPage = () => {
 
       <div className="flex-1 overflow-y-auto" style={{ background: "#0a0a0a", paddingBottom: "max(1rem, env(safe-area-inset-bottom, 0px))" }}>
         {tab === "profile" ? (
-          <ProfileEditor />
+          <>
+            <ProfileEditor />
+            {/* <GiftSelector userId={userId} onGiftSelected={(gift) => {
+              // Handle gift selection if needed
+              console.log('Gift selected:', gift);
+            }} /> */}
+          </>
         ) : (
           <div className="px-3 pt-3 pb-4 space-y-3">
             <p className="text-white/40 text-xs text-center pb-1">

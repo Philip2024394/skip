@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useServiceWorkerUpdate } from "./hooks/useServiceWorkerUpdate";
+// import GiftSenderProvider from "@/components/gifts/GiftSenderProvider";
 
 const queryClient = new QueryClient();
 
@@ -113,9 +114,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AppContent />
+        {/* <GiftSenderProvider> */}
+          <Toaster />
+          <Sonner />
+          <AppContent />
+        {/* </GiftSenderProvider> */}
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>

@@ -1,8 +1,15 @@
 import { motion } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, Fingerprint, Heart, MapPin, BadgeCheck } from "lucide-react";
-import ProfileBadge from "@/components/ProfileBadge";
-import ContactPreferenceBadge from "@/components/ContactPreferenceBadge";
+import { Heart, MapPin, BadgeCheck, Fingerprint } from "lucide-react";
 import { isOnline } from "@/hooks/useOnlineStatus";
+
+// Mock male likers — always shown so female profiles appear popular
+const MOCK_MALE_LIKERS = [
+  { id: "mock-liker-1", name: "Rian", avatar_url: "https://randomuser.me/api/portraits/men/32.jpg" },
+  { id: "mock-liker-2", name: "Adi", avatar_url: "https://randomuser.me/api/portraits/men/45.jpg" },
+  { id: "mock-liker-3", name: "Bayu", avatar_url: "https://randomuser.me/api/portraits/men/22.jpg" },
+  { id: "mock-liker-4", name: "Dimas", avatar_url: "https://randomuser.me/api/portraits/men/67.jpg" },
+  { id: "mock-liker-5", name: "Farel", avatar_url: "https://randomuser.me/api/portraits/men/11.jpg" },
+];
 
 interface ProfileImagesPanelProps {
   profile: any;
@@ -11,9 +18,10 @@ interface ProfileImagesPanelProps {
   onClose: () => void;
   iLiked?: any[];
   handleLike?: (p: any) => void;
+  likedMe?: any[];
 }
 
-export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex, onClose, iLiked = [], handleLike }: ProfileImagesPanelProps) {
+export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex, onClose, iLiked = [], handleLike, likedMe = [] }: ProfileImagesPanelProps) {
   const images: string[] =
     Array.isArray(profile?.images) && profile.images.length > 0
       ? profile.images
@@ -28,6 +36,11 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
   const profileName = profile?.name || profile?.full_name || profile?.first_name || "Profile";
   const isLiked = iLiked.some((p: any) => p.id === profile?.id);
 
+  // Combine real likers with mock male likers — always show at least some
+  const realLikers = likedMe.filter((p: any) => p.id !== profile?.id);
+  const mockToAdd = MOCK_MALE_LIKERS.filter((m) => !realLikers.some((r: any) => r.id === m.id));
+  const likers = [...realLikers, ...mockToAdd].slice(0, 5);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -36,25 +49,51 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
       transition={{ duration: 0.2 }}
       className="relative rounded-2xl overflow-hidden min-h-0 flex flex-col bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5"
     >
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        style={{
-          position: "absolute", top: 10, right: 10, zIndex: 10,
-          width: 32, height: 32, borderRadius: "50%",
-          background: "rgba(0,0,0,0.5)",
-          border: "1px solid rgba(255,255,255,0.2)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer", color: "rgba(255,255,255,0.8)",
-        }}
-        aria-label="Close"
-      >
-        <X size={14} />
-      </button>
-
-      {/* Image counter */}
+      {/* Liked section — top-left */}
       <div style={{
-        position: "absolute", top: 12, left: 14, zIndex: 10,
+        position: "absolute", top: 10, left: 12, zIndex: 10,
+        display: "flex", flexDirection: "column", gap: 4,
+      }}>
+        <p style={{
+          color: "rgba(236,72,153,0.95)",
+          fontSize: 13,
+          fontWeight: 800,
+          margin: 0,
+          textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+          letterSpacing: "0.02em",
+        }}>
+          Liked
+        </p>
+        {likers.length > 0 && (
+          <div style={{ display: "flex", gap: -4 }}>
+            {likers.map((liker: any, i: number) => (
+              <img
+                key={liker.id}
+                src={liker.avatar_url || liker.image || "/placeholder.svg"}
+                alt={liker.name || ""}
+                style={{
+                  width: 26,
+                  height: 26,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "2px solid rgba(0,0,0,0.6)",
+                  marginLeft: i > 0 ? -6 : 0,
+                  position: "relative",
+                  zIndex: likers.length - i,
+                }}
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  if (img.src !== window.location.origin + "/placeholder.svg") img.src = "/placeholder.svg";
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Image counter — top-right */}
+      <div style={{
+        position: "absolute", top: 12, right: 14, zIndex: 10,
         background: "rgba(0,0,0,0.5)",
         borderRadius: 12,
         padding: "3px 10px",
@@ -65,7 +104,7 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
         {safeIndex + 1} / {images.length}
       </div>
 
-      {/* Full-size image */}
+      {/* Full-size image — tap left/right to navigate */}
       <div
         style={{ flex: 1, position: "relative", minHeight: 0 }}
         onClick={(e) => {
@@ -96,10 +135,7 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
 
-        {/* Badge — top-left */}
-        <ProfileBadge profile={profile} />
-
-        {/* Like button — top-right, below close button */}
+        {/* Like button — top-right, below counter */}
         {handleLike && (
           <button
             onClick={(e) => {
@@ -107,7 +143,7 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
               handleLike(profile);
             }}
             aria-label={`Like ${profileName}`}
-            className={`absolute z-20 w-10 h-10 rounded-full flex items-center justify-center active:scale-95 hover:scale-110 transition-all top-3 right-14 ${
+            className={`absolute z-20 w-10 h-10 rounded-full flex items-center justify-center active:scale-95 hover:scale-110 transition-all top-12 right-3 ${
               isLiked
                 ? "bg-pink-500/40 border border-pink-400/60 shadow-[0_0_14px_rgba(180,80,150,0.5)]"
                 : "gradient-love border-0 shadow-[0_0_14px_rgba(180,80,150,0.4)]"
@@ -118,37 +154,26 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
           </button>
         )}
 
-        {/* Navigation arrows */}
-        {canPrev && (
-          <button
-            onClick={(e) => { e.stopPropagation(); setImageIndex(safeIndex - 1); }}
-            style={{
-              position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
-              width: 36, height: 36, borderRadius: "50%",
-              background: "rgba(0,0,0,0.4)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "white",
-            }}
-            aria-label="Previous image"
-          >
-            <ChevronLeft size={18} />
-          </button>
-        )}
+        {/* Fingerprint — next image button, bottom-right */}
         {canNext && (
           <button
-            onClick={(e) => { e.stopPropagation(); setImageIndex(safeIndex + 1); }}
-            style={{
-              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-              width: 36, height: 36, borderRadius: "50%",
-              background: "rgba(0,0,0,0.4)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "white",
+            onClick={(e) => {
+              e.stopPropagation();
+              setImageIndex(safeIndex + 1);
             }}
             aria-label="Next image"
+            className="absolute z-20 w-11 h-11 rounded-full flex items-center justify-center active:scale-90 hover:scale-110 transition-all"
+            style={{
+              bottom: 72,
+              right: 14,
+              background: "rgba(236,72,153,0.25)",
+              border: "1.5px solid rgba(236,72,153,0.5)",
+              boxShadow: "0 0 14px rgba(236,72,153,0.3)",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+            }}
           >
-            <ChevronRight size={18} />
+            <Fingerprint className="w-5 h-5 text-white/90" />
           </button>
         )}
 
@@ -169,11 +194,6 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
           <p className="text-white/60 text-sm flex items-center gap-1 mt-1">
             <MapPin className="w-3 h-3" /> {profile?.city}, {profile?.country}
           </p>
-          {profile?.contact_preference && (
-            <div className="mt-1.5">
-              <ContactPreferenceBadge preference={profile.contact_preference} />
-            </div>
-          )}
         </div>
 
         {/* Dot indicators */}
@@ -201,22 +221,6 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
             ))}
           </div>
         )}
-
-        {/* Fingerprint button - bottom right */}
-        <button
-          style={{
-            position: "absolute", bottom: 12, right: 12, zIndex: 10,
-            width: 44, height: 44, borderRadius: "50%",
-            background: "linear-gradient(135deg, rgba(236,72,153,0.8), rgba(168,85,247,0.8))",
-            border: "2px solid rgba(255,255,255,0.2)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "white",
-            boxShadow: "0 4px 16px rgba(236,72,153,0.4)",
-          }}
-          aria-label="Verify"
-        >
-          <Fingerprint size={22} />
-        </button>
       </div>
     </motion.div>
   );

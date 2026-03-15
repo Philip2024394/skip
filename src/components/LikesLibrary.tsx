@@ -10,6 +10,8 @@ import PromoCard from "./PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import { isOnline } from "@/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/utils/unlockPrice";
+// import GiftsTab from "@/components/gifts/GiftsTab";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── How "new" a profile is (joined in last 7 days) ────────────────────────────
 const isNewProfile = (p: Profile) => {
@@ -51,12 +53,13 @@ interface LikesLibraryProps {
   } | null;
   onRevealDailyTarot?: () => void;
   hidePrivateTabs?: boolean;
+  currentUserId?: string;
   onUnlock: (profile: Profile) => void;
   onSelectProfile: (profile: Profile, sourceList: Profile[]) => void;
   onPurchaseFeature: (feature: PremiumFeature) => void;
 }
 
-type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance";
+type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts";
 type DisplayItem =
   | { type: "profile"; profile: Profile }
   | { type: "promo"; profile: null };
@@ -69,9 +72,10 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   treat:    () => "Treat",
   unlock:   () => "Unlock",
   distance: () => "Distance",
+  gifts:    () => "Gifts",
 };
 // Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
-const HOME_TABS: Tab[]    = ["new", "sent", "received", "unlock"];
+const HOME_TABS: Tab[]    = ["new", "sent", "received", "unlock", "gifts"];
 const PROFILE_TABS: Tab[] = ["new", "sent", "treat", "distance"];
 
 const TREAT_ITEMS = [
@@ -101,6 +105,7 @@ const LikesLibrary = ({
   dailyTarot,
   onRevealDailyTarot,
   hidePrivateTabs,
+  currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
  }: LikesLibraryProps) => {
@@ -135,6 +140,7 @@ const LikesLibrary = ({
     treat:    0,
     unlock:   0,
     distance: 0,
+    gifts:    0,
   };
 
   // Scroll back to left whenever tab changes
@@ -558,7 +564,25 @@ const LikesLibrary = ({
                 dailyTarot={dailyTarot}
                 onUnlock={onUnlock}
               />
-            )}
+            ) : tab === "gifts" ? (
+              <div style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "200px",
+                color: "rgba(255,255,255,0.6)",
+                fontSize: 14,
+                textAlign: "center",
+              }}>
+                <div>
+                  <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>🎁</div>
+                  <p>Gifts tab coming soon!</p>
+                  <p style={{ fontSize: 12, opacity: 0.7, marginTop: 8 }}>
+                    Run the SQL migration to enable virtual gifts
+                  </p>
+                </div>
+              </div>
+            ) : null
           </motion.div>
         </AnimatePresence>
       </div>

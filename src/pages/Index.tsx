@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
-import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, Home, ChevronLeft, ChevronRight, Star, ShieldCheck } from "lucide-react";
+import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, User, ChevronLeft, ChevronRight, Star, ShieldCheck } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { Profile } from "@/components/SwipeCard";
 import SwipeStack from "@/components/SwipeStack";
@@ -16,6 +16,7 @@ import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import FeaturePurchaseDialog from "@/components/FeaturePurchaseDialog";
 import FilterPanel, { FilterState, defaultFilters } from "@/components/FilterPanel";
 import { isOnline } from "@/hooks/useOnlineStatus";
+import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
 import GuestAuthPrompt from "@/components/GuestAuthPrompt";
 import TermsAcceptanceDialog from "@/components/TermsAcceptanceDialog";
 import TreatOverlay from "@/components/overlays/TreatOverlay";
@@ -239,7 +240,14 @@ const Index = () => {
       if (filters.lookingFor && p.looking_for?.toLowerCase() !== filters.lookingFor.toLowerCase()) return false;
       if (filters.orientation && p.orientation?.toLowerCase() !== filters.orientation.toLowerCase()) return false;
       if (filters.availableTonight && !p.available_tonight) return false;
-      if (filters.onlineNow && !isOnline(p.last_seen_at)) return false;
+      if (filters.onlineNow) {
+        const pm = p as any;
+        const useMockSchedule = pm.is_mock && pm.mock_online_hours > 0;
+        const currentlyOnline = useMockSchedule
+          ? isMockCurrentlyOnline(p.id, p.country ?? "Indonesia", pm.mock_online_hours, pm.mock_offline_days)
+          : isOnline(p.last_seen_at);
+        if (!currentlyOnline) return false;
+      }
       if (filters.plusOne && !(p as { is_plusone?: boolean }).is_plusone) return false;
       if (filters.generousLifestyle && !(p as { generous_lifestyle?: boolean }).generous_lifestyle) return false;
       if (filters.weekendPlans && !(p as { weekend_plans?: boolean }).weekend_plans) return false;
@@ -781,12 +789,12 @@ const Index = () => {
           {isProfileRoute ? (
             <button
               type="button"
-              onClick={() => navigate("/home")}
-              aria-label="Home"
+              onClick={() => navigate("/")}
+              aria-label="Back to profiles"
               className="w-9 h-9 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
-              title="Home"
+              title="Back to profiles"
             >
-              <Home className="w-4.5 h-4.5" />
+              <User className="w-4.5 h-4.5" />
             </button>
           ) : (
             <>
@@ -814,9 +822,24 @@ const Index = () => {
       </header>
 
       {/* Main 3-container layout */}
-      <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? ((aboutMeTab === "new" && selectedProfileSection !== null) ? "1fr" : "1fr auto") : "1fr auto 1fr" }}>
-        {/* When profile info/images is active, replace all 3 panels with 1 single container */}
-        {isProfileRoute && aboutMeTab === "new" && selectedProfileSection !== null ? (
+      {(() => {
+        // Compute which full-panel overlay is active (if any)
+        const dateIdeaPlace = isProfileRoute && aboutMeTab === "sent" && selectedDateIdeaIndex !== null
+          ? (selectedProfile?.first_date_places || [])[selectedDateIdeaIndex]
+          : null;
+        const showDateIdeaPanel = !!dateIdeaPlace;
+        const showProfilePanel = isProfileRoute && aboutMeTab === "new" && selectedProfileSection !== null;
+        const showFullPanel = showDateIdeaPanel || showProfilePanel;
+
+        return (
+      <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? (showFullPanel ? "1fr" : "1fr auto") : "1fr auto 1fr" }}>
+        {showDateIdeaPanel ? (
+          <DateIdeaDetailPanel
+            dateIdea={dateIdeaPlace.idea}
+            imageUrl={dateIdeaPlace.image_url || undefined}
+            onClose={() => setSelectedDateIdeaIndex(null)}
+          />
+        ) : showProfilePanel ? (
           selectedProfileSection === "images" ? (
             <ProfileImagesPanel
               profile={selectedProfile}
@@ -825,6 +848,7 @@ const Index = () => {
               onClose={() => setSelectedProfileSection(null)}
               iLiked={iLiked}
               handleLike={handleLike}
+              likedMe={likedMe}
             />
           ) : (
             <ProfileInfoPanel
@@ -965,6 +989,7 @@ const Index = () => {
                       : null
                   }
                   hidePrivateTabs={!isProfileRoute && !user}
+                  currentUserId={user?.id}
                   onRevealDailyTarot={() => {
                     markDailyCardShown();
                   }}
@@ -1100,6 +1125,8 @@ const Index = () => {
           </>
         )}
       </div>
+        );
+      })()}
 
       {/* Profile page is now routed to /profile/:id and clones Home layout */}
 

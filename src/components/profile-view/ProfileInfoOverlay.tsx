@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { getPrimaryBadgeKey } from "@/utils/profileBadges";
+// import VirtualGiftsDisplay from "@/components/gifts/VirtualGiftsDisplay";
 
 interface ProfileInfoPanelProps {
   profile: any;
@@ -224,6 +225,8 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
         backgroundColor: "rgba(236,72,153,0.7)"
       }}
     >
+      {/* Virtual Gifts Display */}
+      {/* <VirtualGiftsDisplay userId={profile?.id} /> */}
       
       {/* Header */}
       <div style={{
@@ -406,6 +409,88 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
             <MatchRow icon="🎯" label="Shared Interests" value={String(matchStats.sharedInterests)} />
             <MatchRow icon="🕐" label="Active Time Match" value={matchStats.activeTime} />
             <MatchRow icon="🗣️" label="Language Match" value={matchStats.langMatch} />
+          </div>
+        </div>
+
+        {/* -- Send Gift Section -- */}
+        <div style={{ marginTop: 12 }}>
+          <div style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 12,
+            padding: 12,
+          }}>
+            <div style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 8,
+            }}>
+              <span style={{
+                color: "rgba(236,72,153,0.9)",
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+              }}>
+                Send Virtual Gifts
+              </span>
+            </div>
+            
+            <div style={{
+              display: "flex",
+              justifyContent: "space-around",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 8,
+            }}>
+              {['🌹', '❤️', '💎', '🍫', '🧸'].map((emoji, index) => (
+                <motion.div
+                  key={index}
+                  whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    // This will be handled by parent component
+                    if (window.sendGiftToProfile) {
+                      window.sendGiftToProfile(profile);
+                    }
+                  }}
+                  style={{
+                    fontSize: 24,
+                    cursor: "pointer",
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  {emoji}
+                </motion.div>
+              ))}
+            </div>
+            
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                // This will be handled by parent component
+                if (window.sendGiftToProfile) {
+                  window.sendGiftToProfile(profile);
+                }
+              }}
+              style={{
+                background: "linear-gradient(135deg, rgba(236,72,153,0.8), rgba(168,85,247,0.8))",
+                border: "none",
+                borderRadius: 8,
+                padding: "8px 12px",
+                color: "white",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: "pointer",
+                textAlign: "center",
+                transition: "all 0.2s ease",
+              }}
+            >
+              Select And Send
+            </motion.div>
           </div>
         </div>
 

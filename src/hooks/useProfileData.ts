@@ -29,7 +29,7 @@ export const useProfileData = (props: UseProfileDataProps) => {
 
   useEffect(() => {
     if (!props.isProfileRoute) return;
-    props.setSelectedDateIdeaIndex(0);
+    props.setSelectedDateIdeaIndex(null as any);
     props.setSelectedProfileSection(null);
     props.setSelectedUnlockItemKey("unlock:single");
   }, [props.isProfileRoute, props.selectedProfile?.id, props.setSelectedDateIdeaIndex, props.setSelectedProfileSection, props.setSelectedUnlockItemKey]);
@@ -37,7 +37,7 @@ export const useProfileData = (props: UseProfileDataProps) => {
   useEffect(() => {
     if (!props.isProfileRoute) return;
     if (props.aboutMeTab !== "sent") return;
-    props.setSelectedDateIdeaIndex(0);
+    // Don't auto-select — let user tap a date idea to open detail
   }, [props.aboutMeTab, props.isProfileRoute, props.selectedProfile?.id, props.setSelectedDateIdeaIndex]);
 
   useEffect(() => {

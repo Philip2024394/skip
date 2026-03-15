@@ -7,7 +7,7 @@ export const TAROT_READER_SEQUENCE = [];
 
 export const TAROT_READER_IMAGE_URL = "";
 
-export const TAROT_CARD_BACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 280'%3E%3Crect width='200' height='280' fill='%231a1a2e'/%3E%3Crect x='10' y='10' width='180' height='260' fill='%23162841' stroke='%23d4af37' stroke-width='2'/%3E%3Ccircle cx='100' cy='140' r='60' fill='none' stroke='%23d4af37' stroke-width='3'/%3E%3Cpath d='M100 80 L100 200 M40 140 L160 140' stroke='%23d4af37' stroke-width='2'/%3E%3Ctext x='100' y='250' text-anchor='middle' fill='%23d4af37' font-family='serif' font-size='14'%3ETAROT%3C/text%3E%3C/svg%3E";
+export const TAROT_CARD_BACK = "https://ik.imagekit.io/7grri5v7d/tarot%20card%20back.png?updatedAt=1773487777679";
 
 export const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   1: "https://ik.imagekit.io/7grri5v7d/T_1-removebg-preview.png",
