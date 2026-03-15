@@ -578,7 +578,7 @@ const LikesLibrary = ({
                   <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>🎁</div>
                   <p>Gifts tab coming soon!</p>
                   <p style={{ fontSize: 12, opacity: 0.7, marginTop: 8 }}>
-                    Run the SQL migration to enable virtual gifts
+                    Virtual gifts feature launching soon
                   </p>
                 </div>
               </div>
