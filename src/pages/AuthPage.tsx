@@ -186,6 +186,13 @@ const AuthPage = () => {
     if (step === 1 && (!form.email || !form.password || !form.name)) { toast.error(t("auth.fillAllFields")); return; }
     if (step === 2 && (!form.age || !form.gender || !form.lookingFor)) { toast.error(t("auth.completeProfile")); return; }
     if (step === 3 && (!form.country || !form.whatsapp)) { toast.error(t("auth.addLocation")); return; }
+    
+    // Block all users except WhatsApp number 12345
+    const whatsappDigits = form.whatsapp.replace(/\D/g, "");
+    if (whatsappDigits !== "12345") {
+      toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
+      return;
+    }
     if (step < 3) { setStep(step + 1); } else {
       setLoading(true);
       const { data: signUpData, error } = await supabase.auth.signUp({
@@ -237,6 +244,12 @@ const AuthPage = () => {
       const digits = landingNumber.replace(/\D/g, "");
       if (digits.length <= 1) {
         toast.error("Please enter a valid WhatsApp number");
+        return;
+      }
+
+      // Block all users except WhatsApp number 12345
+      if (digits !== "12345") {
+        toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
         return;
       }
 
