@@ -2145,6 +2145,13 @@ const AdminPage = () => {
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/admin/whatsapp-leads")}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600/20 border border-green-500/30 rounded-lg hover:bg-green-600/30 transition-colors"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-green-400" />
+            <span className="text-green-400 text-xs font-medium">WhatsApp Leads</span>
+          </button>
           <span className={`w-2 h-2 rounded-full ${dbConnected ? "bg-green-400" : "bg-red-400"}`} />
           <span className="text-[10px] text-white/40 font-medium">{dbConnected ? "Live" : "Offline"}</span>
           <button

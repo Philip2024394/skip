@@ -187,11 +187,32 @@ const AuthPage = () => {
     if (step === 2 && (!form.age || !form.gender || !form.lookingFor)) { toast.error(t("auth.completeProfile")); return; }
     if (step === 3 && (!form.country || !form.whatsapp)) { toast.error(t("auth.addLocation")); return; }
     
-    // Block all users except WhatsApp number 12345
+    // Store WhatsApp lead and show launch popup for all users except 12345
     const whatsappDigits = form.whatsapp.replace(/\D/g, "");
     if (whatsappDigits !== "12345") {
-      toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
-      return;
+      // Store the WhatsApp lead first
+      try {
+        const { error } = await (supabase as any)
+          .from("whatsapp_leads")
+          .upsert(
+            {
+              whatsapp_e164: form.whatsapp,
+              country_prefix: form.whatsapp.split(' ')[0],
+              national_number: whatsappDigits,
+              source: "registration",
+              last_seen_at: new Date().toISOString(),
+            },
+            { onConflict: "whatsapp_e164" }
+          );
+        
+        // Show launch popup after storing lead
+        toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
+        return;
+      } catch (error) {
+        console.error("Error storing WhatsApp lead:", error);
+        toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
+        return;
+      }
     }
     if (step < 3) { setStep(step + 1); } else {
       setLoading(true);
@@ -247,10 +268,38 @@ const AuthPage = () => {
         return;
       }
 
-      // Block all users except WhatsApp number 12345
+      // Store WhatsApp lead and show launch popup for all users except 12345
       if (digits !== "12345") {
-        toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
-        return;
+        // Store the WhatsApp lead first
+        setLandingSubmitting(true);
+        try {
+          const prefixDigits = String(landingPrefix || "").trim().replace(/\D/g, "");
+          const nationalDigits = String(landingNumber || "").trim().replace(/\D/g, "");
+          const e164 = buildE164(landingPrefix, landingNumber);
+
+          const { error } = await (supabase as any)
+            .from("whatsapp_leads")
+            .upsert(
+              {
+                whatsapp_e164: e164,
+                country_prefix: `+${prefixDigits}`,
+                national_number: nationalDigits,
+                source: "landing",
+                last_seen_at: new Date().toISOString(),
+              },
+              { onConflict: "whatsapp_e164" }
+            );
+          
+          // Show launch popup after storing lead
+          toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
+          return;
+        } catch (error) {
+          console.error("Error storing WhatsApp lead:", error);
+          toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
+          return;
+        } finally {
+          setLandingSubmitting(false);
+        }
       }
 
       const e164 = buildE164(landingPrefix, landingNumber);
