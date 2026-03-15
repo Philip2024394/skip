@@ -1,4 +1,4 @@
-import React from "react";
+import { useState } from "react";
 import { MapPin, Eye } from "lucide-react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
@@ -22,7 +22,7 @@ export default function DistanceBadge({ profile, allProfiles = [], onClick }: Di
   };
 
   const distance = getDistance();
-  const [showMap, setShowMap] = React.useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   const handleClick = () => {
     if (onClick) {
