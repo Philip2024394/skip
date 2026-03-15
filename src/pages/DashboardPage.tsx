@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle } from "lucide-react";
+import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle, Gift } from "lucide-react";
 import VerificationSubmitDialog from "@/components/overlays/VerificationSubmitDialog";
 import { Button } from "@/components/ui/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ProfileEditor from "@/components/ProfileEditor";
-// import GiftSelector from "@/components/gifts/GiftSelector";
+import GiftSelector from "@/components/gifts/GiftSelector";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { isNetworkError } from "@/utils/payments";
 
@@ -36,15 +36,17 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const { t, toggleLocale, locale } = useLanguage();
   const [loadingId, setLoadingId] = useState<string | null>(null);
-  const [tab, setTab] = useState<"profile" | "powerups">("profile");
+  const [tab, setTab] = useState<"profile" | "powerups" | "gifts">("profile");
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [verifyFeature, setVerifyFeature] = useState<PremiumFeature | null>(null);
   const [userAge, setUserAge] = useState<number | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Load current user's age for the verification age-match check
+  // Load current user's age and ID for the verification age-match check
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
+      setUserId(session.user.id);
       const { data } = await supabase.from("profiles").select("age").eq("id", session.user.id).single();
       if (data) setUserAge((data as any).age ?? null);
     });
@@ -155,7 +157,7 @@ const DashboardPage = () => {
 
       {/* Tab toggle */}
       <div className="px-3 pt-2.5">
-        <div className="flex gap-1 p-1 bg-white/8 rounded-2xl">
+        <div className="flex gap-1 p-1 bg-black/40 rounded-2xl border border-white/10">
           <button
             onClick={() => setTab("profile")}
             className={`flex-1 py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
@@ -170,11 +172,21 @@ const DashboardPage = () => {
             onClick={() => setTab("powerups")}
             className={`flex-1 py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
               tab === "powerups"
-                ? "bg-gradient-to-r from-amber-500 to-red-500 text-white shadow-[0_4px_12px_rgba(245,158,11,0.3)]"
+                ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white shadow-[0_4px_12px_rgba(236,72,153,0.3)]"
                 : "text-white/40 hover:text-white/70"
             }`}
           >
             <Zap className="w-3 h-3" /> <span className="hidden sm:inline">{t("dash.powerups")}</span><span className="sm:hidden">Power</span>
+          </button>
+          <button
+            onClick={() => setTab("gifts")}
+            className={`flex-1 py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+              tab === "gifts"
+                ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white shadow-[0_4px_12px_rgba(236,72,153,0.3)]"
+                : "text-white/40 hover:text-white/70"
+            }`}
+          >
+            <Gift className="w-3 h-3" /> <span className="hidden sm:inline">Gifts</span><span className="sm:hidden">🎁</span>
           </button>
           <button
             onClick={() => navigate("/faq")}
@@ -189,11 +201,11 @@ const DashboardPage = () => {
         {tab === "profile" ? (
           <>
             <ProfileEditor />
-            {/* <GiftSelector userId={userId} onGiftSelected={(gift) => {
-              // Handle gift selection if needed
-              console.log('Gift selected:', gift);
-            }} /> */}
           </>
+        ) : tab === "gifts" ? (
+          <div className="px-3 pt-3 pb-4">
+            {userId && <GiftSelector userId={userId} profileId="" profileName="" />}
+          </div>
         ) : (
           <div className="px-3 pt-3 pb-4 space-y-3">
             <p className="text-white/40 text-xs text-center pb-1">
@@ -209,23 +221,23 @@ const DashboardPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0 }}
-                  className="relative overflow-hidden rounded-3xl border-2 border-amber-400/60 shadow-[0_0_30px_rgba(251,191,36,0.2)]"
+                  className="relative overflow-hidden rounded-3xl border-2 border-pink-400/60 shadow-[0_0_30px_rgba(236,72,153,0.2)]"
                 >
-                  {/* Gold gradient background */}
-                  <div className="gradient-vip p-5">
+                  {/* Pink gradient background */}
+                  <div className="bg-gradient-to-br from-pink-900/40 via-black/40 to-violet-900/40 p-5">
                     {/* Best Value badge */}
                     <div className="absolute top-3 right-3 bg-black/30 backdrop-blur-sm rounded-full px-2.5 py-1 flex items-center gap-1">
                       <span className="text-[10px] font-black text-white tracking-wider">BEST VALUE</span>
                     </div>
 
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="w-14 h-14 rounded-2xl bg-black/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
-                        <Crown className="w-7 h-7 text-white" fill="white" />
+                      <div className="w-14 h-14 rounded-2xl bg-black/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-pink-400/30">
+                        <Crown className="w-7 h-7 text-pink-400" fill="currentColor" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-display font-black text-white text-xl">VIP Monthly</h3>
-                          <span className="text-white/70 text-xs">👑</span>
+                          <span className="text-pink-400 text-xs">👑</span>
                         </div>
                         <p className="text-white/80 text-xs mt-0.5">Everything you need in one plan</p>
                         <div className="flex items-baseline gap-1.5 mt-1">
@@ -239,8 +251,8 @@ const DashboardPage = () => {
                     <div className="space-y-2 mb-4">
                       {vip.perks?.map((perk, i) => (
                         <div key={i} className="flex items-center gap-2">
-                          <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-2.5 h-2.5 text-white" />
+                          <div className="w-4 h-4 rounded-full bg-pink-400/20 flex items-center justify-center flex-shrink-0">
+                            <Check className="w-2.5 h-2.5 text-pink-400" />
                           </div>
                           <span className="text-white/90 text-xs">{perk}</span>
                         </div>
@@ -288,12 +300,12 @@ const DashboardPage = () => {
               const nameKey = featureNameKeys[feature.id] as any;
               const descKey = featureDescKeys[feature.id] as any;
               const borderShadowMap: Record<string, { border: string; shadow: string }> = {
-                plusone: { border: "border-2 border-emerald-400/60", shadow: "shadow-[0_0_30px_rgba(52,211,153,0.2)]" },
+                plusone: { border: "border-2 border-pink-400/60", shadow: "shadow-[0_0_30px_rgba(236,72,153,0.2)]" },
                 boost: { border: "border-2 border-pink-400/60", shadow: "shadow-[0_0_30px_rgba(236,72,153,0.2)]" },
-                superlike: { border: "border-2 border-amber-400/60", shadow: "shadow-[0_0_30px_rgba(251,191,36,0.2)]" },
-                verified: { border: "border-2 border-emerald-400/60", shadow: "shadow-[0_0_30px_rgba(52,211,153,0.2)]" },
-                incognito: { border: "border-2 border-slate-400/60", shadow: "shadow-[0_0_30px_rgba(100,116,139,0.2)]" },
-                spotlight: { border: "border-2 border-amber-400/60", shadow: "shadow-[0_0_30px_rgba(251,191,36,0.2)]" },
+                superlike: { border: "border-2 border-pink-400/60", shadow: "shadow-[0_0_30px_rgba(236,72,153,0.2)]" },
+                verified: { border: "border-2 border-pink-400/60", shadow: "shadow-[0_0_30px_rgba(236,72,153,0.2)]" },
+                incognito: { border: "border-2 border-pink-400/60", shadow: "shadow-[0_0_30px_rgba(236,72,153,0.2)]" },
+                spotlight: { border: "border-2 border-pink-400/60", shadow: "shadow-[0_0_30px_rgba(236,72,153,0.2)]" },
               };
               const { border, shadow } = borderShadowMap[feature.id] || { border: "border-2 border-white/20", shadow: "" };
               const perks = feature.perks ?? [1, 2, 3].map((n) => t(`premium.${feature.id}.${n}` as any)).filter(Boolean);
@@ -305,10 +317,10 @@ const DashboardPage = () => {
                   transition={{ delay: (i + 1) * 0.08 }}
                   className={`relative overflow-hidden rounded-3xl ${border} ${shadow}`}
                 >
-                  <div className={`${gradient} p-5`}>
+                  <div className="bg-gradient-to-br from-pink-900/40 via-black/40 to-violet-900/40 p-5">
                     <div className="flex items-start gap-3 mb-4">
-                      <div className="w-14 h-14 rounded-2xl bg-black/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-white/20">
-                        <Icon className="w-7 h-7 text-white" />
+                      <div className="w-14 h-14 rounded-2xl bg-black/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-pink-400/30">
+                        <Icon className="w-7 h-7 text-pink-400" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
@@ -328,8 +340,8 @@ const DashboardPage = () => {
                       <div className="space-y-2 mb-4">
                         {perks.map((perk, idx) => (
                           <div key={idx} className="flex items-center gap-2">
-                            <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                              <Check className="w-2.5 h-2.5 text-white" />
+                            <div className="w-4 h-4 rounded-full bg-pink-400/20 flex items-center justify-center flex-shrink-0">
+                              <Check className="w-2.5 h-2.5 text-pink-400" />
                             </div>
                             <span className="text-white/90 text-xs">{perk}</span>
                           </div>
