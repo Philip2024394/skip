@@ -18,6 +18,7 @@ interface SwipeStackProps {
   onLike: (profile: Profile) => void;
   onPass: (profile: Profile) => void;
   onRose?: (profile: Profile) => void;
+  onOpenMap?: (profile: Profile) => void;
 }
 
 const SWIPE_THRESHOLD = 80;
@@ -29,14 +30,15 @@ const SNAP_BACK = { type: "spring" as const, stiffness: 500, damping: 35 };
 // Tween for exit fly-off
 const EXIT_ANIM = { duration: 0.22, ease: "easeOut" as const };
 
-const SwipeStack = ({
+export default function SwipeStack({
   profiles,
   direction,
   roseAvailable,
   onLike,
   onPass,
   onRose,
-}: SwipeStackProps) => {
+  onOpenMap,
+}: SwipeStackProps) {
   // Index as a ref AND state — ref for synchronous reads inside callbacks,
   // state to trigger re-renders.
   const indexRef = useRef(0);
@@ -321,8 +323,9 @@ const SwipeStack = ({
           <DistanceBadge 
             profile={profile} 
             onClick={() => {
-              // Open distance map - you'll need to implement this logic
-              console.log("Open distance map for:", profile);
+              if (onOpenMap) {
+                onOpenMap(profile);
+              }
             }}
           />
 

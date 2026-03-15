@@ -20,9 +20,10 @@ interface ProfileImagesPanelProps {
   iLiked?: any[];
   handleLike?: (p: any) => void;
   likedMe?: any[];
+  onOpenMap?: (profile: any) => void;
 }
 
-export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex, onClose, iLiked = [], handleLike, likedMe = [] }: ProfileImagesPanelProps) {
+export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex, onClose, iLiked = [], handleLike, likedMe = [], onOpenMap }: ProfileImagesPanelProps) {
   const images: string[] =
     Array.isArray(profile?.images) && profile.images.length > 0
       ? profile.images
@@ -140,8 +141,9 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
         <DistanceBadge 
           profile={profile} 
           onClick={() => {
-            // Open distance map - you'll need to implement this logic
-            console.log("Open distance map for profile:", profile);
+            if (onOpenMap) {
+              onOpenMap(profile);
+            }
           }}
         />
 

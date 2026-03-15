@@ -27,6 +27,7 @@ interface TopCardProps {
   setProfileImageIndex: (fn: (i: number) => number) => void;
   setProfileImageDirection: (v: 1 | -1) => void;
   handleLike: (p: any) => void;
+  onOpenMap?: (profile: any) => void;
   handleRose: (p: any) => void;
   handleLibraryCardDrag: (_: any, info: any) => void;
   advanceQueue: (id: string) => void;
@@ -84,8 +85,9 @@ export default function TopCard(props: TopCardProps) {
           <DistanceBadge 
             profile={props.selectedProfile} 
             onClick={() => {
-              // Open distance map - you'll need to implement this logic
-              console.log("Open distance map for:", props.selectedProfile);
+              if (props.onOpenMap) {
+                props.onOpenMap(props.selectedProfile);
+              }
             }}
           />
 
