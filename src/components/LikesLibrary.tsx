@@ -564,24 +564,6 @@ const LikesLibrary = ({
                 dailyTarot={dailyTarot}
                 onUnlock={onUnlock}
               />
-            ) : tab === "gifts" ? (
-              <div style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                height: "200px",
-                color: "rgba(255,255,255,0.6)",
-                fontSize: 14,
-                textAlign: "center",
-              }}>
-                <div>
-                  <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.5 }}>🎁</div>
-                  <p>Gifts tab coming soon!</p>
-                  <p style={{ fontSize: 12, opacity: 0.7, marginTop: 8 }}>
-                    Virtual gifts feature launching soon
-                  </p>
-                </div>
-              </div>
             ) : null
           </motion.div>
         </AnimatePresence>
