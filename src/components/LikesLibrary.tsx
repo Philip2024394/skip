@@ -247,6 +247,9 @@ const LikesLibrary = ({
       .slice(0, 3)
   ) as NonNullable<Profile["first_date_places"]>;
 
+  // Check if we have any date ideas to display
+  const hasDateIdeas = dateIdeas.length > 0 || profileFirstDateIdea;
+
   return (
     <div className="h-full flex flex-col">
       {/* ── Header — tab swipe gesture lives here only ── */}
@@ -478,7 +481,7 @@ const LikesLibrary = ({
                 ))}
               </div>
             ) : isDateIdeasTab ? (
-              dateIdeas.length === 0 && !profileFirstDateIdea ? (
+              !hasDateIdeas ? (
                 <div className="flex items-center justify-center h-full px-4">
                   <p className="text-white/40 text-xs text-center">No date ideas yet</p>
                 </div>
