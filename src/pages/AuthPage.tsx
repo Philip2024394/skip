@@ -170,11 +170,19 @@ const AuthPage = () => {
 
   // Admin login handler
   const handleAdminLogin = () => {
+    alert("Admin login clicked! Password: " + adminPassword);
+    console.log("Admin login attempt with password:", adminPassword);
+    console.log("Password comparison:", adminPassword === "12345");
+
     if (adminPassword === "12345") {
       setAdminLoginError("");
+      console.log("Password correct, redirecting to admin dashboard");
+      alert("Password correct! Redirecting to admin dashboard");
       // Redirect to admin dashboard
       navigate("/admin/whatsapp-directory");
     } else {
+      console.log("Password incorrect");
+      alert("Invalid password: " + adminPassword);
       setAdminLoginError("Invalid admin password");
     }
   };
