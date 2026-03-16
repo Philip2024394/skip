@@ -7,17 +7,34 @@ export default defineConfig({
     target: 'es2015',
     rollupOptions: {
       output: {
-        manualChunks: undefined // No code splitting - single bundle
+        manualChunks: (id) => {
+          // Split heavy libraries into separate chunks
+          if (id.includes('framer-motion')) {
+            return 'motion';
+          }
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
+          if (id.includes('@radix-ui')) {
+            return 'ui';
+          }
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'vendor';
+          }
+          if (id.includes('react-router-dom')) {
+            return 'router';
+          }
+        }
       }
     },
-    chunkSizeWarningLimit: 50, // Very low threshold
+    chunkSizeWarningLimit: 300,
     minify: 'esbuild',
     sourcemap: false,
-    assetsInlineLimit: 1000 // Inline more assets
+    assetsInlineLimit: 4096
   },
   optimizeDeps: {
     force: false,
-    include: ['react', 'react-dom']
+    include: ['react', 'react-dom', 'react-router-dom']
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify('production')
