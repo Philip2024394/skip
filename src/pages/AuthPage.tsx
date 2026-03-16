@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import SecureTextarea from "@/components/ui/SecureTextarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
@@ -771,8 +772,17 @@ const AuthPage = () => {
                       <Input placeholder="+62 812 3456 7890" className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl" value={form.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} />
                     </div>
                     <div>
-                      <Label className="text-white/50 text-xs mb-1.5 block">{t("auth.shortBio")}</Label>
-                      <Textarea placeholder={t("auth.tellUs")} className="bg-white/5 border-white/10 text-white placeholder:text-white/30 resize-none rounded-xl" rows={2} value={form.bio} onChange={(e) => update("bio", e.target.value)} />
+                      <SecureTextarea
+                        id="bio"
+                        value={form.bio}
+                        onChange={(value) => update("bio", value)}
+                        placeholder={t("auth.tellUs")}
+                        rows={2}
+                        maxLength={200}
+                        label={t("auth.shortBio")}
+                        context="user_bio"
+                        className="bg-white/5 border-white/10 text-white placeholder:text-white/30 resize-none rounded-xl"
+                      />
                     </div>
                   </>
                 )}

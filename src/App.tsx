@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import WhatsAppDirectory from "@/components/admin/WhatsAppDirectory";
+import SecurityDashboard from "@/components/admin/SecurityDashboard";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const AppContent = () => {
         <Route path="/dashboard" element={<AuthPage />} />
         <Route path="/admin" element={<AuthPage />} />
         <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><WhatsAppDirectory /></ProtectedRoute>} />
+        <Route path="/admin/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>

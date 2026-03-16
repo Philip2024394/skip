@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { X, Gift, Coins } from "lucide-react";
 import analyticsLogger from "@/lib/analytics";
+import SecureTextarea from "@/components/ui/SecureTextarea";
 
 interface VirtualGift {
   id: string;
@@ -34,6 +34,7 @@ export default function GiftSendPopup({
 }: GiftSendPopupProps) {
   const [message, setMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   const isFreeGift = freeGiftsRemaining > 0;
   const canAfford = userTokens >= gift.token_price;
@@ -183,20 +184,17 @@ export default function GiftSendPopup({
 
         {/* Message Input */}
         <div className="mb-6">
-          <label htmlFor="gift-message" className="text-white/70 text-sm block mb-2">
-            Add a message (optional)
-          </label>
-          <Textarea
+          <SecureTextarea
             id="gift-message"
             value={message}
-            onChange={(e) => setMessage(e.target.value.slice(0, 350))}
+            onChange={setMessage}
             placeholder="Type your message here..."
-            className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50 resize-none"
             rows={3}
             maxLength={350}
-            aria-label="Gift message (optional, maximum 350 characters)"
+            label="Add a message (optional)"
+            context="gift_message"
+            userId={user?.id}
           />
-          <p className="text-white/50 text-xs mt-1">{message.length}/350 characters</p>
         </div>
 
         {/* Status */}
