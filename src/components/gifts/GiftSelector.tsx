@@ -34,42 +34,53 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
   const [selectedGift, setSelectedGift] = useState<VirtualGift | null>(null);
 
   useEffect(() => {
+    console.log('GiftSelector: Component mounted, starting fetchGifts');
     fetchGifts();
     fetchUserTokens();
   }, []);
 
+  // Debug logging for gifts state
+  useEffect(() => {
+    console.log('GiftSelector: Gifts state updated:', {
+      giftsCount: gifts.length,
+      loading,
+      userTokens
+    });
+  }, [gifts, loading, userTokens]);
+
   const fetchGifts = async () => {
-    // Use fallback gifts with working placeholder images - exactly 25 gifts
-    console.log('GiftSelector: Loading 25 virtual gifts with placeholder images');
+    // Use fallback gifts with simple solid colors and emoji text
+    console.log('GiftSelector: Loading 25 virtual gifts with simple images');
     const allGifts = [
-      { id: 'gift001', name: 'Premium Rose', image_url: 'https://via.placeholder.com/150x150/ff69b4/ffffff?text=🌹', image_name: 'premium_rose', token_price: 3 },
-      { id: 'gift002', name: 'Diamond Ring', image_url: 'https://via.placeholder.com/150x150/87ceeb/ffffff?text=💍', image_name: 'diamond_ring', token_price: 5 },
-      { id: 'gift003', name: 'Love Heart', image_url: 'https://via.placeholder.com/150x150/ff1493/ffffff?text=❤️', image_name: 'love_heart', token_price: 2 },
-      { id: 'gift004', name: 'Teddy Bear', image_url: 'https://via.placeholder.com/150x150/daa520/ffffff?text=🧸', image_name: 'teddy_bear', token_price: 4 },
-      { id: 'gift005', name: 'Chocolate Box', image_url: 'https://via.placeholder.com/150x150/d2691e/ffffff?text=🍫', image_name: 'chocolate_box', token_price: 3 },
-      { id: 'gift006', name: 'Perfume', image_url: 'https://via.placeholder.com/150x150/9370db/ffffff?text=👗', image_name: 'perfume', token_price: 6 },
-      { id: 'gift007', name: 'Jewelry Box', image_url: 'https://via.placeholder.com/150x150/ffd700/ffffff?text=💎', image_name: 'jewelry_box', token_price: 8 },
-      { id: 'gift008', name: 'Flower Bouquet', image_url: 'https://via.placeholder.com/150x150/ff69b4/ffffff?text=💐', image_name: 'flower_bouquet', token_price: 4 },
-      { id: 'gift009', name: 'Wine Bottle', image_url: 'https://via.placeholder.com/150x150/8b0000/ffffff?text=🍷', image_name: 'wine_bottle', token_price: 7 },
-      { id: 'gift010', name: 'Watch', image_url: 'https://via.placeholder.com/150x150/c0c0c0/ffffff?text=⌚', image_name: 'watch', token_price: 10 },
-      { id: 'gift011', name: 'Necklace', image_url: 'https://via.placeholder.com/150x150/ffd700/ffffff?text=📿', image_name: 'necklace', token_price: 9 },
-      { id: 'gift012', name: 'Bracelet', image_url: 'https://via.placeholder.com/150x150/c0c0c0/ffffff?text=⌚', image_name: 'bracelet', token_price: 6 },
-      { id: 'gift013', name: 'Earrings', image_url: 'https://via.placeholder.com/150x150/ffd700/ffffff?text=👂', image_name: 'earrings', token_price: 5 },
-      { id: 'gift014', name: 'Handbag', image_url: 'https://via.placeholder.com/150x150/8b4513/ffffff?text=👜', image_name: 'handbag', token_price: 11 },
-      { id: 'gift015', name: 'Shoes', image_url: 'https://via.placeholder.com/150x150/ff69b4/ffffff?text=👠', image_name: 'shoes', token_price: 8 },
-      { id: 'gift016', name: 'Makeup Kit', image_url: 'https://via.placeholder.com/150x150/ff69b4/ffffff?text=💄', image_name: 'makeup_kit', token_price: 4 },
-      { id: 'gift017', name: 'Spa Voucher', image_url: 'https://via.placeholder.com/150x150/98fb98/ffffff?text=💆', image_name: 'spa_voucher', token_price: 12 },
-      { id: 'gift018', name: 'Romantic Dinner', image_url: 'https://via.placeholder.com/150x150/dc143c/ffffff?text=🍽️', image_name: 'romantic_dinner', token_price: 15 },
-      { id: 'gift019', name: 'Weekend Trip', image_url: 'https://via.placeholder.com/150x150/87ceeb/ffffff?text=✈️', image_name: 'weekend_trip', token_price: 20 },
-      { id: 'gift020', name: 'Luxury Car', image_url: 'https://via.placeholder.com/150x150/000000/ffffff?text=🚗', image_name: 'luxury_car', token_price: 25 },
-      { id: 'gift021', name: 'Special Gift 1', image_url: 'https://via.placeholder.com/150x150/ff69b4/ffffff?text=🎁', image_name: 'special_gift_1', token_price: 3 },
-      { id: 'gift022', name: 'Special Gift 2', image_url: 'https://via.placeholder.com/150x150/87ceeb/ffffff?text=🎀', image_name: 'special_gift_2', token_price: 4 },
-      { id: 'gift023', name: 'Special Gift 3', image_url: 'https://via.placeholder.com/150x150/ffd700/ffffff?text=🎉', image_name: 'special_gift_3', token_price: 5 },
-      { id: 'gift024', name: 'Special Gift 4', image_url: 'https://via.placeholder.com/150x150/9370db/ffffff?text=🎈', image_name: 'special_gift_4', token_price: 6 },
-      { id: 'gift025', name: 'Special Gift 5', image_url: 'https://via.placeholder.com/150x150/ff6347/ffffff?text=🎊', image_name: 'special_gift_5', token_price: 7 },
+      { id: 'gift001', name: 'Premium Rose', image_url: 'https://picsum.photos/150/150?random=1&blur=2&bg=ff69b4&text=🌹', image_name: 'premium_rose', token_price: 3 },
+      { id: 'gift002', name: 'Diamond Ring', image_url: 'https://picsum.photos/150/150?random=2&blur=2&bg=87ceeb&text=💍', image_name: 'diamond_ring', token_price: 5 },
+      { id: 'gift003', name: 'Love Heart', image_url: 'https://picsum.photos/150/150?random=3&blur=2&bg=ff1493&text=❤️', image_name: 'love_heart', token_price: 2 },
+      { id: 'gift004', name: 'Teddy Bear', image_url: 'https://picsum.photos/150/150?random=4&blur=2&bg=daa520&text=🧸', image_name: 'teddy_bear', token_price: 4 },
+      { id: 'gift005', name: 'Chocolate Box', image_url: 'https://picsum.photos/150/150?random=5&blur=2&bg=d2691e&text=🍫', image_name: 'chocolate_box', token_price: 3 },
+      { id: 'gift006', name: 'Perfume', image_url: 'https://picsum.photos/150/150?random=6&blur=2&bg=9370db&text=👗', image_name: 'perfume', token_price: 6 },
+      { id: 'gift007', name: 'Jewelry Box', image_url: 'https://picsum.photos/150/150?random=7&blur=2&bg=ffd700&text=💎', image_name: 'jewelry_box', token_price: 8 },
+      { id: 'gift008', name: 'Flower Bouquet', image_url: 'https://picsum.photos/150/150?random=8&blur=2&bg=ff69b4&text=💐', image_name: 'flower_bouquet', token_price: 4 },
+      { id: 'gift009', name: 'Wine Bottle', image_url: 'https://picsum.photos/150/150?random=9&blur=2&bg=8b0000&text=🍷', image_name: 'wine_bottle', token_price: 7 },
+      { id: 'gift010', name: 'Watch', image_url: 'https://picsum.photos/150/150?random=10&blur=2&bg=c0c0c0&text=⌚', image_name: 'watch', token_price: 10 },
+      { id: 'gift011', name: 'Necklace', image_url: 'https://picsum.photos/150/150?random=11&blur=2&bg=ffd700&text=📿', image_name: 'necklace', token_price: 9 },
+      { id: 'gift012', name: 'Bracelet', image_url: 'https://picsum.photos/150/150?random=12&blur=2&bg=c0c0c0&text=⌚', image_name: 'bracelet', token_price: 6 },
+      { id: 'gift013', name: 'Earrings', image_url: 'https://picsum.photos/150/150?random=13&blur=2&bg=ffd700&text=👂', image_name: 'earrings', token_price: 5 },
+      { id: 'gift014', name: 'Handbag', image_url: 'https://picsum.photos/150/150?random=14&blur=2&bg=8b4513&text=👜', image_name: 'handbag', token_price: 11 },
+      { id: 'gift015', name: 'Shoes', image_url: 'https://picsum.photos/150/150?random=15&blur=2&bg=ff69b4&text=👠', image_name: 'shoes', token_price: 8 },
+      { id: 'gift016', name: 'Makeup Kit', image_url: 'https://picsum.photos/150/150?random=16&blur=2&bg=ff69b4&text=💄', image_name: 'makeup_kit', token_price: 4 },
+      { id: 'gift017', name: 'Spa Voucher', image_url: 'https://picsum.photos/150/150?random=17&blur=2&bg=98fb98&text=💆', image_name: 'spa_voucher', token_price: 12 },
+      { id: 'gift018', name: 'Romantic Dinner', image_url: 'https://picsum.photos/150/150?random=18&blur=2&bg=dc143c&text=🍽️', image_name: 'romantic_dinner', token_price: 15 },
+      { id: 'gift019', name: 'Weekend Trip', image_url: 'https://picsum.photos/150/150?random=19&blur=2&bg=87ceeb&text=✈️', image_name: 'weekend_trip', token_price: 20 },
+      { id: 'gift020', name: 'Luxury Car', image_url: 'https://picsum.photos/150/150?random=20&blur=2&bg=000000&text=🚗', image_name: 'luxury_car', token_price: 25 },
+      { id: 'gift021', name: 'Special Gift 1', image_url: 'https://picsum.photos/150/150?random=21&blur=2&bg=ff69b4&text=🎁', image_name: 'special_gift_1', token_price: 3 },
+      { id: 'gift022', name: 'Special Gift 2', image_url: 'https://picsum.photos/150/150?random=22&blur=2&bg=87ceeb&text=🎀', image_name: 'special_gift_2', token_price: 4 },
+      { id: 'gift023', name: 'Special Gift 3', image_url: 'https://picsum.photos/150/150?random=23&blur=2&bg=ffd700&text=🎉', image_name: 'special_gift_3', token_price: 5 },
+      { id: 'gift024', name: 'Special Gift 4', image_url: 'https://picsum.photos/150/150?random=24&blur=2&bg=9370db&text=🎈', image_name: 'special_gift_4', token_price: 6 },
+      { id: 'gift025', name: 'Special Gift 5', image_url: 'https://picsum.photos/150/150?random=25&blur=2&bg=ff6347&text=🎊', image_name: 'special_gift_5', token_price: 7 },
     ];
 
     // Set gifts directly without Supabase call
+    console.log('GiftSelector: Setting gifts array with', allGifts.length, 'items');
     setGifts(allGifts);
     setLoading(false);
 
@@ -171,7 +182,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
                     console.log('GiftSelector: Image loaded:', gift.image_url);
                   }}
                   onError={(e) => {
-                    console.log('GiftSelector: Image failed to load:', gift.image_url);
+                    console.log('GiftSelector: Image failed to load, using fallback:', gift.image_url);
                     const img = e.target as HTMLImageElement;
                     img.style.display = "none";
                     const parent = img.parentElement;
@@ -179,11 +190,28 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
                       const fallback = document.createElement('div');
                       fallback.className = 'fallback-emoji';
                       fallback.textContent = '🎁';
-                      fallback.style.cssText = 'font-size: 24px; display: flex; align-items: center; justify-content: center; height: 100%; color: white;';
+                      fallback.style.cssText = 'font-size: 32px; display: flex; align-items: center; justify-content: center; height: 100%; color: white; background: linear-gradient(135deg, #ff69b4, #87ceeb); border-radius: 8px;';
                       parent.appendChild(fallback);
                     }
                   }}
                 />
+                {/* Always show emoji as backup */}
+                <div
+                  className="fallback-emoji absolute"
+                  style={{
+                    fontSize: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    color: 'white',
+                    background: 'linear-gradient(135deg, #ff69b4, #87ceeb)',
+                    borderRadius: '8px',
+                    opacity: 0
+                  }}
+                >
+                  🎁
+                </div>
               </div>
               <div className="text-white text-[9px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
                 {gift.name}
