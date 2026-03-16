@@ -204,7 +204,7 @@ const DashboardPage = () => {
           </>
         ) : tab === "gifts" ? (
           <div className="px-3 pt-3 pb-4">
-            {userId && <GiftSelector userId={userId} profileId="" profileName="" />}
+            <GiftSelector userId={userId || "temp"} profileId="" profileName="" />
           </div>
         ) : (
           <div className="px-3 pt-3 pb-4 space-y-3">

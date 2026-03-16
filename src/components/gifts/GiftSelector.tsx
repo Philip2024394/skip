@@ -72,14 +72,27 @@ export default function GiftSelector({ userId, profileId, profileName }: GiftSel
     );
   }
 
+  console.log('GiftSelector: Component loaded, gifts count:', gifts.length);
+  console.log('GiftSelector: First few gifts:', gifts.slice(0, 3));
+
+  if (gifts.length === 0 && !loading) {
+    return (
+      <div className="bg-black/40 backdrop-blur-md border border-pink-400/30 rounded-2xl p-4 m-4">
+        <div className="text-white/70 text-center">No gifts available</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-4 py-2 bg-black/20 rounded-2xl border border-pink-400/20">
+    <div>
+      <div className="text-white/50 text-xs mb-2 px-4">{gifts.length} Virtual Gifts Available</div>
+      <div className="overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-4 py-3 bg-black/20 rounded-2xl border border-pink-400/20 h-32">
       {gifts.map((gift) => {
         console.log('GiftSelector: Rendering gift:', gift.name_display, gift.image_url);
         return (
           <div
             key={gift.id}
-            className="inline-block align-top w-20 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out bg-white/5 rounded-xl p-2 h-24 hover:scale-105"
+            className="inline-block align-top w-20 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out bg-white/5 rounded-xl p-2 h-28 hover:scale-105"
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = "scale(1.05)";
             }}
@@ -114,11 +127,15 @@ export default function GiftSelector({ userId, profileId, profileName }: GiftSel
               />
             </div>
             <div className="text-white text-[9px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+              {gift.name_display}
+            </div>
+            <div className="text-pink-400 text-[8px] font-bold text-center leading-tight">
               ${gift.price}
             </div>
           </div>
         );
       })}
+      </div>
     </div>
   );
 }
