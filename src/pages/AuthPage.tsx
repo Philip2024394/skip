@@ -66,6 +66,11 @@ const AuthPage = () => {
   const [landingSubmitting, setLandingSubmitting] = useState(false);
   const [whatsappSubmitted, setWhatsappSubmitted] = useState(false);
   const [onlineCount, setOnlineCount] = useState(getDailyOnlineCount());
+  
+  // Admin login state
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminLoginError, setAdminLoginError] = useState("");
 
   // Fetch real online user count from Supabase (last 5 min)
   useEffect(() => {
@@ -160,6 +165,17 @@ const AuthPage = () => {
     if (msg.includes("invalid login") || msg.includes("invalid credentials")) return t("auth.invalidLogin");
     if (msg.includes("email not confirmed") || msg.includes("confirm your email")) return t("auth.emailNotConfirmed");
     return error.message;
+  };
+
+  // Admin login handler
+  const handleAdminLogin = () => {
+    if (adminPassword === "12345") {
+      setAdminLoginError("");
+      // Redirect to admin dashboard
+      navigate("/admin/whatsapp-directory");
+    } else {
+      setAdminLoginError("Invalid admin password");
+    }
   };
 
   const handleLogin = async () => {
@@ -463,54 +479,103 @@ const AuthPage = () => {
               </div>
             ) : (
               <div className="mt-3 space-y-2.5">
-                <div className="grid grid-cols-[76px_1fr] gap-2">
-                  <Select value={landingPrefix} onValueChange={setLandingPrefix}>
-                    <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
-                      <span className="flex items-center gap-1.5">
-                        <span className="text-sm leading-none">{selectedFlag}</span>
-                        <span className="text-[12px] font-semibold">{landingPrefix}</span>
-                      </span>
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
-                      {Object.entries(COUNTRY_CODES).map(([country, code]) => (
-                        <SelectItem key={country} value={code} className="text-black">
-                          <span className="flex items-center gap-2">
-                            <span className="text-sm leading-none">{getFlagForCountry(country)}</span>
-                            <span className="text-black/90">{country}</span>
-                            <span className="text-black/60">{code}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <Input
-                    value={landingNumber}
-                    onChange={(e) => setLandingNumber(e.target.value)}
-                    placeholder="WhatsApp number"
-                    className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
-                    inputMode="tel"
-                  />
-                </div>
-
-                <Button
-                  onClick={handleLandingEnter}
-                  disabled={landingSubmitting}
-                  className="w-full h-12 rounded-2xl bg-black text-white hover:bg-black/90 font-black text-[15px]"
-                >
-                  {landingSubmitting ? "Submitting..." : "Get Notified →"}
-                </Button>
-
-                <div className="flex items-center justify-between">
+                {/* Admin Login Toggle */}
+                <div className="flex justify-center">
                   <button
-                    type="button"
-                    onClick={() => setShowAuth(true)}
-                    className="text-black/65 text-[11px] font-semibold underline underline-offset-2"
+                    onClick={() => setIsAdminMode(!isAdminMode)}
+                    className="text-xs text-white/60 hover:text-white/80 transition-colors underline"
                   >
-                    Sign in / Register
+                    {isAdminMode ? "Back to User Signup" : "Admin Login"}
                   </button>
-                  <p className="text-black/50 text-[10px]">No verification required</p>
                 </div>
+
+                {isAdminMode ? (
+                  /* Admin Login Form */
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-black/70 text-xs block mb-1">Admin Password</label>
+                      <Input
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="Enter admin password"
+                        className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAdminLogin();
+                          }
+                        }}
+                      />
+                      {adminLoginError && (
+                        <div className="text-red-500 text-xs mt-1">{adminLoginError}</div>
+                      )}
+                    </div>
+                    <Button
+                      onClick={handleAdminLogin}
+                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-black text-[15px]"
+                    >
+                      Admin Login
+                    </Button>
+                  </div>
+                ) : (
+                  /* User WhatsApp Form */
+                  <div className="space-y-3">
+                    {/* Country Selector */}
+                    <div>
+                      <label className="text-black/70 text-xs block mb-1">Select Country</label>
+                      <Select value={landingPrefix} onValueChange={setLandingPrefix}>
+                        <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
+                          <span className="flex items-center gap-1.5">
+                            <span className="text-sm leading-none">{selectedFlag}</span>
+                            <span className="text-[12px] font-semibold">
+                              {Object.entries(COUNTRY_CODES).find(([_, code]) => code === landingPrefix)?.[0] || "Indonesia"}
+                            </span>
+                          </span>
+                        </SelectTrigger>
+                        <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
+                          {Object.entries(COUNTRY_CODES).map(([country, code]) => (
+                            <SelectItem key={country} value={code} className="text-black">
+                              <span className="flex items-center gap-2">
+                                <span className="text-sm leading-none">{getFlagForCountry(country)}</span>
+                                <span className="text-black/90">{country}</span>
+                                <span className="text-black/60">{code}</span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* WhatsApp Number Input with Locked Prefix */}
+                    <div>
+                      <label className="text-black/70 text-xs block mb-1">WhatsApp Number</label>
+                      <div className="grid grid-cols-[80px_1fr] gap-2">
+                        <div className="bg-gray-100 border border-gray-300 rounded-xl h-11 flex items-center justify-center">
+                          <span className="text-sm font-semibold text-gray-700">{landingPrefix}</span>
+                        </div>
+                        <Input
+                          value={landingNumber}
+                          onChange={(e) => setLandingNumber(e.target.value.replace(/\D/g, ''))} // Only allow digits
+                          placeholder="Phone number"
+                          className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
+                          inputMode="tel"
+                          maxLength={15} // Reasonable limit for phone numbers
+                        />
+                      </div>
+                      <div className="text-black/50 text-xs mt-1">
+                        Enter your phone number without the country code
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleLandingEnter}
+                      disabled={landingSubmitting || !landingNumber}
+                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-700 hover:to-purple-700 font-black text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {landingSubmitting ? "Submitting..." : "Get Early Access"}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
