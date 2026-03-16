@@ -3,5 +3,8 @@
   "transformers": {
     "*.{ts,tsx}": ["@parcel/transformer-typescript-tsc"]
   },
-  "resolvers": ["@parcel/resolver-default"]
+  "resolvers": ["@parcel/resolver-default"],
+  "optimizers": {
+    "*.{jpg,jpeg,png,gif,svg}": ["@parcel/optimizer-image"]
+  }
 }
