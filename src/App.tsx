@@ -13,6 +13,7 @@ import SecurityDashboard from "@/components/admin/SecurityDashboard";
 import UltimateSecurityDashboard from "@/components/admin/UltimateSecurityDashboard";
 import AdGenerationDashboard from "@/components/admin/AdGenerationDashboard";
 import EnhancedAdGenerationDashboard from "@/components/admin/EnhancedAdGenerationDashboard";
+import LibraryAdGenerationDashboard from "@/components/admin/LibraryAdGenerationDashboard";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const AppContent = () => {
         <Route path="/admin/ultimate-security" element={<ProtectedRoute><UltimateSecurityDashboard /></ProtectedRoute>} />
         <Route path="/admin/ad-generation" element={<ProtectedRoute><AdGenerationDashboard /></ProtectedRoute>} />
         <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><EnhancedAdGenerationDashboard /></ProtectedRoute>} />
+        <Route path="/admin/library-ad-generation" element={<ProtectedRoute><LibraryAdGenerationDashboard /></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>
