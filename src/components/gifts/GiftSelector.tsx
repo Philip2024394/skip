@@ -164,77 +164,83 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
 
   return (
     <>
-      <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate px-4 py-3 overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide h-48" style={{ contain: "layout" }}>
-        {gifts.map((gift) => {
-          const isFree = freeGiftsRemaining > 0;
-          const canAfford = userTokens && userTokens.tokens_balance >= gift.token_price;
-          const canSend = isFree || canAfford;
+      <div className="rounded-2xl p-3 h-48 overflow-hidden relative border-2 border-white/20">
+        {/* Solid edge background - matching New Members */}
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-md rounded-2xl pointer-events-none" />
 
-          return (
-            <div
-              key={gift.id}
-              className={`inline-block align-top w-20 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out rounded-xl p-2 h-36 ${canSend
-                ? 'bg-white/5 hover:scale-105'
-                : 'bg-white/5 opacity-50 cursor-not-allowed'
-                }`}
-              onMouseEnter={(e) => {
-                if (canSend) e.currentTarget.style.transform = "scale(1.05)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-              }}
-              onClick={() => canSend && handleGiftClick(gift)}
-            >
-              <div className="w-16 h-16 rounded-lg overflow-hidden mb-2 bg-white/10 flex items-center justify-center">
-                <img
-                  src={gift.image_url}
-                  alt={gift.name}
-                  className="w-full h-full object-contain"
-                  onLoad={() => {
-                    console.log('GiftSelector: Image loaded:', gift.image_url);
-                  }}
-                  onError={(e) => {
-                    console.log('GiftSelector: Image failed to load, using fallback:', gift.image_url);
-                    const img = e.target as HTMLImageElement;
-                    img.style.display = "none";
-                    const parent = img.parentElement;
-                    if (parent && !parent.querySelector('.fallback-emoji')) {
-                      const fallback = document.createElement('div');
-                      fallback.className = 'fallback-emoji';
-                      fallback.textContent = '🎁';
-                      fallback.style.cssText = 'font-size: 32px; display: flex; align-items: center; justify-content: center; height: 100%; color: white; background: linear-gradient(135deg, #ff69b4, #87ceeb); border-radius: 8px;';
-                      parent.appendChild(fallback);
-                    }
-                  }}
-                />
-                {/* Always show emoji as backup */}
-                <div
-                  className="fallback-emoji absolute"
-                  style={{
-                    fontSize: '32px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: 'white',
-                    background: 'linear-gradient(135deg, #ff69b4, #87ceeb)',
-                    borderRadius: '8px',
-                    opacity: 0
-                  }}
-                >
-                  🎁
+        {/* Gift content container */}
+        <div className="relative z-10 h-full overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide">
+          {gifts.map((gift) => {
+            const isFree = freeGiftsRemaining > 0;
+            const canAfford = userTokens && userTokens.tokens_balance >= gift.token_price;
+            const canSend = isFree || canAfford;
+
+            return (
+              <div
+                key={gift.id}
+                className={`inline-block align-top w-20 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out rounded-xl p-2 h-36 ${canSend
+                  ? 'bg-white/5 hover:scale-105'
+                  : 'bg-white/5 opacity-50 cursor-not-allowed'
+                  }`}
+                onMouseEnter={(e) => {
+                  if (canSend) e.currentTarget.style.transform = "scale(1.05)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "scale(1)";
+                }}
+                onClick={() => canSend && handleGiftClick(gift)}
+              >
+                <div className="w-16 h-16 rounded-lg overflow-hidden mb-2 bg-white/10 flex items-center justify-center">
+                  <img
+                    src={gift.image_url}
+                    alt={gift.name}
+                    className="w-full h-full object-contain"
+                    onLoad={() => {
+                      console.log('GiftSelector: Image loaded:', gift.image_url);
+                    }}
+                    onError={(e) => {
+                      console.log('GiftSelector: Image failed to load, using fallback:', gift.image_url);
+                      const img = e.target as HTMLImageElement;
+                      img.style.display = "none";
+                      const parent = img.parentElement;
+                      if (parent && !parent.querySelector('.fallback-emoji')) {
+                        const fallback = document.createElement('div');
+                        fallback.className = 'fallback-emoji';
+                        fallback.textContent = '🎁';
+                        fallback.style.cssText = 'font-size: 32px; display: flex; align-items: center; justify-content: center; height: 100%; color: white; background: linear-gradient(135deg, #ff69b4, #87ceeb); border-radius: 8px;';
+                        parent.appendChild(fallback);
+                      }
+                    }}
+                  />
+                  {/* Always show emoji as backup */}
+                  <div
+                    className="fallback-emoji absolute"
+                    style={{
+                      fontSize: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                      color: 'white',
+                      background: 'linear-gradient(135deg, #ff69b4, #87ceeb)',
+                      borderRadius: '8px',
+                      opacity: 0
+                    }}
+                  >
+                    🎁
+                  </div>
+                </div>
+                <div className="text-white text-[9px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                  {gift.name}
+                </div>
+                <div className={`text-[8px] font-bold text-center leading-tight ${isFree ? 'text-green-400' : 'text-yellow-400'
+                  }`}>
+                  {isFree ? 'FREE' : `${gift.token_price}₽`}
                 </div>
               </div>
-              <div className="text-white text-[9px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                {gift.name}
-              </div>
-              <div className={`text-[8px] font-bold text-center leading-tight ${isFree ? 'text-green-400' : 'text-yellow-400'
-                }`}>
-                {isFree ? 'FREE' : `${gift.token_price}₽`}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
       {/* Send Gift Popup */}
