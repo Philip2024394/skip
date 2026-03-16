@@ -488,7 +488,7 @@ const AuthPage = () => {
               </div>
             ) : (
               <div className="mt-3 space-y-3">
-                {/* Admin Login Toggle */}
+                {/* Admin Login Toggle - Always Visible */}
                 <div className="flex justify-center">
                   <button
                     onClick={() => setIsAdminMode(!isAdminMode)}
