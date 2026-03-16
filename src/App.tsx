@@ -27,7 +27,9 @@ import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { useOnlineStatus } from "./hooks/useOnlineStatus";
 import { useServiceWorkerUpdate } from "./hooks/useServiceWorkerUpdate";
-// import GiftSenderProvider from "@/components/gifts/GiftSenderProvider";
+import LaunchBanner from "@/components/ui/LaunchBanner";
+import WhatsAppSignup from "@/components/auth/WhatsAppSignup";
+import WhatsAppDirectory from "@/components/admin/WhatsAppDirectory";
 
 const queryClient = new QueryClient();
 
@@ -93,16 +95,19 @@ const AppContent = () => {
   return (
     <BrowserRouter>
       <ErrorBoundary>
+        <LaunchBanner />
         <AndroidBackHandler />
         <Routes>
-          <Route path="/" element={<LandingGuard><Index /></LandingGuard>} />
-          <Route path="/home" element={<Index />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/profile/:id" element={<Index />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/" element={<WhatsAppSignup />} />
+          <Route path="/home" element={<WhatsAppSignup />} />
+          <Route path="/auth" element={<WhatsAppSignup />} />
+          <Route path="/signup" element={<WhatsAppSignup />} />
+          <Route path="/profile/:id" element={<WhatsAppSignup />} />
+          <Route path="/reset-password" element={<WhatsAppSignup />} />
+          <Route path="/payment-success" element={<WhatsAppSignup />} />
+          <Route path="/dashboard" element={<WhatsAppSignup />} />
+          <Route path="/admin" element={<WhatsAppSignup />} />
+          <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><WhatsAppDirectory /></ProtectedRoute>} />
           <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><DebugWhatsAppLeads /></ProtectedRoute>} />
           <Route path="/admin/world-map" element={<ProtectedRoute><DebugWorldMap /></ProtectedRoute>} />
           <Route path="/test" element={<TestPage />} />
@@ -112,7 +117,7 @@ const AppContent = () => {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/video-playlist/:id" element={<VideoPlaylistPage />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<WhatsAppSignup />} />
         </Routes>
       </ErrorBoundary>
     </BrowserRouter>
