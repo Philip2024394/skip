@@ -213,18 +213,23 @@ const Index = () => {
   };
 
   const [user, setUser] = useState<any>(() => {
+    // Always provide a mock user for guest access
+    const guestUser = {
+      id: "guest-user",
+      email: "guest@2dateme.demo",
+      user_metadata: {
+        name: "Guest User"
+      }
+    };
+
     if (import.meta.env.DEV) return DEV_MOCK_USER;
-    return getAdminUser();
+    const adminUser = getAdminUser();
+    return adminUser || guestUser;
   });
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
-    // Always false for admin user to show content immediately
-    const adminUser = getAdminUser();
-    if (adminUser?.id === 'admin-12345') return false;
-    if (import.meta.env.DEV) return false;
-    try {
-      return !sessionStorage.getItem("2dateme_profiles_cache");
-    } catch { return true; }
+    // Always false for immediate content display
+    return false;
   });
   const [dbProfiles, setDbProfiles] = useState<Profile[]>(() => {
     try {
@@ -251,11 +256,9 @@ const Index = () => {
 
   // Fallback mock profiles if no real DB profiles with images exist
   const mockProfiles = useMemo(() => generateIndonesianProfiles(50), []);
-  // In production (VITE_USE_MOCK_PROFILES !== "true"), only show real DB profiles
-  // But always use mocks for admin user or when VITE_USE_MOCK_PROFILES is true or in DEV mode
-  const isAdminUser = user?.id === "admin-12345";
-  const useMocks = isAdminUser || import.meta.env.VITE_USE_MOCK_PROFILES === "true" || import.meta.env.DEV;
-  const allProfiles = dbProfiles.length > 0 ? dbProfiles : (useMocks ? mockProfiles : []);
+  // Always use mock profiles to ensure content always shows, regardless of user status
+  const useMocks = true; // Always true for all users
+  const allProfiles = dbProfiles.length > 0 ? [...mockProfiles, ...dbProfiles] : mockProfiles;
 
   // Apply filters
   const filteredProfiles = useMemo(() => {
