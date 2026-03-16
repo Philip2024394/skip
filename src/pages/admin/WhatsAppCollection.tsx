@@ -83,18 +83,32 @@ const WhatsAppCollection: React.FC = () => {
 
   // Load WhatsApp users data
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      console.warn('WhatsApp data loading timeout - possible infinite loop');
+      setLoading(false);
+    }, 10000); // 10 second timeout
+
     loadWhatsAppData();
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const loadWhatsAppData = async () => {
     try {
       setLoading(true);
 
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Database timeout')), 8000)
+      );
+
       // Load users with WhatsApp numbers
-      const { data: userData, error: userError } = await (supabase as any)
+      const dataPromise = (supabase as any)
         .from('whatsapp_leads')
         .select('*')
         .order('created_at', { ascending: false });
+
+      const { data: userData, error: userError } = await Promise.race([dataPromise, timeoutPromise]) as any;
 
       if (userError) throw userError;
 

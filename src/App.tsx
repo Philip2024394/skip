@@ -8,6 +8,7 @@ import { useEffect, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import LoadingFallback from "./components/LoadingFallback";
 
 // Lazy load admin components to reduce initial bundle size
 const WhatsAppCollection = lazy(() => import("@/pages/admin/WhatsAppCollection"));
@@ -45,15 +46,15 @@ const AppContent = () => {
         <Route path="/payment-success" element={<AuthPage />} />
         <Route path="/dashboard" element={<AuthPage />} />
         <Route path="/admin" element={<AuthPage />} />
-        <Route path="/admin/whatsapp-collection" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><WhatsAppCollection /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><WhatsAppDirectory /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/security" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><SecurityDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/ultimate-security" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><UltimateSecurityDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/ad-generation" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><AdGenerationDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><EnhancedAdGenerationDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/library-ad-generation" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><LibraryAdGenerationDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/ad-performance" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><AdPerformanceDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/world-map" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><WorldMapDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/whatsapp-collection" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppCollection /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppDirectory /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SecurityDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/ultimate-security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><UltimateSecurityDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><AdGenerationDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><EnhancedAdGenerationDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/library-ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><LibraryAdGenerationDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/ad-performance" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><AdPerformanceDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/world-map" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WorldMapDashboard /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>
