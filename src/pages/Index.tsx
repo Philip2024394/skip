@@ -194,16 +194,19 @@ const Index = () => {
     ? { id: "dev-user-001", email: "admin@2dateme.com", user_metadata: { name: "Dev Admin" } }
     : null;
 
-  // Check for admin user in localStorage (set by AuthPage when 12345 is entered)
+  // Check for admin session in localStorage (set by AuthPage when 12345 is entered)
   const getAdminUser = () => {
     if (typeof localStorage !== 'undefined') {
       try {
-        const adminUserStr = localStorage.getItem('admin-user');
-        if (adminUserStr) {
-          return JSON.parse(adminUserStr);
+        const adminSessionStr = localStorage.getItem('supabase.auth.token');
+        if (adminSessionStr) {
+          const session = JSON.parse(adminSessionStr);
+          if (session.user?.id === 'admin-12345') {
+            return session.user;
+          }
         }
       } catch (error) {
-        console.error('Error parsing admin user from localStorage:', error);
+        console.error('Error parsing admin session from localStorage:', error);
       }
     }
     return null;

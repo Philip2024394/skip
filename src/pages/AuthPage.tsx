@@ -299,16 +299,25 @@ const AuthPage = () => {
       if (digits === "12345") {
         alert("Admin code detected! Setting up admin session and redirecting to home page");
 
-        // Set admin user in localStorage for the Index component to use
-        if (typeof localStorage !== 'undefined') {
-          const adminUser = {
-            id: "admin-12345",
-            email: "admin@2dateme.demo",
+        // Set admin session using Supabase for proper integration
+        const adminSession = {
+          access_token: 'admin-token-12345',
+          refresh_token: 'admin-refresh-12345',
+          expires_in: 3600,
+          user: {
+            id: 'admin-12345',
+            email: 'admin@2dateme.demo',
             user_metadata: {
-              name: "Admin User"
+              name: 'Admin User',
+              role: 'admin'
             }
-          };
-          localStorage.setItem('admin-user', JSON.stringify(adminUser));
+          }
+        };
+
+        // Store session in Supabase auth format
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('supabase.auth.token', JSON.stringify(adminSession));
+          localStorage.setItem('supabase.auth.user', JSON.stringify(adminSession.user));
         }
 
         // Navigate to home page

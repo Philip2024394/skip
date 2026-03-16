@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import AppEmergency from "./AppEmergency.tsx";
+import App from "./App.tsx";
 import "./index.css";
 import ErrorBoundary from "./components/ErrorBoundary";
 
@@ -8,6 +8,6 @@ document.documentElement.classList.remove("dark");
 
 createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
-        <AppEmergency />
+        <App />
     </ErrorBoundary>
 );
