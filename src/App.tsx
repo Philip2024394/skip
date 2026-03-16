@@ -3,122 +3,41 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Capacitor } from "@capacitor/core";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import Index from "./pages/Index";
 import AuthPage from "./pages/AuthPage";
-import ResetPasswordPage from "./pages/ResetPasswordPage";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import DashboardPage from "./pages/DashboardPage";
-import AdminPage from "./pages/AdminPage";
-import DebugWhatsAppLeads from "./pages/admin/DebugWhatsAppLeads";
-import DebugWorldMap from "./pages/admin/DebugWorldMap";
-import TestPage from "./pages/TestPage";
-console.log('🚀 App.tsx loaded - Debug components imported:', typeof DebugWhatsAppLeads, typeof DebugWorldMap);
-import MapPage from "./pages/MapPage";
-import TermsPage from "./pages/TermsPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import FaqPage from "./pages/FaqPage";
-import VideoPlaylistPage from "./pages/VideoPlaylistPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import NotFound from "./pages/NotFound";
-import ErrorBoundary from "./components/ErrorBoundary";
-import { useOnlineStatus } from "./hooks/useOnlineStatus";
-import { useServiceWorkerUpdate } from "./hooks/useServiceWorkerUpdate";
-import LaunchBanner from "@/components/ui/LaunchBanner";
-import WhatsAppSignup from "@/components/auth/WhatsAppSignup";
 import WhatsAppDirectory from "@/components/admin/WhatsAppDirectory";
 
 const queryClient = new QueryClient();
 
-/**
- * LandingGuard: unauthenticated users who haven't submitted a WhatsApp number
- * are sent to /auth (the landing / sign-in page) first.
- * Once they have a session OR have already entered their WhatsApp number they
- * see the main app as normal.
- */
-const LandingGuard = ({ children }: { children: React.ReactNode }) => {
-  const [ready, setReady] = useState(false);
-  const [redirect, setRedirect] = useState(false);
-
+const AppContent = () => {
   useEffect(() => {
-    const hasWA = !!localStorage.getItem("landing_whatsapp_e164");
-    if (hasWA) { setReady(true); return; }
+    // Check if user is already logged in and redirect to auth if needed
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) setRedirect(true);
-      setReady(true);
+      if (session) {
+        // User is logged in, but we want to keep them on landing page for WhatsApp collection
+        console.log("User session found, keeping on landing page");
+      }
     });
   }, []);
 
-  if (!ready) return null;
-  if (redirect) return <Navigate to="/auth" replace />;
-  return <>{children}</>;
-};
-
-/** Handle Android hardware back button */
-const AndroidBackHandler = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return;
-
-    let removeListener: (() => void) | undefined;
-
-    const setup = async () => {
-      const { App } = await import("@capacitor/app");
-      const handle = await App.addListener("backButton", ({ canGoBack }) => {
-        if (canGoBack && location.pathname !== "/") {
-          navigate(-1);
-        } else {
-          // On home screen — show exit confirmation
-          if (window.confirm("Exit 2DateMe?")) {
-            App.exitApp();
-          }
-        }
-      });
-      removeListener = () => handle.remove();
-    };
-
-    setup();
-    return () => { removeListener?.(); };
-  }, [navigate, location]);
-
-  	return null;
-};
-
-const AppContent = () => {
-  useOnlineStatus();
-  useServiceWorkerUpdate();
   return (
     <BrowserRouter>
-      <ErrorBoundary>
-        <AndroidBackHandler />
-        <Routes>
-          <Route path="/" element={<AuthPage />} />
-          <Route path="/home" element={<AuthPage />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/signup" element={<AuthPage />} />
-          <Route path="/profile/:id" element={<AuthPage />} />
-          <Route path="/reset-password" element={<AuthPage />} />
-          <Route path="/payment-success" element={<AuthPage />} />
-          <Route path="/dashboard" element={<AuthPage />} />
-          <Route path="/admin" element={<AuthPage />} />
-          <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><WhatsAppDirectory /></ProtectedRoute>} />
-          <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><DebugWhatsAppLeads /></ProtectedRoute>} />
-          <Route path="/admin/world-map" element={<ProtectedRoute><DebugWorldMap /></ProtectedRoute>} />
-          <Route path="/test" element={<TestPage />} />
-          <Route path="/2dtm-control-panel" element={<AdminPage />} />
-          <Route path="/map" element={<MapPage />} />
-          <Route path="/terms" element={<TermsPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/faq" element={<FaqPage />} />
-          <Route path="/video-playlist/:id" element={<VideoPlaylistPage />} />
-          <Route path="*" element={<AuthPage />} />
-        </Routes>
-      </ErrorBoundary>
+      <Routes>
+        <Route path="/" element={<AuthPage />} />
+        <Route path="/home" element={<AuthPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/signup" element={<AuthPage />} />
+        <Route path="/profile/:id" element={<AuthPage />} />
+        <Route path="/reset-password" element={<AuthPage />} />
+        <Route path="/payment-success" element={<AuthPage />} />
+        <Route path="/dashboard" element={<AuthPage />} />
+        <Route path="/admin" element={<AuthPage />} />
+        <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><WhatsAppDirectory /></ProtectedRoute>} />
+        <Route path="*" element={<AuthPage />} />
+      </Routes>
     </BrowserRouter>
   );
 };
@@ -127,15 +46,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <TooltipProvider>
-        {/* <GiftSenderProvider> */}
-          <Toaster />
-          <Sonner />
-          <AppContent />
-        {/* </GiftSenderProvider> */}
+        <Toaster />
+        <Sonner />
+        <AppContent />
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>
 );
-
 
 export default App;
