@@ -39,7 +39,7 @@ const AppContent = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<AuthPage />} />
-        <Route path="/home" element={<Index />} />
+        <Route path="/home" element={<AuthPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/signup" element={<AuthPage />} />
         <Route path="/profile/:id" element={<AuthPage />} />
