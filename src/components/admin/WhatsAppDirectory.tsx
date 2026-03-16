@@ -46,8 +46,8 @@ export default function WhatsAppDirectory() {
 
   const filteredEntries = entries.filter(entry => {
     const matchesSearch = entry.whatsapp_number.includes(searchTerm) ||
-                         (entry.name && entry.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (entry.email && entry.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      (entry.name && entry.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (entry.email && entry.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCountry = selectedCountry === "all" || entry.country === selectedCountry;
     return matchesSearch && matchesCountry;
   });
@@ -208,4 +208,4 @@ export default function WhatsAppDirectory() {
       </div>
     </div>
   );
-}
+};
