@@ -3,70 +3,24 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  server: {
-    port: 3000,
-    host: 'localhost',
-    hmr: {
-      port: 3000,
-      host: 'localhost',
-      clientPort: 3000,
-      overlay: false
-    },
-    watch: {
-      usePolling: false,
-      interval: 100
-    },
-    cors: true,
-    fs: {
-      strict: false
-    }
-  },
   build: {
     target: 'es2015',
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Admin components - lazy loaded
-          if (id.includes('admin') || id.includes('WhatsApp') || id.includes('Security') || id.includes('AdGeneration')) {
-            return 'admin';
-          }
-          // Maps and geolocation
-          if (id.includes('leaflet') || id.includes('map') || id.includes('geolocation')) {
-            return 'maps';
-          }
-          // UI components
-          if (id.includes('@radix-ui')) {
-            return 'ui';
-          }
-          // Icons
-          if (id.includes('lucide-react')) {
-            return 'icons';
-          }
-          // Utilities
-          if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) {
-            return 'utils';
-          }
-          // Core React
-          if (id.includes('react') || id.includes('react-dom')) {
-            return 'vendor';
-          }
-          // Router
-          if (id.includes('react-router-dom')) {
-            return 'router';
-          }
-        }
+        manualChunks: undefined // No code splitting - single bundle
       }
     },
-    chunkSizeWarningLimit: 200, // Lower threshold
+    chunkSizeWarningLimit: 50, // Very low threshold
     minify: 'esbuild',
-    sourcemap: false // Disable sourcemaps to reduce memory
+    sourcemap: false,
+    assetsInlineLimit: 1000 // Inline more assets
   },
   optimizeDeps: {
     force: false,
-    include: ['react', 'react-dom', 'react-router-dom']
+    include: ['react', 'react-dom']
   },
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+    'process.env.NODE_ENV': JSON.stringify('production')
   },
   esbuild: {
     target: 'es2015',
