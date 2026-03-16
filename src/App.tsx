@@ -95,18 +95,17 @@ const AppContent = () => {
   return (
     <BrowserRouter>
       <ErrorBoundary>
-        <LaunchBanner />
         <AndroidBackHandler />
         <Routes>
-          <Route path="/" element={<WhatsAppSignup />} />
-          <Route path="/home" element={<WhatsAppSignup />} />
-          <Route path="/auth" element={<WhatsAppSignup />} />
-          <Route path="/signup" element={<WhatsAppSignup />} />
-          <Route path="/profile/:id" element={<WhatsAppSignup />} />
-          <Route path="/reset-password" element={<WhatsAppSignup />} />
-          <Route path="/payment-success" element={<WhatsAppSignup />} />
-          <Route path="/dashboard" element={<WhatsAppSignup />} />
-          <Route path="/admin" element={<WhatsAppSignup />} />
+          <Route path="/" element={<AuthPage />} />
+          <Route path="/home" element={<AuthPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/signup" element={<AuthPage />} />
+          <Route path="/profile/:id" element={<AuthPage />} />
+          <Route path="/reset-password" element={<AuthPage />} />
+          <Route path="/payment-success" element={<AuthPage />} />
+          <Route path="/dashboard" element={<AuthPage />} />
+          <Route path="/admin" element={<AuthPage />} />
           <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><WhatsAppDirectory /></ProtectedRoute>} />
           <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><DebugWhatsAppLeads /></ProtectedRoute>} />
           <Route path="/admin/world-map" element={<ProtectedRoute><DebugWorldMap /></ProtectedRoute>} />
@@ -117,7 +116,7 @@ const AppContent = () => {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/faq" element={<FaqPage />} />
           <Route path="/video-playlist/:id" element={<VideoPlaylistPage />} />
-          <Route path="*" element={<WhatsAppSignup />} />
+          <Route path="*" element={<AuthPage />} />
         </Routes>
       </ErrorBoundary>
     </BrowserRouter>

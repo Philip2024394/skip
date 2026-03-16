@@ -13,6 +13,7 @@ import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import AppLogo from "@/components/AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { COUNTRIES_WITH_CODES, ALL_COUNTRIES, COUNTRY_ISO2 } from "@/data/countries";
+import LaunchBanner from "@/components/ui/LaunchBanner";
 
 const COUNTRY_CODES = COUNTRIES_WITH_CODES;
 const COUNTRIES = ALL_COUNTRIES;
@@ -63,6 +64,7 @@ const AuthPage = () => {
   const [landingPrefix, setLandingPrefix] = useState<string>(COUNTRY_CODES["Indonesia"] || "+62");
   const [landingNumber, setLandingNumber] = useState<string>("");
   const [landingSubmitting, setLandingSubmitting] = useState(false);
+  const [whatsappSubmitted, setWhatsappSubmitted] = useState(false);
   const [onlineCount, setOnlineCount] = useState(getDailyOnlineCount());
 
   // Fetch real online user count from Supabase (last 5 min)
@@ -305,7 +307,7 @@ const AuthPage = () => {
       const e164 = buildE164(landingPrefix, landingNumber);
       const saved = typeof localStorage !== "undefined" ? localStorage.getItem("landing_whatsapp_e164") : null;
       if (saved === e164) {
-        navigate("/home");
+        // Show launch banner instead of allowing entry
         return;
       }
 
@@ -314,6 +316,29 @@ const AuthPage = () => {
         const prefixDigits = String(landingPrefix || "").trim().replace(/\D/g, "");
         const nationalDigits = String(landingNumber || "").trim().replace(/\D/g, "");
 
+        // Save to admin WhatsApp directory
+        try {
+          const { error } = await supabase
+            .from('whatsapp_signups')
+            .insert({
+              whatsapp_number: e164,
+              country: COUNTRIES.find(c => c.dial_code === landingPrefix)?.name || 'Unknown',
+              created_at: new Date().toISOString(),
+            });
+        } catch (dbError) {
+          console.log('Database error, using localStorage fallback');
+          // Fallback to localStorage
+          const signups = JSON.parse(localStorage.getItem('whatsapp_signups') || '[]');
+          signups.push({
+            id: `local_${Date.now()}`,
+            whatsapp_number: e164,
+            country: COUNTRIES.find(c => c.dial_code === landingPrefix)?.name || 'Unknown',
+            created_at: new Date().toISOString(),
+          });
+          localStorage.setItem('whatsapp_signups', JSON.stringify(signups));
+        }
+
+        // Also save to existing whatsapp_leads for compatibility
         const { error } = await (supabase as any)
           .from("whatsapp_leads")
           .upsert(
@@ -326,16 +351,25 @@ const AuthPage = () => {
             },
             { onConflict: "whatsapp_e164" }
           );
-        if (error) throw error;
 
         if (typeof localStorage !== "undefined") {
           localStorage.setItem("landing_whatsapp_e164", e164);
         }
       } catch {
-        // Always allow entry even if lead capture fails
+        // Always save locally even if database fails
+        const signups = JSON.parse(localStorage.getItem('whatsapp_signups') || '[]');
+        signups.push({
+          id: `local_${Date.now()}`,
+          whatsapp_number: e164,
+          country: COUNTRIES.find(c => c.dial_code === landingPrefix)?.name || 'Unknown',
+          created_at: new Date().toISOString(),
+        });
+        localStorage.setItem('whatsapp_signups', JSON.stringify(signups));
       } finally {
         setLandingSubmitting(false);
-        navigate("/home");
+        setWhatsappSubmitted(true);
+        // Show success message
+        toast.success("🎉 Thank you! You'll be notified when we launch on March 25th!");
       }
     };
 
@@ -353,6 +387,9 @@ const AuthPage = () => {
           backgroundRepeat: "no-repeat",
         }}
       >
+        {/* Launch Banner */}
+        <LaunchBanner />
+        
         {/* Gradient overlay — darkens bottom for card readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/70 pointer-events-none" />
 
@@ -420,56 +457,68 @@ const AuthPage = () => {
               🔥 {onlineCount.toLocaleString()} Online Looking For You
             </p>
 
-            <div className="mt-3 space-y-2.5">
-              <div className="grid grid-cols-[76px_1fr] gap-2">
-                <Select value={landingPrefix} onValueChange={setLandingPrefix}>
-                  <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
-                    <span className="flex items-center gap-1.5">
-                      <span className="text-sm leading-none">{selectedFlag}</span>
-                      <span className="text-[12px] font-semibold">{landingPrefix}</span>
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
-                    {Object.entries(COUNTRY_CODES).map(([country, code]) => (
-                      <SelectItem key={country} value={code} className="text-black">
-                        <span className="flex items-center gap-2">
-                          <span className="text-sm leading-none">{getFlagForCountry(country)}</span>
-                          <span className="text-black/90">{country}</span>
-                          <span className="text-black/60">{code}</span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Input
-                  value={landingNumber}
-                  onChange={(e) => setLandingNumber(e.target.value)}
-                  placeholder="WhatsApp number"
-                  className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
-                  inputMode="tel"
-                />
+            {whatsappSubmitted ? (
+              <div className="bg-green-500/20 border border-green-500/50 rounded-xl p-4 text-center">
+                <div className="text-green-700 font-semibold mb-2">✅ You're on the list!</div>
+                <div className="text-green-600 text-sm">
+                  Thank you for your interest! We'll notify you as soon as we launch on March 25th, 2026.
+                </div>
+                <div className="text-green-500 text-xs mt-2">
+                  🚀 Get ready for the most advanced dating app experience!
+                </div>
               </div>
+            ) : (
+              <div className="mt-3 space-y-2.5">
+                <div className="grid grid-cols-[76px_1fr] gap-2">
+                  <Select value={landingPrefix} onValueChange={setLandingPrefix}>
+                    <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-sm leading-none">{selectedFlag}</span>
+                        <span className="text-[12px] font-semibold">{landingPrefix}</span>
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
+                      {Object.entries(COUNTRY_CODES).map(([country, code]) => (
+                        <SelectItem key={country} value={code} className="text-black">
+                          <span className="flex items-center gap-2">
+                            <span className="text-sm leading-none">{getFlagForCountry(country)}</span>
+                            <span className="text-black/90">{country}</span>
+                            <span className="text-black/60">{code}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-              <Button
-                onClick={handleLandingEnter}
-                disabled={landingSubmitting}
-                className="w-full h-12 rounded-2xl bg-black text-white hover:bg-black/90 font-black text-[15px]"
-              >
-                {landingSubmitting ? "Entering..." : "Enter App →"}
-              </Button>
+                  <Input
+                    value={landingNumber}
+                    onChange={(e) => setLandingNumber(e.target.value)}
+                    placeholder="WhatsApp number"
+                    className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
+                    inputMode="tel"
+                  />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setShowAuth(true)}
-                  className="text-black/65 text-[11px] font-semibold underline underline-offset-2"
+                <Button
+                  onClick={handleLandingEnter}
+                  disabled={landingSubmitting}
+                  className="w-full h-12 rounded-2xl bg-black text-white hover:bg-black/90 font-black text-[15px]"
                 >
-                  Sign in / Register
-                </button>
-                <p className="text-black/50 text-[10px]">No verification required</p>
+                  {landingSubmitting ? "Submitting..." : "Get Notified →"}
+                </Button>
+
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setShowAuth(true)}
+                    className="text-black/65 text-[11px] font-semibold underline underline-offset-2"
+                  >
+                    Sign in / Register
+                  </button>
+                  <p className="text-black/50 text-[10px]">No verification required</p>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
