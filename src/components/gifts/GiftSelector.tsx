@@ -1,12 +1,19 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import GiftSendPopup from "./GiftSendPopup";
+import TokenPurchase from "./TokenPurchase";
 
 interface VirtualGift {
   id: string;
   name: string;
   image_url: string;
-  name_display: string;
-  price: number;
+  image_name: string;
+  token_price: number;
+}
+
+interface UserTokens {
+  tokens_balance: number;
+  free_gifts_used: number;
 }
 
 interface GiftSelectorProps {
@@ -17,52 +24,84 @@ interface GiftSelectorProps {
   onGiftSent?: () => void;
 }
 
-export default function GiftSelector({ userId, profileId, profileName }: GiftSelectorProps) {
+export default function GiftSelector({ userId, profileId, profileName, onGiftSent }: GiftSelectorProps) {
   const [gifts, setGifts] = useState<VirtualGift[]>([]);
   const [selectedGifts, setSelectedGifts] = useState<VirtualGift[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userTokens, setUserTokens] = useState<UserTokens | null>(null);
+  const [showSendPopup, setShowSendPopup] = useState(false);
+  const [showTokenPurchase, setShowTokenPurchase] = useState(false);
+  const [selectedGift, setSelectedGift] = useState<VirtualGift | null>(null);
 
   useEffect(() => {
     fetchGifts();
+    fetchUserTokens();
   }, []);
 
   const fetchGifts = async () => {
-    // Use fallback gifts directly since virtual_gifts table doesn't exist yet
-    const fallbackGifts = [
-      // Original 6 gift images with proper UUIDs
-      { id: 'b0c1d2e3-f4a5-6789-3456-012345678901', name: 'Special Gift 1', image_url: 'https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgds-removebg-preview.png?updatedAt=1773600046900', name_display: 'Special Gift 1', price: 7.99 },
-      { id: 'c1d2e3f4-a5b6-7890-4567-123456789012', name: 'Special Gift 2', image_url: 'https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgdgsfgsdfg-removebg-preview.png?updatedAt=1773600149048', name_display: 'Special Gift 2', price: 8.99 },
-      { id: 'd2e3f4a5-b6c7-8901-5678-234567890123', name: 'Special Gift 3', image_url: 'https://ik.imagekit.io/7grri5v7d/dgafsgsdfgsdfgsdfgd-removebg-preview.png?updatedAt=1773600246313', name_display: 'Special Gift 3', price: 9.99 },
-      { id: 'e3f4a5b6-c7d8-9012-6789-345678901234', name: 'Special Gift 4', image_url: 'https://ik.imagekit.io/7grri5v7d/sdfasdfasdfasdfasdf-removebg-preview.png?updatedAt=1773601143240', name_display: 'Special Gift 4', price: 10.99 },
-      { id: 'f4a5b6c7-d8e9-0123-7890-456789012345', name: 'Special Gift 5', image_url: 'https://ik.imagekit.io/7grri5v7d/sdfasdfasdfaasdfasdf-removebg-preview.png?updatedAt=1773601223203', name_display: 'Special Gift 5', price: 11.99 },
-      { id: 'a5b6c7d8-e9f0-1234-8901-567890123456', name: 'Special Gift 6', image_url: 'https://ik.imagekit.io/7grri5v7d/dfsgdfgsdfgd-removebg-preview.png?updatedAt=1773601367483', name_display: 'Special Gift 6', price: 13.99 },
-      // New 19 gift images with proper UUIDs
-      { id: 'b1c2d3e4-f5a6-7890-abcd-ef1234567891', name: 'Premium Rose', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview.png?updatedAt=1773598754691', name_display: 'Premium Rose', price: 6.99 },
-      { id: 'c2d3e4f5-a6b7-8901-bcde-f1234567892', name: 'Diamond Ring', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-1.png?updatedAt=1773598754691', name_display: 'Diamond Ring', price: 8.99 },
-      { id: 'd3e4f5a6-b7c8-9012-cdef-234567890123', name: 'Love Heart', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-2.png?updatedAt=1773598754691', name_display: 'Love Heart', price: 5.99 },
-      { id: 'e4f5a6b7-c8d9-0123-def0-345678901234', name: 'Teddy Bear', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-3.png?updatedAt=1773598754691', name_display: 'Teddy Bear', price: 7.99 },
-      { id: 'f5a6b7c8-d9e0-1234-ef01-456789012345', name: 'Chocolate Box', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-4.png?updatedAt=1773598754691', name_display: 'Chocolate Box', price: 9.99 },
-      { id: 'a6b7c8d9-e0f1-2345-f012-567890123456', name: 'Perfume', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-5.png?updatedAt=1773598754691', name_display: 'Perfume', price: 12.99 },
-      { id: 'b7c8d9e0-f1a2-3456-0123-678901234567', name: 'Jewelry Box', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-6.png?updatedAt=1773598754691', name_display: 'Jewelry Box', price: 15.99 },
-      { id: 'c8d9e0f1-a2b3-4567-1234-789012345678', name: 'Flower Bouquet', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-7.png?updatedAt=1773598754691', name_display: 'Flower Bouquet', price: 8.99 },
-      { id: 'd9e0f1a2-b3c4-5678-2345-890123456789', name: 'Wine Bottle', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-8.png?updatedAt=1773598754691', name_display: 'Wine Bottle', price: 18.99 },
-      { id: 'e0f1a2b3-c4d5-6789-3456-901234567890', name: 'Watch', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-9.png?updatedAt=1773598754691', name_display: 'Watch', price: 22.99 },
-      { id: 'f1a2b3c4-d5e6-7890-4567-012345678901', name: 'Necklace', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-10.png?updatedAt=1773598754691', name_display: 'Necklace', price: 14.99 },
-      { id: 'a2b3c4d5-e6f7-8901-5678-123456789012', name: 'Bracelet', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-11.png?updatedAt=1773598754691', name_display: 'Bracelet', price: 11.99 },
-      { id: 'b3c4d5e6-f7a8-9012-6789-234567890123', name: 'Earrings', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-12.png?updatedAt=1773598754691', name_display: 'Earrings', price: 9.99 },
-      { id: 'c4d5e6f7-a8b9-0123-7890-345678901234', name: 'Handbag', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-13.png?updatedAt=1773598754691', name_display: 'Handbag', price: 19.99 },
-      { id: 'd5e6f7a8-b9c0-1234-8901-456789012345', name: 'Shoes', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-14.png?updatedAt=1773598754691', name_display: 'Shoes', price: 16.99 },
-      { id: 'e6f7a8b9-c0d1-2345-9012-567890123456', name: 'Makeup Kit', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-15.png?updatedAt=1773598754691', name_display: 'Makeup Kit', price: 13.99 },
-      { id: 'f7a8b9c0-d1e2-3456-0123-678901234567', name: 'Spa Voucher', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-16.png?updatedAt=1773598754691', name_display: 'Spa Voucher', price: 25.99 },
-      { id: 'a8b9c0d1-e2f3-4567-1234-789012345678', name: 'Romantic Dinner', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-17.png?updatedAt=1773598754691', name_display: 'Romantic Dinner', price: 35.99 },
-      { id: 'b9c0d1e2-f3a4-5678-2345-890123456789', name: 'Weekend Trip', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-18.png?updatedAt=1773598754691', name_display: 'Weekend Trip', price: 49.99 },
-      { id: 'c0d1e2f3-a4b5-6789-3456-901234567890', name: 'Luxury Car', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-19.png?updatedAt=1773598754691', name_display: 'Luxury Car', price: 99.99 },
-    ];
-    
-    console.log('GiftSelector: Using fallback gifts:', fallbackGifts.length);
-    setGifts(fallbackGifts);
+    const { data, error } = await supabase
+      .from('virtual_gifts')
+      .select('*')
+      .eq('is_active', true)
+      .order('token_price', { ascending: true });
+
+    if (error) {
+      console.log('GiftSelector: Using fallback gifts due to error');
+      // Use fallback gifts if database fails
+      const fallbackGifts = [
+        { id: 'gift001', name: 'Premium Rose', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview.png?updatedAt=1773598754691', image_name: 'premium_rose', token_price: 3 },
+        { id: 'gift002', name: 'Love Heart', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-2.png?updatedAt=1773598754691', image_name: 'love_heart', token_price: 2 },
+        { id: 'gift003', name: 'Teddy Bear', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-3.png?updatedAt=1773598754691', image_name: 'teddy_bear', token_price: 4 },
+        { id: 'gift004', name: 'Chocolate Box', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-4.png?updatedAt=1773598754691', image_name: 'chocolate_box', token_price: 3 },
+        { id: 'gift005', name: 'Perfume', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-5.png?updatedAt=1773598754691', image_name: 'perfume', token_price: 6 },
+        { id: 'gift006', name: 'Flower Bouquet', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-7.png?updatedAt=1773598754691', image_name: 'flower_bouquet', token_price: 4 },
+      ];
+      setGifts(fallbackGifts);
+    } else {
+      setGifts(data || []);
+    }
     setLoading(false);
   };
+
+  const fetchUserTokens = async () => {
+    if (!userId) return;
+    
+    const { data, error } = await supabase
+      .from('user_tokens')
+      .select('tokens_balance, free_gifts_used')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.log('GiftSelector: No tokens found, initializing');
+      // Initialize user tokens if not exists
+      const { error: insertError } = await supabase
+        .from('user_tokens')
+        .insert({ user_id: userId, tokens_balance: 0, free_gifts_used: 0 });
+      
+      if (!insertError) {
+        setUserTokens({ tokens_balance: 0, free_gifts_used: 0 });
+      }
+    } else {
+      setUserTokens(data);
+    }
+  };
+
+  const handleGiftClick = (gift: VirtualGift) => {
+    if (!profileId || profileId === "") return;
+    
+    setSelectedGift(gift);
+    setShowSendPopup(true);
+  };
+
+  const handleGiftSent = () => {
+    setShowSendPopup(false);
+    setSelectedGift(null);
+    fetchUserTokens(); // Refresh token balance
+    onGiftSent?.();
+  };
+
+  const freeGiftsRemaining = userTokens ? Math.max(0, 3 - userTokens.free_gifts_used) : 0;
 
   if (loading) {
     return (
@@ -71,9 +110,6 @@ export default function GiftSelector({ userId, profileId, profileName }: GiftSel
       </div>
     );
   }
-
-  console.log('GiftSelector: Component loaded, gifts count:', gifts.length);
-  console.log('GiftSelector: First few gifts:', gifts.slice(0, 3));
 
   if (gifts.length === 0 && !loading) {
     return (
@@ -85,57 +121,110 @@ export default function GiftSelector({ userId, profileId, profileName }: GiftSel
 
   return (
     <div>
+      {/* Token Status */}
+      {userTokens && (
+        <div className="flex items-center justify-between px-4 mb-3">
+          <div className="text-white/50 text-xs">
+            {freeGiftsRemaining > 0 ? (
+              <span className="text-green-400">{freeGiftsRemaining} Free Gifts</span>
+            ) : (
+              <span className="text-yellow-400">{userTokens.tokens_balance} Tokens</span>
+            )}
+          </div>
+          <button
+            onClick={() => setShowTokenPurchase(true)}
+            className="text-pink-400 text-xs hover:text-pink-300 transition-colors"
+          >
+            Get Tokens
+          </button>
+        </div>
+      )}
+
       <div className="text-white/50 text-xs mb-2 px-4">{gifts.length} Virtual Gifts Available</div>
       <div className="overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-4 py-3 bg-black/20 rounded-2xl border border-pink-400/20 h-32">
-      {gifts.map((gift) => {
-        console.log('GiftSelector: Rendering gift:', gift.name_display, gift.image_url);
-        return (
-          <div
-            key={gift.id}
-            className="inline-block align-top w-20 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out bg-white/5 rounded-xl p-2 h-28 hover:scale-105"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.05)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "scale(1)";
-            }}
-            onClick={() => {
-              // Handle gift selection action
-            }}
-          >
-            <div className="w-16 h-16 rounded-lg overflow-hidden mb-1.5 bg-white/10 flex items-center justify-center">
-              <img 
-                src={gift.image_url} 
-                alt={gift.name_display}
-                className="w-full h-full object-contain"
-                onLoad={() => {
-                  console.log('GiftSelector: Image loaded:', gift.image_url);
-                }}
-                onError={(e) => {
-                  console.log('GiftSelector: Image failed to load:', gift.image_url);
-                  const img = e.target as HTMLImageElement;
-                  img.style.display = "none";
-                  const parent = img.parentElement;
-                  if (parent && !parent.querySelector('.fallback-emoji')) {
-                    const fallback = document.createElement('div');
-                    fallback.className = 'fallback-emoji';
-                    fallback.textContent = '🎁';
-                    fallback.style.cssText = 'font-size: 24px; display: flex; align-items: center; justify-content: center; height: 100%; color: white;';
-                    parent.appendChild(fallback);
-                  }
-                }}
-              />
+        {gifts.map((gift) => {
+          const isFree = freeGiftsRemaining > 0;
+          const canAfford = userTokens && userTokens.tokens_balance >= gift.token_price;
+          const canSend = isFree || canAfford;
+
+          return (
+            <div
+              key={gift.id}
+              className={`inline-block align-top w-20 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out rounded-xl p-2 h-28 ${
+                canSend 
+                  ? 'bg-white/5 hover:scale-105' 
+                  : 'bg-white/5 opacity-50 cursor-not-allowed'
+              }`}
+              onMouseEnter={(e) => {
+                if (canSend) e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+              onClick={() => canSend && handleGiftClick(gift)}
+            >
+              <div className="w-16 h-16 rounded-lg overflow-hidden mb-1.5 bg-white/10 flex items-center justify-center">
+                <img 
+                  src={gift.image_url} 
+                  alt={gift.name}
+                  className="w-full h-full object-contain"
+                  onLoad={() => {
+                    console.log('GiftSelector: Image loaded:', gift.image_url);
+                  }}
+                  onError={(e) => {
+                    console.log('GiftSelector: Image failed to load:', gift.image_url);
+                    const img = e.target as HTMLImageElement;
+                    img.style.display = "none";
+                    const parent = img.parentElement;
+                    if (parent && !parent.querySelector('.fallback-emoji')) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'fallback-emoji';
+                      fallback.textContent = '🎁';
+                      fallback.style.cssText = 'font-size: 24px; display: flex; align-items: center; justify-content: center; height: 100%; color: white;';
+                      parent.appendChild(fallback);
+                    }
+                  }}
+                />
+              </div>
+              <div className="text-white text-[9px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                {gift.name}
+              </div>
+              <div className={`text-[8px] font-bold text-center leading-tight ${
+                isFree ? 'text-green-400' : 'text-yellow-400'
+              }`}>
+                {isFree ? 'FREE' : `${gift.token_price}₽`}
+              </div>
             </div>
-            <div className="text-white text-[9px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-              {gift.name_display}
-            </div>
-            <div className="text-pink-400 text-[8px] font-bold text-center leading-tight">
-              ${gift.price}
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
       </div>
+
+      {/* Send Gift Popup */}
+      {showSendPopup && selectedGift && userTokens && (
+        <GiftSendPopup
+          gift={selectedGift}
+          recipientId={profileId}
+          recipientName={profileName}
+          userTokens={userTokens.tokens_balance}
+          freeGiftsRemaining={freeGiftsRemaining}
+          onClose={() => {
+            setShowSendPopup(false);
+            setSelectedGift(null);
+          }}
+          onGiftSent={handleGiftSent}
+        />
+      )}
+
+      {/* Token Purchase Popup */}
+      {showTokenPurchase && (
+        <TokenPurchase
+          onClose={() => setShowTokenPurchase(false)}
+          onPurchaseSuccess={() => {
+            setShowTokenPurchase(false);
+            fetchUserTokens();
+          }}
+        />
+      )}
     </div>
   );
 }
