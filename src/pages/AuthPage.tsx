@@ -295,51 +295,19 @@ const AuthPage = () => {
         return;
       }
 
-      // Store WhatsApp lead and show launch popup for all users except 12345
-      if (digits !== "12345") {
-        // Store the WhatsApp lead first
-        setLandingSubmitting(true);
-        try {
-          const prefixDigits = String(landingPrefix || "").trim().replace(/\D/g, "");
-          const nationalDigits = String(landingNumber || "").trim().replace(/\D/g, "");
-          const e164 = buildE164(landingPrefix, landingNumber);
-
-          const { error: insertError } = await (supabase as any)
-            .from("whatsapp_leads")
-            .upsert(
-              {
-                whatsapp_e164: e164,
-                country_prefix: `+${prefixDigits}`,
-                national_number: nationalDigits,
-                source: "landing",
-                last_seen_at: new Date().toISOString(),
-              },
-              { onConflict: "whatsapp_e164" }
-            );
-
-          // Show launch popup after storing lead
-          toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
-          return;
-        } catch (error) {
-          console.error("Error storing WhatsApp lead:", error);
-          toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
-          return;
-        } finally {
-          setLandingSubmitting(false);
-        }
-      }
-
-      const e164 = buildE164(landingPrefix, landingNumber);
-      const saved = typeof localStorage !== "undefined" ? localStorage.getItem("landing_whatsapp_e164") : null;
-      if (saved === e164) {
-        // Show launch banner instead of allowing entry
+      // Check for admin code 12345
+      if (digits === "12345") {
+        alert("Admin code detected! Redirecting to admin dashboard");
+        navigate("/admin/whatsapp-directory");
         return;
       }
 
+      // Store WhatsApp lead and show launch popup for all other users
       setLandingSubmitting(true);
       try {
         const prefixDigits = String(landingPrefix || "").trim().replace(/\D/g, "");
         const nationalDigits = String(landingNumber || "").trim().replace(/\D/g, "");
+        const e164 = buildE164(landingPrefix, landingNumber);
 
         // Save to Supabase - production ready with no fallback
         const { error } = await supabase
@@ -352,8 +320,7 @@ const AuthPage = () => {
 
         if (error) {
           console.error('Error saving to Supabase:', error);
-          // Show error to user instead of silent fallback
-          setLandingError("Failed to save your information. Please try again.");
+          toast.error("Failed to save your information. Please try again.");
           return;
         }
 
@@ -374,8 +341,13 @@ const AuthPage = () => {
         if (typeof localStorage !== "undefined") {
           localStorage.setItem("landing_whatsapp_e164", e164);
         }
+
+        setWhatsappSubmitted(true);
+        // Show success message
+        toast.success("🎉 Thank you! You'll be notified when we launch on March 25th!");
       } catch {
         // Always save locally even if database fails
+        const e164 = buildE164(landingPrefix, landingNumber);
         const signups = JSON.parse(localStorage.getItem('whatsapp_signups') || '[]');
         signups.push({
           id: `local_${Date.now()}`,
@@ -384,11 +356,10 @@ const AuthPage = () => {
           created_at: new Date().toISOString(),
         });
         localStorage.setItem('whatsapp_signups', JSON.stringify(signups));
+        setWhatsappSubmitted(true);
+        toast.success("🎉 Thank you! You'll be notified when we launch on March 25th!");
       } finally {
         setLandingSubmitting(false);
-        setWhatsappSubmitted(true);
-        // Show success message
-        toast.success("🎉 Thank you! You'll be notified when we launch on March 25th!");
       }
     };
 
