@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ProfileEditor from "@/components/ProfileEditor";
 import GiftSelector from "@/components/gifts/GiftSelector";
+import GiftReceiver from "@/components/gifts/GiftReceiver";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { isNetworkError } from "@/utils/payments";
 
@@ -382,6 +383,9 @@ const DashboardPage = () => {
           }}
         />
       )}
+
+      {/* Gift Receiver for handling incoming gifts */}
+      <GiftReceiver currentUserId={userId} />
     </div>
   );
 };

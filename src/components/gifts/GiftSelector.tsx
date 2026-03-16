@@ -39,52 +39,104 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
   }, []);
 
   const fetchGifts = async () => {
-    const { data, error } = await supabase
-      .from('virtual_gifts')
-      .select('*')
-      .eq('is_active', true)
-      .order('token_price', { ascending: true });
+    // Use fallback gifts directly since virtual_gifts table may not exist yet
+    console.log('GiftSelector: Loading all 25 virtual gifts');
+    const allGifts = [
+      { id: 'gift001', name: 'Premium Rose', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview.png?updatedAt=1773598754691', image_name: 'premium_rose', token_price: 3 },
+      { id: 'gift002', name: 'Diamond Ring', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-1.png?updatedAt=1773598754691', image_name: 'diamond_ring', token_price: 5 },
+      { id: 'gift003', name: 'Love Heart', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-2.png?updatedAt=1773598754691', image_name: 'love_heart', token_price: 2 },
+      { id: 'gift004', name: 'Teddy Bear', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-3.png?updatedAt=1773598754691', image_name: 'teddy_bear', token_price: 4 },
+      { id: 'gift005', name: 'Chocolate Box', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-4.png?updatedAt=1773598754691', image_name: 'chocolate_box', token_price: 3 },
+      { id: 'gift006', name: 'Perfume', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-5.png?updatedAt=1773598754691', image_name: 'perfume', token_price: 6 },
+      { id: 'gift007', name: 'Jewelry Box', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-6.png?updatedAt=1773598754691', image_name: 'jewelry_box', token_price: 8 },
+      { id: 'gift008', name: 'Flower Bouquet', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-7.png?updatedAt=1773598754691', image_name: 'flower_bouquet', token_price: 4 },
+      { id: 'gift009', name: 'Wine Bottle', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-8.png?updatedAt=1773598754691', image_name: 'wine_bottle', token_price: 7 },
+      { id: 'gift010', name: 'Watch', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-9.png?updatedAt=1773598754691', image_name: 'watch', token_price: 10 },
+      { id: 'gift011', name: 'Necklace', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-10.png?updatedAt=1773598754691', image_name: 'necklace', token_price: 9 },
+      { id: 'gift012', name: 'Bracelet', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-11.png?updatedAt=1773598754691', image_name: 'bracelet', token_price: 6 },
+      { id: 'gift013', name: 'Earrings', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-12.png?updatedAt=1773598754691', image_name: 'earrings', token_price: 5 },
+      { id: 'gift014', name: 'Handbag', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-13.png?updatedAt=1773598754691', image_name: 'handbag', token_price: 11 },
+      { id: 'gift015', name: 'Shoes', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-14.png?updatedAt=1773598754691', image_name: 'shoes', token_price: 8 },
+      { id: 'gift016', name: 'Makeup Kit', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-15.png?updatedAt=1773598754691', image_name: 'makeup_kit', token_price: 4 },
+      { id: 'gift017', name: 'Spa Voucher', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-16.png?updatedAt=1773598754691', image_name: 'spa_voucher', token_price: 12 },
+      { id: 'gift018', name: 'Romantic Dinner', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-17.png?updatedAt=1773598754691', image_name: 'romantic_dinner', token_price: 15 },
+      { id: 'gift019', name: 'Weekend Trip', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-18.png?updatedAt=1773598754691', image_name: 'weekend_trip', token_price: 20 },
+      { id: 'gift020', name: 'Luxury Car', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-19.png?updatedAt=1773598754691', image_name: 'luxury_car', token_price: 25 },
+      { id: 'gift021', name: 'Special Gift 1', image_url: 'https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgds-removebg-preview.png?updatedAt=1773600046900', image_name: 'special_gift_1', token_price: 3 },
+      { id: 'gift022', name: 'Special Gift 2', image_url: 'https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgdgsfgsdfg-removebg-preview.png?updatedAt=1773600149048', image_name: 'special_gift_2', token_price: 4 },
+      { id: 'gift023', name: 'Special Gift 3', image_url: 'https://ik.imagekit.io/7grri5v7d/dgafsgsdfgsdfgsdfgd-removebg-preview.png?updatedAt=1773600246313', image_name: 'special_gift_3', token_price: 5 },
+      { id: 'gift024', name: 'Special Gift 4', image_url: 'https://ik.imagekit.io/7grri5v7d/sdfasdfasdfasdfasdf-removebg-preview.png?updatedAt=1773601143240', image_name: 'special_gift_4', token_price: 6 },
+      { id: 'gift025', name: 'Special Gift 5', image_url: 'https://ik.imagekit.io/7grri5v7d/sdfasdfasdfaasdfasdf-removebg-preview.png?updatedAt=1773601223203', image_name: 'special_gift_5', token_price: 7 },
+      { id: 'gift026', name: 'Special Gift 6', image_url: 'https://ik.imagekit.io/7grri5v7d/dfsgdfgsdfgd-removebg-preview.png?updatedAt=1773601367483', image_name: 'special_gift_6', token_price: 8 },
+    ];
+    
+    // Try to get from database first, otherwise use fallback
+    try {
+      const { data, error } = await supabase
+        .from('virtual_gifts')
+        .select('*')
+        .eq('is_active', true)
+        .order('token_price', { ascending: true });
 
-    if (error) {
-      console.log('GiftSelector: Using fallback gifts due to error');
-      // Use fallback gifts if database fails
-      const fallbackGifts = [
-        { id: 'gift001', name: 'Premium Rose', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview.png?updatedAt=1773598754691', image_name: 'premium_rose', token_price: 3 },
-        { id: 'gift002', name: 'Love Heart', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-2.png?updatedAt=1773598754691', image_name: 'love_heart', token_price: 2 },
-        { id: 'gift003', name: 'Teddy Bear', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-3.png?updatedAt=1773598754691', image_name: 'teddy_bear', token_price: 4 },
-        { id: 'gift004', name: 'Chocolate Box', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-4.png?updatedAt=1773598754691', image_name: 'chocolate_box', token_price: 3 },
-        { id: 'gift005', name: 'Perfume', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-5.png?updatedAt=1773598754691', image_name: 'perfume', token_price: 6 },
-        { id: 'gift006', name: 'Flower Bouquet', image_url: 'https://ik.imagekit.io/7grri5v7d/UntitledasdASDasdADS-removebg-preview-7.png?updatedAt=1773598754691', image_name: 'flower_bouquet', token_price: 4 },
-      ];
-      setGifts(fallbackGifts);
-    } else {
-      setGifts(data || []);
+      if (!error && data && data.length > 0) {
+        console.log('GiftSelector: Using database gifts:', data.length);
+        setGifts(data);
+      } else {
+        console.log('GiftSelector: Using fallback gifts:', allGifts.length);
+        setGifts(allGifts);
+      }
+    } catch (err) {
+      console.log('GiftSelector: Database error, using fallback gifts:', allGifts.length);
+      setGifts(allGifts);
     }
+    
     setLoading(false);
   };
 
   const fetchUserTokens = async () => {
     if (!userId) return;
     
-    const { data, error } = await supabase
-      .from('user_tokens')
-      .select('tokens_balance, free_gifts_used')
-      .eq('user_id', userId)
-      .single();
-
-    if (error) {
-      console.log('GiftSelector: No tokens found, initializing');
-      // Initialize user tokens if not exists
-      const { error: insertError } = await supabase
+    // Initialize with default values
+    let tokensBalance = 0;
+    let freeGiftsUsed = 0;
+    
+    // Try to get from database first
+    try {
+      const { data, error } = await supabase
         .from('user_tokens')
-        .insert({ user_id: userId, tokens_balance: 0, free_gifts_used: 0 });
-      
-      if (!insertError) {
-        setUserTokens({ tokens_balance: 0, free_gifts_used: 0 });
+        .select('tokens_balance, free_gifts_used')
+        .eq('user_id', userId)
+        .single();
+
+      if (!error && data) {
+        tokensBalance = data.tokens_balance || 0;
+        freeGiftsUsed = data.free_gifts_used || 0;
+      } else {
+        // Initialize user tokens if not exists
+        try {
+          const { error: insertError } = await supabase
+            .from('user_tokens')
+            .insert({ user_id: userId, tokens_balance: 0, free_gifts_used: 0 });
+          
+          if (!insertError) {
+            tokensBalance = 0;
+            freeGiftsUsed = 0;
+          }
+        } catch (insertErr) {
+          console.log('GiftSelector: Could not initialize user tokens, using localStorage');
+        }
       }
-    } else {
-      setUserTokens(data);
+    } catch (err) {
+      console.log('GiftSelector: Database error for user tokens, using localStorage');
     }
+    
+    // Fallback to localStorage for free gifts tracking
+    if (freeGiftsUsed === 0) {
+      const localUsed = localStorage.getItem(`free_gifts_used_${userId}`);
+      freeGiftsUsed = localUsed ? parseInt(localUsed) : 0;
+    }
+    
+    setUserTokens({ tokens_balance: tokensBalance, free_gifts_used: freeGiftsUsed });
   };
 
   const handleGiftClick = (gift: VirtualGift) => {
