@@ -38,15 +38,28 @@ export default defineConfig({
           if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) {
             return 'utils';
           }
+          if (id.includes('leaflet') || id.includes('map')) {
+            return 'maps';
+          }
+          // Create smaller chunks for large libraries
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
         }
       }
     },
-    chunkSizeWarningLimit: 1000
+    chunkSizeWarningLimit: 300,
+    minify: 'esbuild'
   },
   optimizeDeps: {
-    force: true
+    force: false,
+    include: ['react', 'react-dom', 'react-router-dom']
   },
   define: {
-    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production')
+  },
+  esbuild: {
+    target: 'es2015',
+    drop: ['console', 'debugger']
   }
 })

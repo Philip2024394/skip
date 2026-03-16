@@ -1,28 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Search, 
-  Filter, 
-  Download, 
-  Phone, 
-  MessageSquare, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  Users, 
-  TrendingUp, 
+import {
+  Search,
+  Filter,
+  Download,
+  Phone,
+  MessageSquare,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Users,
+  TrendingUp,
   Calendar,
   Shield,
-  Zap,
   Globe,
   UserCheck,
   UserX,
@@ -92,15 +89,15 @@ const WhatsAppCollection: React.FC = () => {
   const loadWhatsAppData = async () => {
     try {
       setLoading(true);
-      
+
       // Load users with WhatsApp numbers
       const { data: userData, error: userError } = await (supabase as any)
         .from('whatsapp_leads')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (userError) throw userError;
-      
+
       // Transform data to match our interface
       const transformedUsers: WhatsAppUser[] = (userData || []).map(user => ({
         id: user.id,
@@ -121,32 +118,32 @@ const WhatsAppCollection: React.FC = () => {
         interests: user.interests || [],
         language: user.language || 'en'
       }));
-      
+
       setUsers(transformedUsers);
-      
+
       // Calculate stats
       const now = new Date();
       const today = now.toISOString().split('T')[0];
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      
+
       const totalUsers = transformedUsers.length;
       const verifiedNumbers = transformedUsers.filter(u => u.whatsapp_verified).length;
       const pendingVerification = transformedUsers.filter(u => !u.whatsapp_verified && u.status === 'pending').length;
       const todaySignups = transformedUsers.filter(u => u.join_date.startsWith(today)).length;
       const weeklyGrowth = transformedUsers.filter(u => u.join_date >= weekAgo).length;
       const verificationRate = totalUsers > 0 ? (verifiedNumbers / totalUsers) * 100 : 0;
-      
+
       // Calculate top sources
       const sourceCounts = transformedUsers.reduce((acc: any, user) => {
         acc[user.source] = (acc[user.source] || 0) + 1;
         return acc;
       }, {});
-      
+
       const topSources = Object.entries(sourceCounts)
         .map(([source, count]) => ({ source, count: count as number }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
-      
+
       // Calculate top locations
       const locationCounts = transformedUsers
         .filter(u => u.location)
@@ -154,12 +151,12 @@ const WhatsAppCollection: React.FC = () => {
           acc[user.location!] = (acc[user.location!] || 0) + 1;
           return acc;
         }, {});
-      
+
       const topLocations = Object.entries(locationCounts)
         .map(([location, count]) => ({ location, count: count as number }))
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
-      
+
       setStats({
         totalUsers,
         verifiedNumbers,
@@ -170,7 +167,7 @@ const WhatsAppCollection: React.FC = () => {
         topSources,
         topLocations
       });
-      
+
     } catch (error) {
       console.error('Error loading WhatsApp data:', error);
     } finally {
@@ -178,36 +175,36 @@ const WhatsAppCollection: React.FC = () => {
     }
   };
 
-  // Filter users
-  const filteredUsers = users.filter(user => {
+  // Filter users with useMemo for performance
+  const filteredUsers = useMemo(() => users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phone.includes(searchTerm) ||
-                         user.whatsapp_number.includes(searchTerm) ||
-                         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.location?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      user.phone.includes(searchTerm) ||
+      user.whatsapp_number.includes(searchTerm) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.location?.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    const matchesVerification = verificationFilter === 'all' || 
-                               (verificationFilter === 'verified' && user.whatsapp_verified) ||
-                               (verificationFilter === 'unverified' && !user.whatsapp_verified);
+    const matchesVerification = verificationFilter === 'all' ||
+      (verificationFilter === 'verified' && user.whatsapp_verified) ||
+      (verificationFilter === 'unverified' && !user.whatsapp_verified);
     const matchesSource = sourceFilter === 'all' || user.source === sourceFilter;
-    
+
     return matchesSearch && matchesStatus && matchesVerification && matchesSource;
-  });
+  }), [users, searchTerm, statusFilter, verificationFilter, sourceFilter]);
 
   // Handle user verification
   const handleVerifyUser = async (userId: string, verified: boolean) => {
     try {
       await (supabase as any)
         .from('whatsapp_leads')
-        .update({ 
+        .update({
           whatsapp_verified: verified,
           verified: verified,
           status: verified ? 'verified' : 'pending',
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
-      
+
       loadWhatsAppData();
     } catch (error) {
       console.error('Error updating user verification:', error);
@@ -219,12 +216,12 @@ const WhatsAppCollection: React.FC = () => {
     try {
       await (supabase as any)
         .from('whatsapp_leads')
-        .update({ 
+        .update({
           status,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
-      
+
       loadWhatsAppData();
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -237,7 +234,7 @@ const WhatsAppCollection: React.FC = () => {
       for (const userId of selectedUsers) {
         await (supabase as any)
           .from('whatsapp_leads')
-          .update({ 
+          .update({
             whatsapp_verified: true,
             verified: true,
             status: 'verified',
@@ -245,7 +242,7 @@ const WhatsAppCollection: React.FC = () => {
           })
           .eq('id', userId);
       }
-      
+
       setSelectedUsers([]);
       setIsBulkVerifyOpen(false);
       loadWhatsAppData();
@@ -270,7 +267,7 @@ const WhatsAppCollection: React.FC = () => {
         user.join_date
       ].join(','))
     ].join('\n');
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -282,8 +279,8 @@ const WhatsAppCollection: React.FC = () => {
 
   // Toggle user selection
   const toggleUserSelection = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
+    setSelectedUsers(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
@@ -333,7 +330,7 @@ const WhatsAppCollection: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Verified Numbers</CardTitle>
@@ -346,7 +343,7 @@ const WhatsAppCollection: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Pending Verification</CardTitle>
@@ -359,7 +356,7 @@ const WhatsAppCollection: React.FC = () => {
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Today Signups</CardTitle>
@@ -392,7 +389,7 @@ const WhatsAppCollection: React.FC = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Top Locations</CardTitle>
@@ -553,7 +550,7 @@ const WhatsAppCollection: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Phone Number</Label>
@@ -588,7 +585,7 @@ const WhatsAppCollection: React.FC = () => {
                   <p className="text-sm">{selectedUser.language || 'Not specified'}</p>
                 </div>
               </div>
-              
+
               {selectedUser.interests && selectedUser.interests.length > 0 && (
                 <div>
                   <Label>Interests</Label>
