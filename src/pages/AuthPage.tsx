@@ -15,6 +15,7 @@ import AppLogo from "@/components/AppLogo";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { COUNTRIES_WITH_CODES, ALL_COUNTRIES, COUNTRY_ISO2 } from "@/data/countries";
 import LaunchBanner from "@/components/ui/LaunchBanner";
+import Index from "./Index";
 
 const COUNTRY_CODES = COUNTRIES_WITH_CODES;
 const COUNTRIES = ALL_COUNTRIES;
@@ -193,9 +194,8 @@ const AuthPage = () => {
         return;
       }
     }
-    // DISABLED: Don't navigate to home page until app is ready
-    alert("Login temporarily disabled. App is not ready yet.");
-    return;
+    // Navigate to home page for regular users
+    navigate("/home");
   };
 
   const handleRegisterStep = async () => {
@@ -264,14 +264,53 @@ const AuthPage = () => {
     }
   };
 
-  // Check if user should see home page content - DISABLED until app is ready
-  const shouldShowHomePage = () => {
-    // Always return false until app is ready
-    return false;
-  };
+  const [showHomePage, setShowHomePage] = useState(false);
+
+  // Check if user should see home page content
+  useEffect(() => {
+    const checkHomePageAccess = async () => {
+      // Check for admin session (12345 still disabled)
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const adminSessionStr = localStorage.getItem('supabase.auth.token');
+          if (adminSessionStr) {
+            const session = JSON.parse(adminSessionStr);
+            if (session.user?.id === 'admin-12345') {
+              setShowHomePage(false); // Keep 12345 admin disabled
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing admin session:', error);
+        }
+      }
+
+      // Check if there's a real Supabase session
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setShowHomePage(session !== null);
+      } catch (error) {
+        console.error('Error checking session:', error);
+        setShowHomePage(false);
+      }
+    };
+
+    checkHomePageAccess();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        setShowHomePage(true);
+      } else if (event === 'SIGNED_OUT') {
+        setShowHomePage(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // If user should see home page, show Index component
-  if (shouldShowHomePage()) {
+  if (showHomePage) {
     return <Index />;
   }
 

@@ -39,8 +39,8 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
   }, []);
 
   const fetchGifts = async () => {
-    // Use fallback gifts with working placeholder images
-    console.log('GiftSelector: Loading all 25 virtual gifts with placeholder images');
+    // Use fallback gifts with working placeholder images - exactly 25 gifts
+    console.log('GiftSelector: Loading 25 virtual gifts with placeholder images');
     const allGifts = [
       { id: 'gift001', name: 'Premium Rose', image_url: 'https://via.placeholder.com/150x150/ff69b4/ffffff?text=🌹', image_name: 'premium_rose', token_price: 3 },
       { id: 'gift002', name: 'Diamond Ring', image_url: 'https://via.placeholder.com/150x150/87ceeb/ffffff?text=💍', image_name: 'diamond_ring', token_price: 5 },
@@ -67,7 +67,6 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
       { id: 'gift023', name: 'Special Gift 3', image_url: 'https://via.placeholder.com/150x150/ffd700/ffffff?text=🎉', image_name: 'special_gift_3', token_price: 5 },
       { id: 'gift024', name: 'Special Gift 4', image_url: 'https://via.placeholder.com/150x150/9370db/ffffff?text=🎈', image_name: 'special_gift_4', token_price: 6 },
       { id: 'gift025', name: 'Special Gift 5', image_url: 'https://via.placeholder.com/150x150/ff6347/ffffff?text=🎊', image_name: 'special_gift_5', token_price: 7 },
-      { id: 'gift026', name: 'Special Gift 6', image_url: 'https://via.placeholder.com/150x150/32cd32/ffffff?text=🎋', image_name: 'special_gift_6', token_price: 8 },
     ];
 
     // Set gifts directly without Supabase call
@@ -142,7 +141,6 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
         </div>
       )}
 
-      <div className="text-white/50 text-xs mb-2 px-4">{gifts.length} Virtual Gifts Available</div>
       <div className="overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-4 py-3 bg-black/20 rounded-2xl border border-pink-400/20 h-32">
         {gifts.map((gift) => {
           const isFree = freeGiftsRemaining > 0;
