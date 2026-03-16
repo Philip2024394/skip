@@ -98,14 +98,14 @@ export default function SwipeStack({
   const rotate = useTransform(x, [-300, 0, 300], [-14, 0, 14]);
 
   // Horizontal stamps only respond to horizontal movement
-  const likeOpacity  = useTransform(x, [0, 50, 100], [0, 0.6, 1]);
-  const nopeOpacity  = useTransform(x, [-100, -50, 0], [1, 0.6, 0]);
+  const likeOpacity = useTransform(x, [0, 50, 100], [0, 0.6, 1]);
+  const nopeOpacity = useTransform(x, [-100, -50, 0], [1, 0.6, 0]);
 
   // Vertical stamp: show LIKE when swiping up (negative y) on both stacks, or when swiping down on bottom stack.
   const verticalOpacity = useTransform(
     y,
-    direction === "up"   ? [-100, -50, 0, 50] : [-100, -50, 0, 50, 100],
-    direction === "up"   ? [1, 0.7, 0, 0]     : [1, 0.7, 0, 0, 0.7]
+    direction === "up" ? [-100, -50, 0, 50] : [-100, -50, 0, 50, 100],
+    direction === "up" ? [1, 0.7, 0, 0] : [1, 0.7, 0, 0, 0.7]
   );
 
   const bgOverlay = useTransform(
@@ -151,10 +151,10 @@ export default function SwipeStack({
       const horizontalDominant = absX >= absY || absVx >= absVy;
 
       // Swipe UP = like on both stacks (top and bottom). Swipe DOWN = like only on bottom stack.
-      const isVerticalUp   = !horizontalDominant && (oy < -SWIPE_THRESHOLD || vy < -VELOCITY_THRESHOLD);
-      const isVerticalDown = direction === "down" && !horizontalDominant && (oy >  SWIPE_THRESHOLD || vy >  VELOCITY_THRESHOLD);
-      const isRight        = horizontalDominant && (ox >  SWIPE_THRESHOLD || vx >  VELOCITY_THRESHOLD);
-      const isLeft         = horizontalDominant && (ox < -SWIPE_THRESHOLD || vx < -VELOCITY_THRESHOLD);
+      const isVerticalUp = !horizontalDominant && (oy < -SWIPE_THRESHOLD || vy < -VELOCITY_THRESHOLD);
+      const isVerticalDown = direction === "down" && !horizontalDominant && (oy > SWIPE_THRESHOLD || vy > VELOCITY_THRESHOLD);
+      const isRight = horizontalDominant && (ox > SWIPE_THRESHOLD || vx > VELOCITY_THRESHOLD);
+      const isLeft = horizontalDominant && (ox < -SWIPE_THRESHOLD || vx < -VELOCITY_THRESHOLD);
 
       // Not enough movement — snap back
       if (!isVerticalUp && !isVerticalDown && !isRight && !isLeft) {
@@ -316,12 +316,11 @@ export default function SwipeStack({
           {/* ── Bottom gradient ───────────────────────────────── */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none" />
 
-          {/* ── Single badge — locked: yellow, top-left only (ProfileBadge) ── */}
-          <ProfileBadge profile={profile} isProfilePage={false} />
-          
+          {/* ── Single badge — moved to name area (no longer top-left) ── */}
+
           {/* ── Distance badge — top-right, opens map ── */}
-          <DistanceBadge 
-            profile={profile} 
+          <DistanceBadge
+            profile={profile}
             onClick={() => {
               if (onOpenMap) {
                 onOpenMap(profile);
@@ -358,9 +357,8 @@ export default function SwipeStack({
           <button
             onClick={handleNextBtn}
             aria-label="Next profile"
-            className={`absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform shadow-[0_0_12px_rgba(255,255,255,0.25)] ${
-              direction === "up" ? "bottom-3 right-3" : "top-3 right-3"
-            }`}
+            className={`absolute z-20 w-14 h-14 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center active:scale-95 hover:scale-110 transition-transform shadow-[0_0_12px_rgba(255,255,255,0.25)] ${direction === "up" ? "bottom-3 right-3" : "top-3 right-3"
+              }`}
             style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           >
             <Fingerprint className="w-7 h-7 text-white/80 drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
@@ -370,9 +368,8 @@ export default function SwipeStack({
           <button
             onClick={handleLikeBtn}
             aria-label="Like"
-            className={`absolute z-20 w-10 h-10 rounded-full gradient-love border-0 shadow-[0_0_14px_rgba(180,80,150,0.4)] flex items-center justify-center active:scale-95 hover:scale-110 transition-transform ${
-              direction === "up" ? "top-3 right-3" : "bottom-3 right-3"
-            }`}
+            className={`absolute z-20 w-10 h-10 rounded-full gradient-love border-0 shadow-[0_0_14px_rgba(180,80,150,0.4)] flex items-center justify-center active:scale-95 hover:scale-110 transition-transform ${direction === "up" ? "top-3 right-3" : "bottom-3 right-3"
+              }`}
             style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           >
             <Heart className="w-5 h-5 text-white" fill="white" />
@@ -387,15 +384,16 @@ export default function SwipeStack({
                   <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
                 )}
                 {profile.name}, {profile.age}
+                <ProfileBadge profile={profile} isProfilePage={false} />
               </h3>
               {(profile.is_mock && (profile as any).mock_online_hours
-            ? isMockCurrentlyOnline(profile.id, profile.country, (profile as any).mock_online_hours, (profile as any).mock_offline_days)
-            : isOnline(profile.last_seen_at)) && (
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                </span>
-              )}
+                ? isMockCurrentlyOnline(profile.id, profile.country, (profile as any).mock_online_hours, (profile as any).mock_offline_days)
+                : isOnline(profile.last_seen_at)) && (
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                  </span>
+                )}
             </div>
             <p className="text-white/80 text-sm flex items-center gap-1 mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
               <MapPin className="w-3 h-3" /> {profile.city}, {profile.country}

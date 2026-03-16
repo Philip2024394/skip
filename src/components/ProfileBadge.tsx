@@ -24,6 +24,9 @@ const BADGE_ICON_COLOR = "text-yellow-400" as const;
 // ── Profile page badge style (approved modification) ───────────────────────
 const PROFILE_PAGE_BADGE_STYLE = "text-yellow-400 font-bold text-xs" as const;
 
+// ── Home page inline badge style (moved from top-left) ───────────────────────
+const HOME_PAGE_INLINE_BADGE_STYLE = "text-yellow-400 font-bold text-xs ml-2" as const;
+
 interface ProfileBadgeProps {
   profile: any;
   /** Pass a translation function if you have one; otherwise badge shows English label */
@@ -34,7 +37,7 @@ interface ProfileBadgeProps {
 
 /**
  * Renders the single primary profile badge.
- * - Home page: top-left, yellow with icon (locked style)
+ * - Home page: inline with name, text only (moved from top-left)
  * - Profile page: over name, text only (approved modification)
  */
 export default function ProfileBadge({ profile, t, isProfilePage = false }: ProfileBadgeProps) {
@@ -42,12 +45,12 @@ export default function ProfileBadge({ profile, t, isProfilePage = false }: Prof
   if (!key) return null;
 
   const labels: Record<string, { icon: string; label: string }> = {
-    available_tonight: { icon: "🌙", label: t?.("popup.freeTonight") ?? "Free Tonight" },
-    is_plusone: { icon: "✚", label: "+1 Plus One" },
-    generous_lifestyle: { icon: "🎁", label: "Generous" },
-    weekend_plans: { icon: "📅", label: "Weekend Plans" },
-    late_night_chat: { icon: "🌙", label: "Late Night" },
-    no_drama: { icon: "✨", label: "No Drama" },
+    available_tonight: { icon: "", label: t?.("popup.freeTonight") ?? "Free Tonight" },
+    is_plusone: { icon: "", label: "+1 Plus One" },
+    generous_lifestyle: { icon: "", label: "Generous" },
+    weekend_plans: { icon: "", label: "Weekend Plans" },
+    late_night_chat: { icon: "", label: "Late Night" },
+    no_drama: { icon: "", label: "No Drama" },
   };
 
   const entry = labels[key];
@@ -62,11 +65,10 @@ export default function ProfileBadge({ profile, t, isProfilePage = false }: Prof
     );
   }
 
-  // Home page: show locked yellow badge with icon at top-left
+  // Home page: show text-only badge inline with name (moved from top-left)
   return (
-    <div className={`${BADGE_POSITION} ${BADGE_BASE}`}>
-      <span className={BADGE_ICON_COLOR}>{entry.icon}</span>
+    <span className={HOME_PAGE_INLINE_BADGE_STYLE}>
       {entry.label}
-    </div>
+    </span>
   );
 }

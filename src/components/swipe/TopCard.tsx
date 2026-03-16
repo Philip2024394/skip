@@ -79,12 +79,11 @@ export default function TopCard(props: TopCardProps) {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
 
-          {/* ── Single badge — locked: yellow, top-left only (ProfileBadge) ── */}
-          <ProfileBadge profile={props.selectedProfile} t={props.t} isProfilePage={props.isProfileRoute} />
-          
+          {/* ── Single badge — moved to name area (no longer top-left) ── */}
+
           {/* ── Distance badge — top-right, opens map ── */}
-          <DistanceBadge 
-            profile={props.selectedProfile} 
+          <DistanceBadge
+            profile={props.selectedProfile}
             onClick={() => {
               if (props.onOpenMap) {
                 props.onOpenMap(props.selectedProfile);
@@ -165,11 +164,10 @@ export default function TopCard(props: TopCardProps) {
               props.handleLike(props.selectedProfile);
             }}
             aria-label={`Like ${props.selectedProfile.name}`}
-            className={`absolute z-20 w-10 h-10 rounded-full flex items-center justify-center active:scale-95 hover:scale-110 transition-all top-3 right-3 ${
-              props.iLiked.some(p => p.id === props.selectedProfile.id)
-                ? "bg-pink-500/40 border border-pink-400/60 shadow-[0_0_14px_rgba(180,80,150,0.5)]"
-                : "gradient-love border-0 shadow-[0_0_14px_rgba(180,80,150,0.4)]"
-            }`}
+            className={`absolute z-20 w-10 h-10 rounded-full flex items-center justify-center active:scale-95 hover:scale-110 transition-all top-3 right-3 ${props.iLiked.some(p => p.id === props.selectedProfile.id)
+              ? "bg-pink-500/40 border border-pink-400/60 shadow-[0_0_14px_rgba(180,80,150,0.5)]"
+              : "gradient-love border-0 shadow-[0_0_14px_rgba(180,80,150,0.4)]"
+              }`}
             style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           >
             <Heart className="w-5 h-5 text-white" fill="white" />
@@ -183,14 +181,15 @@ export default function TopCard(props: TopCardProps) {
                 <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
               )}
               {props.selectedProfile.name}, {props.selectedProfile.age}
+              {!props.isProfileRoute && <ProfileBadge profile={props.selectedProfile} t={props.t} isProfilePage={false} />}
               {(props.selectedProfile.is_mock && (props.selectedProfile as any).mock_online_hours
                 ? isMockCurrentlyOnline(props.selectedProfile.id, props.selectedProfile.country, (props.selectedProfile as any).mock_online_hours, (props.selectedProfile as any).mock_offline_days)
                 : isOnline(props.selectedProfile.last_seen_at)) && (
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
-                </span>
-              )}
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.8)]" />
+                  </span>
+                )}
             </h3>
             <p className="text-white/60 text-sm flex items-center gap-1 mt-1">
               <MapPin className="w-3 h-3" /> {props.selectedProfile.city}, {props.selectedProfile.country}
