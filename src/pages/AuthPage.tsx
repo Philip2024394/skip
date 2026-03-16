@@ -538,7 +538,6 @@ const AuthPage = () => {
                     {landingSubmitting ? "Submitting..." : "Get Early Access"}
                   </Button>
                 </div>
-                )}
               </div>
             )}
           </div>
