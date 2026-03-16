@@ -1,19 +1,23 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 3000,
     hmr: {
       overlay: false,
-      clientPort: 8091,
     },
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'Last-Modified': new Date().toUTCString()
+    }
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -23,5 +27,13 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       external: ["@revenuecat/purchases-capacitor"],
     },
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom"],
+    force: true,
+  },
+  esbuild: {
+    jsx: 'transform',
+    jsxFactory: 'React.createElement',
   },
 }));
