@@ -74,23 +74,23 @@ type DisplayItem =
 
 // ── Tab pill config ───────────────────────────────────────────────────────────
 const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
-  new:      () => "New",
-  sent:     () => "I Liked",
+  new: () => "New",
+  sent: () => "I Liked",
   received: () => "Likes Me",
-  treat:    () => "Treat",
-  unlock:   () => "Unlock",
+  treat: () => "Treat",
+  unlock: () => "Unlock",
   distance: () => "Distance",
-  gifts:    () => "Gifts",
+  gifts: () => "Gifts",
 };
 // Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
-const HOME_TABS: Tab[]    = ["new", "sent", "received", "unlock", "gifts"];
+const HOME_TABS: Tab[] = ["new", "sent", "received", "unlock", "gifts"];
 const PROFILE_TABS: Tab[] = ["new", "sent", "treat", "gifts"];
 
 const TREAT_ITEMS = [
-  { key: "massage",    emoji: "💆", label: "Massage",    desc: "Relaxing full-body massage",      image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
-  { key: "beautician", emoji: "💅", label: "Beautician",  desc: "Professional beauty treatment",  image: "https://ik.imagekit.io/7grri5v7d/beauty%20woman.png?updatedAt=1773339036755" },
-  { key: "flowers",    emoji: "🌸", label: "Flowers",    desc: "Fresh flower bouquet",            image: "https://ik.imagekit.io/7grri5v7d/flowers%20nice.png?updatedAt=1773339411434" },
-  { key: "jewelry",   emoji: "💎", label: "Jewelry",    desc: "Sparkling gift",                  image: "https://ik.imagekit.io/7grri5v7d/jewerlysss.png?updatedAt=1773338936919" },
+  { key: "massage", emoji: "💆", label: "Massage", desc: "Relaxing full-body massage", image: "https://ik.imagekit.io/7grri5v7d/massage%20therapsy.png?updatedAt=1773339304480" },
+  { key: "beautician", emoji: "💅", label: "Beautician", desc: "Professional beauty treatment", image: "https://ik.imagekit.io/7grri5v7d/beauty%20woman.png?updatedAt=1773339036755" },
+  { key: "flowers", emoji: "🌸", label: "Flowers", desc: "Fresh flower bouquet", image: "https://ik.imagekit.io/7grri5v7d/flowers%20nice.png?updatedAt=1773339411434" },
+  { key: "jewelry", emoji: "💎", label: "Jewelry", desc: "Sparkling gift", image: "https://ik.imagekit.io/7grri5v7d/jewerlysss.png?updatedAt=1773338936919" },
 ] as const;
 type TreatKey = typeof TREAT_ITEMS[number]["key"];
 
@@ -139,21 +139,21 @@ const LikesLibrary = ({
         return tb - ta;
       })
       .slice(0, 50),
-  [newProfiles]);
+    [newProfiles]);
 
   const currentList: Profile[] =
-    tab === "sent"     ? iLiked :
-    tab === "received" ? likedMe :
-    sortedNew;
+    tab === "sent" ? iLiked :
+      tab === "received" ? likedMe :
+        sortedNew;
 
   const counts: Record<Tab, number> = {
-    sent:     iLiked.length,
+    sent: iLiked.length,
     received: likedMe.length,
-    new:      sortedNew.length,
-    treat:    0,
-    unlock:   0,
+    new: sortedNew.length,
+    treat: 0,
+    unlock: 0,
     distance: 0,
-    gifts:    0,
+    gifts: 0,
   };
 
   // Scroll back to left whenever tab changes
@@ -228,7 +228,7 @@ const LikesLibrary = ({
       setTab(next);
       onTabChange?.(next);
     }
-    if (dx > 50  && idx > 0) {
+    if (dx > 50 && idx > 0) {
       const next = activeTabs[idx - 1];
       setTab(next);
       onTabChange?.(next);
@@ -238,8 +238,8 @@ const LikesLibrary = ({
 
   // ── Empty-state copy ────────────────────────────────────────────
   const emptyText =
-    tab === "sent"     ? "Swipe up or down to like!" :
-    "No likes yet — keep swiping!";
+    tab === "sent" ? "Swipe up or down to like!" :
+      "No likes yet — keep swiping!";
 
   const isDateIdeasTab =
     tab === "sent" &&
@@ -285,27 +285,27 @@ const LikesLibrary = ({
             const pct = 100 / visibleTabs.length;
             return (
               <>
-          {/* Sliding background */}
-          <motion.div
-            className="absolute top-0.5 bottom-0.5 rounded-[10px] gradient-love"
-            animate={{
-              left: `calc(${visibleIndex} * ${pct}% + 2px)`,
-              width: `calc(${pct}% - 4px)`,
-            }}
-            transition={{ type: "spring", stiffness: 400, damping: 35 }}
-          />
-          {visibleTabs.map((t) => (
-            <button
-              key={t}
-              onClick={() => {
-                onTabChange?.(t);
-                requestAnimationFrame(() => setTab(t));
-              }}
-              className={`relative z-10 py-1 px-1.5 rounded-[10px] text-[9px] font-semibold transition-colors min-w-[44px] text-center ${tab === t ? "text-white" : "text-white/40 hover:text-white/70"}`}
-            >
-              {tabLabelOverrides?.[t] ?? TAB_LABELS[t](counts)}
-            </button>
-          ))}
+                {/* Sliding background */}
+                <motion.div
+                  className="absolute top-0.5 bottom-0.5 rounded-[10px] gradient-love"
+                  animate={{
+                    left: `calc(${visibleIndex} * ${pct}% + 2px)`,
+                    width: `calc(${pct}% - 4px)`,
+                  }}
+                  transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                />
+                {visibleTabs.map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => {
+                      onTabChange?.(t);
+                      requestAnimationFrame(() => setTab(t));
+                    }}
+                    className={`relative z-10 py-1 px-1.5 rounded-[10px] text-[9px] font-semibold transition-colors min-w-[44px] text-center ${tab === t ? "text-white" : "text-white/40 hover:text-white/70"}`}
+                  >
+                    {tabLabelOverrides?.[t] ?? TAB_LABELS[t](counts)}
+                  </button>
+                ))}
               </>
             );
           })()}
@@ -334,11 +334,10 @@ const LikesLibrary = ({
       {/* ── Scrollable card row — native scroll, no tab-switch interference ── */}
       <div
         ref={scrollRef}
-        className={`flex-1 [&::-webkit-scrollbar]:hidden ${
-          isDateIdeasTab || isProfileInfoTab || isTreatTab
+        className={`flex-1 [&::-webkit-scrollbar]:hidden ${isDateIdeasTab || isProfileInfoTab || isTreatTab
             ? "overflow-y-auto overflow-x-hidden"
             : "overflow-x-auto overflow-y-hidden"
-        }`}
+          }`}
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -358,7 +357,7 @@ const LikesLibrary = ({
             className={(isDateIdeasTab || isProfileInfoTab || isTreatTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
             {isProfileInfoTab ? (
-              <div 
+              <div
                 className="grid grid-cols-3 gap-2 h-full pb-2 rounded-xl p-2 border border-white/10"
                 style={{
                   backgroundImage: "url(https://ik.imagekit.io/7grri5v7d/vip%20jhh33.png)",
@@ -420,11 +419,10 @@ const LikesLibrary = ({
                       e.stopPropagation();
                       onSelectTreatItem?.(item.key);
                     }}
-                    className={`relative overflow-hidden rounded-xl cursor-pointer transition-all hover:scale-[1.02] flex-shrink-0 ${
-                      selectedTreatItem === item.key
+                    className={`relative overflow-hidden rounded-xl cursor-pointer transition-all hover:scale-[1.02] flex-shrink-0 ${selectedTreatItem === item.key
                         ? "ring-2 ring-fuchsia-400/60"
                         : ""
-                    }`}
+                      }`}
                     style={{
                       height: 124, width: 80,
                       backgroundImage: `url(${item.image})`,
@@ -458,15 +456,15 @@ const LikesLibrary = ({
             ) : isUnlockTab ? (
               <div className="flex gap-2 h-full pb-2">
                 {([
-                  { key: "unlock:single",   emoji: "💬", label: "1 Unlock",   price: "$1.99" },
-                  { key: "unlock:pack3",    emoji: "💬", label: "3 Pack",     price: "$4.99" },
-                  { key: "unlock:pack10",   emoji: "💬", label: "10 Pack",    price: "$12.99" },
-                  { key: "unlock:vip",      emoji: "👑", label: "VIP",        price: "$10.99" },
-                  { key: "unlock:superlike",emoji: "⭐", label: "Super Like", price: "$1.99" },
-                  { key: "unlock:boost",    emoji: "🚀", label: "Boost",      price: "$1.99" },
-                  { key: "unlock:verified", emoji: "✅", label: "Verified",   price: "$1.99" },
-                  { key: "unlock:incognito",emoji: "👻", label: "Incognito",  price: "$2.99" },
-                  { key: "unlock:spotlight",emoji: "🌟", label: "Spotlight",  price: "$4.99" },
+                  { key: "unlock:single", emoji: "💬", label: "1 Unlock", price: "$1.99" },
+                  { key: "unlock:pack3", emoji: "💬", label: "3 Pack", price: "$4.99" },
+                  { key: "unlock:pack10", emoji: "💬", label: "10 Pack", price: "$12.99" },
+                  { key: "unlock:vip", emoji: "👑", label: "VIP", price: "$10.99" },
+                  { key: "unlock:superlike", emoji: "⭐", label: "Super Like", price: "$1.99" },
+                  { key: "unlock:boost", emoji: "🚀", label: "Boost", price: "$1.99" },
+                  { key: "unlock:verified", emoji: "✅", label: "Verified", price: "$1.99" },
+                  { key: "unlock:incognito", emoji: "👻", label: "Incognito", price: "$2.99" },
+                  { key: "unlock:spotlight", emoji: "🌟", label: "Spotlight", price: "$4.99" },
                 ] as const).map((p, idx) => (
                   <motion.button
                     key={p.key}
@@ -563,14 +561,12 @@ const LikesLibrary = ({
                 </div>
               )
             ) : tab === "gifts" ? (
-              <div className="h-full">
-                <GiftSelector
-                  userId={selectedProfile?.id || ""}
-                  profileId={selectedProfile?.id || ""}
-                  profileName={selectedProfile?.name || ""}
-                  onGiftSent={onGiftSent}
-                />
-              </div>
+              <GiftSelector
+                userId={selectedProfile?.id || ""}
+                profileId={selectedProfile?.id || ""}
+                profileName={selectedProfile?.name || ""}
+                onGiftSent={onGiftSent}
+              />
             ) : displayItemsWithTarot.length === 0 ? (
               <div className="flex items-center justify-center flex-1 px-4">
                 <p className="text-white/40 text-xs text-center">{emptyText}</p>
