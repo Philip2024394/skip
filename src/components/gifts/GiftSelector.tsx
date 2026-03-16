@@ -163,7 +163,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
   }
 
   return (
-    <div>
+    <>
       <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate px-4 py-3 overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide h-48" style={{ contain: "layout" }}>
         {gifts.map((gift) => {
           const isFree = freeGiftsRemaining > 0;
@@ -253,7 +253,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
         />
       )}
 
-      {/* Token Purchase Popup */}
+      {/* Token Purchase */}
       {showTokenPurchase && (
         <TokenPurchase
           onClose={() => setShowTokenPurchase(false)}
@@ -263,6 +263,6 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
           }}
         />
       )}
-    </div>
+    </>
   );
 }
