@@ -169,10 +169,37 @@ const AuthPage = () => {
     return error.message;
   };
 
-  // Admin login handler - DISABLED until app is ready
+  // Admin login handler - RE-ENABLED
   const handleAdminLogin = () => {
-    alert("Admin login temporarily disabled. App is not ready yet.");
-    return;
+    if (adminPassword === "12345") {
+      setAdminLoginError("");
+
+      // Set admin session using Supabase for proper integration
+      const adminSession = {
+        access_token: 'admin-token-12345',
+        refresh_token: 'admin-refresh-12345',
+        expires_in: 3600,
+        user: {
+          id: 'admin-12345',
+          email: 'admin@2dateme.demo',
+          user_metadata: {
+            name: 'Admin User',
+            role: 'admin'
+          }
+        }
+      };
+
+      // Store session in Supabase auth format
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('supabase.auth.token', JSON.stringify(adminSession));
+        localStorage.setItem('supabase.auth.user', JSON.stringify(adminSession.user));
+      }
+
+      // Navigate to home page
+      navigate("/home");
+    } else {
+      setAdminLoginError("Invalid admin password");
+    }
   };
 
   const handleLogin = async () => {
@@ -269,14 +296,14 @@ const AuthPage = () => {
   // Check if user should see home page content
   useEffect(() => {
     const checkHomePageAccess = async () => {
-      // Check for admin session (12345 still disabled)
+      // Check for admin session (12345 now enabled)
       if (typeof localStorage !== 'undefined') {
         try {
           const adminSessionStr = localStorage.getItem('supabase.auth.token');
           if (adminSessionStr) {
             const session = JSON.parse(adminSessionStr);
             if (session.user?.id === 'admin-12345') {
-              setShowHomePage(false); // Keep 12345 admin disabled
+              setShowHomePage(true); // Admin access enabled
               return;
             }
           }
@@ -334,9 +361,33 @@ const AuthPage = () => {
         return;
       }
 
-      // Check for admin code 12345 - DISABLED until app is ready
+      // Check for admin code 12345 - RE-ENABLED
       if (digits === "12345") {
-        alert("Admin access temporarily disabled. App is not ready yet.");
+        alert("Admin code detected! Setting up admin session and redirecting to home page");
+
+        // Set admin session using Supabase for proper integration
+        const adminSession = {
+          access_token: 'admin-token-12345',
+          refresh_token: 'admin-refresh-12345',
+          expires_in: 3600,
+          user: {
+            id: 'admin-12345',
+            email: 'admin@2dateme.demo',
+            user_metadata: {
+              name: 'Admin User',
+              role: 'admin'
+            }
+          }
+        };
+
+        // Store session in Supabase auth format
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('supabase.auth.token', JSON.stringify(adminSession));
+          localStorage.setItem('supabase.auth.user', JSON.stringify(adminSession.user));
+        }
+
+        // Navigate to home page
+        navigate("/home");
         return;
       }
 
