@@ -595,7 +595,7 @@ export default function LibraryAdGenerationDashboard() {
                     <Upload className="w-4 h-4 mr-2" />
                     Upload
                   </Button>
-                </div>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {currentLibrary && (
@@ -743,3 +743,4 @@ export default function LibraryAdGenerationDashboard() {
     </div>
   );
 }
+

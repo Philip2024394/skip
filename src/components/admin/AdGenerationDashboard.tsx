@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   Copy, Download, RefreshCw, Settings, Globe, Image, Video, 
-  Instagram, Facebook, TikTok, Linkedin, Twitter, Youtube,
+  Instagram, Facebook,  Linkedin, Twitter, Youtube,
   CheckCircle, AlertCircle, Eye, Edit, Trash2, Plus, BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -155,7 +155,7 @@ export default function AdGenerationDashboard() {
     switch (platform) {
       case 'instagram': return <Instagram className="w-5 h-5" />;
       case 'facebook': return <Facebook className="w-5 h-5" />;
-      case 'tiktok': return <TikTok className="w-5 h-5" />;
+      case 'Music': return <Music className="w-5 h-5" />;
       case 'linkedin': return <Linkedin className="w-5 h-5" />;
       case 'twitter': return <Twitter className="w-5 h-5" />;
       case 'youtube': return <Youtube className="w-5 h-5" />;

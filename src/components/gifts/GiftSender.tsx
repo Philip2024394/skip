@@ -6,7 +6,8 @@ import { toast } from "sonner";
 interface VirtualGift {
   id: string;
   name: string;
-  emoji: string;
+  image_url: string;
+  name_display: string;
   price: number;
 }
 
@@ -30,12 +31,43 @@ export default function GiftSender({ receiverId, receiverName, onClose }: GiftSe
   const fetchGifts = async () => {
     const { data, error } = await supabase
       .from('virtual_gifts')
-      .select('id, name, emoji, price')
+      .select('id, name, image_url, name_display, price')
       .eq('is_active', true)
       .order('price', { ascending: true });
 
     if (error) {
       console.error('Error fetching gifts:', error);
+      // Use fallback gifts with all 25 images
+      const fallbackGifts = [
+        // Original 19 gift images
+        { id: 'gift001', name: 'Classic Rose', image_url: 'https://ik.imagekit.io/7grri5v7d/classic-rose-removebg-preview.png', name_display: 'Classic Rose', price: 5.99 },
+        { id: 'gift002', name: 'Romantic Heart', image_url: 'https://ik.imagekit.io/7grri5v7d/romantic-heart-removebg-preview.png', name_display: 'Romantic Heart', price: 6.99 },
+        { id: 'gift003', name: 'Diamond Ring', image_url: 'https://ik.imagekit.io/7grri5v7d/diamond-ring-removebg-preview.png', name_display: 'Diamond Ring', price: 15.99 },
+        { id: 'gift004', name: 'Chocolate Box', image_url: 'https://ik.imagekit.io/7grri5v7d/chocolate-box-removebg-preview.png', name_display: 'Chocolate Box', price: 8.99 },
+        { id: 'gift005', name: 'Teddy Bear', image_url: 'https://ik.imagekit.io/7grri5v7d/teddy-bear-removebg-preview.png', name_display: 'Teddy Bear', price: 9.99 },
+        { id: 'gift006', name: 'Flower Bouquet', image_url: 'https://ik.imagekit.io/7grri5v7d/flower-bouquet-removebg-preview.png', name_display: 'Flower Bouquet', price: 12.99 },
+        { id: 'gift007', name: 'Love Letter', image_url: 'https://ik.imagekit.io/7grri5v7d/love-letter-removebg-preview.png', name_display: 'Love Letter', price: 4.99 },
+        { id: 'gift008', name: 'Perfume', image_url: 'https://ik.imagekit.io/7grri5v7d/perfume-removebg-preview.png', name_display: 'Perfume', price: 14.99 },
+        { id: 'gift009', name: 'Jewelry Box', image_url: 'https://ik.imagekit.io/7grri5v7d/jewelry-box-removebg-preview.png', name_display: 'Jewelry Box', price: 18.99 },
+        { id: 'gift010', name: 'Wine Bottle', image_url: 'https://ik.imagekit.io/7grri5v7d/wine-bottle-removebg-preview.png', name_display: 'Wine Bottle', price: 16.99 },
+        { id: 'gift011', name: 'Cake Slice', image_url: 'https://ik.imagekit.io/7grri5v7d/cake-slice-removebg-preview.png', name_display: 'Cake Slice', price: 7.99 },
+        { id: 'gift012', name: 'Music Box', image_url: 'https://ik.imagekit.io/7grri5v7d/music-box-removebg-preview.png', name_display: 'Music Box', price: 11.99 },
+        { id: 'gift013', name: 'Photo Frame', image_url: 'https://ik.imagekit.io/7grri5v7d/photo-frame-removebg-preview.png', name_display: 'Photo Frame', price: 10.99 },
+        { id: 'gift014', name: 'Candle Light', image_url: 'https://ik.imagekit.io/7grri5v7d/candle-light-removebg-preview.png', name_display: 'Candle Light', price: 5.99 },
+        { id: 'gift015', name: 'Keychain', image_url: 'https://ik.imagekit.io/7grri5v7d/keychain-removebg-preview.png', name_display: 'Keychain', price: 6.49 },
+        { id: 'gift016', name: 'Bracelet', image_url: 'https://ik.imagekit.io/7grri5v7d/bracelet-removebg-preview.png', name_display: 'Bracelet', price: 13.99 },
+        { id: 'gift017', name: 'Necklace', image_url: 'https://ik.imagekit.io/7grri5v7d/necklace-removebg-preview.png', name_display: 'Necklace', price: 17.99 },
+        { id: 'gift018', name: 'Earrings', image_url: 'https://ik.imagekit.io/7grri5v7d/earrings-removebg-preview.png', name_display: 'Earrings', price: 14.49 },
+        { id: 'gift019', name: 'Watch', image_url: 'https://ik.imagekit.io/7grri5v7d/watch-removebg-preview.png', name_display: 'Watch', price: 22.99 },
+        // New 6 gift images
+        { id: 'gift020', name: 'Special Gift 1', image_url: 'https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgds-removebg-preview.png?updatedAt=1773600046900', name_display: 'Special Gift 1', price: 7.99 },
+        { id: 'gift021', name: 'Special Gift 2', image_url: 'https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgdgsfgsdfg-removebg-preview.png?updatedAt=1773600149048', name_display: 'Special Gift 2', price: 8.99 },
+        { id: 'gift022', name: 'Special Gift 3', image_url: 'https://ik.imagekit.io/7grri5v7d/dgafsgsdfgsdfgsdfgd-removebg-preview.png?updatedAt=1773600246313', name_display: 'Special Gift 3', price: 9.99 },
+        { id: 'gift023', name: 'Special Gift 4', image_url: 'https://ik.imagekit.io/7grri5v7d/sdfasdfasdfasdfasdf-removebg-preview.png?updatedAt=1773601143240', name_display: 'Special Gift 4', price: 10.99 },
+        { id: 'gift024', name: 'Special Gift 5', image_url: 'https://ik.imagekit.io/7grri5v7d/sdfasdfasdfaasdfasdf-removebg-preview.png?updatedAt=1773601223203', name_display: 'Special Gift 5', price: 11.99 },
+        { id: 'gift025', name: 'Special Gift 6', image_url: 'https://ik.imagekit.io/7grri5v7d/dfsgdfgsdfgd-removebg-preview.png?updatedAt=1773601367483', name_display: 'Special Gift 6', price: 13.99 },
+      ];
+      setGifts(fallbackGifts);
       return;
     }
 
@@ -104,9 +136,39 @@ export default function GiftSender({ receiverId, receiverName, onClose }: GiftSe
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ duration: 0.5 }}
-            style={{ fontSize: 64, marginBottom: 16 }}
+            style={{ 
+              width: 80, 
+              height: 80, 
+              marginBottom: 16,
+              borderRadius: 12,
+              overflow: "hidden",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(255,255,255,0.1)",
+            }}
           >
-            {selectedGift?.emoji}
+            <img 
+              src={selectedGift?.image_url} 
+              alt={selectedGift?.name_display}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = "none";
+                const parent = img.parentElement;
+                if (parent && !parent.querySelector('.fallback-emoji')) {
+                  const fallback = document.createElement('div');
+                  fallback.className = 'fallback-emoji';
+                  fallback.textContent = '🎁';
+                  fallback.style.cssText = 'font-size: 32px; display: flex; align-items: center; justify-content: center; height: 100%; color: white;';
+                  parent.appendChild(fallback);
+                }
+              }}
+            />
           </motion.div>
           <h2 style={{
             color: "white",
@@ -121,7 +183,7 @@ export default function GiftSender({ receiverId, receiverName, onClose }: GiftSe
             fontSize: 14,
             marginBottom: 16,
           }}>
-            Your {selectedGift?.name} has been sent to {receiverName}
+            Your {selectedGift?.name_display} has been sent to {receiverName}
           </p>
           <p style={{
             color: "rgba(236,72,153,0.8)",
@@ -216,18 +278,45 @@ export default function GiftSender({ receiverId, receiverName, onClose }: GiftSe
                   }}
                 >
                   <div style={{
-                    fontSize: 40,
+                    width: 60,
+                    height: 60,
                     marginBottom: 8,
+                    borderRadius: 8,
+                    overflow: "hidden",
+                    background: "rgba(255,255,255,0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}>
-                    {gift.emoji}
+                    <img 
+                      src={gift.image_url} 
+                      alt={gift.name_display}
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                      }}
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        img.style.display = "none";
+                        const parent = img.parentElement;
+                        if (parent && !parent.querySelector('.fallback-emoji')) {
+                          const fallback = document.createElement('div');
+                          fallback.className = 'fallback-emoji';
+                          fallback.textContent = '🎁';
+                          fallback.style.cssText = 'font-size: 24px; display: flex; align-items: center; justify-content: center; height: 100%; color: white;';
+                          parent.appendChild(fallback);
+                        }
+                      }}
+                    />
                   </div>
                   <div style={{
                     color: "white",
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 600,
                     marginBottom: 4,
                   }}>
-                    {gift.name}
+                    {gift.name_display}
                   </div>
                   <div style={{
                     color: "rgba(236,72,153,0.8)",
@@ -253,10 +342,38 @@ export default function GiftSender({ receiverId, receiverName, onClose }: GiftSe
               textAlign: "center",
             }}>
               <div style={{
-                fontSize: 48,
+                width: 60,
+                height: 60,
                 marginBottom: 8,
+                borderRadius: 8,
+                overflow: "hidden",
+                background: "rgba(255,255,255,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 8px auto",
               }}>
-                {selectedGift.emoji}
+                <img 
+                  src={selectedGift.image_url} 
+                  alt={selectedGift.name_display}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                  onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    img.style.display = "none";
+                    const parent = img.parentElement;
+                    if (parent && !parent.querySelector('.fallback-emoji')) {
+                      const fallback = document.createElement('div');
+                      fallback.className = 'fallback-emoji';
+                      fallback.textContent = '🎁';
+                      fallback.style.cssText = 'font-size: 24px; display: flex; align-items: center; justify-content: center; height: 100%; color: white;';
+                      parent.appendChild(fallback);
+                    }
+                  }}
+                />
               </div>
               <h3 style={{
                 color: "white",
@@ -264,7 +381,7 @@ export default function GiftSender({ receiverId, receiverName, onClose }: GiftSe
                 fontWeight: 700,
                 marginBottom: 4,
               }}>
-                {selectedGift.name}
+                {selectedGift.name_display}
               </h3>
               <p style={{
                 color: "rgba(236,72,153,0.8)",
