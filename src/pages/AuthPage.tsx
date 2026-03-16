@@ -67,7 +67,7 @@ const AuthPage = () => {
   const [landingSubmitting, setLandingSubmitting] = useState(false);
   const [whatsappSubmitted, setWhatsappSubmitted] = useState(false);
   const [onlineCount, setOnlineCount] = useState(getDailyOnlineCount());
-  
+
   // Admin login state
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
@@ -205,7 +205,7 @@ const AuthPage = () => {
     if (step === 1 && (!form.email || !form.password || !form.name)) { toast.error(t("auth.fillAllFields")); return; }
     if (step === 2 && (!form.age || !form.gender || !form.lookingFor)) { toast.error(t("auth.completeProfile")); return; }
     if (step === 3 && (!form.country || !form.whatsapp)) { toast.error(t("auth.addLocation")); return; }
-    
+
     // Store WhatsApp lead and show launch popup for all users except 12345
     const whatsappDigits = form.whatsapp.replace(/\D/g, "");
     if (whatsappDigits !== "12345") {
@@ -223,7 +223,7 @@ const AuthPage = () => {
             },
             { onConflict: "whatsapp_e164" }
           );
-        
+
         // Show launch popup after storing lead
         toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
         return;
@@ -308,7 +308,7 @@ const AuthPage = () => {
               },
               { onConflict: "whatsapp_e164" }
             );
-          
+
           // Show launch popup after storing lead
           toast.error("🚀 2DateMe is going live on March 25th! You'll be notified when we launch. Get ready to meet amazing people! 🎉");
           return;
@@ -341,7 +341,7 @@ const AuthPage = () => {
             country: COUNTRIES.find(c => c.dial_code === landingPrefix)?.name || 'Unknown',
             created_at: new Date().toISOString(),
           });
-        
+
         if (error) {
           console.error('Error saving to Supabase:', error);
           // Show error to user instead of silent fallback
@@ -400,13 +400,13 @@ const AuthPage = () => {
       >
         {/* Launch Banner */}
         <LaunchBanner />
-        
+
         {/* Gradient overlay — darkens bottom for card readability */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/70 pointer-events-none" />
 
         {/* ── Top bar ─────────────────────────────────────────── */}
         <div className="relative z-20 flex items-center justify-between px-4 pt-safe"
-             style={{ paddingTop: `max(1rem, env(safe-area-inset-top, 1rem))` }}>
+          style={{ paddingTop: `max(1rem, env(safe-area-inset-top, 1rem))` }}>
           {/* Logo + name */}
           <div className="flex items-center gap-2.5">
             <AppLogo className="w-28 h-28 object-contain flex-shrink-0" />
@@ -461,7 +461,7 @@ const AuthPage = () => {
 
         {/* ── CTA card — pinned to bottom ─────────────────────── */}
         <div className="relative z-20 px-4 pb-safe"
-             style={{ paddingBottom: `max(1.25rem, env(safe-area-inset-bottom, 1.25rem))` }}>
+          style={{ paddingBottom: `max(1.25rem, env(safe-area-inset-bottom, 1.25rem))` }}>
           <div className="rounded-3xl bg-yellow-400 p-4 shadow-[0_0_40px_rgba(250,204,21,0.3)] border border-yellow-300/60">
             <p className="text-black text-[17px] font-black text-center leading-tight">Get Started Free</p>
             <p className="text-black/65 text-[11px] font-semibold text-center mt-0.5">
@@ -479,103 +479,65 @@ const AuthPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="mt-3 space-y-2.5">
-                {/* Admin Login Toggle */}
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => setIsAdminMode(!isAdminMode)}
-                    className="text-xs text-white/60 hover:text-white/80 transition-colors underline"
-                  >
-                    {isAdminMode ? "Back to User Signup" : "Admin Login"}
-                  </button>
-                </div>
-
-                {isAdminMode ? (
-                  /* Admin Login Form */
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-black/70 text-xs block mb-1">Admin Password</label>
+              <div className="mt-3 space-y-3">
+                {/* User WhatsApp Form */}
+                <div className="space-y-3">
+                  {/* WhatsApp Number Input with Country Prefix and Flag */}
+                  <div>
+                    <label className="text-black/70 text-xs block mb-1">WhatsApp Number</label>
+                    <div className="grid grid-cols-[120px_1fr] gap-2">
+                      <div className="bg-gray-100 border border-gray-300 rounded-xl h-11 flex items-center justify-center gap-1.5">
+                        <span className="text-sm leading-none">{selectedFlag}</span>
+                        <span className="text-sm font-semibold text-gray-700">{landingPrefix}</span>
+                      </div>
                       <Input
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Enter admin password"
+                        value={landingNumber}
+                        onChange={(e) => setLandingNumber(e.target.value.replace(/\D/g, ''))} // Only allow digits
+                        placeholder="Phone number"
                         className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            handleAdminLogin();
-                          }
-                        }}
+                        inputMode="tel"
+                        maxLength={15} // Reasonable limit for phone numbers
                       />
-                      {adminLoginError && (
-                        <div className="text-red-500 text-xs mt-1">{adminLoginError}</div>
-                      )}
                     </div>
-                    <Button
-                      onClick={handleAdminLogin}
-                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700 font-black text-[15px]"
-                    >
-                      Admin Login
-                    </Button>
+                    <div className="text-black/50 text-xs mt-1">
+                      Enter your phone number without the country code
+                    </div>
                   </div>
-                ) : (
-                  /* User WhatsApp Form */
-                  <div className="space-y-3">
-                    {/* Country Selector */}
-                    <div>
-                      <label className="text-black/70 text-xs block mb-1">Select Country</label>
-                      <Select value={landingPrefix} onValueChange={setLandingPrefix}>
-                        <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
-                          <span className="flex items-center gap-1.5">
-                            <span className="text-sm leading-none">{selectedFlag}</span>
-                            <span className="text-[12px] font-semibold">
-                              {Object.entries(COUNTRY_CODES).find(([_, code]) => code === landingPrefix)?.[0] || "Indonesia"}
-                            </span>
+
+                  {/* Country Selector (moved below) */}
+                  <div>
+                    <label className="text-black/70 text-xs block mb-1">Select Country</label>
+                    <Select value={landingPrefix} onValueChange={setLandingPrefix}>
+                      <SelectTrigger className="bg-white border-white/70 text-black rounded-xl h-11">
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-sm leading-none">{selectedFlag}</span>
+                          <span className="text-[12px] font-semibold">
+                            {Object.entries(COUNTRY_CODES).find(([_, code]) => code === landingPrefix)?.[0] || "Indonesia"}
                           </span>
-                        </SelectTrigger>
-                        <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
-                          {Object.entries(COUNTRY_CODES).map(([country, code]) => (
-                            <SelectItem key={country} value={code} className="text-black">
-                              <span className="flex items-center gap-2">
-                                <span className="text-sm leading-none">{getFlagForCountry(country)}</span>
-                                <span className="text-black/90">{country}</span>
-                                <span className="text-black/60">{code}</span>
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* WhatsApp Number Input with Locked Prefix */}
-                    <div>
-                      <label className="text-black/70 text-xs block mb-1">WhatsApp Number</label>
-                      <div className="grid grid-cols-[80px_1fr] gap-2">
-                        <div className="bg-gray-100 border border-gray-300 rounded-xl h-11 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-gray-700">{landingPrefix}</span>
-                        </div>
-                        <Input
-                          value={landingNumber}
-                          onChange={(e) => setLandingNumber(e.target.value.replace(/\D/g, ''))} // Only allow digits
-                          placeholder="Phone number"
-                          className="bg-white border-white/70 text-black placeholder:text-black/40 rounded-xl h-11 w-full"
-                          inputMode="tel"
-                          maxLength={15} // Reasonable limit for phone numbers
-                        />
-                      </div>
-                      <div className="text-black/50 text-xs mt-1">
-                        Enter your phone number without the country code
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={handleLandingEnter}
-                      disabled={landingSubmitting || !landingNumber}
-                      className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-700 hover:to-purple-700 font-black text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {landingSubmitting ? "Submitting..." : "Get Early Access"}
-                    </Button>
+                        </span>
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-gray-200 text-black rounded-xl max-h-[240px]">
+                        {Object.entries(COUNTRY_CODES).map(([country, code]) => (
+                          <SelectItem key={country} value={code} className="text-black">
+                            <span className="flex items-center gap-2">
+                              <span className="text-sm leading-none">{getFlagForCountry(country)}</span>
+                              <span className="text-black/90">{country}</span>
+                              <span className="text-black/60">{code}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+
+                  <Button
+                    onClick={handleLandingEnter}
+                    disabled={landingSubmitting || !landingNumber}
+                    className="w-full h-12 rounded-2xl bg-gradient-to-r from-pink-600 to-purple-600 text-white hover:from-pink-700 hover:to-purple-700 font-black text-[15px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {landingSubmitting ? "Submitting..." : "Get Early Access"}
+                  </Button>
+                </div>
                 )}
               </div>
             )}
