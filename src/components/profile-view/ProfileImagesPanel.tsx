@@ -130,6 +130,7 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            objectPosition: "50% 0%", // Always show top part
             display: "block",
           }}
         />

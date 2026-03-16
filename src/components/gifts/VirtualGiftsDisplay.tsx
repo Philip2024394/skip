@@ -6,8 +6,8 @@ interface SentGift {
   id: string;
   gift_id: string;
   gift: {
-    emoji: string;
-    name: string;
+    image_url: string;
+    name_display: string;
   };
   sender_id: string;
   message: string;
@@ -34,8 +34,8 @@ export default function VirtualGiftsDisplay({ userId }: VirtualGiftsDisplayProps
         message,
         created_at,
         virtual_gifts!inner(
-          emoji,
-          name
+          image_url,
+          name_display
         )
       `)
       .eq('receiver_id', userId)
@@ -52,8 +52,8 @@ export default function VirtualGiftsDisplay({ userId }: VirtualGiftsDisplayProps
       id: gift.id,
       gift_id: gift.gift_id,
       gift: {
-        emoji: gift.virtual_gifts.emoji,
-        name: gift.virtual_gifts.name
+        image_url: gift.virtual_gifts.image_url,
+        name_display: gift.virtual_gifts.name_display
       },
       sender_id: '', // We don't need sender info for display
       message: gift.message || '',
@@ -98,13 +98,31 @@ export default function VirtualGiftsDisplay({ userId }: VirtualGiftsDisplayProps
               cursor: 'pointer',
               transform: index === 0 ? 'scale(1)' : 'scale(0.7)',
             }}
-            title={`${gift.gift.name}${gift.message ? ` - ${gift.message}` : ''}`}
+            title={`${gift.gift.name_display}${gift.message ? ` - ${gift.message}` : ''}`}
           >
             <motion.div
               whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
               whileTap={{ scale: 0.95 }}
+              style={{
+                width: index === 0 ? '48px' : '32px',
+                height: index === 0 ? '48px' : '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                borderRadius: '8px',
+                border: '1px solid rgba(236,72,153,0.3)',
+              }}
             >
-              {gift.gift.emoji}
+              <img 
+                src={gift.gift.image_url} 
+                alt={gift.gift.name_display}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
             </motion.div>
           </motion.div>
         ))}

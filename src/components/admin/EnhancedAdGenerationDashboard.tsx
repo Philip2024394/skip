@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { 
   Copy, Download, RefreshCw, Settings, Globe, Image, Video, 
-  Instagram, Facebook, TikTok, Linkedin, Twitter, Youtube,
+  Instagram, Facebook, Music2, Linkedin, Twitter, Youtube,
   CheckCircle, AlertCircle, Eye, Edit, Trash2, Plus, BarChart3,
   TrendingUp, Search, Target, Zap, Languages, MapPin, Phone
 } from "lucide-react";
@@ -87,7 +87,7 @@ export default function EnhancedAdGenerationDashboard() {
   });
 
   const [countries] = useState<CountryConfig[]>(enhancedAdGenerator.getCountries());
-  const [platforms] = useState<string[]>(['instagram', 'facebook', 'tiktok', 'linkedin', 'twitter', 'youtube']);
+  const [platforms] = useState<string[]>(['instagram', 'facebook', 'Music2', 'linkedin', 'twitter', 'youtube']);
 
   useEffect(() => {
     // Set default country to Indonesia
@@ -176,7 +176,7 @@ export default function EnhancedAdGenerationDashboard() {
     switch (platform) {
       case 'instagram': return <Instagram className="w-5 h-5" />;
       case 'facebook': return <Facebook className="w-5 h-5" />;
-      case 'tiktok': return <TikTok className="w-5 h-5" />;
+      case 'Music2': return <Music2 className="w-5 h-5" />;
       case 'linkedin': return <Linkedin className="w-5 h-5" />;
       case 'twitter': return <Twitter className="w-5 h-5" />;
       case 'youtube': return <Youtube className="w-5 h-5" />;

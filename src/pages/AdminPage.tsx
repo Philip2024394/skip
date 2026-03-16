@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { BasicInfoEditor } from "@/components/profile-editor/BasicInfoEditor";
 import { LifestyleEditor } from "@/components/profile-editor/LifestyleEditor";
 import { RelationshipGoalsEditor } from "@/components/profile-editor/RelationshipGoalsEditor";
+import MockGiftSelector from "@/components/gifts/MockGiftSelector";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -190,7 +191,7 @@ const UserDrawer = ({
   actionLoading: string | null;
 }) => {
   const [files, setFiles] = useState<File[]>([]);
-  const [drawerTab, setDrawerTab] = useState<"actions" | "edit" | "images">("actions");
+  const [drawerTab, setDrawerTab] = useState<"actions" | "edit" | "images" | "details" | "gifts">("actions");
   const [saving, setSaving] = useState(false);
   const [countrySearch, setCountrySearch] = useState("");
   const [targetCountries, setTargetCountries] = useState<string[]>(profile.visible_in_countries ?? []);
@@ -423,9 +424,13 @@ const UserDrawer = ({
               className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${drawerTab === "images" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}>
               <Camera className="w-3.5 h-3.5" /> Photos
             </button>
-            <button onClick={() => setDrawerTab("details" as any)}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${(drawerTab as string) === "details" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}>
+            <button onClick={() => setDrawerTab("details")}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${drawerTab === "details" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}>
               <ClipboardList className="w-3.5 h-3.5" /> Details
+            </button>
+            <button onClick={() => setDrawerTab("gifts")}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${drawerTab === "gifts" ? "bg-white/15 text-white" : "text-white/40 hover:text-white/70"}`}>
+              <Gift className="w-3.5 h-3.5" /> Gifts
             </button>
           </div>
 
@@ -1125,6 +1130,22 @@ const UserDrawer = ({
                 className="h-12 w-full rounded-2xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md transition-all active:scale-95 disabled:opacity-60">
                 <Save className="w-4 h-4" />{saving ? "Saving…" : "Save Profile Details"}
               </button>
+            </div>
+          )}
+
+          {/* ── GIFTS TAB ─────────────────────────────────────── */}
+          {drawerTab === "gifts" && (
+            <div className="space-y-3">
+              <p className="text-white/40 text-[10px] font-medium">Select up to 5 virtual gifts for this mock profile. These will be the gifts that users can send to this profile.</p>
+              
+              {profile.is_mock ? (
+                <MockGiftSelector profileId={profile.id} />
+              ) : (
+                <div className="text-center py-8 bg-white/5 border border-white/10 rounded-2xl">
+                  <Gift className="w-8 h-8 text-white/20 mx-auto mb-2" />
+                  <p className="text-white/40 text-sm">Gift selection is only available for mock profiles</p>
+                </div>
+              )}
             </div>
           )}
 

@@ -291,9 +291,9 @@ export default function SwipeStack({
               alt={profile.name}
               className="absolute w-full h-full object-cover"
               style={{
-                objectPosition: profile.main_image_pos || "50% 50%",
+                objectPosition: "50% 0%", // Always show top part
                 transform: `scale(${(profile.main_image_zoom || 100) / 100})`,
-                transformOrigin: profile.main_image_pos || "center center",
+                transformOrigin: "50% 0%", // Anchor from top center
               }}
               draggable={false}
               onError={(e) => {

@@ -36,7 +36,7 @@ interface ImagePosition {
   zoom: number; // 100-300 (percentage scale)
 }
 
-const defaultPos: ImagePosition = { x: 50, y: 50, zoom: 100 };
+const defaultPos: ImagePosition = { x: 50, y: 0, zoom: 100 };
 
 interface ProfileData {
   name: string;
@@ -563,8 +563,9 @@ const ProfileEditor = () => {
                               alt={`Photo ${idx + 1}`}
                               className="absolute w-full h-full object-cover pointer-events-none"
                               style={{
-                                transform: `scale(${getPos(idx).zoom / 100}) translate(${50 - getPos(idx).x}%, ${50 - getPos(idx).y}%)`,
-                                transformOrigin: "center center",
+                                objectPosition: "50% 0%", // Always show top part
+                                transform: `scale(${getPos(idx).zoom / 100}) translateX(${50 - getPos(idx).x}%)`,
+                                transformOrigin: "50% 0%", // Anchor from top center
                               }}
                             />
                           </div>
@@ -616,7 +617,7 @@ const ProfileEditor = () => {
                   className="h-6 text-[10px] px-2 text-white/40"
                   onClick={() => {
                     updateImagePos(editingImageIdx, "x", 50);
-                    updateImagePos(editingImageIdx, "y", 50);
+                    updateImagePos(editingImageIdx, "y", 0); // Reset to top
                     updateImagePos(editingImageIdx, "zoom", 100);
                   }}
                 >
@@ -634,8 +635,9 @@ const ProfileEditor = () => {
                     alt="Preview"
                     className="absolute w-full h-full object-cover pointer-events-none"
                     style={{
-                      transform: `scale(${getPos(editingImageIdx).zoom / 100}) translate(${50 - getPos(editingImageIdx).x}%, ${50 - getPos(editingImageIdx).y}%)`,
-                      transformOrigin: "center center",
+                      objectPosition: "50% 0%", // Always show top part
+                      transform: `scale(${getPos(editingImageIdx).zoom / 100}) translateX(${50 - getPos(editingImageIdx).x}%)`,
+                      transformOrigin: "50% 0%", // Anchor from top center
                     }}
                     draggable={false}
                   />
@@ -669,12 +671,12 @@ const ProfileEditor = () => {
                     className="flex-1"
                   />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 opacity-50">
                   <MoveVertical className="w-3.5 h-3.5 text-white/40 flex-shrink-0" />
                   <span className="text-[10px] text-white/40 w-6">U/D</span>
                   <Slider
-                    value={[getPos(editingImageIdx).y]}
-                    onValueChange={([v]) => updateImagePos(editingImageIdx, "y", v)}
+                    value={[0]} // Fixed to top
+                    disabled={true}
                     min={0}
                     max={100}
                     step={1}

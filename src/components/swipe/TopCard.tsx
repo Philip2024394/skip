@@ -67,8 +67,9 @@ export default function TopCard(props: TopCardProps) {
             alt={props.selectedProfile.name}
             className="w-full h-full object-cover"
             style={{
-              objectPosition: props.selectedProfile.main_image_pos || "50% 50%",
+              objectPosition: "50% 0%", // Always show top part
               transform: props.selectedProfile.main_image_zoom ? `scale(${props.selectedProfile.main_image_zoom / 100})` : undefined,
+              transformOrigin: "50% 0%", // Anchor from top center
             }}
             onError={(e) => {
               const img = e.target as HTMLImageElement;

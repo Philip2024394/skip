@@ -93,7 +93,7 @@ export default function AdPerformanceDashboard() {
   const platforms = [
     { code: 'instagram', name: 'Instagram' },
     { code: 'facebook', name: 'Facebook' },
-    { code: 'tiktok', name: 'TikTok' },
+    { code: 'Music2', name: 'Music2' },
     { code: 'linkedin', name: 'LinkedIn' },
     { code: 'twitter', name: 'Twitter' },
     { code: 'youtube', name: 'YouTube' }

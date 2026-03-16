@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { 
   Copy, Download, RefreshCw, Settings, Globe, Image, Video, 
-  Instagram, Facebook, TikTok, Linkedin, Twitter, Youtube,
+  Instagram, Facebook, Music2, Linkedin, Twitter, Youtube,
   CheckCircle, AlertCircle, Eye, Edit, Trash2, Plus, BarChart3,
   TrendingUp, Search, Target, Zap, Languages, MapPin, Phone,
   Upload, FolderOpen, X, ArrowUp, ArrowDown, Clock
@@ -103,7 +103,7 @@ export default function LibraryAdGenerationDashboard() {
     { code: 'VN', name: 'Vietnam', prefix: '+84' }
   ]);
 
-  const [platforms] = useState(['instagram', 'facebook', 'tiktok', 'linkedin', 'twitter', 'youtube']);
+  const [platforms] = useState(['instagram', 'facebook', 'Music2', 'linkedin', 'twitter', 'youtube']);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [currentLibrary, setCurrentLibrary] = useState<CountryLibrary | null>(null);
@@ -237,7 +237,7 @@ export default function LibraryAdGenerationDashboard() {
     switch (platform) {
       case 'instagram': return <Instagram className="w-5 h-5" />;
       case 'facebook': return <Facebook className="w-5 h-5" />;
-      case 'tiktok': return <TikTok className="w-5 h-5" />;
+      case 'Music2': return <Music2 className="w-5 h-5" />;
       case 'linkedin': return <Linkedin className="w-5 h-5" />;
       case 'twitter': return <Twitter className="w-5 h-5" />;
       case 'youtube': return <Youtube className="w-5 h-5" />;
