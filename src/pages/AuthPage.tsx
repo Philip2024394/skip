@@ -211,7 +211,7 @@ const AuthPage = () => {
     if (whatsappDigits !== "12345") {
       // Store the WhatsApp lead first
       try {
-        const { error } = await (supabase as any)
+        const { error: insertError } = await (supabase as any)
           .from("whatsapp_leads")
           .upsert(
             {
@@ -296,7 +296,7 @@ const AuthPage = () => {
           const nationalDigits = String(landingNumber || "").trim().replace(/\D/g, "");
           const e164 = buildE164(landingPrefix, landingNumber);
 
-          const { error } = await (supabase as any)
+          const { error: insertError } = await (supabase as any)
             .from("whatsapp_leads")
             .upsert(
               {
@@ -350,7 +350,7 @@ const AuthPage = () => {
         }
 
         // Also save to existing whatsapp_leads for compatibility
-        const { error } = await (supabase as any)
+        const { error: insertError } = await (supabase as any)
           .from("whatsapp_leads")
           .upsert(
             {

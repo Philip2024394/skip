@@ -15,6 +15,7 @@ import AdGenerationDashboard from "@/components/admin/AdGenerationDashboard";
 import EnhancedAdGenerationDashboard from "@/components/admin/EnhancedAdGenerationDashboard";
 import LibraryAdGenerationDashboard from "@/components/admin/LibraryAdGenerationDashboard";
 import AdPerformanceDashboard from "@/components/admin/AdPerformanceDashboard";
+import WorldMapDashboard from "./pages/admin/WorldMapDashboard";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const AppContent = () => {
         <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><EnhancedAdGenerationDashboard /></ProtectedRoute>} />
         <Route path="/admin/library-ad-generation" element={<ProtectedRoute><LibraryAdGenerationDashboard /></ProtectedRoute>} />
         <Route path="/admin/ad-performance" element={<ProtectedRoute><AdPerformanceDashboard /></ProtectedRoute>} />
+        <Route path="/admin/world-map" element={<ProtectedRoute><WorldMapDashboard /></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>
