@@ -45,3 +45,10 @@ scripts/.env.script
 .env.production
 .env.*.local
 *.env
+
+*.sql
+*.md
+tore .
+.parcel-cache/
+test-app/
+skip/
