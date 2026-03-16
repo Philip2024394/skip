@@ -316,26 +316,20 @@ const AuthPage = () => {
         const prefixDigits = String(landingPrefix || "").trim().replace(/\D/g, "");
         const nationalDigits = String(landingNumber || "").trim().replace(/\D/g, "");
 
-        // Save to admin WhatsApp directory
-        try {
-          const { error } = await supabase
-            .from('whatsapp_signups')
-            .insert({
-              whatsapp_number: e164,
-              country: COUNTRIES.find(c => c.dial_code === landingPrefix)?.name || 'Unknown',
-              created_at: new Date().toISOString(),
-            });
-        } catch (dbError) {
-          console.log('Database error, using localStorage fallback');
-          // Fallback to localStorage
-          const signups = JSON.parse(localStorage.getItem('whatsapp_signups') || '[]');
-          signups.push({
-            id: `local_${Date.now()}`,
+        // Save to Supabase - production ready with no fallback
+        const { error } = await supabase
+          .from('whatsapp_signups')
+          .insert({
             whatsapp_number: e164,
             country: COUNTRIES.find(c => c.dial_code === landingPrefix)?.name || 'Unknown',
             created_at: new Date().toISOString(),
           });
-          localStorage.setItem('whatsapp_signups', JSON.stringify(signups));
+        
+        if (error) {
+          console.error('Error saving to Supabase:', error);
+          // Show error to user instead of silent fallback
+          setLandingError("Failed to save your information. Please try again.");
+          return;
         }
 
         // Also save to existing whatsapp_leads for compatibility

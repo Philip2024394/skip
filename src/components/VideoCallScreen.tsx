@@ -4,6 +4,7 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { WebRTCConnection } from "@/lib/webrtc";
+import analyticsLogger from "@/lib/analytics";
 
 interface VideoCallScreenProps {
   matchId: string;
@@ -44,6 +45,13 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
         const webrtc = new WebRTCConnection(matchId, user.id);
         webrtcRef.current = webrtc;
 
+        // Log call start
+        analyticsLogger.logCallStarted({
+          userId: user.id,
+          matchId: matchId,
+          callId: callId
+        });
+
         await webrtc.initialize(
           (remoteStream) => {
             if (remoteVideoRef.current) {
@@ -73,6 +81,17 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
         }
       } catch (error: any) {
         console.error("Error initializing call:", error);
+        
+        // Log call failure
+        if (userIdRef.current) {
+          analyticsLogger.logCallFailed({
+            userId: userIdRef.current,
+            matchId: matchId,
+            callId: callId,
+            error: error.message || 'Unknown call initialization error'
+          });
+        }
+        
         if (error.name === "NotAllowedError") {
           toast.error("Please allow camera and microphone access");
         } else if (error.name === "NotFoundError") {
@@ -177,6 +196,17 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
     if (callEnded) return;
     setCallEnded(true);
     
+    // Log call end
+    if (userIdRef.current && callStartTime) {
+      const duration = Math.floor((Date.now() - callStartTime) / 1000);
+      analyticsLogger.logCallEnded({
+        userId: userIdRef.current,
+        matchId: matchId,
+        callId: callId,
+        duration: duration
+      });
+    }
+    
     await updateCallStatus("ended");
     
     if (webrtcRef.current) {
@@ -184,7 +214,7 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
     }
     
     onEnd();
-  }, [callEnded, elapsed, onEnd]);
+  }, [callEnded, elapsed, onEnd, callStartTime, matchId, callId]);
 
   const handleDeclineExtend = useCallback(() => {
     setShowExtendPopup(false);

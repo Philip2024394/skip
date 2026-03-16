@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Gift, Coins } from "lucide-react";
+import analyticsLogger from "@/lib/analytics";
 
 interface VirtualGift {
   id: string;
@@ -90,6 +91,17 @@ export default function GiftSendPopup({
           if (tokenError) throw tokenError;
         } catch (dbError) {
           console.log('GiftSendPopup: Database error, simulating paid gift');
+          // Log the error for monitoring
+          analyticsLogger.logGiftSent({
+            userId: user.id,
+            giftId: gift.id,
+            giftName: gift.name,
+            recipientId: recipientId,
+            tokenAmount: gift.token_price,
+            isFreeGift: isFreeGift,
+            error: dbError instanceof Error ? dbError.message : 'Unknown database error'
+          });
+          
           // Simulate paid gift for demo
           const sentGifts = JSON.parse(localStorage.getItem('sent_gifts_demo') || '[]');
           sentGifts.push({
@@ -106,6 +118,16 @@ export default function GiftSendPopup({
           });
           localStorage.setItem('sent_gifts_demo', JSON.stringify(sentGifts));
         }
+
+        // Log successful gift send
+        analyticsLogger.logGiftSent({
+          userId: user.id,
+          giftId: gift.id,
+          giftName: gift.name,
+          recipientId: recipientId,
+          tokenAmount: gift.token_price,
+          isFreeGift: isFreeGift
+        });
       }
 
       onGiftSent();
@@ -161,19 +183,20 @@ export default function GiftSendPopup({
 
         {/* Message Input */}
         <div className="mb-6">
-          <label className="text-white/70 text-sm block mb-2">
+          <label htmlFor="gift-message" className="text-white/70 text-sm block mb-2">
             Add a message (optional)
           </label>
           <Textarea
+            id="gift-message"
             value={message}
             onChange={(e) => setMessage(e.target.value.slice(0, 350))}
-            placeholder="Say something nice..."
-            className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/40 focus:border-pink-400/50 focus:outline-none resize-none"
+            placeholder="Type your message here..."
+            className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/50 resize-none"
             rows={3}
+            maxLength={350}
+            aria-label="Gift message (optional, maximum 350 characters)"
           />
-          <p className="text-white/50 text-xs mt-1 text-right">
-            {message.length}/350
-          </p>
+          <p className="text-white/50 text-xs mt-1">{message.length}/350 characters</p>
         </div>
 
         {/* Status */}
@@ -194,6 +217,7 @@ export default function GiftSendPopup({
             variant="outline"
             onClick={onClose}
             className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+            aria-label="Cancel gift sending"
           >
             Cancel
           </Button>
@@ -201,13 +225,14 @@ export default function GiftSendPopup({
             onClick={handleSend}
             disabled={!canSend || isSending || message.length > 350}
             className="flex-1 bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-medium"
+            aria-label={`Send ${gift.name} gift to ${recipientName}`}
           >
             {isSending ? (
               "Sending..."
             ) : (
               <>
                 <Gift className="w-4 h-4 mr-2" />
-                Send Gift
+                {isFreeGift ? "Send Free Gift" : `Send (${gift.token_price} tokens)`}
               </>
             )}
           </Button>

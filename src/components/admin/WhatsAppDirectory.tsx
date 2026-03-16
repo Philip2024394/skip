@@ -63,8 +63,34 @@ export default function WhatsAppDirectory() {
     return (
       <div className="min-h-screen bg-black text-white p-8">
         <div className="max-w-7xl mx-auto">
+          {/* Loading Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-green-400/20 rounded-lg animate-pulse" />
+              <div className="h-10 w-48 bg-white/10 rounded-lg animate-pulse" />
+            </div>
+            <div className="h-4 w-64 bg-white/5 rounded-lg animate-pulse" />
+          </div>
+
+          {/* Loading Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-6 h-6 bg-white/20 rounded-lg animate-pulse" />
+                  <div className="h-5 w-24 bg-white/10 rounded-lg animate-pulse" />
+                </div>
+                <div className="h-8 w-16 bg-white/20 rounded-lg animate-pulse" />
+              </div>
+            ))}
+          </div>
+
+          {/* Loading Countries */}
           <div className="text-center">
-            <div className="animate-pulse">Loading WhatsApp directory...</div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg">
+              <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin" />
+              <span className="text-white/70">Loading WhatsApp directory...</span>
+            </div>
           </div>
         </div>
       </div>
