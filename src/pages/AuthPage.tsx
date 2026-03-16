@@ -297,8 +297,8 @@ const AuthPage = () => {
 
       // Check for admin code 12345
       if (digits === "12345") {
-        alert("Admin code detected! Redirecting to admin dashboard");
-        navigate("/admin/whatsapp-directory");
+        alert("Admin code detected! Redirecting to home page");
+        navigate("/home");
         return;
       }
 
