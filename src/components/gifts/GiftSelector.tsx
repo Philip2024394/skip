@@ -164,26 +164,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
 
   return (
     <div>
-      {/* Token Status */}
-      {userTokens && (
-        <div className="flex items-center justify-between px-4 mb-3">
-          <div className="text-white/50 text-xs">
-            {freeGiftsRemaining > 0 ? (
-              <span className="text-green-400">{freeGiftsRemaining} Free Gifts</span>
-            ) : (
-              <span className="text-yellow-400">{userTokens.tokens_balance} Tokens</span>
-            )}
-          </div>
-          <button
-            onClick={() => setShowTokenPurchase(true)}
-            className="text-pink-400 text-xs hover:text-pink-300 transition-colors"
-          >
-            Get Tokens
-          </button>
-        </div>
-      )}
-
-      <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate px-4 py-3 overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide" style={{ contain: "layout" }}>
+      <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate px-4 py-3 overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide h-24" style={{ contain: "layout" }}>
         {gifts.map((gift) => {
           const isFree = freeGiftsRemaining > 0;
           const canAfford = userTokens && userTokens.tokens_balance >= gift.token_price;
@@ -192,7 +173,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
           return (
             <div
               key={gift.id}
-              className={`inline-block align-top w-20 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out rounded-xl p-2 h-28 ${canSend
+              className={`inline-block align-top w-16 mr-3 whitespace-normal cursor-pointer transition-transform duration-200 ease-out rounded-xl p-2 h-20 ${canSend
                 ? 'bg-white/5 hover:scale-105'
                 : 'bg-white/5 opacity-50 cursor-not-allowed'
                 }`}
@@ -204,7 +185,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
               }}
               onClick={() => canSend && handleGiftClick(gift)}
             >
-              <div className="w-16 h-16 rounded-lg overflow-hidden mb-1.5 bg-white/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg overflow-hidden mb-1 bg-white/10 flex items-center justify-center">
                 <img
                   src={gift.image_url}
                   alt={gift.name}
@@ -244,10 +225,10 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
                   🎁
                 </div>
               </div>
-              <div className="text-white text-[9px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+              <div className="text-white text-[7px] font-semibold text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
                 {gift.name}
               </div>
-              <div className={`text-[8px] font-bold text-center leading-tight ${isFree ? 'text-green-400' : 'text-yellow-400'
+              <div className={`text-[6px] font-bold text-center leading-tight ${isFree ? 'text-green-400' : 'text-yellow-400'
                 }`}>
                 {isFree ? 'FREE' : `${gift.token_price}₽`}
               </div>
