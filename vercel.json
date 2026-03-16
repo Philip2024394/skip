@@ -49,10 +49,5 @@
         }
       ]
     }
-  ],
-  "functions": {
-    "app/__index.js": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
