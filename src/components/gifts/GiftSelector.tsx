@@ -183,7 +183,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
         </div>
       )}
 
-      <div className="overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-4 py-3 bg-black/20 rounded-2xl border border-pink-400/20 h-32">
+      <div className="relative rounded-2xl overflow-hidden min-h-0 bg-black/40 backdrop-blur-xl border-2 border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-white/5 isolate px-4 py-3 overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide" style={{ contain: "layout" }}>
         {gifts.map((gift) => {
           const isFree = freeGiftsRemaining > 0;
           const canAfford = userTokens && userTokens.tokens_balance >= gift.token_price;
