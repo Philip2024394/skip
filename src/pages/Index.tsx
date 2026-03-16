@@ -246,7 +246,9 @@ const Index = () => {
   // Fallback mock profiles if no real DB profiles with images exist
   const mockProfiles = useMemo(() => generateIndonesianProfiles(50), []);
   // In production (VITE_USE_MOCK_PROFILES !== "true"), only show real DB profiles
-  const useMocks = import.meta.env.VITE_USE_MOCK_PROFILES === "true" || import.meta.env.DEV;
+  // But always use mocks for admin user or when VITE_USE_MOCK_PROFILES is true or in DEV mode
+  const isAdminUser = user?.id === "admin-12345";
+  const useMocks = isAdminUser || import.meta.env.VITE_USE_MOCK_PROFILES === "true" || import.meta.env.DEV;
   const allProfiles = dbProfiles.length > 0 ? dbProfiles : (useMocks ? mockProfiles : []);
 
   // Apply filters
