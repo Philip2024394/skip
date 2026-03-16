@@ -1,0 +1,96 @@
+{
+  "scanDate": "2026-03-16T15:04:08.504Z",
+  "suspiciousFiles": [
+    {
+      "path": "scripts\\test_whatsapp_leads.sql",
+      "size": 213,
+      "modified": "2026-03-15T17:52:18.634Z",
+      "pattern": "/^test/i"
+    },
+    {
+      "path": "src\\pages\\TestPage.tsx",
+      "size": 696,
+      "modified": "2026-03-16T13:27:16.224Z",
+      "pattern": "/^test/i"
+    },
+    {
+      "path": "src\\test\\example.test.ts",
+      "size": 150,
+      "modified": "2026-03-08T18:20:04.536Z",
+      "pattern": "/\\.test\\./i"
+    },
+    {
+      "path": "test-node.js",
+      "size": 129,
+      "modified": "2026-03-16T09:54:09.220Z",
+      "pattern": "/^test/i"
+    }
+  ],
+  "largeFiles": [
+    {
+      "path": "src\\assets\\landing-hero.png",
+      "size": 1456408,
+      "modified": "2026-03-08T18:20:04.494Z"
+    },
+    {
+      "path": "src\\assets\\home-background.png",
+      "size": 1394475,
+      "modified": "2026-03-08T18:20:04.399Z"
+    },
+    {
+      "path": "src\\assets\\super-like-heart.png",
+      "size": 1385406,
+      "modified": "2026-03-08T18:20:04.502Z"
+    }
+  ],
+  "duplicateFiles": [
+    {
+      "hash": "42047-.png",
+      "size": 42047,
+      "files": [
+        "public\\icon-192.png",
+        "public\\icons\\icon-192.png"
+      ]
+    },
+    {
+      "hash": "247528-.png",
+      "size": 247528,
+      "files": [
+        "public\\icon-512.png",
+        "public\\icons\\icon-512.png"
+      ]
+    },
+    {
+      "hash": "1033-.tsx",
+      "size": 1033,
+      "files": [
+        "src\\components\\ErrorBoundary.tsx",
+        "src\\main.tsx"
+      ]
+    },
+    {
+      "hash": "1828-.tsx",
+      "size": 1828,
+      "files": [
+        "src\\components\\FloatingLikeParticles.tsx",
+        "src\\components\\ui\\card.tsx"
+      ]
+    },
+    {
+      "hash": "7-",
+      "size": 7,
+      "files": [
+        "supabase\\.temp\\cli-latest",
+        "supabase\\.temp\\storage-version"
+      ]
+    },
+    {
+      "hash": "66-.sql",
+      "size": 66,
+      "files": [
+        "supabase\\migrations\\20260306092525_0e4b2752-a53f-4f06-ba7c-cbc100fe445e.sql",
+        "supabase\\migrations\\20260306094930_245cbdb2-2898-4ff1-9eb5-39ae0e4ecada.sql"
+      ]
+    }
+  ]
+}

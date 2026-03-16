@@ -80,6 +80,7 @@
     "@parcel/transformer-jsonld": "^2.16.4",
     "@parcel/transformer-typescript-tsc": "^2.16.4",
     "@tailwindcss/typography": "^0.5.16",
+    "cross-env": "^10.1.0",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

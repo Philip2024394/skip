@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import WhatsAppCollection from "@/pages/admin/WhatsAppCollection";
 import WhatsAppDirectory from "@/components/admin/WhatsAppDirectory";
 import SecurityDashboard from "@/components/admin/SecurityDashboard";
 import UltimateSecurityDashboard from "@/components/admin/UltimateSecurityDashboard";
@@ -42,6 +43,7 @@ const AppContent = () => {
         <Route path="/payment-success" element={<AuthPage />} />
         <Route path="/dashboard" element={<AuthPage />} />
         <Route path="/admin" element={<AuthPage />} />
+        <Route path="/admin/whatsapp-collection" element={<ProtectedRoute><WhatsAppCollection /></ProtectedRoute>} />
         <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><WhatsAppDirectory /></ProtectedRoute>} />
         <Route path="/admin/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
         <Route path="/admin/ultimate-security" element={<ProtectedRoute><UltimateSecurityDashboard /></ProtectedRoute>} />
