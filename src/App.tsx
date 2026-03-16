@@ -12,6 +12,7 @@ import WhatsAppDirectory from "@/components/admin/WhatsAppDirectory";
 import SecurityDashboard from "@/components/admin/SecurityDashboard";
 import UltimateSecurityDashboard from "@/components/admin/UltimateSecurityDashboard";
 import AdGenerationDashboard from "@/components/admin/AdGenerationDashboard";
+import EnhancedAdGenerationDashboard from "@/components/admin/EnhancedAdGenerationDashboard";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ const AppContent = () => {
         <Route path="/admin/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
         <Route path="/admin/ultimate-security" element={<ProtectedRoute><UltimateSecurityDashboard /></ProtectedRoute>} />
         <Route path="/admin/ad-generation" element={<ProtectedRoute><AdGenerationDashboard /></ProtectedRoute>} />
+        <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><EnhancedAdGenerationDashboard /></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>
