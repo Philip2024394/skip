@@ -22,34 +22,44 @@ export default defineConfig({
     }
   },
   build: {
-    target: 'esnext',
+    target: 'es2015',
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (id.includes('react') || id.includes('react-dom')) {
-            return 'vendor';
+          // Admin components - lazy loaded
+          if (id.includes('admin') || id.includes('WhatsApp') || id.includes('Security') || id.includes('AdGeneration')) {
+            return 'admin';
           }
-          if (id.includes('react-router-dom')) {
-            return 'router';
+          // Maps and geolocation
+          if (id.includes('leaflet') || id.includes('map') || id.includes('geolocation')) {
+            return 'maps';
           }
+          // UI components
           if (id.includes('@radix-ui')) {
             return 'ui';
           }
+          // Icons
+          if (id.includes('lucide-react')) {
+            return 'icons';
+          }
+          // Utilities
           if (id.includes('date-fns') || id.includes('clsx') || id.includes('tailwind-merge')) {
             return 'utils';
           }
-          if (id.includes('leaflet') || id.includes('map')) {
-            return 'maps';
+          // Core React
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'vendor';
           }
-          // Create smaller chunks for large libraries
-          if (id.includes('lucide-react')) {
-            return 'icons';
+          // Router
+          if (id.includes('react-router-dom')) {
+            return 'router';
           }
         }
       }
     },
-    chunkSizeWarningLimit: 300,
-    minify: 'esbuild'
+    chunkSizeWarningLimit: 200, // Lower threshold
+    minify: 'esbuild',
+    sourcemap: false // Disable sourcemaps to reduce memory
   },
   optimizeDeps: {
     force: false,

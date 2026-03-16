@@ -4,19 +4,21 @@ import { LanguageProvider } from "@/i18n/LanguageContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthPage from "./pages/AuthPage";
 import ProtectedRoute from "./components/ProtectedRoute";
-import WhatsAppCollection from "@/pages/admin/WhatsAppCollection";
-import WhatsAppDirectory from "@/components/admin/WhatsAppDirectory";
-import SecurityDashboard from "@/components/admin/SecurityDashboard";
-import UltimateSecurityDashboard from "@/components/admin/UltimateSecurityDashboard";
-import AdGenerationDashboard from "@/components/admin/AdGenerationDashboard";
-import EnhancedAdGenerationDashboard from "@/components/admin/EnhancedAdGenerationDashboard";
-import LibraryAdGenerationDashboard from "@/components/admin/LibraryAdGenerationDashboard";
-import AdPerformanceDashboard from "@/components/admin/AdPerformanceDashboard";
-import WorldMapDashboard from "./pages/admin/WorldMapDashboard";
+
+// Lazy load admin components to reduce initial bundle size
+const WhatsAppCollection = lazy(() => import("@/pages/admin/WhatsAppCollection"));
+const WhatsAppDirectory = lazy(() => import("@/components/admin/WhatsAppDirectory"));
+const SecurityDashboard = lazy(() => import("@/components/admin/SecurityDashboard"));
+const UltimateSecurityDashboard = lazy(() => import("@/components/admin/UltimateSecurityDashboard"));
+const AdGenerationDashboard = lazy(() => import("@/components/admin/AdGenerationDashboard"));
+const EnhancedAdGenerationDashboard = lazy(() => import("@/components/admin/EnhancedAdGenerationDashboard"));
+const LibraryAdGenerationDashboard = lazy(() => import("@/components/admin/LibraryAdGenerationDashboard"));
+const AdPerformanceDashboard = lazy(() => import("@/components/admin/AdPerformanceDashboard"));
+const WorldMapDashboard = lazy(() => import("./pages/admin/WorldMapDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -43,15 +45,15 @@ const AppContent = () => {
         <Route path="/payment-success" element={<AuthPage />} />
         <Route path="/dashboard" element={<AuthPage />} />
         <Route path="/admin" element={<AuthPage />} />
-        <Route path="/admin/whatsapp-collection" element={<ProtectedRoute><WhatsAppCollection /></ProtectedRoute>} />
-        <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><WhatsAppDirectory /></ProtectedRoute>} />
-        <Route path="/admin/security" element={<ProtectedRoute><SecurityDashboard /></ProtectedRoute>} />
-        <Route path="/admin/ultimate-security" element={<ProtectedRoute><UltimateSecurityDashboard /></ProtectedRoute>} />
-        <Route path="/admin/ad-generation" element={<ProtectedRoute><AdGenerationDashboard /></ProtectedRoute>} />
-        <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><EnhancedAdGenerationDashboard /></ProtectedRoute>} />
-        <Route path="/admin/library-ad-generation" element={<ProtectedRoute><LibraryAdGenerationDashboard /></ProtectedRoute>} />
-        <Route path="/admin/ad-performance" element={<ProtectedRoute><AdPerformanceDashboard /></ProtectedRoute>} />
-        <Route path="/admin/world-map" element={<ProtectedRoute><WorldMapDashboard /></ProtectedRoute>} />
+        <Route path="/admin/whatsapp-collection" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><WhatsAppCollection /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><WhatsAppDirectory /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/security" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><SecurityDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/ultimate-security" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><UltimateSecurityDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/ad-generation" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><AdGenerationDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><EnhancedAdGenerationDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/library-ad-generation" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><LibraryAdGenerationDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/ad-performance" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><AdPerformanceDashboard /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/world-map" element={<ProtectedRoute><Suspense fallback={<div>Loading...</div>}><WorldMapDashboard /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes>
     </BrowserRouter>
