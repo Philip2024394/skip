@@ -218,6 +218,9 @@ const Index = () => {
   });
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
+    // Always false for admin user to show content immediately
+    const adminUser = getAdminUser();
+    if (adminUser?.id === 'admin-12345') return false;
     if (import.meta.env.DEV) return false;
     try {
       return !sessionStorage.getItem("2dateme_profiles_cache");
