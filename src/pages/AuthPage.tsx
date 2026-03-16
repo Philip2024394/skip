@@ -297,7 +297,21 @@ const AuthPage = () => {
 
       // Check for admin code 12345
       if (digits === "12345") {
-        alert("Admin code detected! Redirecting to home page");
+        alert("Admin code detected! Setting up admin session and redirecting to home page");
+
+        // Set admin user in localStorage for the Index component to use
+        if (typeof localStorage !== 'undefined') {
+          const adminUser = {
+            id: "admin-12345",
+            email: "admin@2dateme.demo",
+            user_metadata: {
+              name: "Admin User"
+            }
+          };
+          localStorage.setItem('admin-user', JSON.stringify(adminUser));
+        }
+
+        // Navigate to home page
         navigate("/home");
         return;
       }

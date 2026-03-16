@@ -102,23 +102,23 @@ const saveLocalLikedMeProfiles = (profiles: Profile[]) => {
 import PackageTermsOverlay from "@/components/overlays/PackageTermsOverlay";
 
 // ── Home page package detail (shown in bottom card when unlock item selected) ──
-const UNLOCK_BG_IMAGE    = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
-const VIP_BG_IMAGE       = "https://ik.imagekit.io/7grri5v7d/vip%20matches.png?updatedAt=1773414288279";
-const BOOST_BG_IMAGE     = "https://ik.imagekit.io/7grri5v7d/rocket%20boost.png?updatedAt=1773414413248";
-const VERIFIED_BG_IMAGE  = "https://ik.imagekit.io/7grri5v7d/vip%20profiles.png";
+const UNLOCK_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
+const VIP_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/vip%20matches.png?updatedAt=1773414288279";
+const BOOST_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/rocket%20boost.png?updatedAt=1773414413248";
+const VERIFIED_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/vip%20profiles.png";
 const SPOTLIGHT_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/spot%20light.png";
 const INCOGNITO_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/incognito.png";
 
 const HOME_UNLOCK_PACKAGES = [
-  { key: "unlock:single",   emoji: "💬", name: "1 Match Unlock",  price: "$1.99",     desc: "Unlock WhatsApp after you both match. Fast, simple, direct.",       sub: "Requires a mutual match",      btn: "Unlock Now",   bgImage: UNLOCK_BG_IMAGE },
-  { key: "unlock:pack3",    emoji: "💬", name: "3 Unlock Pack",    price: "$4.99",     desc: "Perfect for a week of real connections. Save vs singles.",           sub: "Best for active users",        btn: "Get Pack",     bgImage: UNLOCK_BG_IMAGE },
-  { key: "unlock:pack10",   emoji: "💬", name: "10 Unlock Pack",   price: "$12.99",    desc: "Best value for heavy matching. Lowest cost per unlock.",             sub: "Best value · never expire",    btn: "Get Pack",     bgImage: UNLOCK_BG_IMAGE },
-  { key: "unlock:vip",      emoji: "👑", name: "VIP Monthly",      price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.",                  sub: "Auto-renews monthly",          btn: "Go VIP",       bgImage: VIP_BG_IMAGE },
-  { key: "unlock:superlike",emoji: "⭐", name: "Super Like",       price: "$1.99",     desc: "Flash in their library first! They get notified.",                  sub: "One-time purchase",            btn: "Get",          bgImage: null },
-  { key: "unlock:boost",    emoji: "🚀", name: "Profile Boost",    price: "$1.99",     desc: "Top of swipe stack for 1 hour. 5–10× more views!",                  sub: "Activates immediately · 1 hr", btn: "Boost Now",    bgImage: BOOST_BG_IMAGE },
-  { key: "unlock:verified", emoji: "✅", name: "Verified Badge",   price: "$1.99",     desc: "Get verified. Rank higher & build trust.",                          sub: "Permanent badge",              btn: "Get Verified", bgImage: VERIFIED_BG_IMAGE },
-  { key: "unlock:incognito",emoji: "👻", name: "Incognito Mode",   price: "$2.99",     desc: "Browse profiles invisibly for 24 hours.",                           sub: "Activates immediately · 24 hr",btn: "Go Incognito", bgImage: INCOGNITO_BG_IMAGE },
-  { key: "unlock:spotlight",emoji: "🌟", name: "Spotlight",        price: "$4.99",     desc: "Featured at top of everyone's stack for 24 hours!",                 sub: "Activates immediately · 24 hr",btn: "Get Spotlight",bgImage: SPOTLIGHT_BG_IMAGE },
+  { key: "unlock:single", emoji: "💬", name: "1 Match Unlock", price: "$1.99", desc: "Unlock WhatsApp after you both match. Fast, simple, direct.", sub: "Requires a mutual match", btn: "Unlock Now", bgImage: UNLOCK_BG_IMAGE },
+  { key: "unlock:pack3", emoji: "💬", name: "3 Unlock Pack", price: "$4.99", desc: "Perfect for a week of real connections. Save vs singles.", sub: "Best for active users", btn: "Get Pack", bgImage: UNLOCK_BG_IMAGE },
+  { key: "unlock:pack10", emoji: "💬", name: "10 Unlock Pack", price: "$12.99", desc: "Best value for heavy matching. Lowest cost per unlock.", sub: "Best value · never expire", btn: "Get Pack", bgImage: UNLOCK_BG_IMAGE },
+  { key: "unlock:vip", emoji: "👑", name: "VIP Monthly", price: "$10.99/mo", desc: "7 unlocks + 5 Super Likes + VIP badge. Save 54%.", sub: "Auto-renews monthly", btn: "Go VIP", bgImage: VIP_BG_IMAGE },
+  { key: "unlock:superlike", emoji: "⭐", name: "Super Like", price: "$1.99", desc: "Flash in their library first! They get notified.", sub: "One-time purchase", btn: "Get", bgImage: null },
+  { key: "unlock:boost", emoji: "🚀", name: "Profile Boost", price: "$1.99", desc: "Top of swipe stack for 1 hour. 5–10× more views!", sub: "Activates immediately · 1 hr", btn: "Boost Now", bgImage: BOOST_BG_IMAGE },
+  { key: "unlock:verified", emoji: "✅", name: "Verified Badge", price: "$1.99", desc: "Get verified. Rank higher & build trust.", sub: "Permanent badge", btn: "Get Verified", bgImage: VERIFIED_BG_IMAGE },
+  { key: "unlock:incognito", emoji: "👻", name: "Incognito Mode", price: "$2.99", desc: "Browse profiles invisibly for 24 hours.", sub: "Activates immediately · 24 hr", btn: "Go Incognito", bgImage: INCOGNITO_BG_IMAGE },
+  { key: "unlock:spotlight", emoji: "🌟", name: "Spotlight", price: "$4.99", desc: "Featured at top of everyone's stack for 24 hours!", sub: "Activates immediately · 24 hr", btn: "Get Spotlight", bgImage: SPOTLIGHT_BG_IMAGE },
 ];
 
 function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClose: () => void }) {
@@ -193,7 +193,26 @@ const Index = () => {
   const DEV_MOCK_USER = import.meta.env.DEV
     ? { id: "dev-user-001", email: "admin@2dateme.com", user_metadata: { name: "Dev Admin" } }
     : null;
-  const [user, setUser] = useState<any>(() => import.meta.env.DEV ? DEV_MOCK_USER : null);
+
+  // Check for admin user in localStorage (set by AuthPage when 12345 is entered)
+  const getAdminUser = () => {
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const adminUserStr = localStorage.getItem('admin-user');
+        if (adminUserStr) {
+          return JSON.parse(adminUserStr);
+        }
+      } catch (error) {
+        console.error('Error parsing admin user from localStorage:', error);
+      }
+    }
+    return null;
+  };
+
+  const [user, setUser] = useState<any>(() => {
+    if (import.meta.env.DEV) return DEV_MOCK_USER;
+    return getAdminUser();
+  });
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
     if (import.meta.env.DEV) return false;
@@ -300,11 +319,11 @@ const Index = () => {
     if (topShuffledQueueRef.current.length === 0 || bottomShuffledQueueRef.current.length === 0) {
       const shuffled = fisherYates(filteredProfiles);
       const midPoint = Math.floor(shuffled.length / 2);
-      
+
       // Split the shuffled array into two non-overlapping halves
       topShuffledQueueRef.current = shuffled.slice(0, midPoint);
       bottomShuffledQueueRef.current = shuffled.slice(midPoint);
-      
+
       // Ensure both queues have at least some profiles
       if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
         topShuffledQueueRef.current = [filteredProfiles[0]];
@@ -312,7 +331,7 @@ const Index = () => {
       if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 1) {
         bottomShuffledQueueRef.current = [filteredProfiles[1]];
       }
-      
+
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
       sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
     }
@@ -326,7 +345,7 @@ const Index = () => {
     topSeenIdsRef.current.add(profileId);
     // Persist seen ids
     sessionStorage.setItem("top_swipe_seen_ids", JSON.stringify([...topSeenIdsRef.current]));
-    
+
     // If all profiles seen in top queue, reshuffle BOTH containers
     if (topSeenIdsRef.current.size >= topShuffledQueueRef.current.length) {
       // Reset seen lists for both queues
@@ -334,14 +353,14 @@ const Index = () => {
       bottomSeenIdsRef.current = new Set();
       sessionStorage.removeItem("top_swipe_seen_ids");
       sessionStorage.removeItem("bottom_swipe_seen_ids");
-      
+
       // Reshuffle both queues with new non-overlapping profiles
       const shuffled = fisherYates(filteredProfiles);
       const midPoint = Math.floor(shuffled.length / 2);
-      
+
       topShuffledQueueRef.current = shuffled.slice(0, midPoint);
       bottomShuffledQueueRef.current = shuffled.slice(midPoint);
-      
+
       // Ensure both queues have profiles
       if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
         topShuffledQueueRef.current = [filteredProfiles[0]];
@@ -349,7 +368,7 @@ const Index = () => {
       if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
         bottomShuffledQueueRef.current = [filteredProfiles[Math.min(1, filteredProfiles.length - 1)]];
       }
-      
+
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
       sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
     }
@@ -362,7 +381,7 @@ const Index = () => {
     bottomSeenIdsRef.current.add(profileId);
     // Persist seen ids
     sessionStorage.setItem("bottom_swipe_seen_ids", JSON.stringify([...bottomSeenIdsRef.current]));
-    
+
     // If all profiles seen in bottom queue, reshuffle BOTH containers
     if (bottomSeenIdsRef.current.size >= bottomShuffledQueueRef.current.length) {
       // Reset seen lists for both queues
@@ -370,14 +389,14 @@ const Index = () => {
       bottomSeenIdsRef.current = new Set();
       sessionStorage.removeItem("top_swipe_seen_ids");
       sessionStorage.removeItem("bottom_swipe_seen_ids");
-      
+
       // Reshuffle both queues with new non-overlapping profiles
       const shuffled = fisherYates(filteredProfiles);
       const midPoint = Math.floor(shuffled.length / 2);
-      
+
       topShuffledQueueRef.current = shuffled.slice(0, midPoint);
       bottomShuffledQueueRef.current = shuffled.slice(midPoint);
-      
+
       // Ensure both queues have profiles
       if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
         topShuffledQueueRef.current = [filteredProfiles[0]];
@@ -385,7 +404,7 @@ const Index = () => {
       if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
         bottomShuffledQueueRef.current = [filteredProfiles[Math.min(1, filteredProfiles.length - 1)]];
       }
-      
+
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
       sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
     }
@@ -403,25 +422,25 @@ const Index = () => {
     // Use filteredProfiles as immediate fallback before queues are built (first render)
     const topQueue = topShuffledQueueRef.current.length > 0 ? topShuffledQueueRef.current : filteredProfiles;
     const bottomQueue = bottomShuffledQueueRef.current.length > 0 ? bottomShuffledQueueRef.current : filteredProfiles;
-    
+
     const topUnseen = topQueue.filter(p => !topSeenIdsRef.current.has(p.id));
     const bottomUnseen = bottomQueue.filter(p => !bottomSeenIdsRef.current.has(p.id));
-    
+
     // If all seen (race condition), use full queues
     const topPool = topUnseen.length > 0 ? topUnseen : topQueue;
     const bottomPool = bottomUnseen.length > 0 ? bottomUnseen : bottomQueue;
-    
+
     // CRITICAL: Ensure no overlapping profiles between top and bottom
     const topProfileIds = new Set(topPool.map(p => p.id));
     const filteredBottomPool = bottomPool.filter(p => !topProfileIds.has(p.id));
-    
+
     // If filtering removes all bottom profiles, use bottomPool as fallback
     const safeBottom = filteredBottomPool.length > 0 ? filteredBottomPool : bottomPool;
-    
+
     // Final safety: ensure neither stack is empty
     const safeTop = topPool.length > 0 ? topPool : (safeBottom.length > 0 ? safeBottom.slice().reverse() : filteredProfiles.slice(0, 1));
     const finalBottom = safeBottom.length > 0 ? safeBottom : (safeTop.length > 1 ? safeTop.slice(1).reverse() : filteredProfiles.slice(1, 2));
-    
+
     return { topProfiles: safeTop, bottomProfiles: finalBottom };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredProfiles, queueTick]);
@@ -442,7 +461,7 @@ const Index = () => {
   const [showReferralPopup, setShowReferralPopup] = useState(false);
 
   const DAILY_CARD_KEY_BASE = "dailyTarotCard";
-  
+
   const sessionStatsRef = useRef({
     viewed: 0,
     liked: 0,
@@ -511,7 +530,7 @@ const Index = () => {
     locale,
     sessionStatsRef,
   });
-  
+
   // Restore persisted session behavior
   useEffect(() => {
     try {
@@ -549,7 +568,7 @@ const Index = () => {
     }
   }, [daysSinceLastActive, getBehaviorStorageKey, iLiked, likedMe]);
 
-  
+
   // Track profile views + repeated views in-session
   useEffect(() => {
     const currentProfileId = isProfileRoute ? profileRouteId : topProfiles[0]?.id;
@@ -563,7 +582,7 @@ const Index = () => {
     persistSessionBehavior();
   }, [isProfileRoute, profileRouteId, topProfiles]);
 
-  
+
   // Show daily match suggestion once per day — only picks someone not yet swiped on
   useEffect(() => {
     if (filteredProfiles.length === 0) return;
@@ -594,7 +613,7 @@ const Index = () => {
     };
     window.addEventListener("beforeinstallprompt", handler as EventListener);
     return () => window.removeEventListener("beforeinstallprompt", handler as EventListener);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Once user logs in, show banner if prompt was already captured
@@ -735,7 +754,7 @@ const Index = () => {
     setSelectedIndex(idx >= 0 ? idx : 0);
   }, []);
 
-  
+
   const {
     handleLike,
     handleRose,
@@ -772,7 +791,7 @@ const Index = () => {
     navigate,
   });
 
-  
+
   const handleLibraryCardDrag = (_: any, info: PanInfo) => {
     const { offset } = info;
     if (offset.y < -80) {
@@ -844,7 +863,7 @@ const Index = () => {
       <p className="mt-5 text-white text-xl font-bold tracking-widest" style={{ fontFamily: "inherit" }}>2DateMe</p>
       <p className="mt-1 text-white/40 text-xs tracking-wider">Connect Instantly</p>
       <div className="mt-8 flex gap-1.5">
-        {[0,1,2].map(i => (
+        {[0, 1, 2].map(i => (
           <div
             key={i}
             className="w-1.5 h-1.5 rounded-full bg-primary"
@@ -918,305 +937,305 @@ const Index = () => {
         const showFullPanel = showDateIdeaPanel || showProfilePanel;
 
         return (
-      <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? (showFullPanel ? "1fr" : "1fr auto") : "1fr auto 1fr" }}>
-        {showDateIdeaPanel ? (
-          <DateIdeaDetailPanel
-            dateIdea={dateIdeaPlace.idea}
-            imageUrl={dateIdeaPlace.image_url || undefined}
-            onClose={() => setSelectedDateIdeaIndex(null)}
-          />
-        ) : showProfilePanel ? (
-          selectedProfileSection === "images" ? (
-            <ProfileImagesPanel
-              profile={selectedProfile}
-              imageIndex={profileImageViewIndex}
-              setImageIndex={setProfileImageViewIndex}
-              onClose={() => setSelectedProfileSection(null)}
-              iLiked={iLiked}
-              handleLike={handleLike}
-              likedMe={likedMe}
-            />
-          ) : (
-            <ProfileInfoPanel
-              profile={selectedProfile}
-              onClose={() => setSelectedProfileSection(null)}
-            />
-          )
-        ) : (
-          <>
-            <TopCard
-              key="top-card"
-              selectedProfile={selectedProfile}
-              isProfileRoute={isProfileRoute}
-              topProfiles={topProfiles}
-              topCardX={topCardX}
-              profileImageIndex={profileImageIndex}
-              profileImageDirection={profileImageDirection}
-              iLiked={iLiked}
-              roseAvailable={roseAvailable}
-              user={user}
-              t={t}
-              isAnimatingTopCardRef={isAnimatingTopCardRef}
-              selectedList={selectedList}
-              selectedProfileSection={isProfileRoute ? selectedProfileSection : null}
-              setSelectedIndex={setSelectedIndex}
-              setProfileImageIndex={setProfileImageIndex}
-              setProfileImageDirection={setProfileImageDirection}
-              handleLike={handleLike}
-              handleRose={handleRose}
-              handleLibraryCardDrag={handleLibraryCardDrag}
-              advanceQueue={advanceTopQueue}
-              navigate={navigate}
-              sessionStatsRef={sessionStatsRef}
-              setSessionTick={setSessionTick}
-              persistSessionBehavior={persistSessionBehavior}
-            />
-
-            {/* Center - Likes Library */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="rounded-2xl p-3 h-48 overflow-hidden relative border-2 border-white/20"
-            >
-              {/* Solid edge background */}
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-md rounded-2xl pointer-events-none" />
-              {/* Floating red hearts animation */}
-              {[...Array(6)].map((_, i) => (
-                <motion.span
-                  key={`heart-${i}`}
-                  className="absolute pointer-events-none select-none"
-                  style={{ left: `${10 + i * 15}%`, bottom: 0, fontSize: `${10 + (i % 3) * 4}px`, color: 'hsl(320, 50%, 50%)' }}
-                  animate={{ y: [0, -160], opacity: [0.7, 0] }}
-                  transition={{
-                    duration: 3 + i * 0.5,
-                    repeat: Infinity,
-                    delay: i * 0.8,
-                    ease: "easeOut",
-                  }}
-                >
-                  ♥
-                </motion.span>
-              ))}
-              <div className="relative z-10 h-full" ref={libraryRef}>
-                <LikesLibrary
-                  title={isProfileRoute ? "About Me" : undefined}
-                  tabLabelOverrides={
-                    isProfileRoute
-                      ? {
-                          new: "Profile",
-                          sent: "Date Ideas",
-                          treat: "Treat",
-                          distance: "Distance",
-                        }
-                      : undefined
-                  }
-                  onTabChange={(t) => {
-                    // Allow treat tab on both home and profile pages
-                    if (t === "treat") {
-                      setAboutMeTab(t);
-                      setSelectedTreatItem("massage");
-                      return;
-                    }
-                    // On home page: switching away from unlock tab clears the package detail
-                    if (!isProfileRoute) {
-                      setAboutMeTab(t);
-                      if (t !== "unlock") setHomeUnlockKey("");
-                      return;
-                    }
-                    // Only reset selections when actually switching tabs (not on re-render)
-                    if (t !== aboutMeTab) {
-                      setSelectedProfileSection(null);
-                      setSelectedDatePlace(null);
-                      setSelectedDateIdeaIndex(null);
-                      if (isProfileRoute) setSelectedTreatItem(null);
-                    }
-                    setAboutMeTab(t);
-                  }}
-                  selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
-                  onSelectProfileSection={(s) => {
-                    if (!isProfileRoute) return;
-                    setSelectedProfileSection(s as any);
-                  }}
-                  selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : homeUnlockKey}
-                  onSelectUnlockItem={(key) => {
-                    if (isProfileRoute) {
-                      setSelectedUnlockItemKey(key);
-                    } else {
-                      setHomeUnlockKey(key);
-                      setAboutMeTab("unlock");
-                    }
-                  }}
-                  selectedTreatItem={selectedTreatItem}
-                  onSelectTreatItem={(key) => {
-                    setSelectedTreatItem(key);
-                    setOpenTreatItem(key);
-                  }}
-                  selectedDateIdeaIndex={isProfileRoute ? (selectedDateIdeaIndex ?? undefined) : undefined}
-                  onSelectDateIdea={(idx) => {
-                    if (!isProfileRoute) return;
-                    setSelectedDateIdeaIndex(idx);
-                  }}
-                  profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
-                  profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
-                  // Gifts tab props
-                  selectedProfile={isProfileRoute ? selectedProfile : null}
-                  allProfiles={allProfiles}
-                  onGiftSent={() => {
-                    console.log("Gift sent in Index");
-                  }}
+          <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? (showFullPanel ? "1fr" : "1fr auto") : "1fr auto 1fr" }}>
+            {showDateIdeaPanel ? (
+              <DateIdeaDetailPanel
+                dateIdea={dateIdeaPlace.idea}
+                imageUrl={dateIdeaPlace.image_url || undefined}
+                onClose={() => setSelectedDateIdeaIndex(null)}
+              />
+            ) : showProfilePanel ? (
+              selectedProfileSection === "images" ? (
+                <ProfileImagesPanel
+                  profile={selectedProfile}
+                  imageIndex={profileImageViewIndex}
+                  setImageIndex={setProfileImageViewIndex}
+                  onClose={() => setSelectedProfileSection(null)}
                   iLiked={iLiked}
+                  handleLike={handleLike}
                   likedMe={likedMe}
-                  newProfiles={libraryNewProfiles}
-                  filterCountry={filters.country}
-                  dailyTarot={
-                    dailyTarot
-                      ? {
-                          cardId: dailyTarot.card.id,
-                          cardName: dailyTarot.card.name,
-                          cardEmoji: dailyTarot.card.emoji,
-                          reading: dailyTarot.reading,
-                          shown: dailyTarot.shown,
-                        }
-                      : null
-                  }
-                  hidePrivateTabs={!isProfileRoute && !user}
-                  currentUserId={user?.id}
-                  onRevealDailyTarot={() => {
-                    markDailyCardShown();
-                  }}
-                  receivedHighlightProfileId={null}
-                  heartDropProfileId={null}
-                  superLikeGlowProfileId={superLikeGlowProfileId}
-                  onUnlock={handleUnlock}
-                  onSelectProfile={(profile, sourceList) => {
-                    handleSelectProfile(profile, sourceList);
-                  }}
-                  onPurchaseFeature={handlePurchaseFeature}
                 />
-              </div>
-            </motion.div>
+              ) : (
+                <ProfileInfoPanel
+                  profile={selectedProfile}
+                  onClose={() => setSelectedProfileSection(null)}
+                />
+              )
+            ) : (
+              <>
+                <TopCard
+                  key="top-card"
+                  selectedProfile={selectedProfile}
+                  isProfileRoute={isProfileRoute}
+                  topProfiles={topProfiles}
+                  topCardX={topCardX}
+                  profileImageIndex={profileImageIndex}
+                  profileImageDirection={profileImageDirection}
+                  iLiked={iLiked}
+                  roseAvailable={roseAvailable}
+                  user={user}
+                  t={t}
+                  isAnimatingTopCardRef={isAnimatingTopCardRef}
+                  selectedList={selectedList}
+                  selectedProfileSection={isProfileRoute ? selectedProfileSection : null}
+                  setSelectedIndex={setSelectedIndex}
+                  setProfileImageIndex={setProfileImageIndex}
+                  setProfileImageDirection={setProfileImageDirection}
+                  handleLike={handleLike}
+                  handleRose={handleRose}
+                  handleLibraryCardDrag={handleLibraryCardDrag}
+                  advanceQueue={advanceTopQueue}
+                  navigate={navigate}
+                  sessionStatsRef={sessionStatsRef}
+                  setSessionTick={setSessionTick}
+                  persistSessionBehavior={persistSessionBehavior}
+                />
 
-            {/* Bottom Card — only on home page, not profile page */}
-            {!isProfileRoute && (
-              <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
-                {aboutMeTab === "unlock" ? (
-                  <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} />
-                ) : (
-                  <SwipeStack
-                    key="bottom-stack"
-                    profiles={bottomProfiles}
-                    direction="down"
-                    roseAvailable={roseAvailable}
-                    onRose={handleRose}
-                    onLike={(p) => {
-                      handleLike(p);
-                      advanceBottomQueue(p.id);
-                      if (user) navigate(`/profile/${p.id}`);
-                    }}
-                    onPass={(p) => {
-                      sessionStatsRef.current.passed += 1;
-                      setSessionTick((v) => v + 1);
-                      advanceBottomQueue(p.id);
-                    }}
-                  />
+                {/* Center - Likes Library */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="rounded-2xl p-3 h-48 overflow-hidden relative border-2 border-white/20"
+                >
+                  {/* Solid edge background */}
+                  <div className="absolute inset-0 bg-black/40 backdrop-blur-md rounded-2xl pointer-events-none" />
+                  {/* Floating red hearts animation */}
+                  {[...Array(6)].map((_, i) => (
+                    <motion.span
+                      key={`heart-${i}`}
+                      className="absolute pointer-events-none select-none"
+                      style={{ left: `${10 + i * 15}%`, bottom: 0, fontSize: `${10 + (i % 3) * 4}px`, color: 'hsl(320, 50%, 50%)' }}
+                      animate={{ y: [0, -160], opacity: [0.7, 0] }}
+                      transition={{
+                        duration: 3 + i * 0.5,
+                        repeat: Infinity,
+                        delay: i * 0.8,
+                        ease: "easeOut",
+                      }}
+                    >
+                      ♥
+                    </motion.span>
+                  ))}
+                  <div className="relative z-10 h-full" ref={libraryRef}>
+                    <LikesLibrary
+                      title={isProfileRoute ? "About Me" : undefined}
+                      tabLabelOverrides={
+                        isProfileRoute
+                          ? {
+                            new: "Profile",
+                            sent: "Date Ideas",
+                            treat: "Treat",
+                            distance: "Distance",
+                          }
+                          : undefined
+                      }
+                      onTabChange={(t) => {
+                        // Allow treat tab on both home and profile pages
+                        if (t === "treat") {
+                          setAboutMeTab(t);
+                          setSelectedTreatItem("massage");
+                          return;
+                        }
+                        // On home page: switching away from unlock tab clears the package detail
+                        if (!isProfileRoute) {
+                          setAboutMeTab(t);
+                          if (t !== "unlock") setHomeUnlockKey("");
+                          return;
+                        }
+                        // Only reset selections when actually switching tabs (not on re-render)
+                        if (t !== aboutMeTab) {
+                          setSelectedProfileSection(null);
+                          setSelectedDatePlace(null);
+                          setSelectedDateIdeaIndex(null);
+                          if (isProfileRoute) setSelectedTreatItem(null);
+                        }
+                        setAboutMeTab(t);
+                      }}
+                      selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
+                      onSelectProfileSection={(s) => {
+                        if (!isProfileRoute) return;
+                        setSelectedProfileSection(s as any);
+                      }}
+                      selectedUnlockItemKey={isProfileRoute ? selectedUnlockItemKey : homeUnlockKey}
+                      onSelectUnlockItem={(key) => {
+                        if (isProfileRoute) {
+                          setSelectedUnlockItemKey(key);
+                        } else {
+                          setHomeUnlockKey(key);
+                          setAboutMeTab("unlock");
+                        }
+                      }}
+                      selectedTreatItem={selectedTreatItem}
+                      onSelectTreatItem={(key) => {
+                        setSelectedTreatItem(key);
+                        setOpenTreatItem(key);
+                      }}
+                      selectedDateIdeaIndex={isProfileRoute ? (selectedDateIdeaIndex ?? undefined) : undefined}
+                      onSelectDateIdea={(idx) => {
+                        if (!isProfileRoute) return;
+                        setSelectedDateIdeaIndex(idx);
+                      }}
+                      profileFirstDateIdea={isProfileRoute ? selectedProfile?.first_date_idea ?? null : undefined}
+                      profileDatePlaces={isProfileRoute ? selectedProfile?.first_date_places ?? [] : undefined}
+                      // Gifts tab props
+                      selectedProfile={isProfileRoute ? selectedProfile : null}
+                      allProfiles={allProfiles}
+                      onGiftSent={() => {
+                        console.log("Gift sent in Index");
+                      }}
+                      iLiked={iLiked}
+                      likedMe={likedMe}
+                      newProfiles={libraryNewProfiles}
+                      filterCountry={filters.country}
+                      dailyTarot={
+                        dailyTarot
+                          ? {
+                            cardId: dailyTarot.card.id,
+                            cardName: dailyTarot.card.name,
+                            cardEmoji: dailyTarot.card.emoji,
+                            reading: dailyTarot.reading,
+                            shown: dailyTarot.shown,
+                          }
+                          : null
+                      }
+                      hidePrivateTabs={!isProfileRoute && !user}
+                      currentUserId={user?.id}
+                      onRevealDailyTarot={() => {
+                        markDailyCardShown();
+                      }}
+                      receivedHighlightProfileId={null}
+                      heartDropProfileId={null}
+                      superLikeGlowProfileId={superLikeGlowProfileId}
+                      onUnlock={handleUnlock}
+                      onSelectProfile={(profile, sourceList) => {
+                        handleSelectProfile(profile, sourceList);
+                      }}
+                      onPurchaseFeature={handlePurchaseFeature}
+                    />
+                  </div>
+                </motion.div>
+
+                {/* Bottom Card — only on home page, not profile page */}
+                {!isProfileRoute && (
+                  <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
+                    {aboutMeTab === "unlock" ? (
+                      <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} />
+                    ) : (
+                      <SwipeStack
+                        key="bottom-stack"
+                        profiles={bottomProfiles}
+                        direction="down"
+                        roseAvailable={roseAvailable}
+                        onRose={handleRose}
+                        onLike={(p) => {
+                          handleLike(p);
+                          advanceBottomQueue(p.id);
+                          if (user) navigate(`/profile/${p.id}`);
+                        }}
+                        onPass={(p) => {
+                          sessionStatsRef.current.passed += 1;
+                          setSessionTick((v) => v + 1);
+                          advanceBottomQueue(p.id);
+                        }}
+                      />
+                    )}
+                  </div>
                 )}
-              </div>
+              </>
             )}
-          </>
-        )}
 
-        <FloatingLikeParticles
-          active={likeParticlesActive}
-          superLike={false}
-          onComplete={() => setLikeParticlesActive(false)}
-        />
-        <FloatingLikeParticles
-          active={superLikeParticlesActive}
-          superLike={true}
-          onComplete={() => setSuperLikeParticlesActive(false)}
-        />
+            <FloatingLikeParticles
+              active={likeParticlesActive}
+              superLike={false}
+              onComplete={() => setLikeParticlesActive(false)}
+            />
+            <FloatingLikeParticles
+              active={superLikeParticlesActive}
+              superLike={true}
+              onComplete={() => setSuperLikeParticlesActive(false)}
+            />
 
-        {/* Development: toggle and simulate butterfly / super like — only in dev build */}
-        {isDevBuild() && (
-          <>
-            <button
-              type="button"
-              onClick={() => setDevPanelOpen((o) => !o)}
-              className="fixed bottom-24 left-3 z-[75] w-10 h-10 rounded-full bg-amber-500/90 hover:bg-amber-500 text-black flex items-center justify-center shadow-lg border border-amber-600/50"
-              aria-label="Development panel"
-              title="Development features"
-            >
-              <FlaskConical className="w-5 h-5" />
-            </button>
-            {devPanelOpen && (
-              <div className="fixed bottom-24 left-3 z-[76] w-56 rounded-xl bg-black/95 backdrop-blur-xl border border-amber-500/40 shadow-xl p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-amber-400 text-xs font-semibold">Development features</span>
-                  <button
-                    type="button"
-                    onClick={() => setDevPanelOpen(false)}
-                    className="text-white/50 hover:text-white p-0.5"
-                    aria-label="Close"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={devFeaturesEnabled}
-                    onChange={(e) => setDevFeaturesEnabled(e.target.checked)}
-                    className="rounded border-amber-500/50 bg-black/50 text-amber-500"
-                  />
-                  <span className="text-white/80 text-xs">On — animations & triggers live</span>
-                </label>
-                <p className="text-white/40 text-[10px]">
-                  Off = same as production: only real events trigger like particles.
-                </p>
+            {/* Development: toggle and simulate butterfly / super like — only in dev build */}
+            {isDevBuild() && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setDevPanelOpen((o) => !o)}
+                  className="fixed bottom-24 left-3 z-[75] w-10 h-10 rounded-full bg-amber-500/90 hover:bg-amber-500 text-black flex items-center justify-center shadow-lg border border-amber-600/50"
+                  aria-label="Development panel"
+                  title="Development features"
+                >
+                  <FlaskConical className="w-5 h-5" />
+                </button>
+                {devPanelOpen && (
+                  <div className="fixed bottom-24 left-3 z-[76] w-56 rounded-xl bg-black/95 backdrop-blur-xl border border-amber-500/40 shadow-xl p-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-amber-400 text-xs font-semibold">Development features</span>
+                      <button
+                        type="button"
+                        onClick={() => setDevPanelOpen(false)}
+                        className="text-white/50 hover:text-white p-0.5"
+                        aria-label="Close"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={devFeaturesEnabled}
+                        onChange={(e) => setDevFeaturesEnabled(e.target.checked)}
+                        className="rounded border-amber-500/50 bg-black/50 text-amber-500"
+                      />
+                      <span className="text-white/80 text-xs">On — animations & triggers live</span>
+                    </label>
+                    <p className="text-white/40 text-[10px]">
+                      Off = same as production: only real events trigger like particles.
+                    </p>
 
-                {/* Animation Trigger Buttons */}
-                <div className="space-y-2 pt-2 border-t border-amber-500/30">
-                  <button
-                    type="button"
-                    onClick={() => setLikeParticlesActive(true)}
-                    className="w-full flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    ❤️ Trigger Like Hearts
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setSuperLikeParticlesActive(true)}
-                    className="w-full flex items-center gap-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    ⭐ Trigger Super Like
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const mock = filteredProfiles[0] || { id: "mock-match", name: "Jessica", avatar_url: "https://i.pravatar.cc/150?img=47", age: 24, city: "Yogyakarta" };
-                      setMatchDialog(mock);
-                    }}
-                    className="w-full flex items-center gap-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    💞 Test Match Popup
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const mock = filteredProfiles[Math.floor(Math.random() * Math.max(1, filteredProfiles.length))] || { id: "mock-daily", name: "Sari", avatar_url: "https://i.pravatar.cc/150?img=32", age: 22, city: "Yogyakarta", bio: "Love coffee, sunsets and genuine connections ☕" };
-                      setDailyMatchProfile(mock);
-                    }}
-                    className="w-full flex items-center gap-2 bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    ✨ Test Daily Match
-                  </button>
-                </div>
-              </div>
+                    {/* Animation Trigger Buttons */}
+                    <div className="space-y-2 pt-2 border-t border-amber-500/30">
+                      <button
+                        type="button"
+                        onClick={() => setLikeParticlesActive(true)}
+                        className="w-full flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        ❤️ Trigger Like Hearts
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSuperLikeParticlesActive(true)}
+                        className="w-full flex items-center gap-2 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        ⭐ Trigger Super Like
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const mock = filteredProfiles[0] || { id: "mock-match", name: "Jessica", avatar_url: "https://i.pravatar.cc/150?img=47", age: 24, city: "Yogyakarta" };
+                          setMatchDialog(mock);
+                        }}
+                        className="w-full flex items-center gap-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        💞 Test Match Popup
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const mock = filteredProfiles[Math.floor(Math.random() * Math.max(1, filteredProfiles.length))] || { id: "mock-daily", name: "Sari", avatar_url: "https://i.pravatar.cc/150?img=32", age: 22, city: "Yogyakarta", bio: "Love coffee, sunsets and genuine connections ☕" };
+                          setDailyMatchProfile(mock);
+                        }}
+                        className="w-full flex items-center gap-2 bg-violet-500/20 hover:bg-violet-500/30 text-violet-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        ✨ Test Daily Match
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
-      </div>
+          </div>
         );
       })()}
 
