@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { getPrimaryBadgeKey } from "@/utils/profileBadges";
+import ProfileBadge from "@/components/ProfileBadge";
 // import VirtualGiftsDisplay from "@/components/gifts/VirtualGiftsDisplay";
 
 interface ProfileInfoPanelProps {
@@ -71,10 +72,10 @@ const CompatibilityBar = ({ percent, insight }: { percent: number; insight: stri
         background: "linear-gradient(90deg, rgba(236,72,153,0.9), rgba(255,182,193,0.8), rgba(255,105,180,0.9))",
       }} />
     </div>
-    <p style={{ 
-      fontSize: 9, 
-      color: "rgba(236,72,153,0.7)", 
-      fontWeight: 600, 
+    <p style={{
+      fontSize: 9,
+      color: "rgba(236,72,153,0.7)",
+      fontWeight: 600,
       fontStyle: "italic",
       margin: "4px 0 0 0",
       textAlign: "center"
@@ -125,7 +126,7 @@ const BADGE_INFO: Record<string, { icon: string; label: string; meaning: string;
 
 const RELATIONSHIP_INSIGHTS = [
   "Similar Energy Matters",
-  "Opposites Can Attract", 
+  "Opposites Can Attract",
   "Common Ground Wins",
   "Shared Values First",
   "Chemistry Beats Math",
@@ -227,7 +228,7 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
     >
       {/* Virtual Gifts Display */}
       {/* <VirtualGiftsDisplay userId={profile?.id} /> */}
-      
+
       {/* Header */}
       <div style={{
         padding: "12px 16px 8px",
@@ -260,6 +261,7 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
         <div>
           <p style={{ color: "white", fontSize: 14, fontWeight: 800, margin: 0 }}>
             Hi I'm {profileName}
+            <ProfileBadge profile={profile} isProfilePage={true} />
           </p>
           <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 11, fontWeight: 600, margin: "2px 0 0 0" }}>
             Living in {profile?.country || "Indonesia"}
@@ -436,7 +438,7 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
                 Send Virtual Gifts
               </span>
             </div>
-            
+
             <div style={{
               display: "flex",
               justifyContent: "space-around",
@@ -466,7 +468,7 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
                 </motion.div>
               ))}
             </div>
-            
+
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
