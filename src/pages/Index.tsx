@@ -296,13 +296,24 @@ const Index = () => {
     if (bottomStored) bottomShuffledQueueRef.current = filteredProfiles.filter(p => JSON.parse(bottomStored).includes(p.id));
     if (bottomSeenStored) bottomSeenIdsRef.current = new Set(JSON.parse(bottomSeenStored));
 
-    // If no stored queues, create fresh independent shuffles
-    if (topShuffledQueueRef.current.length === 0) {
-      topShuffledQueueRef.current = fisherYates(filteredProfiles);
+    // If no stored queues, create fresh independent shuffles with NO overlapping profiles
+    if (topShuffledQueueRef.current.length === 0 || bottomShuffledQueueRef.current.length === 0) {
+      const shuffled = fisherYates(filteredProfiles);
+      const midPoint = Math.floor(shuffled.length / 2);
+      
+      // Split the shuffled array into two non-overlapping halves
+      topShuffledQueueRef.current = shuffled.slice(0, midPoint);
+      bottomShuffledQueueRef.current = shuffled.slice(midPoint);
+      
+      // Ensure both queues have at least some profiles
+      if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
+        topShuffledQueueRef.current = [filteredProfiles[0]];
+      }
+      if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 1) {
+        bottomShuffledQueueRef.current = [filteredProfiles[1]];
+      }
+      
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
-    }
-    if (bottomShuffledQueueRef.current.length === 0) {
-      bottomShuffledQueueRef.current = fisherYates(filteredProfiles);
       sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
     }
 
@@ -315,14 +326,34 @@ const Index = () => {
     topSeenIdsRef.current.add(profileId);
     // Persist seen ids
     sessionStorage.setItem("top_swipe_seen_ids", JSON.stringify([...topSeenIdsRef.current]));
-    // If all profiles seen, reset seen list and re-shuffle for a fresh loop
+    
+    // If all profiles seen in top queue, reshuffle BOTH containers
     if (topSeenIdsRef.current.size >= topShuffledQueueRef.current.length) {
+      // Reset seen lists for both queues
       topSeenIdsRef.current = new Set();
+      bottomSeenIdsRef.current = new Set();
       sessionStorage.removeItem("top_swipe_seen_ids");
-      topShuffledQueueRef.current = fisherYates(filteredProfiles);
+      sessionStorage.removeItem("bottom_swipe_seen_ids");
+      
+      // Reshuffle both queues with new non-overlapping profiles
+      const shuffled = fisherYates(filteredProfiles);
+      const midPoint = Math.floor(shuffled.length / 2);
+      
+      topShuffledQueueRef.current = shuffled.slice(0, midPoint);
+      bottomShuffledQueueRef.current = shuffled.slice(midPoint);
+      
+      // Ensure both queues have profiles
+      if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
+        topShuffledQueueRef.current = [filteredProfiles[0]];
+      }
+      if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
+        bottomShuffledQueueRef.current = [filteredProfiles[Math.min(1, filteredProfiles.length - 1)]];
+      }
+      
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
+      sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
     }
-    // Trigger re-render so topProfiles recompute
+    // Trigger re-render so topProfiles/bottomProfiles recompute
     setQueueTick(t => t + 1);
   }, [filteredProfiles]);
 
@@ -331,11 +362,31 @@ const Index = () => {
     bottomSeenIdsRef.current.add(profileId);
     // Persist seen ids
     sessionStorage.setItem("bottom_swipe_seen_ids", JSON.stringify([...bottomSeenIdsRef.current]));
-    // If all profiles seen, reset seen list and re-shuffle for a fresh loop
+    
+    // If all profiles seen in bottom queue, reshuffle BOTH containers
     if (bottomSeenIdsRef.current.size >= bottomShuffledQueueRef.current.length) {
+      // Reset seen lists for both queues
+      topSeenIdsRef.current = new Set();
       bottomSeenIdsRef.current = new Set();
+      sessionStorage.removeItem("top_swipe_seen_ids");
       sessionStorage.removeItem("bottom_swipe_seen_ids");
-      bottomShuffledQueueRef.current = fisherYates(filteredProfiles);
+      
+      // Reshuffle both queues with new non-overlapping profiles
+      const shuffled = fisherYates(filteredProfiles);
+      const midPoint = Math.floor(shuffled.length / 2);
+      
+      topShuffledQueueRef.current = shuffled.slice(0, midPoint);
+      bottomShuffledQueueRef.current = shuffled.slice(midPoint);
+      
+      // Ensure both queues have profiles
+      if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
+        topShuffledQueueRef.current = [filteredProfiles[0]];
+      }
+      if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
+        bottomShuffledQueueRef.current = [filteredProfiles[Math.min(1, filteredProfiles.length - 1)]];
+      }
+      
+      sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
       sessionStorage.setItem("bottom_swipe_queue_ids", JSON.stringify(bottomShuffledQueueRef.current.map(p => p.id)));
     }
     // Trigger re-render so bottomProfiles recompute
@@ -347,7 +398,7 @@ const Index = () => {
     // This is no longer used since we have independent queues
   }, []);
 
-  // Derive ordered top/bottom from independent queues, skipping seen profiles
+  // Derive ordered top/bottom from independent queues, ensuring no overlap
   const { topProfiles, bottomProfiles } = useMemo(() => {
     // Use filteredProfiles as immediate fallback before queues are built (first render)
     const topQueue = topShuffledQueueRef.current.length > 0 ? topShuffledQueueRef.current : filteredProfiles;
@@ -360,11 +411,18 @@ const Index = () => {
     const topPool = topUnseen.length > 0 ? topUnseen : topQueue;
     const bottomPool = bottomUnseen.length > 0 ? bottomUnseen : bottomQueue;
     
-    // Guarantee neither stack is ever blank — fall back to the other (reversed) if empty
-    const safeTop = topPool.length > 0 ? topPool : bottomPool.slice().reverse();
-    const safeBottom = bottomPool.length > 0 ? bottomPool : topPool.slice().reverse();
+    // CRITICAL: Ensure no overlapping profiles between top and bottom
+    const topProfileIds = new Set(topPool.map(p => p.id));
+    const filteredBottomPool = bottomPool.filter(p => !topProfileIds.has(p.id));
     
-    return { topProfiles: safeTop, bottomProfiles: safeBottom };
+    // If filtering removes all bottom profiles, use bottomPool as fallback
+    const safeBottom = filteredBottomPool.length > 0 ? filteredBottomPool : bottomPool;
+    
+    // Final safety: ensure neither stack is empty
+    const safeTop = topPool.length > 0 ? topPool : (safeBottom.length > 0 ? safeBottom.slice().reverse() : filteredProfiles.slice(0, 1));
+    const finalBottom = safeBottom.length > 0 ? safeBottom : (safeTop.length > 1 ? safeTop.slice(1).reverse() : filteredProfiles.slice(1, 2));
+    
+    return { topProfiles: safeTop, bottomProfiles: finalBottom };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredProfiles, queueTick]);
 
