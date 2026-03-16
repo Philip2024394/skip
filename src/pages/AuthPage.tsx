@@ -168,23 +168,10 @@ const AuthPage = () => {
     return error.message;
   };
 
-  // Admin login handler
+  // Admin login handler - DISABLED until app is ready
   const handleAdminLogin = () => {
-    alert("Admin login clicked! Password: " + adminPassword);
-    console.log("Admin login attempt with password:", adminPassword);
-    console.log("Password comparison:", adminPassword === "12345");
-
-    if (adminPassword === "12345") {
-      setAdminLoginError("");
-      console.log("Password correct, redirecting to admin dashboard");
-      alert("Password correct! Redirecting to admin dashboard");
-      // Redirect to admin dashboard
-      navigate("/admin/whatsapp-directory");
-    } else {
-      console.log("Password incorrect");
-      alert("Invalid password: " + adminPassword);
-      setAdminLoginError("Invalid admin password");
-    }
+    alert("Admin login temporarily disabled. App is not ready yet.");
+    return;
   };
 
   const handleLogin = async () => {
@@ -206,7 +193,9 @@ const AuthPage = () => {
         return;
       }
     }
-    navigate("/home");
+    // DISABLED: Don't navigate to home page until app is ready
+    alert("Login temporarily disabled. App is not ready yet.");
+    return;
   };
 
   const handleRegisterStep = async () => {
@@ -275,31 +264,10 @@ const AuthPage = () => {
     }
   };
 
-  // Check if user should see home page content
+  // Check if user should see home page content - DISABLED until app is ready
   const shouldShowHomePage = () => {
-    // Check for admin session
-    if (typeof localStorage !== 'undefined') {
-      try {
-        const adminSessionStr = localStorage.getItem('supabase.auth.token');
-        if (adminSessionStr) {
-          const session = JSON.parse(adminSessionStr);
-          if (session.user?.id === 'admin-12345') {
-            return true;
-          }
-        }
-      } catch (error) {
-        console.error('Error parsing admin session:', error);
-      }
-    }
-
-    // Check if there's a real Supabase session
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session !== null;
-    };
-
-    // For now, return true to maintain authentication flow
-    return true;
+    // Always return false until app is ready
+    return false;
   };
 
   // If user should see home page, show Index component
@@ -327,33 +295,9 @@ const AuthPage = () => {
         return;
       }
 
-      // Check for admin code 12345
+      // Check for admin code 12345 - DISABLED until app is ready
       if (digits === "12345") {
-        alert("Admin code detected! Setting up admin session and redirecting to home page");
-
-        // Set admin session using Supabase for proper integration
-        const adminSession = {
-          access_token: 'admin-token-12345',
-          refresh_token: 'admin-refresh-12345',
-          expires_in: 3600,
-          user: {
-            id: 'admin-12345',
-            email: 'admin@2dateme.demo',
-            user_metadata: {
-              name: 'Admin User',
-              role: 'admin'
-            }
-          }
-        };
-
-        // Store session in Supabase auth format
-        if (typeof localStorage !== 'undefined') {
-          localStorage.setItem('supabase.auth.token', JSON.stringify(adminSession));
-          localStorage.setItem('supabase.auth.user', JSON.stringify(adminSession.user));
-        }
-
-        // Navigate to home page
-        navigate("/home");
+        alert("Admin access temporarily disabled. App is not ready yet.");
         return;
       }
 
