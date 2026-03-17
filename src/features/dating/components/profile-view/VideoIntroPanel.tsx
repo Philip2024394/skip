@@ -42,15 +42,18 @@ const BG_FEMALE = [
   "https://ik.imagekit.io/7grri5v7d/room%20323.png",
 ];
 const BG_MALE = [
-  "https://ik.imagekit.io/7grri5v7d/room%2032343432223432.png",
-  "https://ik.imagekit.io/7grri5v7d/room%20323434322.png",
-  "https://ik.imagekit.io/7grri5v7d/room%2032343.png",
+  "https://ik.imagekit.io/7grri5v7d/sddasdasdasda.png",
+  "https://ik.imagekit.io/7grri5v7d/soccer.png",
+  "https://ik.imagekit.io/7grri5v7d/guys%204ewrfsdfsd.png",
+  "https://ik.imagekit.io/7grri5v7d/guys%204ewr.png",
 ];
 
 function getVideoBg(profile: Profile): string {
-  const pool = profile.gender?.toLowerCase() === "female" ? BG_FEMALE : BG_MALE;
-  const idx = Math.abs([...profile.id].reduce((s, c) => s + c.charCodeAt(0), 0)) % pool.length;
-  return pool[idx];
+  if (profile.gender?.toLowerCase() === "female") {
+    return BG_FEMALE[0];
+  }
+  // Male: random on every render so it changes on refresh
+  return BG_MALE[Math.floor(Math.random() * BG_MALE.length)];
 }
 
 export default function VideoIntroPanel({
