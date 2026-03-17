@@ -2,11 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Users, Globe, Calendar, Search, Filter, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/shared/components/button";
+import { Input } from "@/shared/components/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/card";
+import { Badge } from "@/shared/components/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
@@ -99,13 +99,13 @@ export default function WhatsAppLeadsPage() {
 
   // Filter leads based on search and filters
   const filteredLeads = leads.filter(lead => {
-    const matchesSearch = searchTerm === "" || 
+    const matchesSearch = searchTerm === "" ||
       lead.whatsapp_e164.includes(searchTerm) ||
       lead.national_number.includes(searchTerm);
-    
+
     const matchesCountry = selectedCountry === "all" || lead.country_prefix === selectedCountry;
     const matchesSource = selectedSource === "all" || lead.source === selectedSource;
-    
+
     return matchesSearch && matchesCountry && matchesSource;
   });
 
@@ -165,7 +165,7 @@ export default function WhatsAppLeadsPage() {
               <p className="text-white/70 mt-1">Users who signed up with WhatsApp by country</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-4">
             <div className="text-right">
               <div className="text-2xl font-bold text-green-500">{leads.length}</div>
@@ -193,7 +193,7 @@ export default function WhatsAppLeadsPage() {
                   />
                 </div>
               </div>
-              
+
               <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                 <SelectTrigger className="bg-white/5 border-white/10 text-white w-[150px]">
                   <SelectValue placeholder="Country" />
@@ -253,8 +253,8 @@ export default function WhatsAppLeadsPage() {
                 <CardContent>
                   <div className="grid gap-3">
                     {countryLeads
-                      .filter(lead => 
-                        searchTerm === "" || 
+                      .filter(lead =>
+                        searchTerm === "" ||
                         lead.whatsapp_e164.includes(searchTerm) ||
                         lead.national_number.includes(searchTerm)
                       )

@@ -1,22 +1,22 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Star, MessageCircle } from "lucide-react";
-import MatchCelebrationOverlay from "@/components/overlays/MatchCelebrationOverlay";
-import { Button } from "@/components/ui/button";
+import MatchCelebrationOverlay from "@/features/dating/components/MatchCelebrationOverlay";
+import { Button } from "@/shared/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import FeaturePurchaseDialog from "@/components/FeaturePurchaseDialog";
-import FilterPanel from "@/components/FilterPanel";
-import TermsAcceptanceDialog from "@/components/TermsAcceptanceDialog";
-import GuestAuthPrompt from "@/components/GuestAuthPrompt";
-import AppLogo from "@/components/AppLogo";
+} from "@/shared/components/dialog";
+import FeaturePurchaseDialog from "@/features/payments/components/FeaturePurchaseDialog";
+import FilterPanel from "@/features/dating/components/FilterPanel";
+import TermsAcceptanceDialog from "@/features/auth/components/TermsAcceptanceDialog";
+import GuestAuthPrompt from "@/features/auth/components/GuestAuthPrompt";
+import AppLogo from "@/shared/components/AppLogo";
 import { Sparkles } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { hasUnlockBadges } from "@/utils/unlockPrice";
+import { hasUnlockBadges } from "@/shared/utils/unlockPrice";
 import { toast } from "sonner";
 
 interface AppDialogsProps {

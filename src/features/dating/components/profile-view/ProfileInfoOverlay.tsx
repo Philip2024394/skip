@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
-import { getPrimaryBadgeKey } from "@/utils/profileBadges";
-import ProfileBadge from "@/components/ProfileBadge";
+import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
+import ProfileBadge from "@/features/dating/components/ProfileBadge";
 // import VirtualGiftsDisplay from "@/components/gifts/VirtualGiftsDisplay";
 
 interface ProfileInfoPanelProps {

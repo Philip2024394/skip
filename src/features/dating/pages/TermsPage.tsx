@@ -1,7 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { useSEO } from "@/hooks/useSEO";
+import { Button } from "@/shared/components/button";
+import { useSEO } from "@/shared/hooks/useSEO";
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mt-8">

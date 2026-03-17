@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Globe, Users, Activity } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/shared/components/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -147,7 +147,7 @@ const WorldMapDashboard = () => {
     try {
       const now = new Date();
       const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-      
+
       const { data, error } = await supabase
         .from("profiles")
         .select(`
@@ -167,7 +167,7 @@ const WorldMapDashboard = () => {
         .order("last_seen_at", { ascending: false });
 
       if (error) throw error;
-      
+
       const usersWithSession = (data || []).map(user => ({
         ...user,
         session_start: user.created_at,
@@ -245,7 +245,7 @@ const WorldMapDashboard = () => {
               <p className="text-white/70 mt-1">Real-time visualization of online users worldwide</p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-green-500">{totalUsers}</div>

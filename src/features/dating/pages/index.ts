@@ -1,5 +1,5 @@
 // Dating pages exports
-export { default as Index } from './Index';
+// Note: Index is imported directly/lazily where needed, not re-exported here
 export { default as DashboardPage } from './DashboardPage';
 export { default as MapPage } from './MapPage';
 export { default as FaqPage } from './FaqPage';

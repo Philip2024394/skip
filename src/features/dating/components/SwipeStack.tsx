@@ -4,12 +4,12 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 import { Heart, MapPin, Fingerprint, BadgeCheck } from "lucide-react";
 import type { Profile } from "./SwipeCard";
-import { isOnline } from "@/hooks/useOnlineStatus";
-import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
+import { isOnline } from "@/shared/hooks/useOnlineStatus";
+import { isMockCurrentlyOnline } from "@/shared/utils/mockOnlineSchedule";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
-import ProfileBadge from "@/components/ProfileBadge";
-import DistanceBadge from "@/components/DistanceBadge";
-import VoicePlayer from "./VoicePlayer";
+import ProfileBadge from "@/features/dating/components/ProfileBadge";
+import DistanceBadge from "@/features/dating/components/DistanceBadge";
+import VoicePlayer from "@/features/video/components/VoicePlayer";
 
 interface SwipeStackProps {
   profiles: Profile[];

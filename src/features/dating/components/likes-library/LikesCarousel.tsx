@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, Gift, Heart, MapPin, MoonStar, ShieldCheck, Unlock } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import PromoCard from "../PromoCard";
+import { Button } from "@/shared/components/button";
+import PromoCard from "@/shared/components/PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
-import { isOnline } from "@/hooks/useOnlineStatus";
-import { getUnlockPriceLabel } from "@/utils/unlockPrice";
-import { CountdownBadge } from "@/components/likes-library/CountdownBadge";
+import { isOnline } from "@/shared/hooks/useOnlineStatus";
+import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
+import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
 type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance";
 

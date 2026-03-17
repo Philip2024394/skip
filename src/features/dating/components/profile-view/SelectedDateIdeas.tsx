@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/shared/components/card";
+import { Badge } from "@/shared/components/badge";
 
 interface DateIdeasImage {
   id: string;
@@ -77,7 +77,7 @@ export const SelectedDateIdeas = ({ selectedIdeas, className }: SelectedDateIdea
       <div className="grid grid-cols-1 gap-4">
         {selectedIdeas.map((idea, index) => {
           const imageData = getImageForIdea(idea);
-          
+
           return (
             <Card key={idea} className="bg-white/5 border-white/10 overflow-hidden">
               <CardContent className="p-4">
@@ -91,29 +91,29 @@ export const SelectedDateIdeas = ({ selectedIdeas, className }: SelectedDateIdea
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
-                      
+
                       {/* Index indicator */}
                       <div className="absolute -top-2 -right-2 w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                         {index + 1}
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <h4 className="text-white font-medium text-sm line-clamp-2 mb-1">
                       {idea}
                     </h4>
-                    
+
                     {imageData && (
-                      <Badge 
-                        variant="secondary" 
+                      <Badge
+                        variant="secondary"
                         className="bg-white/10 text-white/80 border-white/20 text-xs"
                       >
                         {imageData.category}
                       </Badge>
                     )}
-                    
+
                     <p className="text-white/60 text-xs mt-2 leading-relaxed">
                       💕 Perfect for getting to know someone special with this fun and engaging date idea.
                     </p>

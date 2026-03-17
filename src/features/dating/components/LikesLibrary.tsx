@@ -2,19 +2,19 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Unlock, Clock, Sparkles, MapPin, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Profile } from "./SwipeCard";
-import TarotDrawer from "@/components/tarot/TarotDrawer";
-import { useTarotState } from "@/components/tarot/useTarotState";
-import LikesCarousel from "@/components/likes-library/LikesCarousel";
-import { Button } from "@/components/ui/button";
-import PromoCard from "./PromoCard";
+import TarotDrawer from "@/features/dating/components/TarotDrawer";
+import { useTarotState } from "@/features/dating/components/useTarotState";
+import LikesCarousel from "@/features/dating/components/likes-library/LikesCarousel";
+import { Button } from "@/shared/components/button";
+import PromoCard from "@/shared/components/PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
-import { isOnline } from "@/hooks/useOnlineStatus";
-import { getUnlockPriceLabel } from "@/utils/unlockPrice";
+import { isOnline } from "@/shared/hooks/useOnlineStatus";
+import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
 // import GiftsTab from "@/components/gifts/GiftsTab";
 import { supabase } from "@/integrations/supabase/client";
-import GiftSelector from "@/components/gifts/GiftSelector";
-import VideoContainer from "@/components/video/VideoContainer";
-import CountdownBadge from "@/components/likes-library/CountdownBadge";
+import GiftSelector from "@/features/gifts/components/GiftSelector";
+import VideoContainer from "@/features/video/components/VideoContainer";
+import CountdownBadge from "@/features/dating/components/likes-library/CountdownBadge";
 import { useNavigate } from "react-router-dom";
 
 // ── How "new" a profile is (joined in last 7 days) ────────────────────────────
@@ -335,8 +335,8 @@ const LikesLibrary = ({
       <div
         ref={scrollRef}
         className={`flex-1 [&::-webkit-scrollbar]:hidden ${isDateIdeasTab || isProfileInfoTab || isTreatTab
-            ? "overflow-y-auto overflow-x-hidden"
-            : "overflow-x-auto overflow-y-hidden"
+          ? "overflow-y-auto overflow-x-hidden"
+          : "overflow-x-auto overflow-y-hidden"
           }`}
         style={{
           scrollbarWidth: "none",
@@ -420,8 +420,8 @@ const LikesLibrary = ({
                       onSelectTreatItem?.(item.key);
                     }}
                     className={`relative overflow-hidden rounded-xl cursor-pointer transition-all hover:scale-[1.02] flex-shrink-0 ${selectedTreatItem === item.key
-                        ? "ring-2 ring-fuchsia-400/60"
-                        : ""
+                      ? "ring-2 ring-fuchsia-400/60"
+                      : ""
                       }`}
                     style={{
                       height: 124, width: 80,

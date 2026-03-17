@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { WebRTCConnection } from "@/lib/webrtc";
-import analyticsLogger from "@/lib/analytics";
+import { WebRTCConnection } from "@/shared/services/webrtc";
+import analyticsLogger from "@/shared/services/analytics";
 
 interface VideoCallScreenProps {
   matchId: string;
@@ -28,7 +28,7 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [connectionState, setConnectionState] = useState<RTCPeerConnectionState>("new");
   const [callStartTime, setCallStartTime] = useState<number | null>(null);
-  
+
   const startRef = useRef(Date.now());
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -81,7 +81,7 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
         }
       } catch (error: any) {
         console.error("Error initializing call:", error);
-        
+
         // Log call failure
         if (userIdRef.current) {
           analyticsLogger.logCallFailed({
@@ -91,7 +91,7 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
             error: error.message || 'Unknown call initialization error'
           });
         }
-        
+
         if (error.name === "NotAllowedError") {
           toast.error("Please allow camera and microphone access");
         } else if (error.name === "NotFoundError") {
@@ -135,12 +135,12 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
     try {
       await supabase
         .from("video_calls")
-        .update({ 
+        .update({
           status,
           ...(status === "active" ? { started_at: new Date().toISOString() } : {}),
-          ...(status === "ended" ? { 
+          ...(status === "ended" ? {
             ended_at: new Date().toISOString(),
-            duration_seconds: elapsed 
+            duration_seconds: elapsed
           } : {})
         })
         .eq("id", callId);
@@ -195,7 +195,7 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
   const handleEndCall = useCallback(async () => {
     if (callEnded) return;
     setCallEnded(true);
-    
+
     // Log call end
     if (userIdRef.current && callStartTime) {
       const duration = Math.floor((Date.now() - callStartTime) / 1000);
@@ -206,13 +206,13 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
         duration: duration
       });
     }
-    
+
     await updateCallStatus("ended");
-    
+
     if (webrtcRef.current) {
       webrtcRef.current.endCall();
     }
-    
+
     onEnd();
   }, [callEnded, elapsed, onEnd, callStartTime, matchId, callId]);
 
@@ -272,17 +272,15 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
       {/* Timer */}
       <div className="absolute top-4 left-0 right-0 flex justify-center z-10 pointer-events-none">
         <div
-          className={`flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md ${
-            remaining <= 120
+          className={`flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md ${remaining <= 120
               ? "bg-red-500/80 border border-red-400/60"
               : "bg-black/60 border border-white/15"
-          }`}
+            }`}
         >
           <Clock size={14} className={remaining <= 120 ? "text-white" : "text-white/60"} />
           <span
-            className={`text-sm font-bold tabular-nums ${
-              remaining <= 120 ? "text-white" : "text-white"
-            }`}
+            className={`text-sm font-bold tabular-nums ${remaining <= 120 ? "text-white" : "text-white"
+              }`}
           >
             {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}
           </span>
@@ -305,11 +303,10 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
       <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-4 z-10">
         <button
           onClick={toggleAudio}
-          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${
-            audioEnabled
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${audioEnabled
               ? "bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30"
               : "bg-red-500 hover:bg-red-600"
-          }`}
+            }`}
         >
           {audioEnabled ? (
             <Mic className="w-6 h-6 text-white" />
@@ -327,11 +324,10 @@ export default function VideoCallScreen({ matchId, callId, partnerName, partnerI
 
         <button
           onClick={toggleVideo}
-          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${
-            videoEnabled
+          className={`w-14 h-14 rounded-full flex items-center justify-center transition-all shadow-lg ${videoEnabled
               ? "bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/30"
               : "bg-red-500 hover:bg-red-600"
-          }`}
+            }`}
         >
           {videoEnabled ? (
             <Video className="w-6 h-6 text-white" />

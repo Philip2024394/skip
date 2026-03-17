@@ -1,13 +1,13 @@
 import { motion, animate } from "framer-motion";
 import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight, BadgeCheck } from "lucide-react";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
-import ProfileBadge from "@/components/ProfileBadge";
-import ContactPreferenceBadge from "@/components/ContactPreferenceBadge";
-import DistanceBadge from "@/components/DistanceBadge";
-import SentGiftsDisplay from "@/components/gifts/SentGiftsDisplay";
-import { isOnline } from "@/hooks/useOnlineStatus";
-import { isMockCurrentlyOnline } from "@/utils/mockOnlineSchedule";
-import SwipeStack from "@/components/SwipeStack";
+import ProfileBadge from "@/features/dating/components/ProfileBadge";
+import ContactPreferenceBadge from "@/features/dating/components/ContactPreferenceBadge";
+import DistanceBadge from "@/features/dating/components/DistanceBadge";
+import SentGiftsDisplay from "@/features/gifts/components/SentGiftsDisplay";
+import { isOnline } from "@/shared/hooks/useOnlineStatus";
+import { isMockCurrentlyOnline } from "@/shared/utils/mockOnlineSchedule";
+import SwipeStack from "@/features/dating/components/SwipeStack";
 
 interface TopCardProps {
   selectedProfile: any;

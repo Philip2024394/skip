@@ -7,7 +7,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthPage } from "@/features/auth/pages";
-import { Index } from "@/features/dating/pages";
 import { ProtectedRoute, LoadingFallback } from "@/shared/components";
 
 // Lazy load admin components to reduce initial bundle size

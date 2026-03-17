@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/shared/components/button";
 import { X, XCircle, Heart } from "lucide-react";
 
 interface GiftRefusedNotificationProps {

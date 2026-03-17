@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Heart, MapPin, BadgeCheck, Fingerprint } from "lucide-react";
-import DistanceBadge from "@/components/DistanceBadge";
-import { isOnline } from "@/hooks/useOnlineStatus";
+import DistanceBadge from "@/features/dating/components/DistanceBadge";
+import { isOnline } from "@/shared/hooks/useOnlineStatus";
 
 // Mock male likers — always shown so female profiles appear popular
 const MOCK_MALE_LIKERS = [
@@ -139,8 +139,8 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
 
         {/* Distance badge — top-right */}
-        <DistanceBadge 
-          profile={profile} 
+        <DistanceBadge
+          profile={profile}
           onClick={() => {
             if (onOpenMap) {
               onOpenMap(profile);
@@ -156,11 +156,10 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
               handleLike(profile);
             }}
             aria-label={`Like ${profileName}`}
-            className={`absolute z-20 w-10 h-10 rounded-full flex items-center justify-center active:scale-95 hover:scale-110 transition-all top-12 right-3 ${
-              isLiked
+            className={`absolute z-20 w-10 h-10 rounded-full flex items-center justify-center active:scale-95 hover:scale-110 transition-all top-12 right-3 ${isLiked
                 ? "bg-pink-500/40 border border-pink-400/60 shadow-[0_0_14px_rgba(180,80,150,0.5)]"
                 : "gradient-love border-0 shadow-[0_0_14px_rgba(180,80,150,0.4)]"
-            }`}
+              }`}
             style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           >
             <Heart className="w-5 h-5 text-white" fill="white" />

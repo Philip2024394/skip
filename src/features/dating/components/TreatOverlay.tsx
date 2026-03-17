@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Lock, Flag, ShoppingCart } from "lucide-react";
-import ContactOverlay from "@/components/overlays/ContactOverlay";
+import ContactOverlay from "@/features/dating/components/ContactOverlay";
 
 interface TreatOverlayProps {
   showTreatPage: any;
@@ -18,17 +18,17 @@ const FingerprintIcon = ({ size = 14, color = "#e848c7" }: { size?: number; colo
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const BG_IMAGES: Record<string, string> = {
-  massage:    "https://ik.imagekit.io/7grri5v7d/massage%20therapist.png?updatedAt=1773333035061",
-  jewelry:    "https://ik.imagekit.io/7grri5v7d/jewerly.png?updatedAt=1773337086683",
+  massage: "https://ik.imagekit.io/7grri5v7d/massage%20therapist.png?updatedAt=1773333035061",
+  jewelry: "https://ik.imagekit.io/7grri5v7d/jewerly.png?updatedAt=1773337086683",
   beautician: "https://ik.imagekit.io/7grri5v7d/beautician%20picture.png?updatedAt=1773336675160",
-  flowers:    "https://ik.imagekit.io/7grri5v7d/flowerist.png?updatedAt=1773335238478",
+  flowers: "https://ik.imagekit.io/7grri5v7d/flowerist.png?updatedAt=1773335238478",
 };
 
 const HERO_TEXT: Record<string, { main: string; sub: string; locations: string }> = {
-  massage:    { main: "Yogyakarta", sub: "Massage Service",    locations: "Home  ·  Villa  ·  Hotel" },
+  massage: { main: "Yogyakarta", sub: "Massage Service", locations: "Home  ·  Villa  ·  Hotel" },
   beautician: { main: "Yogyakarta", sub: "Beautician Service", locations: "Home  ·  Villa  ·  Hotel" },
-  flowers:    { main: "Yogyakarta", sub: "Florist Service",    locations: "Home  ·  Hotel  ·  Villa" },
-  jewelry:    { main: "Yogyakarta", sub: "Jewelry Services",   locations: "Home  ·  Hotel  ·  Villa" },
+  flowers: { main: "Yogyakarta", sub: "Florist Service", locations: "Home  ·  Hotel  ·  Villa" },
+  jewelry: { main: "Yogyakarta", sub: "Jewelry Services", locations: "Home  ·  Hotel  ·  Villa" },
 };
 
 const PAGE_EMOJI: Record<string, string> = {
@@ -36,62 +36,62 @@ const PAGE_EMOJI: Record<string, string> = {
 };
 
 const ADDITIONAL_TEXT: Record<string, string> = {
-  massage:    "Additional Services On Request",
+  massage: "Additional Services On Request",
   beautician: "Additional Services On Request",
-  flowers:    "Additional Bouquets On Request",
-  jewelry:    "Additional Jewelry On Request",
+  flowers: "Additional Bouquets On Request",
+  jewelry: "Additional Jewelry On Request",
 };
 
 // ── Glass styles ──────────────────────────────────────────────────────────────
-const GLASS_BG   = "rgba(0,0,0,0.80)";
-const GLASS_RIM  = "rgba(195,60,255,0.45)";
+const GLASS_BG = "rgba(0,0,0,0.80)";
+const GLASS_RIM = "rgba(195,60,255,0.45)";
 const GLASS_RIM2 = "rgba(232,72,199,0.50)";
 const GLASS_BLUR = "blur(20px)";
-const FLIP_BG    = "rgba(0,0,0,0.93)";
-const PINK_FP    = "#e848c7";
+const FLIP_BG = "rgba(0,0,0,0.93)";
+const PINK_FP = "#e848c7";
 const PINK_FP_DIM = "rgba(232,72,199,0.35)";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 type MassageService = { icon: string; name: string; duration: string; price: string };
 
 const MASSAGE_MENUS: MassageService[][] = [
-  [{ icon: "✈️", name: "Travel Relax",       duration: "60 MIN",  price: "Rp 80.000"  }, { icon: "💼", name: "Office Massage",      duration: "90 MIN",  price: "Rp 130.000" }, { icon: "🏃", name: "Sports Recovery",     duration: "120 MIN", price: "Rp 180.000" }],
-  [{ icon: "⚡", name: "Power Relief",         duration: "60 MIN",  price: "Rp 90.000"  }, { icon: "🧘", name: "Deep Tissue Therapy", duration: "90 MIN",  price: "Rp 145.000" }, { icon: "🏆", name: "Athletic Recovery",   duration: "120 MIN", price: "Rp 200.000" }],
-  [{ icon: "🪨", name: "Hot Stone Bliss",      duration: "60 MIN",  price: "Rp 100.000" }, { icon: "🌿", name: "Javanese Traditional",duration: "90 MIN",  price: "Rp 155.000" }, { icon: "👑", name: "Royal Spa Full Body", duration: "120 MIN", price: "Rp 200.000" }],
-  [{ icon: "🌸", name: "Relax & Unwind",       duration: "60 MIN",  price: "Rp 80.000"  }, { icon: "🕯️", name: "Aromatherapy Dream", duration: "90 MIN",  price: "Rp 130.000" }, { icon: "💆", name: "Total Body Reset",    duration: "120 MIN", price: "Rp 175.000" }],
-  [{ icon: "🚗", name: "Mobile Home Visit",    duration: "60 MIN",  price: "Rp 85.000"  }, { icon: "🦶", name: "Reflexology & Back",  duration: "90 MIN",  price: "Rp 135.000" }, { icon: "🌙", name: "Night Relax Special", duration: "120 MIN", price: "Rp 190.000" }],
+  [{ icon: "✈️", name: "Travel Relax", duration: "60 MIN", price: "Rp 80.000" }, { icon: "💼", name: "Office Massage", duration: "90 MIN", price: "Rp 130.000" }, { icon: "🏃", name: "Sports Recovery", duration: "120 MIN", price: "Rp 180.000" }],
+  [{ icon: "⚡", name: "Power Relief", duration: "60 MIN", price: "Rp 90.000" }, { icon: "🧘", name: "Deep Tissue Therapy", duration: "90 MIN", price: "Rp 145.000" }, { icon: "🏆", name: "Athletic Recovery", duration: "120 MIN", price: "Rp 200.000" }],
+  [{ icon: "🪨", name: "Hot Stone Bliss", duration: "60 MIN", price: "Rp 100.000" }, { icon: "🌿", name: "Javanese Traditional", duration: "90 MIN", price: "Rp 155.000" }, { icon: "👑", name: "Royal Spa Full Body", duration: "120 MIN", price: "Rp 200.000" }],
+  [{ icon: "🌸", name: "Relax & Unwind", duration: "60 MIN", price: "Rp 80.000" }, { icon: "🕯️", name: "Aromatherapy Dream", duration: "90 MIN", price: "Rp 130.000" }, { icon: "💆", name: "Total Body Reset", duration: "120 MIN", price: "Rp 175.000" }],
+  [{ icon: "🚗", name: "Mobile Home Visit", duration: "60 MIN", price: "Rp 85.000" }, { icon: "🦶", name: "Reflexology & Back", duration: "90 MIN", price: "Rp 135.000" }, { icon: "🌙", name: "Night Relax Special", duration: "120 MIN", price: "Rp 190.000" }],
 ];
 
 const PRODUCT_IMAGES: Record<string, string[][]> = {
   beautician: [
-    ["https://images.unsplash.com/photo-1604654894610-df63bc536371?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1560066984-138daaa22279?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1527515637462-cff94ebb84ce?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1591343395082-e120087004b4?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1604654894610-df63bc536371?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1560066984-138daaa22279?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1527515637462-cff94ebb84ce?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1591343395082-e120087004b4?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1604654894610-df63bc536371?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1604654894610-df63bc536371?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1560066984-138daaa22279?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1527515637462-cff94ebb84ce?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1591343395082-e120087004b4?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1560066984-138daaa22279?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1527515637462-cff94ebb84ce?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1591343395082-e120087004b4?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=200&q=75&auto=format&fit=crop"],
   ],
   flowers: [
-    ["https://images.unsplash.com/photo-1548198471-89014d55f8d0?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1487530811015-780f7e3d5c2b?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1548198471-89014d55f8d0?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1487530811015-780f7e3d5c2b?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1548198471-89014d55f8d0?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1487530811015-780f7e3d5c2b?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1548198471-89014d55f8d0?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1487530811015-780f7e3d5c2b?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1548198471-89014d55f8d0?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1487530811015-780f7e3d5c2b?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1548198471-89014d55f8d0?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1455659817273-f96807779a8a?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1487530811015-780f7e3d5c2b?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1508610048659-a06b669e3321?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1566305977571-5666677c6e98?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1490750967-23b94de16e3e?w=200&q=75&auto=format&fit=crop"],
   ],
   jewelry: [
-    ["https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop"],
-    ["https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop","https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&q=75&auto=format&fit=crop"],
+    ["https://images.unsplash.com/photo-1573408301185-9519f94816b5?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&q=75&auto=format&fit=crop", "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&q=75&auto=format&fit=crop"],
   ],
 };
 
 type Provider = { name: string; bio: string; avatar: string };
 const PROVIDERS: Record<string, Provider[]> = {
-  massage:    [{ name: "Sari Dewi",     bio: "Swedish & aromatherapy · 6 yrs exp",   avatar: "https://i.pravatar.cc/80?img=47" }, { name: "Budi Santoso",  bio: "Deep tissue & sports certified",        avatar: "https://i.pravatar.cc/80?img=12" }, { name: "Ayu Lestari",   bio: "Hot stone & Javanese traditional",      avatar: "https://i.pravatar.cc/80?img=48" }, { name: "Rini Pratiwi",  bio: "Relaxation & aromatherapy expert",      avatar: "https://i.pravatar.cc/80?img=49" }, { name: "Hendra Kusuma", bio: "Mobile service · reflexology & back",   avatar: "https://i.pravatar.cc/80?img=15" }],
-  beautician: [{ name: "Maya Putri",    bio: "Nail art & gel · Korean skincare",     avatar: "https://i.pravatar.cc/80?img=44" }, { name: "Lia Rahma",     bio: "Hair colourist & stylist · 8 yrs",     avatar: "https://i.pravatar.cc/80?img=45" }, { name: "Nanda Sari",    bio: "Bridal & event makeup artist",         avatar: "https://i.pravatar.cc/80?img=46" }, { name: "Citra Ayu",     bio: "Lash & brow lifting specialist",       avatar: "https://i.pravatar.cc/80?img=41" }, { name: "Dian Cahya",    bio: "Facial & skin rejuvenation",           avatar: "https://i.pravatar.cc/80?img=43" }],
-  flowers:    [{ name: "Toko Indah",    bio: "Fresh daily bouquets · roses & mixed", avatar: "https://i.pravatar.cc/80?img=33" }, { name: "Rosa Florist",  bio: "Wedding & event florals · same day",   avatar: "https://i.pravatar.cc/80?img=34" }, { name: "Bunga Segar",   bio: "Tropical blooms & exotic orchids",     avatar: "https://i.pravatar.cc/80?img=35" }, { name: "Melati Garden", bio: "Sustainable local · seasonal variety", avatar: "https://i.pravatar.cc/80?img=36" }, { name: "Anggrek Shop",  bio: "Rare orchid specialist · potted & cut",avatar: "https://i.pravatar.cc/80?img=37" }],
-  jewelry:    [{ name: "Toko Emas Bali",bio: "Gold & silver handcrafted jewelry",    avatar: "https://i.pravatar.cc/80?img=25" }, { name: "Permata Shop",  bio: "Gemstone rings & custom pendants",     avatar: "https://i.pravatar.cc/80?img=26" }, { name: "Silver Studio", bio: "Artisan silver · local craftsmanship",  avatar: "https://i.pravatar.cc/80?img=27" }, { name: "Diamond Dreams",bio: "Diamond & precious stone specialist",  avatar: "https://i.pravatar.cc/80?img=28" }, { name: "Artisan Gold",  bio: "Custom jewelry design & engraving",    avatar: "https://i.pravatar.cc/80?img=29" }],
+  massage: [{ name: "Sari Dewi", bio: "Swedish & aromatherapy · 6 yrs exp", avatar: "https://i.pravatar.cc/80?img=47" }, { name: "Budi Santoso", bio: "Deep tissue & sports certified", avatar: "https://i.pravatar.cc/80?img=12" }, { name: "Ayu Lestari", bio: "Hot stone & Javanese traditional", avatar: "https://i.pravatar.cc/80?img=48" }, { name: "Rini Pratiwi", bio: "Relaxation & aromatherapy expert", avatar: "https://i.pravatar.cc/80?img=49" }, { name: "Hendra Kusuma", bio: "Mobile service · reflexology & back", avatar: "https://i.pravatar.cc/80?img=15" }],
+  beautician: [{ name: "Maya Putri", bio: "Nail art & gel · Korean skincare", avatar: "https://i.pravatar.cc/80?img=44" }, { name: "Lia Rahma", bio: "Hair colourist & stylist · 8 yrs", avatar: "https://i.pravatar.cc/80?img=45" }, { name: "Nanda Sari", bio: "Bridal & event makeup artist", avatar: "https://i.pravatar.cc/80?img=46" }, { name: "Citra Ayu", bio: "Lash & brow lifting specialist", avatar: "https://i.pravatar.cc/80?img=41" }, { name: "Dian Cahya", bio: "Facial & skin rejuvenation", avatar: "https://i.pravatar.cc/80?img=43" }],
+  flowers: [{ name: "Toko Indah", bio: "Fresh daily bouquets · roses & mixed", avatar: "https://i.pravatar.cc/80?img=33" }, { name: "Rosa Florist", bio: "Wedding & event florals · same day", avatar: "https://i.pravatar.cc/80?img=34" }, { name: "Bunga Segar", bio: "Tropical blooms & exotic orchids", avatar: "https://i.pravatar.cc/80?img=35" }, { name: "Melati Garden", bio: "Sustainable local · seasonal variety", avatar: "https://i.pravatar.cc/80?img=36" }, { name: "Anggrek Shop", bio: "Rare orchid specialist · potted & cut", avatar: "https://i.pravatar.cc/80?img=37" }],
+  jewelry: [{ name: "Toko Emas Bali", bio: "Gold & silver handcrafted jewelry", avatar: "https://i.pravatar.cc/80?img=25" }, { name: "Permata Shop", bio: "Gemstone rings & custom pendants", avatar: "https://i.pravatar.cc/80?img=26" }, { name: "Silver Studio", bio: "Artisan silver · local craftsmanship", avatar: "https://i.pravatar.cc/80?img=27" }, { name: "Diamond Dreams", bio: "Diamond & precious stone specialist", avatar: "https://i.pravatar.cc/80?img=28" }, { name: "Artisan Gold", bio: "Custom jewelry design & engraving", avatar: "https://i.pravatar.cc/80?img=29" }],
 };
 
 // ── Report popup (red theme + user info) ──────────────────────────────────────
@@ -101,8 +101,8 @@ function ReportPopup({ providerName, category, currentUser, onClose }: {
   providerName: string; category: string; currentUser: any; onClose: () => void;
 }) {
   const [selected, setSelected] = useState<string | null>(null);
-  const [details, setDetails]   = useState("");
-  const userName  = currentUser?.name || currentUser?.user_metadata?.name || currentUser?.email || "User";
+  const [details, setDetails] = useState("");
+  const userName = currentUser?.name || currentUser?.user_metadata?.name || currentUser?.email || "User";
   const userPhone = currentUser?.phone || currentUser?.user_metadata?.phone || "Not provided";
 
   const handleSend = () => {
@@ -241,7 +241,7 @@ function CardFront({
         </div>
         {/* Unlock button */}
         <div style={{ flexShrink: 0 }}>
-          <button onClick={() => {}}
+          <button onClick={() => { }}
             style={{ display: "flex", alignItems: "center", gap: 4, padding: "6px 10px", borderRadius: 20, background: `rgba(232,72,199,0.12)`, border: `1.5px solid ${GLASS_RIM2}`, color: PINK_FP, fontSize: 10, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>
             <Lock size={9} strokeWidth={2.5} />Unlock
           </button>
@@ -332,9 +332,9 @@ function TreatFooter({ category, onContactUs }: { category: string; onContactUs:
   const tips: { icon: string; text: string }[] = [
     { icon: "💬", text: "All conversations must be recorded in WhatsApp chat — keep a text record of every agreement for your reference and the provider's." },
     { icon: "📞", text: "Feel free to call the provider, but ensure all order details, pricing, and agreements are confirmed in WhatsApp text format." },
-    ...(category === "massage"  ? [{ icon: "⏱️", text: "Massage: Confirm the number of minutes, massage type, and arrival time before booking." }] : []),
-    ...(category === "flowers"  ? [{ icon: "📸", text: "Florist: Request a photo of the final product before or at time of delivery." }] : []),
-    ...(category === "jewelry"  ? [{ icon: "📜", text: "Jewelry: Request certification of gold, diamonds, or gemstones before purchase." }] : []),
+    ...(category === "massage" ? [{ icon: "⏱️", text: "Massage: Confirm the number of minutes, massage type, and arrival time before booking." }] : []),
+    ...(category === "flowers" ? [{ icon: "📸", text: "Florist: Request a photo of the final product before or at time of delivery." }] : []),
+    ...(category === "jewelry" ? [{ icon: "📜", text: "Jewelry: Request certification of gold, diamonds, or gemstones before purchase." }] : []),
     ...(category === "beautician" ? [{ icon: "💆", text: "Beautician: Confirm the treatment time, procedure, and any products to be used beforehand." }] : []),
     { icon: "🕐", text: "Set a clear arrival time or estimated delivery time. Delivery to hotels, villas, or homes in certain areas may require additional time due to city location." },
     { icon: "💳", text: "Service providers expect full payment for products or services before delivery. Most providers use local courier services for orders under a certain value." },
@@ -400,15 +400,15 @@ function TreatFooter({ category, onContactUs }: { category: string; onContactUs:
 // ── Main Overlay ──────────────────────────────────────────────────────────────
 export default function TreatOverlay({ showTreatPage, onClose, currentUser }: TreatOverlayProps) {
   const [reportingProvider, setReportingProvider] = useState<string | null>(null);
-  const [showContact,        setShowContact]        = useState(false);
+  const [showContact, setShowContact] = useState(false);
 
   if (!showTreatPage) return null;
 
-  const bgImage   = BG_IMAGES[showTreatPage];
+  const bgImage = BG_IMAGES[showTreatPage];
   const providers = PROVIDERS[showTreatPage] ?? [];
   const allImages = PRODUCT_IMAGES[showTreatPage] ?? [];
-  const hero      = HERO_TEXT[showTreatPage] ?? { main: "Yogyakarta", sub: "Service", locations: "Home · Villa · Hotel" };
-  const emoji     = PAGE_EMOJI[showTreatPage] ?? "🎁";
+  const hero = HERO_TEXT[showTreatPage] ?? { main: "Yogyakarta", sub: "Service", locations: "Home · Villa · Hotel" };
+  const emoji = PAGE_EMOJI[showTreatPage] ?? "🎁";
 
   if (!bgImage) return null;
 
@@ -457,7 +457,7 @@ export default function TreatOverlay({ showTreatPage, onClose, currentUser }: Tr
                   Unlock all 5 WhatsApp contacts
                 </p>
               </div>
-              <button onClick={() => {}}
+              <button onClick={() => { }}
                 style={{ display: "flex", alignItems: "center", gap: 5, padding: "9px 14px", borderRadius: 22, background: "linear-gradient(135deg, rgba(232,72,199,0.85), rgba(195,60,255,0.85))", border: "none", color: "#fff", fontWeight: 900, fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", boxShadow: "0 0 16px rgba(195,60,255,0.35)", flexShrink: 0 }}>
                 <ShoppingCart size={12} strokeWidth={2.5} />Order Now · $1.99
               </button>

@@ -1,4 +1,4 @@
-import { getPreferenceIcon } from "@/utils/contactPreference";
+import { getPreferenceIcon } from "@/shared/utils/contactPreference";
 
 interface ContactPreferenceBadgeProps {
   preference?: string | null;

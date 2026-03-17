@@ -2,7 +2,7 @@ import { useState } from "react";
 import { MapPin, Eye } from "lucide-react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import DistanceMapOverlay from "@/components/profile-view/DistanceMapOverlay";
+import DistanceMapOverlay from "@/features/dating/components/profile-view/DistanceMapOverlay";
 
 interface DistanceBadgeProps {
   profile: any;
@@ -58,8 +58,8 @@ export default function DistanceBadge({ profile, allProfiles = [], onClick }: Di
             profile={profile}
             allProfiles={allProfiles}
             onClose={handleCloseMap}
-            onLike={() => {}}
-            onSuperLike={() => {}}
+            onLike={() => { }}
+            onSuperLike={() => { }}
           />
         </AnimatePresence>,
         document.body

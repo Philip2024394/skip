@@ -18,6 +18,7 @@ import { isMockCurrentlyOnline } from "@/shared/utils/mockOnlineSchedule";
 import { GuestAuthPrompt } from "@/features/auth/components";
 import { TermsAcceptanceDialog } from "@/features/auth/components";
 import { TreatOverlay, AppDialogs, DailyMatchSuggestion, shouldShowDailyMatch, markDailyMatchShown } from "@/features/dating/components";
+import PackageTermsOverlay from "@/features/dating/components/PackageTermsOverlay";
 import { ProfileBottomSheet, ProfileInfoPanel, ProfileImagesPanel, DateIdeaDetailPanel, TreatDetailPanel } from "@/features/dating/components";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/shared/services/constants";
@@ -33,6 +34,9 @@ import { InfoChip, Section, ContainerBlock } from "@/shared/components/SwipeUICo
 import { getTarotCardById } from "@/data/tarotCards";
 import { TopCard } from "@/features/dating/components";
 import { useVideoCall } from "@/shared/hooks/useVideoCall";
+import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
+import CoinHub from "@/shared/components/CoinHub";
+import { TokenPurchase } from "@/features/gifts/components";
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
 import logoHeart from "@/assets/images/logo-heart.png";
@@ -90,8 +94,6 @@ const saveLocalLikedMeProfiles = (profiles: Profile[]) => {
   }
 };
 
-
-import PackageTermsOverlay from "@/components/overlays/PackageTermsOverlay";
 
 // ── Home page package detail (shown in bottom card when unlock item selected) ──
 const UNLOCK_BG_IMAGE = "https://ik.imagekit.io/7grri5v7d/match%20unlockssss.png?updatedAt=1773231173310";
@@ -218,6 +220,8 @@ const Index = () => {
     const adminUser = getAdminUser();
     return adminUser || guestUser;
   });
+  const coinBalance = useCoinBalance(user?.id);
+  const [showCoinRefuel, setShowCoinRefuel] = useState(false);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
     // Always false for immediate content display
@@ -911,6 +915,11 @@ const Index = () => {
               </button>
               {user ? (
                 <>
+                  <CoinHub
+                    balance={coinBalance.balance}
+                    loading={coinBalance.loading}
+                    onClick={() => setShowCoinRefuel(true)}
+                  />
                   <button onClick={() => { if (!user) { showGuestPrompt("filter"); return; } setShowFilters(true); }} aria-label={t("nav.filters")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.filters")}>
                     <SlidersHorizontal className="w-4 h-4" />
                   </button>
@@ -1342,6 +1351,16 @@ const Index = () => {
           />
         )}
       </AnimatePresence>
+
+      {showCoinRefuel && (
+        <TokenPurchase
+          onClose={() => setShowCoinRefuel(false)}
+          onPurchaseSuccess={() => {
+            setShowCoinRefuel(false);
+            coinBalance.addCoins(50);
+          }}
+        />
+      )}
 
     </div>
   );

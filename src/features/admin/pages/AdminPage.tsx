@@ -15,10 +15,10 @@ import { Badge } from "@/shared/components/badge";
 import { Slider } from "@/shared/components/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { BasicInfoEditor } from "@/components/profile-editor/BasicInfoEditor";
-import { LifestyleEditor } from "@/components/profile-editor/LifestyleEditor";
-import { RelationshipGoalsEditor } from "@/components/profile-editor/RelationshipGoalsEditor";
-import MockGiftSelector from "@/components/gifts/MockGiftSelector";
+import { BasicInfoEditor } from "@/features/dating/components/profile-editor/BasicInfoEditor";
+import { LifestyleEditor } from "@/features/dating/components/profile-editor/LifestyleEditor";
+import { RelationshipGoalsEditor } from "@/features/dating/components/profile-editor/RelationshipGoalsEditor";
+import MockGiftSelector from "@/features/gifts/components/MockGiftSelector";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import { WhatsAppCountryList } from "../components/WhatsAppCountryList";
 

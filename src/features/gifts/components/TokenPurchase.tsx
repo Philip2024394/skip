@@ -1,20 +1,28 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { X, Coins, ShoppingBag } from "lucide-react";
+import { Button } from "@/shared/components/button";
+import { X, Coins, Sparkles, Zap, Crown, Star } from "lucide-react";
 
 interface TokenPackage {
   tokens: number;
   price: number;
   priceId: string;
+  label: string;
+  desc: string;
+  icon: "star" | "zap" | "sparkles" | "crown";
+  popular?: boolean;
+  gradient: string;
 }
 
 const TOKEN_PACKAGES: TokenPackage[] = [
-  { tokens: 5, price: 1.25, priceId: "price_5_tokens" },
-  { tokens: 15, price: 3.25, priceId: "price_15_tokens" },
-  { tokens: 35, price: 6.50, priceId: "price_35_tokens" },
-  { tokens: 75, price: 12.50, priceId: "price_75_tokens" },
+  { tokens: 5, price: 1.25, priceId: "price_5_tokens", label: "Starter", desc: "Try it out", icon: "star", gradient: "from-pink-500/15 to-pink-700/5" },
+  { tokens: 15, price: 3.25, priceId: "price_15_tokens", label: "Popular", desc: "Most chosen", icon: "zap", popular: true, gradient: "from-violet-500/20 to-fuchsia-600/10" },
+  { tokens: 35, price: 6.50, priceId: "price_35_tokens", label: "Value", desc: "Save 26%", icon: "sparkles", gradient: "from-blue-500/15 to-cyan-600/10" },
+  { tokens: 75, price: 12.50, priceId: "price_75_tokens", label: "Diamond", desc: "Save 33%", icon: "crown", gradient: "from-amber-400/20 to-yellow-600/10" },
 ];
+
+const ICON_MAP = { star: Star, zap: Zap, sparkles: Sparkles, crown: Crown };
 
 interface TokenPurchaseProps {
   onClose: () => void;
@@ -31,7 +39,7 @@ export default function TokenPurchase({ onClose, onPurchaseSuccess }: TokenPurch
 
     try {
       const { data, error } = await supabase.functions.invoke("purchase-tokens", {
-        body: { 
+        body: {
           tokens: pkg.tokens,
           priceId: pkg.priceId,
           price: pkg.price,
@@ -41,27 +49,23 @@ export default function TokenPurchase({ onClose, onPurchaseSuccess }: TokenPurch
       if (error) throw error;
 
       if (data?.url) {
-        // Open Stripe checkout
         window.open(data.url, "_blank");
-        
-        // Poll for payment completion (in a real app, you'd use webhooks)
+
         const checkPayment = async () => {
           try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
 
-            const { data: tokens } = await supabase
-              .from("user_tokens")
-              .select("tokens_balance")
+            const { data: tokens } = await (supabase as any)
+              .from("user_wallets")
+              .select("current_balance")
               .eq("user_id", user.id)
               .single();
 
-            // If tokens increased, payment was successful
-            if (tokens && tokens.tokens_balance >= pkg.tokens) {
+            if (tokens && tokens.current_balance >= pkg.tokens) {
               onPurchaseSuccess();
               onClose();
             } else {
-              // Check again in 2 seconds
               setTimeout(checkPayment, 2000);
             }
           } catch (error) {
@@ -79,84 +83,109 @@ export default function TokenPurchase({ onClose, onPurchaseSuccess }: TokenPurch
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-pink-900/90 via-black/90 to-violet-900/90 rounded-3xl border-2 border-pink-400/30 shadow-[0_20px_60px_rgba(0,0,0,0.8)] max-w-lg w-full p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Coins className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-white text-xl font-bold">Purchase Tokens</h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/20 transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Info */}
-        <div className="bg-black/30 rounded-xl p-4 mb-6">
-          <p className="text-white/90 text-sm">
-            Purchase tokens to send virtual gifts to other users. Tokens never expire!
-          </p>
-        </div>
-
-        {/* Token Packages */}
-        <div className="space-y-3 mb-6">
-          {TOKEN_PACKAGES.map((pkg, index) => (
-            <div
-              key={pkg.tokens}
-              className={`bg-white/5 border rounded-xl p-4 cursor-pointer transition-all ${
-                selectedPackage?.tokens === pkg.tokens
-                  ? "border-pink-400/50 bg-pink-400/10"
-                  : "border-white/20 hover:border-pink-400/30 hover:bg-white/10"
-              }`}
-              onClick={() => !isProcessing && handlePurchase(pkg)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-400/20 to-yellow-600/20 border border-yellow-400/30 flex items-center justify-center">
-                    <Coins className="w-6 h-6 text-yellow-400" />
-                  </div>
-                  <div>
-                    <p className="text-white font-semibold">{pkg.tokens} Tokens</p>
-                    <p className="text-white/60 text-sm">
-                      {pkg.tokens === 5 ? "Perfect for trying out" :
-                       pkg.tokens === 15 ? "Most popular choice" :
-                       pkg.tokens === 35 ? "Great value" :
-                       "Best value - send many gifts!"}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-white font-bold text-lg">${pkg.price}</p>
-                  <p className="text-green-400 text-sm">
-                    ${(pkg.price / pkg.tokens).toFixed(2)}/token
-                  </p>
-                </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <motion.div
+        initial={{ scale: 0.9, y: 30 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 30 }}
+        className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-3xl border border-yellow-400/20 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(250,204,21,0.08)] max-w-md w-full overflow-hidden"
+      >
+        {/* Header with glow */}
+        <div className="relative px-6 pt-6 pb-4">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent rounded-full" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-[0_0_16px_rgba(250,204,21,0.3)]">
+                <Coins className="w-5 h-5 text-black" />
               </div>
-              
-              {isProcessing && selectedPackage?.tokens === pkg.tokens && (
-                <div className="mt-3">
-                  <div className="bg-pink-500/20 rounded-lg p-2">
-                    <p className="text-pink-300 text-sm text-center">
-                      Opening payment page...
+              <div>
+                <h3 className="text-white text-lg font-bold">Refuel Coins</h3>
+                <p className="text-white/40 text-[10px]">Coins never expire</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Package cards */}
+        <div className="px-4 pb-4 space-y-2.5">
+          {TOKEN_PACKAGES.map((pkg, i) => {
+            const Icon = ICON_MAP[pkg.icon];
+            const isSelected = selectedPackage?.tokens === pkg.tokens;
+
+            return (
+              <motion.div
+                key={pkg.tokens}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08 }}
+                className={`
+                  relative bg-gradient-to-r ${pkg.gradient} border rounded-2xl p-3.5 cursor-pointer transition-all duration-200
+                  ${isSelected ? "border-yellow-400/50 ring-1 ring-yellow-400/20" : "border-white/10 hover:border-white/25"}
+                  ${isProcessing && !isSelected ? "opacity-50 pointer-events-none" : ""}
+                `}
+                onClick={() => !isProcessing && handlePurchase(pkg)}
+              >
+                {pkg.popular && (
+                  <div className="absolute -top-2 right-4 px-2 py-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full text-[9px] font-bold text-white shadow-lg">
+                    POPULAR
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center`}>
+                      <Icon className={`w-5 h-5 ${pkg.icon === "crown" ? "text-yellow-400" : pkg.icon === "sparkles" ? "text-blue-400" : pkg.icon === "zap" ? "text-violet-400" : "text-pink-400"}`} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-white font-bold text-sm">{pkg.tokens}</span>
+                        <Coins className="w-3.5 h-3.5 text-yellow-400" />
+                      </div>
+                      <span className="text-white/50 text-[10px]">{pkg.desc}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-white font-bold">${pkg.price.toFixed(2)}</p>
+                    <p className="text-green-400/80 text-[10px] font-medium">
+                      ${(pkg.price / pkg.tokens).toFixed(2)}/coin
                     </p>
                   </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {isProcessing && isSelected && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    className="mt-2 bg-yellow-400/10 border border-yellow-400/20 rounded-lg px-3 py-1.5"
+                  >
+                    <p className="text-yellow-300 text-xs text-center animate-pulse">Opening payment...</p>
+                  </motion.div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Footer */}
-        <div className="text-center">
-          <p className="text-white/50 text-xs">
-            Secure payment powered by Stripe. Tokens are added instantly after payment.
+        <div className="px-6 pb-5 pt-1 text-center">
+          <p className="text-white/30 text-[10px]">
+            Secure payment via Stripe. Coins added instantly.
           </p>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -12,7 +12,7 @@
  * ╚═════════════════════════════════════════════════════════════╝
  */
 
-import { getPrimaryBadgeKey } from "@/utils/profileBadges";
+import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
 
 // ── Locked style constants for HOME PAGE (admin-locked) ─────────────────────
 // ADMIN-LOCKED: do not change these without explicit admin approval

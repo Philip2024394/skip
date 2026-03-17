@@ -1,4 +1,4 @@
-import { BIO_MAX_LENGTH } from "@/lib/constants";
+import { BIO_MAX_LENGTH } from "@/shared/services/constants";
 
 /** Remove emoji and phone-number-like sequences from bio text. */
 export function sanitizeBio(text: string): string {

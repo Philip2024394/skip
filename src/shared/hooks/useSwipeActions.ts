@@ -1,10 +1,10 @@
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Profile } from "@/components/SwipeCard";
+import { Profile } from "@/features/dating/components/SwipeCard";
 import { PremiumFeature } from "@/data/premiumFeatures";
-import { LIKE_EXPIRY_MS, SUPER_LIKES_BALANCE_KEY, POST_LOGIN_LANDING_KEY } from "@/lib/constants";
-import { isNetworkError } from "@/utils/payments";
-import { hasUnlockBadges } from "@/utils/unlockPrice";
+import { LIKE_EXPIRY_MS, SUPER_LIKES_BALANCE_KEY, POST_LOGIN_LANDING_KEY } from "@/shared/services/constants";
+import { isNetworkError } from "@/shared/utils/payments";
+import { hasUnlockBadges } from "@/shared/utils/unlockPrice";
 
 interface UseSwipeActionsProps {
   user: any;

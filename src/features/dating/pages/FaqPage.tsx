@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle, UserPlus, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import AppLogo from "@/components/AppLogo";
+import AppLogo from "@/shared/components/AppLogo";
 
 interface FaqItem {
   q: string;
@@ -267,68 +267,68 @@ const FaqPage = () => {
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="px-4 py-6 max-w-lg mx-auto space-y-8" style={{ paddingBottom: `max(6rem, env(safe-area-inset-bottom, 0px))` }}>
-        {/* Hero */}
-        <div className="text-center space-y-2 pt-2">
-          <div className="w-14 h-14 rounded-2xl gradient-love flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(180,80,150,0.35)]">
-            <Heart className="w-7 h-7 text-white" fill="white" />
-          </div>
-          <h2 className="font-display font-bold text-xl text-white">How can we help?</h2>
-          <p className="text-white/50 text-sm">Everything you need to know about 2DateMe.</p>
-        </div>
-
-        {/* Sections */}
-        {FAQ_SECTIONS.map((section) => (
-          <div key={section.title} className="space-y-2">
-            <div className={`flex items-center gap-2 mb-3 ${section.color}`}>
-              {section.icon}
-              <h3 className="font-semibold text-sm uppercase tracking-wider">{section.title}</h3>
+          {/* Hero */}
+          <div className="text-center space-y-2 pt-2">
+            <div className="w-14 h-14 rounded-2xl gradient-love flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(180,80,150,0.35)]">
+              <Heart className="w-7 h-7 text-white" fill="white" />
             </div>
-            <div className="space-y-2">
-              {section.items.map((item, i) => {
-                const id = `${section.title}-${i}`;
-                return (
-                  <FaqAccordion
-                    key={id}
-                    item={item}
-                    isOpen={openId === id}
-                    onToggle={() => toggle(id)}
-                  />
-                );
-              })}
+            <h2 className="font-display font-bold text-xl text-white">How can we help?</h2>
+            <p className="text-white/50 text-sm">Everything you need to know about 2DateMe.</p>
+          </div>
+
+          {/* Sections */}
+          {FAQ_SECTIONS.map((section) => (
+            <div key={section.title} className="space-y-2">
+              <div className={`flex items-center gap-2 mb-3 ${section.color}`}>
+                {section.icon}
+                <h3 className="font-semibold text-sm uppercase tracking-wider">{section.title}</h3>
+              </div>
+              <div className="space-y-2">
+                {section.items.map((item, i) => {
+                  const id = `${section.title}-${i}`;
+                  return (
+                    <FaqAccordion
+                      key={id}
+                      item={item}
+                      isOpen={openId === id}
+                      onToggle={() => toggle(id)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* Contact card */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
+            <div className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              <h3 className="font-semibold text-white">Still need help?</h3>
+            </div>
+            <p className="text-white/55 text-sm leading-relaxed">
+              Our support team is here for you. Drop us an email and we'll get back to you within 24 hours.
+            </p>
+            <a
+              href="mailto:support@2DateMe.com"
+              className="inline-flex items-center gap-2 bg-primary/20 border border-primary/40 text-primary font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-primary/30 transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+              support@2DateMe.com
+            </a>
+            <p className="text-white/30 text-[11px]">
+              For urgent safety concerns please include "URGENT" in the subject line.
+            </p>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center space-y-1 pt-2">
+            <p className="text-white/25 text-[11px]">© 2025 2DateMe.com · All rights reserved</p>
+            <div className="flex items-center justify-center gap-3 text-[11px]">
+              <button onClick={() => navigate("/terms")} className="text-white/30 hover:text-white/60 transition-colors">Terms</button>
+              <span className="text-white/20">·</span>
+              <button onClick={() => navigate("/privacy")} className="text-white/30 hover:text-white/60 transition-colors">Privacy</button>
             </div>
           </div>
-        ))}
-
-        {/* Contact card */}
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-          <div className="flex items-center gap-2">
-            <Mail className="w-5 h-5 text-primary" />
-            <h3 className="font-semibold text-white">Still need help?</h3>
-          </div>
-          <p className="text-white/55 text-sm leading-relaxed">
-            Our support team is here for you. Drop us an email and we'll get back to you within 24 hours.
-          </p>
-          <a
-            href="mailto:support@2DateMe.com"
-            className="inline-flex items-center gap-2 bg-primary/20 border border-primary/40 text-primary font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-primary/30 transition-colors"
-          >
-            <Mail className="w-4 h-4" />
-            support@2DateMe.com
-          </a>
-          <p className="text-white/30 text-[11px]">
-            For urgent safety concerns please include "URGENT" in the subject line.
-          </p>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center space-y-1 pt-2">
-          <p className="text-white/25 text-[11px]">© 2025 2DateMe.com · All rights reserved</p>
-          <div className="flex items-center justify-center gap-3 text-[11px]">
-            <button onClick={() => navigate("/terms")} className="text-white/30 hover:text-white/60 transition-colors">Terms</button>
-            <span className="text-white/20">·</span>
-            <button onClick={() => navigate("/privacy")} className="text-white/30 hover:text-white/60 transition-colors">Privacy</button>
-          </div>
-        </div>
         </div>
       </div>
     </div>

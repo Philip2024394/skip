@@ -1,47 +1,47 @@
 import { Profile, BasicInfo, LifestyleInfo, RelationshipGoals } from "@/types/profile";
-import indoGirl1 from "@/assets/indo-girl-1.png";
-import indoGirl2 from "@/assets/indo-girl-2.png";
-import indoGirl3 from "@/assets/indo-girl-3.png";
-import indoGirl4 from "@/assets/indo-girl-4.png";
-import indoGirl5 from "@/assets/indo-girl-5.png";
-import indoGirl6 from "@/assets/indo-girl-6.png";
-import indoGirl7 from "@/assets/indo-girl-7.png";
-import indoGirl8 from "@/assets/indo-girl-8.png";
-import indoGirl9 from "@/assets/indo-girl-9.png";
-import indoGirl10 from "@/assets/indo-girl-10.png";
-import indoGirl11 from "@/assets/indo-girl-11.png";
-import indoGirl12 from "@/assets/indo-girl-12.png";
-import indoGirl13 from "@/assets/indo-girl-13.png";
-import indoGirl14 from "@/assets/indo-girl-14.png";
-import indoGirl15 from "@/assets/indo-girl-15.png";
-import indoGirl16 from "@/assets/indo-girl-16.png";
-import indoGirl17 from "@/assets/indo-girl-17.png";
-import indoGirl18 from "@/assets/indo-girl-18.png";
-import indoGirl19 from "@/assets/indo-girl-19.png";
-import indoGirl20 from "@/assets/indo-girl-20.png";
-import indoGirl21 from "@/assets/indo-girl-21.png";
-import indoGirl22 from "@/assets/indo-girl-22.png";
-import indoGirl23 from "@/assets/indo-girl-23.png";
-import indoGirl24 from "@/assets/indo-girl-24.png";
-import indoGirl25 from "@/assets/indo-girl-25.png";
-import indoGirl26 from "@/assets/indo-girl-26.png";
-import indoGirl27 from "@/assets/indo-girl-27.png";
-import indoGirl28 from "@/assets/indo-girl-28.png";
-import indoGirl29 from "@/assets/indo-girl-29.png";
-import indoGirl30 from "@/assets/indo-girl-30.png";
-import indoGirl31 from "@/assets/indo-girl-31.png";
-import indoGirl32 from "@/assets/indo-girl-32.png";
-import indoGirl33 from "@/assets/indo-girl-33.png";
-import indoGirl34 from "@/assets/indo-girl-34.png";
-import indoGuy1 from "@/assets/indo-guy-1.png";
-import indoGuy2 from "@/assets/indo-guy-2.png";
-import indoGuy3 from "@/assets/indo-guy-3.png";
-import indoGuy4 from "@/assets/indo-guy-4.png";
-import indoGuy5 from "@/assets/indo-guy-5.png";
-import indoGuy6 from "@/assets/indo-guy-6.png";
-import indoGuy7 from "@/assets/indo-guy-7.png";
-import indoGuy8 from "@/assets/indo-guy-8.png";
-import indoGuy9 from "@/assets/indo-guy-9.png";
+import indoGirl1 from "@/assets/images/indo-girl-1.png";
+import indoGirl2 from "@/assets/images/indo-girl-2.png";
+import indoGirl3 from "@/assets/images/indo-girl-3.png";
+import indoGirl4 from "@/assets/images/indo-girl-4.png";
+import indoGirl5 from "@/assets/images/indo-girl-5.png";
+import indoGirl6 from "@/assets/images/indo-girl-6.png";
+import indoGirl7 from "@/assets/images/indo-girl-7.png";
+import indoGirl8 from "@/assets/images/indo-girl-8.png";
+import indoGirl9 from "@/assets/images/indo-girl-9.png";
+import indoGirl10 from "@/assets/images/indo-girl-10.png";
+import indoGirl11 from "@/assets/images/indo-girl-11.png";
+import indoGirl12 from "@/assets/images/indo-girl-12.png";
+import indoGirl13 from "@/assets/images/indo-girl-13.png";
+import indoGirl14 from "@/assets/images/indo-girl-14.png";
+import indoGirl15 from "@/assets/images/indo-girl-15.png";
+import indoGirl16 from "@/assets/images/indo-girl-16.png";
+import indoGirl17 from "@/assets/images/indo-girl-17.png";
+import indoGirl18 from "@/assets/images/indo-girl-18.png";
+import indoGirl19 from "@/assets/images/indo-girl-19.png";
+import indoGirl20 from "@/assets/images/indo-girl-20.png";
+import indoGirl21 from "@/assets/images/indo-girl-21.png";
+import indoGirl22 from "@/assets/images/indo-girl-22.png";
+import indoGirl23 from "@/assets/images/indo-girl-23.png";
+import indoGirl24 from "@/assets/images/indo-girl-24.png";
+import indoGirl25 from "@/assets/images/indo-girl-25.png";
+import indoGirl26 from "@/assets/images/indo-girl-26.png";
+import indoGirl27 from "@/assets/images/indo-girl-27.png";
+import indoGirl28 from "@/assets/images/indo-girl-28.png";
+import indoGirl29 from "@/assets/images/indo-girl-29.png";
+import indoGirl30 from "@/assets/images/indo-girl-30.png";
+import indoGirl31 from "@/assets/images/indo-girl-31.png";
+import indoGirl32 from "@/assets/images/indo-girl-32.png";
+import indoGirl33 from "@/assets/images/indo-girl-33.png";
+import indoGirl34 from "@/assets/images/indo-girl-34.png";
+import indoGuy1 from "@/assets/images/indo-guy-1.png";
+import indoGuy2 from "@/assets/images/indo-guy-2.png";
+import indoGuy3 from "@/assets/images/indo-guy-3.png";
+import indoGuy4 from "@/assets/images/indo-guy-4.png";
+import indoGuy5 from "@/assets/images/indo-guy-5.png";
+import indoGuy6 from "@/assets/images/indo-guy-6.png";
+import indoGuy7 from "@/assets/images/indo-guy-7.png";
+import indoGuy8 from "@/assets/images/indo-guy-8.png";
+import indoGuy9 from "@/assets/images/indo-guy-9.png";
 
 type DatePlace = {
   idea: string;
@@ -54,30 +54,30 @@ type DatePlace = {
 };
 
 const FEMALE_NAMES = [
-  "Putri","Dewi","Sari","Ayu","Rina","Wulan","Indah","Ratna","Mega","Dian",
-  "Lestari","Anisa","Fitri","Nurul","Sinta","Kartika","Melati","Citra","Bunga","Kirana",
-  "Dinda","Nadia","Laras","Tari","Widya","Ariani","Bella","Cahya","Devi","Eka",
-  "Farah","Gita","Hasna","Intan","Jasmine","Kezia","Lila","Maya","Nova","Olivia",
-  "Puspita","Qanita","Rara","Salma","Tiara","Ulfa","Vina","Widi","Xena","Yola",
-  "Zahra","Amira","Binta","Celine","Diana","Elsa","Fanny","Grace","Hana","Ines",
-  "Jihan","Krisna","Lana","Mira","Nayla","Ophi","Putri","Qisti","Reni","Sela",
-  "Tria","Uma","Vera","Wenny","Yasmin","Zelia","Adinda","Brena","Calista","Dahlia",
-  "Elina","Firda","Ghina","Hesti","Ira","Julita","Katya","Lidya","Mala","Nisa",
-  "Okta","Prisca","Reina","Shinta","Tasya","Uswah","Vanya","Winni","Xanthe","Yuni",
+  "Putri", "Dewi", "Sari", "Ayu", "Rina", "Wulan", "Indah", "Ratna", "Mega", "Dian",
+  "Lestari", "Anisa", "Fitri", "Nurul", "Sinta", "Kartika", "Melati", "Citra", "Bunga", "Kirana",
+  "Dinda", "Nadia", "Laras", "Tari", "Widya", "Ariani", "Bella", "Cahya", "Devi", "Eka",
+  "Farah", "Gita", "Hasna", "Intan", "Jasmine", "Kezia", "Lila", "Maya", "Nova", "Olivia",
+  "Puspita", "Qanita", "Rara", "Salma", "Tiara", "Ulfa", "Vina", "Widi", "Xena", "Yola",
+  "Zahra", "Amira", "Binta", "Celine", "Diana", "Elsa", "Fanny", "Grace", "Hana", "Ines",
+  "Jihan", "Krisna", "Lana", "Mira", "Nayla", "Ophi", "Putri", "Qisti", "Reni", "Sela",
+  "Tria", "Uma", "Vera", "Wenny", "Yasmin", "Zelia", "Adinda", "Brena", "Calista", "Dahlia",
+  "Elina", "Firda", "Ghina", "Hesti", "Ira", "Julita", "Katya", "Lidya", "Mala", "Nisa",
+  "Okta", "Prisca", "Reina", "Shinta", "Tasya", "Uswah", "Vanya", "Winni", "Xanthe", "Yuni",
 ];
 
 const MALE_NAMES = [
-  "Budi","Rizky","Dimas","Arief","Bayu","Dwi","Eko","Gilang",
-  "Hendra","Irfan","Joko","Kevin","Made","Naufal","Oka",
-  "Teguh","Umar","Vito","Wahyu","Xander","Yusuf","Zaki",
-  "Adrian","Bima","Chandra","Daffa","Evan","Fajar","Guntur",
-  "Hanif","Ivan","Jaya",
+  "Budi", "Rizky", "Dimas", "Arief", "Bayu", "Dwi", "Eko", "Gilang",
+  "Hendra", "Irfan", "Joko", "Kevin", "Made", "Naufal", "Oka",
+  "Teguh", "Umar", "Vito", "Wahyu", "Xander", "Yusuf", "Zaki",
+  "Adrian", "Bima", "Chandra", "Daffa", "Evan", "Fajar", "Guntur",
+  "Hanif", "Ivan", "Jaya",
 ];
 
 const CITIES = [
-  "Jakarta","Bali","Bandung","Surabaya","Yogyakarta",
-  "Medan","Semarang","Makassar","Malang","Solo",
-  "Palembang","Balikpapan","Manado","Pontianak","Lombok",
+  "Jakarta", "Bali", "Bandung", "Surabaya", "Yogyakarta",
+  "Medan", "Semarang", "Makassar", "Malang", "Solo",
+  "Palembang", "Balikpapan", "Manado", "Pontianak", "Lombok",
 ];
 
 const COORDS: [number, number][] = [
@@ -289,34 +289,34 @@ const MALE_BIOS = [
 ];
 
 const LOOKING_FOR_FEMALE = [
-  "Dating","Relationship","Dating","Relationship","Dating",
-  "Friendship","Relationship","Dating","Relationship","Dating",
-  "Friendship","Dating","Relationship","Dating","Relationship",
-  "Dating","Friendship","Relationship","Dating","Relationship",
-  "Dating","Relationship","Dating","Friendship","Relationship",
-  "Dating","Relationship","Dating","Relationship","Friendship",
-  "Dating","Relationship","Friendship","Dating","Relationship",
-  "Dating","Relationship","Dating","Friendship","Relationship",
-  "Dating","Relationship","Dating","Relationship","Dating",
-  "Friendship","Relationship","Dating","Relationship","Dating",
+  "Dating", "Relationship", "Dating", "Relationship", "Dating",
+  "Friendship", "Relationship", "Dating", "Relationship", "Dating",
+  "Friendship", "Dating", "Relationship", "Dating", "Relationship",
+  "Dating", "Friendship", "Relationship", "Dating", "Relationship",
+  "Dating", "Relationship", "Dating", "Friendship", "Relationship",
+  "Dating", "Relationship", "Dating", "Relationship", "Friendship",
+  "Dating", "Relationship", "Friendship", "Dating", "Relationship",
+  "Dating", "Relationship", "Dating", "Friendship", "Relationship",
+  "Dating", "Relationship", "Dating", "Relationship", "Dating",
+  "Friendship", "Relationship", "Dating", "Relationship", "Dating",
 ];
 
 const LOOKING_FOR_MALE = [
-  "Dating","Relationship","Dating","Friendship","Dating",
-  "Relationship","Dating","Dating","Relationship","Friendship",
-  "Dating","Networking","Relationship","Dating","Friendship",
-  "Relationship","Dating","Dating","Friendship","Relationship",
-  "Dating","Relationship","Dating","Networking","Dating",
-  "Relationship","Dating","Dating","Friendship","Relationship",
+  "Dating", "Relationship", "Dating", "Friendship", "Dating",
+  "Relationship", "Dating", "Dating", "Relationship", "Friendship",
+  "Dating", "Networking", "Relationship", "Dating", "Friendship",
+  "Relationship", "Dating", "Dating", "Friendship", "Relationship",
+  "Dating", "Relationship", "Dating", "Networking", "Dating",
+  "Relationship", "Dating", "Dating", "Friendship", "Relationship",
 ];
 
 const EXTRA_LANGS_POOL: (string[] | undefined)[] = [
-  ["English"],["English","Arabic"],["English"],undefined,["English"],
-  ["Arabic"],["English"],["English"],undefined,["English","Arabic"],
-  ["English"],undefined,["Arabic"],["English"],["English"],
-  undefined,["English","Arabic"],["English"],["Arabic"],["English"],
-  undefined,["English"],["English"],["Arabic"],["English"],
-  ["English"],undefined,["English","Arabic"],["English"],["Arabic"],
+  ["English"], ["English", "Arabic"], ["English"], undefined, ["English"],
+  ["Arabic"], ["English"], ["English"], undefined, ["English", "Arabic"],
+  ["English"], undefined, ["Arabic"], ["English"], ["English"],
+  undefined, ["English", "Arabic"], ["English"], ["Arabic"], ["English"],
+  undefined, ["English"], ["English"], ["Arabic"], ["English"],
+  ["English"], undefined, ["English", "Arabic"], ["English"], ["Arabic"],
 ];
 
 const buildGoogleMapsSearchUrl = (query: string, lat: number, lng: number) => {
@@ -327,23 +327,23 @@ const buildGoogleMapsSearchUrl = (query: string, lat: number, lng: number) => {
 // ── Category image pools — each date idea picks from its category's images ──
 const IMG = (id: string) => `https://images.unsplash.com/photo-${id}?w=400&h=220&fit=crop`;
 const CATEGORY_IMAGES: Record<string, string[]> = {
-  cafe:       [IMG("1501339847302-ac426a4a7cbb"), IMG("1509042239860-f550ce710b93"), IMG("1445116572660-236099ec97a0"), IMG("1495474472287-4d71bcdd2085"), IMG("1442512595331-e89e73853f31"), IMG("1521017432531-fbd92d768814")],
-  food:       [IMG("1414235077428-338989a2e8c0"), IMG("1517248135467-4c7edcad34c4"), IMG("1550966871-3ed3cdb51f3a"), IMG("1504674900247-0877df9cc836"), IMG("1565299624946-b28f40a0ae38"), IMG("1476224203421-9ac39bcb3327")],
-  dessert:    [IMG("1551024601-bec78aea704b"), IMG("1488477181946-6428a0291777"), IMG("1563729784474-d77dbb933a9e"), IMG("1587314168485-3236d6710814"), IMG("1486427944299-d1955d23e34d"), IMG("1567206563064-6f60f40a2b57")],
-  park:       [IMG("1500534314209-a25ddb2bd429"), IMG("1476673160081-cf065607f449"), IMG("1510270929905-aa8d499cf5fc"), IMG("1473448912268-2022ce9509d8"), IMG("1441974231531-c6227db76b6e"), IMG("1502082553048-f009c37129b9")],
-  beach:      [IMG("1507525428034-b723cf961d3e"), IMG("1519046904884-53103b34b206"), IMG("1471922694854-ff1b63b20054"), IMG("1520454974749-611b7248ffdb"), IMG("1506953823976-0678e0aaf346"), IMG("1468413253725-0d5181091126")],
-  sunset:     [IMG("1508193638397-1c4234db14d8"), IMG("1473116763249-2faaef81ccda"), IMG("1414609245224-afa02bfb3fda"), IMG("1506354666786-959d6d497f1a"), IMG("1495616811223-4d98c6e9c869"), IMG("1472120435266-95a3f747eb08")],
-  nightlife:  [IMG("1527769929938-b77e7fb4c0f3"), IMG("1470337458703-46ad1756a187"), IMG("1566417713940-fe7c737a9ef2"), IMG("1572116469696-31de0f17cc34"), IMG("1516450360452-9312f5e86fc7"), IMG("1429962714451-bb934ecdc4ec")],
-  market:     [IMG("1555939594-58d7cb561ad1"), IMG("1504544750208-dc0358e63f7f"), IMG("1567521464027-f127ff144326"), IMG("1514933651103-005eec06c04b"), IMG("1529692236671-f1f6cf9683ba"), IMG("1533777857889-4be7d998efb0")],
-  art:        [IMG("1518998053901-5348d3961a04"), IMG("1531243269054-5ebf6f34081e"), IMG("1544967082-d9d25d867d66"), IMG("1460661419201-fd4cecdf8a8b"), IMG("1513364776144-60967b0f800f"), IMG("1561214115-f2f134cc4912")],
-  cooking:    [IMG("1556909114-f6e7ad7d3136"), IMG("1507048331197-7d4ac70811cf"), IMG("1466637574441-749b8f19452f"), IMG("1528712306091-ed0763094c98"), IMG("1556910103-1c02745aae4d"), IMG("1551218808-94e220e084d2")],
-  music:      [IMG("1493225457124-a3eb161ffa5f"), IMG("1501612780327-45045538702b"), IMG("1459749411175-04bf5292ceea"), IMG("1524368535928-5b5e00ddc76b"), IMG("1470229722913-7c0e2dbbafd3"), IMG("1511671782779-c97d3d27a1d4")],
-  cinema:     [IMG("1489599849927-2ee91cede3ba"), IMG("1536440136628-849c177e76a1"), IMG("1478720568477-152d9b164e26"), IMG("1517604931442-7e0c8ed2963c")],
-  active:     [IMG("1545232979-a9ba987ce37c"), IMG("1558618666-fcd25c85f82e"), IMG("1596464716388-e3c15a40e69a"), IMG("1544551763-46a013bb70d5"), IMG("1571019614242-c5c5dee9f50c"), IMG("1540479859555-17af45c78602")],
-  water:      [IMG("1544551763-46a013bb70d5"), IMG("1530053969600-cacd2598338c"), IMG("1516728778615-2d590ea1855e"), IMG("1559827260-dc66d6f5e3a5"), IMG("1504458174710-8ef9f463798f"), IMG("1537519646099-2ee971dcefc0")],
-  romantic:   [IMG("1470252649378-9c29740c9fa8"), IMG("1475738198235-4b30fc2fca88"), IMG("1507400492013-162706c8c05e"), IMG("1474524955719-b9f87c50ce47"), IMG("1505765050516-f72dcac9c60e"), IMG("1519681393784-d120267933ba")],
-  nature:     [IMG("1441974231531-c6227db76b6e"), IMG("1472396961693-142e6e269027"), IMG("1518173946687-1e1e4b4d15b7"), IMG("1475113548554-5a36f1f523d6"), IMG("1469474968028-56623f02e42e"), IMG("1426604966848-d7adac402bff")],
-  playful:    [IMG("1558618666-fcd25c85f82e"), IMG("1596464716388-e3c15a40e69a"), IMG("1571019614242-c5c5dee9f50c"), IMG("1540479859555-17af45c78602"), IMG("1560448204-e02f11c3d0e2"), IMG("1541532713592-79a0317b6b77")],
+  cafe: [IMG("1501339847302-ac426a4a7cbb"), IMG("1509042239860-f550ce710b93"), IMG("1445116572660-236099ec97a0"), IMG("1495474472287-4d71bcdd2085"), IMG("1442512595331-e89e73853f31"), IMG("1521017432531-fbd92d768814")],
+  food: [IMG("1414235077428-338989a2e8c0"), IMG("1517248135467-4c7edcad34c4"), IMG("1550966871-3ed3cdb51f3a"), IMG("1504674900247-0877df9cc836"), IMG("1565299624946-b28f40a0ae38"), IMG("1476224203421-9ac39bcb3327")],
+  dessert: [IMG("1551024601-bec78aea704b"), IMG("1488477181946-6428a0291777"), IMG("1563729784474-d77dbb933a9e"), IMG("1587314168485-3236d6710814"), IMG("1486427944299-d1955d23e34d"), IMG("1567206563064-6f60f40a2b57")],
+  park: [IMG("1500534314209-a25ddb2bd429"), IMG("1476673160081-cf065607f449"), IMG("1510270929905-aa8d499cf5fc"), IMG("1473448912268-2022ce9509d8"), IMG("1441974231531-c6227db76b6e"), IMG("1502082553048-f009c37129b9")],
+  beach: [IMG("1507525428034-b723cf961d3e"), IMG("1519046904884-53103b34b206"), IMG("1471922694854-ff1b63b20054"), IMG("1520454974749-611b7248ffdb"), IMG("1506953823976-0678e0aaf346"), IMG("1468413253725-0d5181091126")],
+  sunset: [IMG("1508193638397-1c4234db14d8"), IMG("1473116763249-2faaef81ccda"), IMG("1414609245224-afa02bfb3fda"), IMG("1506354666786-959d6d497f1a"), IMG("1495616811223-4d98c6e9c869"), IMG("1472120435266-95a3f747eb08")],
+  nightlife: [IMG("1527769929938-b77e7fb4c0f3"), IMG("1470337458703-46ad1756a187"), IMG("1566417713940-fe7c737a9ef2"), IMG("1572116469696-31de0f17cc34"), IMG("1516450360452-9312f5e86fc7"), IMG("1429962714451-bb934ecdc4ec")],
+  market: [IMG("1555939594-58d7cb561ad1"), IMG("1504544750208-dc0358e63f7f"), IMG("1567521464027-f127ff144326"), IMG("1514933651103-005eec06c04b"), IMG("1529692236671-f1f6cf9683ba"), IMG("1533777857889-4be7d998efb0")],
+  art: [IMG("1518998053901-5348d3961a04"), IMG("1531243269054-5ebf6f34081e"), IMG("1544967082-d9d25d867d66"), IMG("1460661419201-fd4cecdf8a8b"), IMG("1513364776144-60967b0f800f"), IMG("1561214115-f2f134cc4912")],
+  cooking: [IMG("1556909114-f6e7ad7d3136"), IMG("1507048331197-7d4ac70811cf"), IMG("1466637574441-749b8f19452f"), IMG("1528712306091-ed0763094c98"), IMG("1556910103-1c02745aae4d"), IMG("1551218808-94e220e084d2")],
+  music: [IMG("1493225457124-a3eb161ffa5f"), IMG("1501612780327-45045538702b"), IMG("1459749411175-04bf5292ceea"), IMG("1524368535928-5b5e00ddc76b"), IMG("1470229722913-7c0e2dbbafd3"), IMG("1511671782779-c97d3d27a1d4")],
+  cinema: [IMG("1489599849927-2ee91cede3ba"), IMG("1536440136628-849c177e76a1"), IMG("1478720568477-152d9b164e26"), IMG("1517604931442-7e0c8ed2963c")],
+  active: [IMG("1545232979-a9ba987ce37c"), IMG("1558618666-fcd25c85f82e"), IMG("1596464716388-e3c15a40e69a"), IMG("1544551763-46a013bb70d5"), IMG("1571019614242-c5c5dee9f50c"), IMG("1540479859555-17af45c78602")],
+  water: [IMG("1544551763-46a013bb70d5"), IMG("1530053969600-cacd2598338c"), IMG("1516728778615-2d590ea1855e"), IMG("1559827260-dc66d6f5e3a5"), IMG("1504458174710-8ef9f463798f"), IMG("1537519646099-2ee971dcefc0")],
+  romantic: [IMG("1470252649378-9c29740c9fa8"), IMG("1475738198235-4b30fc2fca88"), IMG("1507400492013-162706c8c05e"), IMG("1474524955719-b9f87c50ce47"), IMG("1505765050516-f72dcac9c60e"), IMG("1519681393784-d120267933ba")],
+  nature: [IMG("1441974231531-c6227db76b6e"), IMG("1472396961693-142e6e269027"), IMG("1518173946687-1e1e4b4d15b7"), IMG("1475113548554-5a36f1f523d6"), IMG("1469474968028-56623f02e42e"), IMG("1426604966848-d7adac402bff")],
+  playful: [IMG("1558618666-fcd25c85f82e"), IMG("1596464716388-e3c15a40e69a"), IMG("1571019614242-c5c5dee9f50c"), IMG("1540479859555-17af45c78602"), IMG("1560448204-e02f11c3d0e2"), IMG("1541532713592-79a0317b6b77")],
 };
 
 // Map each of the 135 date ideas to a search key and image category
@@ -497,54 +497,54 @@ const buildFirstDatePlaces = (_city: string, lat: number, lng: number, seed: num
 
 // ─── About Me data pools ────────────────────────────────────────────────────
 
-const FEMALE_HEIGHTS = ["155cm","157cm","158cm","160cm","162cm","163cm","165cm","167cm","168cm","170cm"];
-const MALE_HEIGHTS   = ["168cm","170cm","172cm","174cm","175cm","177cm","178cm","180cm","182cm","185cm"];
+const FEMALE_HEIGHTS = ["155cm", "157cm", "158cm", "160cm", "162cm", "163cm", "165cm", "167cm", "168cm", "170cm"];
+const MALE_HEIGHTS = ["168cm", "170cm", "172cm", "174cm", "175cm", "177cm", "178cm", "180cm", "182cm", "185cm"];
 
-const FEMALE_BODY_TYPES = ["Slim","Petite","Athletic","Curvy","Average"];
-const MALE_BODY_TYPES   = ["Slim","Athletic","Muscular","Average","Lean"];
+const FEMALE_BODY_TYPES = ["Slim", "Petite", "Athletic", "Curvy", "Average"];
+const MALE_BODY_TYPES = ["Slim", "Athletic", "Muscular", "Average", "Lean"];
 
-const ETHNICITIES_F = ["Javanese","Sundanese","Balinese","Minangkabau","Betawi","Bugis","Madurese","Chinese-Indonesian","Mixed","Batak"];
-const ETHNICITIES_M = ["Javanese","Sundanese","Balinese","Minangkabau","Betawi","Bugis","Makassarese","Chinese-Indonesian","Mixed","Malay"];
+const ETHNICITIES_F = ["Javanese", "Sundanese", "Balinese", "Minangkabau", "Betawi", "Bugis", "Madurese", "Chinese-Indonesian", "Mixed", "Batak"];
+const ETHNICITIES_M = ["Javanese", "Sundanese", "Balinese", "Minangkabau", "Betawi", "Bugis", "Makassarese", "Chinese-Indonesian", "Mixed", "Malay"];
 
-const EDUCATIONS = ["High School","Diploma","Bachelor's Degree","Bachelor's Degree","Bachelor's Degree","Master's Degree","Master's Degree","Doctorate","Vocational","Professional Degree"];
+const EDUCATIONS = ["High School", "Diploma", "Bachelor's Degree", "Bachelor's Degree", "Bachelor's Degree", "Master's Degree", "Master's Degree", "Doctorate", "Vocational", "Professional Degree"];
 
-const INCOMES = ["< Rp 5M/mo","Rp 5–10M/mo","Rp 10–20M/mo","Rp 20–40M/mo","Rp 40M+/mo","Prefer not to say"];
+const INCOMES = ["< Rp 5M/mo", "Rp 5–10M/mo", "Rp 10–20M/mo", "Rp 20–40M/mo", "Rp 40M+/mo", "Prefer not to say"];
 
-const LIVES_WITH = ["Lives alone","With family","With housemates","With partner","Own home"];
+const LIVES_WITH = ["Lives alone", "With family", "With housemates", "With partner", "Own home"];
 
-const CHILDREN_OPTIONS = ["No children","1 child","2 children","3+ children","No children, open to having","No children, not planning to"];
+const CHILDREN_OPTIONS = ["No children", "1 child", "2 children", "3+ children", "No children, open to having", "No children, not planning to"];
 
-const SMOKING_OPTIONS   = ["Non-smoker","Non-smoker","Social smoker","Light smoker","Non-smoker","Quit smoking"];
-const DRINKING_OPTIONS  = ["Non-drinker","Social drinker","Non-drinker","Light drinker","Rarely drinks","Non-drinker","Social drinker"];
-const EXERCISE_OPTIONS  = ["Daily","4–5×/week","2–3×/week","Occasionally","Rarely","Weekly gym","Yoga & pilates","Running & cycling"];
-const DIET_OPTIONS      = ["No preference","Halal only","Vegetarian","Mostly healthy","Loves street food","Home-cooked meals"];
-const SLEEP_OPTIONS     = ["Night owl","Early bird","Flexible","Late sleeper","Varies by week","Usually by midnight"];
-const SOCIAL_STYLES     = ["Introvert","Ambivert","Extrovert","Social but selective","Homebody","Outgoing"];
-const LOVE_LANGUAGES    = ["Quality time","Words of affirmation","Acts of service","Physical touch","Gift giving","Quality time","Words of affirmation"];
-const PETS_OPTIONS      = ["Cat lover","Dog person","Has cats","Has a dog","No pets","Animal lover","Allergic to pets","Open to pets"];
+const SMOKING_OPTIONS = ["Non-smoker", "Non-smoker", "Social smoker", "Light smoker", "Non-smoker", "Quit smoking"];
+const DRINKING_OPTIONS = ["Non-drinker", "Social drinker", "Non-drinker", "Light drinker", "Rarely drinks", "Non-drinker", "Social drinker"];
+const EXERCISE_OPTIONS = ["Daily", "4–5×/week", "2–3×/week", "Occasionally", "Rarely", "Weekly gym", "Yoga & pilates", "Running & cycling"];
+const DIET_OPTIONS = ["No preference", "Halal only", "Vegetarian", "Mostly healthy", "Loves street food", "Home-cooked meals"];
+const SLEEP_OPTIONS = ["Night owl", "Early bird", "Flexible", "Late sleeper", "Varies by week", "Usually by midnight"];
+const SOCIAL_STYLES = ["Introvert", "Ambivert", "Extrovert", "Social but selective", "Homebody", "Outgoing"];
+const LOVE_LANGUAGES = ["Quality time", "Words of affirmation", "Acts of service", "Physical touch", "Gift giving", "Quality time", "Words of affirmation"];
+const PETS_OPTIONS = ["Cat lover", "Dog person", "Has cats", "Has a dog", "No pets", "Animal lover", "Allergic to pets", "Open to pets"];
 
 const HOBBIES_POOL: string[][] = [
-  ["Cooking","Hiking","Reading"],
-  ["Travel","Photography","Yoga"],
-  ["Music","Dancing","Cooking"],
-  ["Gaming","Movies","Gym"],
-  ["Painting","Cycling","Coffee"],
-  ["Surfing","Swimming","Food tours"],
-  ["Badminton","Running","Karaoke"],
-  ["Gardening","Baking","Journaling"],
-  ["Diving","Motorbike trips","Street photography"],
-  ["Crafts","Watching K-dramas","Board games"],
+  ["Cooking", "Hiking", "Reading"],
+  ["Travel", "Photography", "Yoga"],
+  ["Music", "Dancing", "Cooking"],
+  ["Gaming", "Movies", "Gym"],
+  ["Painting", "Cycling", "Coffee"],
+  ["Surfing", "Swimming", "Food tours"],
+  ["Badminton", "Running", "Karaoke"],
+  ["Gardening", "Baking", "Journaling"],
+  ["Diving", "Motorbike trips", "Street photography"],
+  ["Crafts", "Watching K-dramas", "Board games"],
 ];
 
-const RELIGIONS_F  = ["Muslim","Muslim","Muslim","Muslim","Muslim","Christian","Hindu","Buddhist","Catholic","Muslim"];
-const RELIGIONS_M  = ["Muslim","Muslim","Muslim","Muslim","Muslim","Christian","Hindu","Buddhist","Catholic","Muslim"];
-const PRAYER_OPTS  = ["5× daily","Regularly","Occasionally","Fridays only","Trying to improve","Not practicing"];
-const HIJAB_OPTS   = ["Yes, full hijab","Yes, sometimes","No","Syari","Prefer not to say"];
-const DATE_TYPES   = ["Traditional courtship","Modern casual dating","Getting to know first","Halal approach","Open to both"];
-const TIMELINES    = ["Ready when it feels right","Within 1 year","1–2 years","Not rushing","Serious about marriage"];
-const MARITAL_OPTS = ["Never married","Divorced","Widowed","Prefer not to say"];
-const DOWRY_OPTS   = ["Open to discussion","Important to my family","Flexible","Symbolic amount","Not required"];
-const FAMILY_OPTS  = ["Very important","Somewhat involved","Independent decision","Meet the family first"];
+const RELIGIONS_F = ["Muslim", "Muslim", "Muslim", "Muslim", "Muslim", "Christian", "Hindu", "Buddhist", "Catholic", "Muslim"];
+const RELIGIONS_M = ["Muslim", "Muslim", "Muslim", "Muslim", "Muslim", "Christian", "Hindu", "Buddhist", "Catholic", "Muslim"];
+const PRAYER_OPTS = ["5× daily", "Regularly", "Occasionally", "Fridays only", "Trying to improve", "Not practicing"];
+const HIJAB_OPTS = ["Yes, full hijab", "Yes, sometimes", "No", "Syari", "Prefer not to say"];
+const DATE_TYPES = ["Traditional courtship", "Modern casual dating", "Getting to know first", "Halal approach", "Open to both"];
+const TIMELINES = ["Ready when it feels right", "Within 1 year", "1–2 years", "Not rushing", "Serious about marriage"];
+const MARITAL_OPTS = ["Never married", "Divorced", "Widowed", "Prefer not to say"];
+const DOWRY_OPTS = ["Open to discussion", "Important to my family", "Flexible", "Symbolic amount", "Not required"];
+const FAMILY_OPTS = ["Very important", "Somewhat involved", "Independent decision", "Meet the family first"];
 const ABOUT_PARTNER_POOL = [
   "Someone who is honest, kind, and values family. I appreciate a person who communicates openly.",
   "Looking for someone with a good sense of humour and a warm heart. Ambition is attractive.",
@@ -712,13 +712,13 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
 
   // Override female profiles with real uploaded local assets (faces guaranteed)
   const girlOverrides: { img: string; gallery: string[]; pos: string }[] = [
-    { img: indoGirl1,  gallery: [indoGirl1,  indoGirl2],  pos: "50% 20%" },
-    { img: indoGirl3,  gallery: [indoGirl3,  indoGirl27], pos: "50% 15%" },
-    { img: indoGirl4,  gallery: [indoGirl4,  indoGirl26], pos: "50% 20%" },
-    { img: indoGirl5,  gallery: [indoGirl5,  indoGirl7],  pos: "50% 15%" },
-    { img: indoGirl6,  gallery: [indoGirl6,  indoGirl29], pos: "50% 25%" },
-    { img: indoGirl8,  gallery: [indoGirl8,  indoGirl30], pos: "50% 20%" },
-    { img: indoGirl9,  gallery: [indoGirl9,  indoGirl32], pos: "50% 20%" },
+    { img: indoGirl1, gallery: [indoGirl1, indoGirl2], pos: "50% 20%" },
+    { img: indoGirl3, gallery: [indoGirl3, indoGirl27], pos: "50% 15%" },
+    { img: indoGirl4, gallery: [indoGirl4, indoGirl26], pos: "50% 20%" },
+    { img: indoGirl5, gallery: [indoGirl5, indoGirl7], pos: "50% 15%" },
+    { img: indoGirl6, gallery: [indoGirl6, indoGirl29], pos: "50% 25%" },
+    { img: indoGirl8, gallery: [indoGirl8, indoGirl30], pos: "50% 20%" },
+    { img: indoGirl9, gallery: [indoGirl9, indoGirl32], pos: "50% 20%" },
     { img: indoGirl10, gallery: [indoGirl10, indoGirl33], pos: "50% 15%" },
     { img: indoGirl11, gallery: [indoGirl11, indoGirl34], pos: "50% 15%" },
     { img: indoGirl12, gallery: [indoGirl12, indoGirl28], pos: "50% 20%" },
@@ -729,23 +729,23 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     { img: indoGirl17, gallery: [indoGirl17, indoGirl34], pos: "50% 15%" },
     { img: indoGirl18, gallery: [indoGirl18, indoGirl27], pos: "50% 15%" },
     { img: indoGirl19, gallery: [indoGirl19, indoGirl30], pos: "50% 15%" },
-    { img: indoGirl20, gallery: [indoGirl20, indoGirl2],  pos: "50% 15%" },
-    { img: indoGirl21, gallery: [indoGirl21, indoGirl4],  pos: "50% 15%" },
-    { img: indoGirl22, gallery: [indoGirl22, indoGirl6],  pos: "50% 15%" },
-    { img: indoGirl23, gallery: [indoGirl23, indoGirl8],  pos: "50% 15%" },
-    { img: indoGirl24, gallery: [indoGirl24, indoGirl9],  pos: "50% 15%" },
+    { img: indoGirl20, gallery: [indoGirl20, indoGirl2], pos: "50% 15%" },
+    { img: indoGirl21, gallery: [indoGirl21, indoGirl4], pos: "50% 15%" },
+    { img: indoGirl22, gallery: [indoGirl22, indoGirl6], pos: "50% 15%" },
+    { img: indoGirl23, gallery: [indoGirl23, indoGirl8], pos: "50% 15%" },
+    { img: indoGirl24, gallery: [indoGirl24, indoGirl9], pos: "50% 15%" },
     { img: indoGirl25, gallery: [indoGirl25, indoGirl11], pos: "50% 15%" },
     { img: indoGirl26, gallery: [indoGirl26, indoGirl13], pos: "50% 15%" },
-    { img: indoGirl27, gallery: [indoGirl27, indoGirl1],  pos: "50% 15%" },
-    { img: indoGirl28, gallery: [indoGirl28, indoGirl3],  pos: "50% 15%" },
-    { img: indoGirl29, gallery: [indoGirl29, indoGirl5],  pos: "50% 15%" },
-    { img: indoGirl30, gallery: [indoGirl30, indoGirl8],  pos: "50% 20%" },
+    { img: indoGirl27, gallery: [indoGirl27, indoGirl1], pos: "50% 15%" },
+    { img: indoGirl28, gallery: [indoGirl28, indoGirl3], pos: "50% 15%" },
+    { img: indoGirl29, gallery: [indoGirl29, indoGirl5], pos: "50% 15%" },
+    { img: indoGirl30, gallery: [indoGirl30, indoGirl8], pos: "50% 20%" },
     { img: indoGirl31, gallery: [indoGirl31, indoGirl10], pos: "50% 15%" },
     { img: indoGirl32, gallery: [indoGirl32, indoGirl12], pos: "50% 15%" },
     { img: indoGirl33, gallery: [indoGirl33, indoGirl14], pos: "50% 15%" },
     { img: indoGirl34, gallery: [indoGirl34, indoGirl16], pos: "50% 15%" },
-    { img: indoGirl2,  gallery: [indoGirl2,  indoGirl18], pos: "50% 15%" },
-    { img: indoGirl7,  gallery: [indoGirl7,  indoGirl19], pos: "50% 15%" },
+    { img: indoGirl2, gallery: [indoGirl2, indoGirl18], pos: "50% 15%" },
+    { img: indoGirl7, gallery: [indoGirl7, indoGirl19], pos: "50% 15%" },
   ];
 
   let girlIdx = 0;

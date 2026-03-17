@@ -2,30 +2,30 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, X, MapPin, Save, Loader2, CalendarHeart, Calendar, Star, ZoomIn, ZoomOut, MoveHorizontal, MoveVertical, Heart, PauseCircle, Moon, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/shared/components/button";
+import { Input } from "@/shared/components/input";
+import { Label } from "@/shared/components/label";
+import { Textarea } from "@/shared/components/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/select";
+import { Switch } from "@/shared/components/switch";
+import { Slider } from "@/shared/components/slider";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/shared/components/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import VoiceRecorder from "./VoiceRecorder";
+import VoiceRecorder from "@/features/video/components/VoiceRecorder";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import DatePlacesEditor, { DatePlace } from "./DatePlacesEditor";
 import { LANGUAGES, getCountryFlag, getLanguageFlag, getNativeLanguage } from "@/data/languages";
 import { HelpCircle, Languages, Plus, X as XIcon } from "lucide-react";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
-import { BIO_MAX_LENGTH } from "@/lib/constants";
-import { sanitizeBio } from "@/utils/bio";
-import { CONTACT_PREFERENCE_OPTIONS, type ContactPreference } from "@/utils/contactPreference";
-import { BasicInfoEditor } from "@/components/profile-editor/BasicInfoEditor";
-import { LifestyleEditor } from "@/components/profile-editor/LifestyleEditor";
-import { RelationshipGoalsEditor } from "@/components/profile-editor/RelationshipGoalsEditor";
+import { BIO_MAX_LENGTH } from "@/shared/services/constants";
+import { sanitizeBio } from "@/shared/utils/bio";
+import { CONTACT_PREFERENCE_OPTIONS, type ContactPreference } from "@/shared/utils/contactPreference";
+import { BasicInfoEditor } from "@/features/dating/components/profile-editor/BasicInfoEditor";
+import { LifestyleEditor } from "@/features/dating/components/profile-editor/LifestyleEditor";
+import { RelationshipGoalsEditor } from "@/features/dating/components/profile-editor/RelationshipGoalsEditor";
 import { ALL_COUNTRIES } from "@/data/countries";
-import { detectCountryFromPhone, getDialCode } from "@/lib/phoneCountry";
+import { detectCountryFromPhone, getDialCode } from "@/shared/services/phoneCountry";
 
 const GENDERS = ["Male", "Female", "Non-binary", "Other"];
 const LOOKING_FOR = ["Men", "Women", "Everyone"];
@@ -539,9 +539,8 @@ const ProfileEditor = () => {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: idx * 0.05 }}
-                      className={`aspect-square w-full rounded-xl overflow-hidden relative cursor-pointer group ${
-                        isEditing ? "ring-2 ring-violet-500" : isMain ? "ring-2 ring-pink-500" : "bg-white/5 border border-white/10"
-                      }`}
+                      className={`aspect-square w-full rounded-xl overflow-hidden relative cursor-pointer group ${isEditing ? "ring-2 ring-violet-500" : isMain ? "ring-2 ring-pink-500" : "bg-white/5 border border-white/10"
+                        }`}
                       onClick={() => {
                         if (!img) {
                           setUploadSlot(idx);
@@ -626,9 +625,8 @@ const ProfileEditor = () => {
               </div>
 
               {/* Preview frame */}
-              <div className={`relative w-full rounded-2xl overflow-hidden shadow-card ${
-                isMainImage(editingImageIdx) ? "aspect-[4/5] max-h-[70vh]" : "aspect-square max-h-[40vh]"
-              }`}>
+              <div className={`relative w-full rounded-2xl overflow-hidden shadow-card ${isMainImage(editingImageIdx) ? "aspect-[4/5] max-h-[70vh]" : "aspect-square max-h-[40vh]"
+                }`}>
                 <div className="absolute inset-0 overflow-hidden">
                   <img
                     src={profile.images[editingImageIdx]}
@@ -868,7 +866,7 @@ const ProfileEditor = () => {
         </>
       )}
 
-      
+
       {editorStep === "details" && (
         <>
           {/* Lifestyle Section */}
@@ -897,59 +895,59 @@ const ProfileEditor = () => {
               <Languages className="w-3 h-3" /> Languages I Speak
             </Label>
             <div className="space-y-2">
-          {/* Native language (auto from country) */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-            <span className="text-sm text-white flex-1 flex items-center gap-2">
-              <span className="text-base leading-none">{getCountryFlag(profile.country)}</span>
-              {getNativeLanguage(profile.country)}
-            </span>
-            <span className="text-[10px] bg-pink-500/15 text-pink-400 px-2 py-0.5 rounded-full font-medium">Native</span>
-          </div>
-          
-          {/* Extra languages */}
-          {profile.languages.map((lang, idx) => (
-            <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
-              <span className="text-sm text-white flex-1 flex items-center gap-2">
-                <span className="text-base leading-none">{getLanguageFlag(lang)}</span>
-                {lang}
-              </span>
-              <button
-                onClick={() => {
-                  const updated = profile.languages.filter((_, i) => i !== idx);
-                  update("languages", updated);
-                }}
-                className="w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors"
-              >
-                <XIcon className="w-3 h-3" />
-              </button>
-            </div>
-          ))}
-          
-          {/* Add language dropdown */}
-          {profile.languages.length < 2 && (
-            <Select
-              value=""
-              onValueChange={(v) => {
-                if (v && !profile.languages.includes(v) && v !== getNativeLanguage(profile.country)) {
-                  update("languages", [...profile.languages, v].slice(0, 2));
-                }
-              }}
-            >
-              <SelectTrigger className="bg-white/5 border-white/10 h-9 text-sm border-dashed text-white">
-                <div className="flex items-center gap-1.5 text-white/40">
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add a language ({2 - profile.languages.length} remaining)</span>
+              {/* Native language (auto from country) */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-sm text-white flex-1 flex items-center gap-2">
+                  <span className="text-base leading-none">{getCountryFlag(profile.country)}</span>
+                  {getNativeLanguage(profile.country)}
+                </span>
+                <span className="text-[10px] bg-pink-500/15 text-pink-400 px-2 py-0.5 rounded-full font-medium">Native</span>
+              </div>
+
+              {/* Extra languages */}
+              {profile.languages.map((lang, idx) => (
+                <div key={idx} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10">
+                  <span className="text-sm text-white flex-1 flex items-center gap-2">
+                    <span className="text-base leading-none">{getLanguageFlag(lang)}</span>
+                    {lang}
+                  </span>
+                  <button
+                    onClick={() => {
+                      const updated = profile.languages.filter((_, i) => i !== idx);
+                      update("languages", updated);
+                    }}
+                    className="w-5 h-5 rounded-full bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/20 transition-colors"
+                  >
+                    <XIcon className="w-3 h-3" />
+                  </button>
                 </div>
-              </SelectTrigger>
-              <SelectContent className="max-h-[200px]">
-                {LANGUAGES.filter(
-                  (l) => l !== getNativeLanguage(profile.country) && !profile.languages.includes(l)
-                ).map((lang) => (
-                  <SelectItem key={lang} value={lang}>{lang}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+              ))}
+
+              {/* Add language dropdown */}
+              {profile.languages.length < 2 && (
+                <Select
+                  value=""
+                  onValueChange={(v) => {
+                    if (v && !profile.languages.includes(v) && v !== getNativeLanguage(profile.country)) {
+                      update("languages", [...profile.languages, v].slice(0, 2));
+                    }
+                  }}
+                >
+                  <SelectTrigger className="bg-white/5 border-white/10 h-9 text-sm border-dashed text-white">
+                    <div className="flex items-center gap-1.5 text-white/40">
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Add a language ({2 - profile.languages.length} remaining)</span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[200px]">
+                    {LANGUAGES.filter(
+                      (l) => l !== getNativeLanguage(profile.country) && !profile.languages.includes(l)
+                    ).map((lang) => (
+                      <SelectItem key={lang} value={lang}>{lang}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
 
@@ -957,24 +955,23 @@ const ProfileEditor = () => {
           <div>
             <Label className="text-white/50 text-xs mb-1 block">Orientation (optional)</Label>
             <div className="flex gap-2">
-          {[
-            { value: "", label: "Not specified" },
-            { value: "Straight", label: "Straight" },
-            { value: "Same-Sex", label: "Gay / Lesbian" },
-          ].map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => update("orientation", o.value)}
-              className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${
-                profile.orientation === o.value
-                  ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white border-pink-500/50 shadow-md"
-                  : "bg-white/5 text-white/50 border-white/10 hover:border-pink-500/30"
-              }`}
-            >
-              {o.label}
-            </button>
-          ))}
+              {[
+                { value: "", label: "Not specified" },
+                { value: "Straight", label: "Straight" },
+                { value: "Same-Sex", label: "Gay / Lesbian" },
+              ].map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => update("orientation", o.value)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${profile.orientation === o.value
+                    ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white border-pink-500/50 shadow-md"
+                    : "bg-white/5 text-white/50 border-white/10 hover:border-pink-500/30"
+                    }`}
+                >
+                  {o.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -982,34 +979,34 @@ const ProfileEditor = () => {
           <div>
             <Label className="text-white/50 text-xs mb-1 block">Map Location</Label>
             <Button
-          variant="outline"
-          onClick={handleSetLocation}
-          disabled={locating}
-          className="w-full h-9 text-sm border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white rounded-xl"
-        >
-          {locating ? (
-            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Getting location...</>
-          ) : profile.latitude ? (
-            <><MapPin className="w-4 h-4 mr-2 text-primary" /> Location set — tap to update</>
-          ) : (
-            <><MapPin className="w-4 h-4 mr-2" /> Set my location on the map</>
-          )}
-        </Button>
-        {profile.latitude && (
-          <p className="text-[10px] text-white/40 mt-1 text-center">
-            📍 Approx: {profile.latitude.toFixed(2)}°, {profile.longitude?.toFixed(2)}°
-          </p>
-        )}
+              variant="outline"
+              onClick={handleSetLocation}
+              disabled={locating}
+              className="w-full h-9 text-sm border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white rounded-xl"
+            >
+              {locating ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Getting location...</>
+              ) : profile.latitude ? (
+                <><MapPin className="w-4 h-4 mr-2 text-primary" /> Location set — tap to update</>
+              ) : (
+                <><MapPin className="w-4 h-4 mr-2" /> Set my location on the map</>
+              )}
+            </Button>
+            {profile.latitude && (
+              <p className="text-[10px] text-white/40 mt-1 text-center">
+                📍 Approx: {profile.latitude.toFixed(2)}°, {profile.longitude?.toFixed(2)}°
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-between">
             <p className="text-white/40 text-xs font-semibold">Badges</p>
             <button
-          type="button"
-          onClick={() => setShowBadgesHelp(true)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white transition-colors"
-        >
-          <HelpCircle className="w-4 h-4" /> Help
+              type="button"
+              onClick={() => setShowBadgesHelp(true)}
+              className="inline-flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white transition-colors"
+            >
+              <HelpCircle className="w-4 h-4" /> Help
             </button>
           </div>
 
@@ -1022,299 +1019,299 @@ const ProfileEditor = () => {
                 </DialogDescription>
               </DialogHeader>
 
-          <div className="space-y-3 text-sm">
-            <div>
-              <p className="font-semibold text-white">Free Tonight</p>
-              <p className="text-white/50 text-xs mt-0.5">Shows you're available tonight. Auto-clears at midnight.</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white">Plus-One Premium</p>
-              <p className="text-white/50 text-xs mt-0.5">Signals you're open to events and social outings.</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white">Generous Lifestyle</p>
-              <p className="text-white/50 text-xs mt-0.5">You enjoy treating companions to dinners, events, or experiences.</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white">Weekend Plans</p>
-              <p className="text-white/50 text-xs mt-0.5">Usually available on weekends for meetups and social plans.</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white">Late Night Chat</p>
-              <p className="text-white/50 text-xs mt-0.5">Prefer nighttime conversations and late evening activity.</p>
-            </div>
-            <div>
-              <p className="font-semibold text-white">No Drama</p>
-              <p className="text-white/50 text-xs mt-0.5">Prefer calm, positive, and respectful connections.</p>
-            </div>
-          </div>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="font-semibold text-white">Free Tonight</p>
+                  <p className="text-white/50 text-xs mt-0.5">Shows you're available tonight. Auto-clears at midnight.</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Plus-One Premium</p>
+                  <p className="text-white/50 text-xs mt-0.5">Signals you're open to events and social outings.</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Generous Lifestyle</p>
+                  <p className="text-white/50 text-xs mt-0.5">You enjoy treating companions to dinners, events, or experiences.</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Weekend Plans</p>
+                  <p className="text-white/50 text-xs mt-0.5">Usually available on weekends for meetups and social plans.</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-white">Late Night Chat</p>
+                  <p className="text-white/50 text-xs mt-0.5">Prefer nighttime conversations and late evening activity.</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-white">No Drama</p>
+                  <p className="text-white/50 text-xs mt-0.5">Prefer calm, positive, and respectful connections.</p>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
 
-      {/* Free Tonight */}
-      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Moon className="w-4 h-4 text-yellow-400" fill="currentColor" />
-            <div>
-              <p className="text-white text-sm font-medium">Free Tonight</p>
-              <p className="text-white/40 text-[10px]">
-                {freeTonightUntil
-                  ? `Auto-clears at midnight · expires ${freeTonightUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
-                  : "Shows a badge on your profile until midnight"}
-              </p>
-            </div>
-          </div>
-          <Switch
-            checked={profile.available_tonight}
-            onCheckedChange={(checked) => {
-              update("available_tonight", checked);
-              if (checked) clearOtherBadges("available_tonight");
-              if (checked) {
-                // Set expiry to end of today (midnight local time)
-                const midnight = new Date();
-                midnight.setHours(23, 59, 59, 999);
-                setFreeTonightUntil(midnight);
-                if (userId) localStorage.setItem(`free_tonight_until_${userId}`, midnight.toISOString());
-                // Schedule auto-clear
-                const msLeft = midnight.getTime() - Date.now();
-                setTimeout(async () => {
-                  await supabase.from("profiles").update({ available_tonight: false }).eq("id", userId);
-                  if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
-                  setFreeTonightUntil(null);
-                  update("available_tonight", false);
-                  toast("🌙 Free Tonight badge has been automatically removed at midnight.");
-                }, msLeft);
-              } else {
-                setFreeTonightUntil(null);
-                if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
-              }
-            }}
-          />
-        </div>
-        {profile.available_tonight && freeTonightUntil && (
-          <div className="flex items-center gap-1.5 bg-yellow-400/10 border border-yellow-400/30 rounded-lg px-2.5 py-1.5">
-            <Moon className="w-3 h-3 text-yellow-400 flex-shrink-0" fill="currentColor" />
-            <p className="text-yellow-300 text-[10px]">
-              Badge is live on your profile and will automatically turn off at{" "}
-              <span className="font-bold">midnight tonight</span>. Turn the switch off anytime to remove it early.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Plus-One Premium */}
-      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-yellow-400" />
-            <div>
-              <div className="flex items-center gap-1.5">
-                <p className="text-white text-sm font-medium">Plus-One Premium</p>
-                <span className="bg-yellow-500/20 border border-yellow-400/40 text-yellow-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">$19.99</span>
-              </div>
-              <p className="text-white/40 text-[10px]">Show you're open to events & social outings</p>
-            </div>
-          </div>
-          <Switch
-            checked={profile.is_plusone}
-            onCheckedChange={(checked) => {
-              if (checked) {
-                // Redirect to purchase — cannot enable for free
-                const plusoneFeature = PREMIUM_FEATURES.find(f => f.id === "plusone");
-                if (plusoneFeature) {
-                  toast("🎫 Purchase Plus-One Premium to activate this badge.", { duration: 3000 });
-                  navigate(`/dashboard?purchase=plusone`);
-                }
-                return;
-              }
-              // Turning off is always free
-              update("is_plusone", false);
-            }}
-          />
-        </div>
-        {profile.is_plusone && (
-          <div className="flex items-start gap-1.5 bg-yellow-500/10 border border-yellow-400/30 rounded-lg px-2.5 py-1.5">
-            <Calendar className="w-3 h-3 text-yellow-400 flex-shrink-0 mt-0.5" />
-            <p className="text-yellow-300 text-[10px] leading-relaxed">
-              Your <span className="font-bold">🎫 Plus-One</span> badge is live! Others can see you're open to dinners, weddings, concerts, travel & social occasions. Connect via WhatsApp to coordinate plans.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Generous Lifestyle badge */}
-      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Gift className="w-4 h-4 text-amber-400" />
-            <div>
-              <p className="text-white text-sm font-medium">Generous Lifestyle</p>
-              <p className="text-white/40 text-[10px]">You enjoy treating companions to dinners, events & memorable experiences</p>
-            </div>
-          </div>
-          <Switch
-            checked={profile.generous_lifestyle}
-            onCheckedChange={(checked) => {
-              update("generous_lifestyle", checked);
-              if (checked) clearOtherBadges("generous_lifestyle");
-            }}
-          />
-        </div>
-        {profile.generous_lifestyle && (
-          <div className="flex items-start gap-1.5 bg-amber-500/10 border border-amber-400/30 rounded-lg px-2.5 py-1.5">
-            <Gift className="w-3 h-3 text-amber-400 flex-shrink-0 mt-0.5" />
-            <p className="text-amber-300 text-[10px] leading-relaxed">
-              Your <span className="font-bold">Generous Lifestyle</span> badge is live. It signals that you enjoy sharing experiences and thoughtful gestures—no expectations or obligations.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Weekend Plans badge */}
-      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="w-4 h-4 text-primary" />
-            <div>
-              <p className="text-white text-sm font-medium">Weekend Plans</p>
-              <p className="text-white/40 text-[10px]">Usually available on weekends for meetups & social plans</p>
-            </div>
-          </div>
-          <Switch
-            checked={profile.weekend_plans}
-            onCheckedChange={(checked) => {
-              update("weekend_plans", checked);
-              if (checked) clearOtherBadges("weekend_plans");
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Late Night Chat badge */}
-      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MoonStar className="w-4 h-4 text-indigo-400" />
-            <div>
-              <p className="text-white text-sm font-medium">Late Night Chat</p>
-              <p className="text-white/40 text-[10px]">Typically active later in the evening; prefer nighttime conversations</p>
-            </div>
-          </div>
-          <Switch
-            checked={profile.late_night_chat}
-            onCheckedChange={(checked) => {
-              update("late_night_chat", checked);
-              if (checked) clearOtherBadges("late_night_chat");
-            }}
-          />
-        </div>
-      </div>
-
-      {/* No Drama badge */}
-      <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-yellow-400" />
-            <div>
-              <p className="text-white text-sm font-medium">No Drama</p>
-              <p className="text-white/40 text-[10px]">Prefer relaxed, positive & respectful connections</p>
-            </div>
-          </div>
-          <Switch
-            checked={profile.no_drama}
-            onCheckedChange={(checked) => {
-              update("no_drama", checked);
-              if (checked) clearOtherBadges("no_drama");
-            }}
-          />
-        </div>
-      </div>
-
-      {/* ── First Contact Preference ─────────────────────────────── */}
-      <div>
-        <Label className="text-white/50 text-xs mb-2 block flex items-center gap-1">
-          📱📹 First Contact Preference
-        </Label>
-        <p className="text-white/40 text-[10px] mb-3">
-          How would you like matches to connect with you?
-        </p>
-        <div className="space-y-2">
-          {CONTACT_PREFERENCE_OPTIONS.map((opt) => {
-            const isSelected = profile.contact_preference === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => update("contact_preference", opt.value)}
-                className="w-full text-left transition-all"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "12px 14px",
-                  borderRadius: 14,
-                  border: isSelected
-                    ? "2px solid rgba(236,72,153,0.7)"
-                    : "1.5px solid rgba(255,255,255,0.08)",
-                  background: isSelected
-                    ? "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(168,85,247,0.08))"
-                    : "rgba(255,255,255,0.04)",
-                  cursor: "pointer",
-                }}
-              >
-                <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{opt.icon}</span>
-                <div style={{ flex: 1 }}>
-                  <p style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: isSelected ? "#ec4899" : "rgba(255,255,255,0.8)",
-                    margin: 0,
-                  }}>
-                    {opt.label}
-                  </p>
-                  <p style={{
-                    fontSize: 10,
-                    color: "rgba(255,255,255,0.4)",
-                    margin: "2px 0 0",
-                  }}>
-                    {opt.description}
+          {/* Free Tonight */}
+          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Moon className="w-4 h-4 text-yellow-400" fill="currentColor" />
+                <div>
+                  <p className="text-white text-sm font-medium">Free Tonight</p>
+                  <p className="text-white/40 text-[10px]">
+                    {freeTonightUntil
+                      ? `Auto-clears at midnight · expires ${freeTonightUntil.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                      : "Shows a badge on your profile until midnight"}
                   </p>
                 </div>
-                {isSelected && (
-                  <span style={{
-                    width: 20, height: 20, borderRadius: "50%",
-                    background: "linear-gradient(135deg, #ec4899, #a855f7)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 11, color: "white", fontWeight: 800, flexShrink: 0,
-                  }}>
-                    ✓
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+              </div>
+              <Switch
+                checked={profile.available_tonight}
+                onCheckedChange={(checked) => {
+                  update("available_tonight", checked);
+                  if (checked) clearOtherBadges("available_tonight");
+                  if (checked) {
+                    // Set expiry to end of today (midnight local time)
+                    const midnight = new Date();
+                    midnight.setHours(23, 59, 59, 999);
+                    setFreeTonightUntil(midnight);
+                    if (userId) localStorage.setItem(`free_tonight_until_${userId}`, midnight.toISOString());
+                    // Schedule auto-clear
+                    const msLeft = midnight.getTime() - Date.now();
+                    setTimeout(async () => {
+                      await supabase.from("profiles").update({ available_tonight: false }).eq("id", userId);
+                      if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
+                      setFreeTonightUntil(null);
+                      update("available_tonight", false);
+                      toast("🌙 Free Tonight badge has been automatically removed at midnight.");
+                    }, msLeft);
+                  } else {
+                    setFreeTonightUntil(null);
+                    if (userId) localStorage.removeItem(`free_tonight_until_${userId}`);
+                  }
+                }}
+              />
+            </div>
+            {profile.available_tonight && freeTonightUntil && (
+              <div className="flex items-center gap-1.5 bg-yellow-400/10 border border-yellow-400/30 rounded-lg px-2.5 py-1.5">
+                <Moon className="w-3 h-3 text-yellow-400 flex-shrink-0" fill="currentColor" />
+                <p className="text-yellow-300 text-[10px]">
+                  Badge is live on your profile and will automatically turn off at{" "}
+                  <span className="font-bold">midnight tonight</span>. Turn the switch off anytime to remove it early.
+                </p>
+              </div>
+            )}
+          </div>
 
-      {/* First Date Idea */}
-      <div>
-        <Label className="text-white/50 text-xs mb-1 block flex items-center gap-1">
-          <Heart className="w-3 h-3 text-primary" /> First Date Would Be Nice...
-        </Label>
-        <Select value={profile.first_date_idea || ""} onValueChange={(v) => update("first_date_idea", v || null)}>
-          <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue placeholder="Select your ideal first date" /></SelectTrigger>
-          <SelectContent className="max-h-[200px]">
-            {FIRST_DATE_IDEAS.map((idea) => <SelectItem key={idea} value={idea}>{idea}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+          {/* Plus-One Premium */}
+          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-yellow-400" />
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-white text-sm font-medium">Plus-One Premium</p>
+                    <span className="bg-yellow-500/20 border border-yellow-400/40 text-yellow-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full">$19.99</span>
+                  </div>
+                  <p className="text-white/40 text-[10px]">Show you're open to events & social outings</p>
+                </div>
+              </div>
+              <Switch
+                checked={profile.is_plusone}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    // Redirect to purchase — cannot enable for free
+                    const plusoneFeature = PREMIUM_FEATURES.find(f => f.id === "plusone");
+                    if (plusoneFeature) {
+                      toast("🎫 Purchase Plus-One Premium to activate this badge.", { duration: 3000 });
+                      navigate(`/dashboard?purchase=plusone`);
+                    }
+                    return;
+                  }
+                  // Turning off is always free
+                  update("is_plusone", false);
+                }}
+              />
+            </div>
+            {profile.is_plusone && (
+              <div className="flex items-start gap-1.5 bg-yellow-500/10 border border-yellow-400/30 rounded-lg px-2.5 py-1.5">
+                <Calendar className="w-3 h-3 text-yellow-400 flex-shrink-0 mt-0.5" />
+                <p className="text-yellow-300 text-[10px] leading-relaxed">
+                  Your <span className="font-bold">🎫 Plus-One</span> badge is live! Others can see you're open to dinners, weddings, concerts, travel & social occasions. Connect via WhatsApp to coordinate plans.
+                </p>
+              </div>
+            )}
+          </div>
 
-      {/* Date Places */}
-      <DatePlacesEditor
-        places={profile.first_date_places}
-        onChange={(places) => update("first_date_places", places)}
-      />
+          {/* Generous Lifestyle badge */}
+          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Gift className="w-4 h-4 text-amber-400" />
+                <div>
+                  <p className="text-white text-sm font-medium">Generous Lifestyle</p>
+                  <p className="text-white/40 text-[10px]">You enjoy treating companions to dinners, events & memorable experiences</p>
+                </div>
+              </div>
+              <Switch
+                checked={profile.generous_lifestyle}
+                onCheckedChange={(checked) => {
+                  update("generous_lifestyle", checked);
+                  if (checked) clearOtherBadges("generous_lifestyle");
+                }}
+              />
+            </div>
+            {profile.generous_lifestyle && (
+              <div className="flex items-start gap-1.5 bg-amber-500/10 border border-amber-400/30 rounded-lg px-2.5 py-1.5">
+                <Gift className="w-3 h-3 text-amber-400 flex-shrink-0 mt-0.5" />
+                <p className="text-amber-300 text-[10px] leading-relaxed">
+                  Your <span className="font-bold">Generous Lifestyle</span> badge is live. It signals that you enjoy sharing experiences and thoughtful gestures—no expectations or obligations.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Weekend Plans badge */}
+          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-primary" />
+                <div>
+                  <p className="text-white text-sm font-medium">Weekend Plans</p>
+                  <p className="text-white/40 text-[10px]">Usually available on weekends for meetups & social plans</p>
+                </div>
+              </div>
+              <Switch
+                checked={profile.weekend_plans}
+                onCheckedChange={(checked) => {
+                  update("weekend_plans", checked);
+                  if (checked) clearOtherBadges("weekend_plans");
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Late Night Chat badge */}
+          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <MoonStar className="w-4 h-4 text-indigo-400" />
+                <div>
+                  <p className="text-white text-sm font-medium">Late Night Chat</p>
+                  <p className="text-white/40 text-[10px]">Typically active later in the evening; prefer nighttime conversations</p>
+                </div>
+              </div>
+              <Switch
+                checked={profile.late_night_chat}
+                onCheckedChange={(checked) => {
+                  update("late_night_chat", checked);
+                  if (checked) clearOtherBadges("late_night_chat");
+                }}
+              />
+            </div>
+          </div>
+
+          {/* No Drama badge */}
+          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-yellow-400" />
+                <div>
+                  <p className="text-white text-sm font-medium">No Drama</p>
+                  <p className="text-white/40 text-[10px]">Prefer relaxed, positive & respectful connections</p>
+                </div>
+              </div>
+              <Switch
+                checked={profile.no_drama}
+                onCheckedChange={(checked) => {
+                  update("no_drama", checked);
+                  if (checked) clearOtherBadges("no_drama");
+                }}
+              />
+            </div>
+          </div>
+
+          {/* ── First Contact Preference ─────────────────────────────── */}
+          <div>
+            <Label className="text-white/50 text-xs mb-2 block flex items-center gap-1">
+              📱📹 First Contact Preference
+            </Label>
+            <p className="text-white/40 text-[10px] mb-3">
+              How would you like matches to connect with you?
+            </p>
+            <div className="space-y-2">
+              {CONTACT_PREFERENCE_OPTIONS.map((opt) => {
+                const isSelected = profile.contact_preference === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => update("contact_preference", opt.value)}
+                    className="w-full text-left transition-all"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "12px 14px",
+                      borderRadius: 14,
+                      border: isSelected
+                        ? "2px solid rgba(236,72,153,0.7)"
+                        : "1.5px solid rgba(255,255,255,0.08)",
+                      background: isSelected
+                        ? "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(168,85,247,0.08))"
+                        : "rgba(255,255,255,0.04)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{opt.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <p style={{
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: isSelected ? "#ec4899" : "rgba(255,255,255,0.8)",
+                        margin: 0,
+                      }}>
+                        {opt.label}
+                      </p>
+                      <p style={{
+                        fontSize: 10,
+                        color: "rgba(255,255,255,0.4)",
+                        margin: "2px 0 0",
+                      }}>
+                        {opt.description}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <span style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        background: "linear-gradient(135deg, #ec4899, #a855f7)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 11, color: "white", fontWeight: 800, flexShrink: 0,
+                      }}>
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* First Date Idea */}
+          <div>
+            <Label className="text-white/50 text-xs mb-1 block flex items-center gap-1">
+              <Heart className="w-3 h-3 text-primary" /> First Date Would Be Nice...
+            </Label>
+            <Select value={profile.first_date_idea || ""} onValueChange={(v) => update("first_date_idea", v || null)}>
+              <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue placeholder="Select your ideal first date" /></SelectTrigger>
+              <SelectContent className="max-h-[200px]">
+                {FIRST_DATE_IDEAS.map((idea) => <SelectItem key={idea} value={idea}>{idea}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Date Places */}
+          <DatePlacesEditor
+            places={profile.first_date_places}
+            onChange={(places) => update("first_date_places", places)}
+          />
         </>
       )}
 
@@ -1363,19 +1360,19 @@ const ProfileEditor = () => {
               {!isLast ? (
                 <button
                   onClick={async () => {
-  // Auto save current step data silently
-  if (profile && userId) {
-    await supabase.from("profiles").update({
-      basic_info: profile.basic_info as unknown as import("@/integrations/supabase/types").Json,
-      lifestyle_info: profile.lifestyle_info as unknown as import("@/integrations/supabase/types").Json,
-      relationship_goals: profile.relationship_goals as unknown as import("@/integrations/supabase/types").Json,
-      name: profile.name,
-      age: profile.age,
-      bio: profile.bio,
-    }).eq("id", userId);
-  }
-  setEditorStep(steps[currentIdx + 1] as any);
-}}
+                    // Auto save current step data silently
+                    if (profile && userId) {
+                      await supabase.from("profiles").update({
+                        basic_info: profile.basic_info as unknown as import("@/integrations/supabase/types").Json,
+                        lifestyle_info: profile.lifestyle_info as unknown as import("@/integrations/supabase/types").Json,
+                        relationship_goals: profile.relationship_goals as unknown as import("@/integrations/supabase/types").Json,
+                        name: profile.name,
+                        age: profile.age,
+                        bio: profile.bio,
+                      }).eq("id", userId);
+                    }
+                    setEditorStep(steps[currentIdx + 1] as any);
+                  }}
                   style={{
                     flex: 2,
                     padding: "12px",

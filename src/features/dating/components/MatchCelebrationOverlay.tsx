@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, MessageCircle, ChevronLeft, Video, Phone } from "lucide-react";
-import { resolveConnectionType, getPreferenceIcon, getPreferenceLabel } from "@/utils/contactPreference";
+import { resolveConnectionType, getPreferenceIcon, getPreferenceLabel } from "@/shared/utils/contactPreference";
 
 interface MatchCelebrationOverlayProps {
   matchedProfile: any;
@@ -415,38 +415,48 @@ export default function MatchCelebrationOverlay({
                 >
                   <div style={{ position: "relative" }}>
                     <img src={myAvatar} alt="You"
-                      style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover",
+                      style={{
+                        width: 68, height: 68, borderRadius: "50%", objectFit: "cover",
                         border: "3px solid rgba(236,72,153,0.7)",
-                        boxShadow: "0 0 22px rgba(236,72,153,0.5)" }}
+                        boxShadow: "0 0 22px rgba(236,72,153,0.5)"
+                      }}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
                     />
-                    <div style={{ position: "absolute", bottom: -2, right: -2, width: 20, height: 20,
+                    <div style={{
+                      position: "absolute", bottom: -2, right: -2, width: 20, height: 20,
                       borderRadius: "50%", background: "#ec4899", border: "2px solid #0a0018",
-                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>✓</div>
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10
+                    }}>✓</div>
                   </div>
 
                   <motion.div
                     animate={{ scale: [1, 1.2, 1] }}
                     transition={{ repeat: Infinity, duration: 0.9, ease: "easeInOut" }}
-                    style={{ width: 40, height: 40, borderRadius: "50%",
+                    style={{
+                      width: 40, height: 40, borderRadius: "50%",
                       background: "linear-gradient(135deg, rgba(236,72,153,0.22), rgba(168,85,247,0.22))",
                       border: "1.5px solid rgba(236,72,153,0.5)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: "0 0 18px rgba(236,72,153,0.4)" }}
+                      boxShadow: "0 0 18px rgba(236,72,153,0.4)"
+                    }}
                   >
                     <Heart size={18} style={{ color: "#ec4899" }} fill="#ec4899" />
                   </motion.div>
 
                   <div style={{ position: "relative" }}>
                     <img src={theirAvatar} alt={theirName}
-                      style={{ width: 68, height: 68, borderRadius: "50%", objectFit: "cover",
+                      style={{
+                        width: 68, height: 68, borderRadius: "50%", objectFit: "cover",
                         border: "3px solid rgba(168,85,247,0.7)",
-                        boxShadow: "0 0 22px rgba(168,85,247,0.5)" }}
+                        boxShadow: "0 0 22px rgba(168,85,247,0.5)"
+                      }}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
                     />
-                    <div style={{ position: "absolute", bottom: -2, right: -2, width: 20, height: 20,
+                    <div style={{
+                      position: "absolute", bottom: -2, right: -2, width: 20, height: 20,
                       borderRadius: "50%", background: "#a855f7", border: "2px solid #0a0018",
-                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>✓</div>
+                      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10
+                    }}>✓</div>
                   </div>
                 </motion.div>
 

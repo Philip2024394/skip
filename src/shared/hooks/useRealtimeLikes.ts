@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Profile } from "@/components/SwipeCard";
-import { LIKE_EXPIRY_MS } from "@/lib/constants";
+import { Profile } from "@/features/dating/components/SwipeCard";
+import { LIKE_EXPIRY_MS } from "@/shared/services/constants";
 
 interface UseRealtimeLikesProps {
   user: any;
