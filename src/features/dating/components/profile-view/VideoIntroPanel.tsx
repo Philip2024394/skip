@@ -269,7 +269,7 @@ export default function VideoIntroPanel({
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.22 }}
       className="relative rounded-2xl overflow-hidden min-h-0 flex flex-col shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)]"
-      style={{ backgroundImage: `url(${getVideoBg(profile)})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      style={{ backgroundImage: `url(${getVideoBg(profile)})`, backgroundSize: "contain", backgroundPosition: "center bottom", backgroundRepeat: "no-repeat", backgroundColor: "#0a0010" }}
     >
       {/* Overlay — matches profile panel: light fuchsia/purple diagonal, no heavy darking */}
       <div className="absolute inset-0 pointer-events-none z-0" style={{
