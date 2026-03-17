@@ -1,26 +1,21 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/shared/components/toaster";
+import { Toaster as Sonner } from "@/shared/components/sonner";
 import { LanguageProvider } from "@/i18n/LanguageContext";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/shared/components/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import AuthPage from "./pages/AuthPage";
-import Index from "./pages/Index";
-import ProtectedRoute from "./components/ProtectedRoute";
-import LoadingFallback from "./components/LoadingFallback";
+import { AuthPage } from "@/features/auth/pages";
+import { Index } from "@/features/dating/pages";
+import { ProtectedRoute, LoadingFallback } from "@/shared/components";
 
 // Lazy load admin components to reduce initial bundle size
-const WhatsAppCollection = lazy(() => import("@/pages/admin/WhatsAppCollection"));
-const WhatsAppDirectory = lazy(() => import("@/components/admin/WhatsAppDirectory"));
-const SecurityDashboard = lazy(() => import("@/components/admin/SecurityDashboard"));
-const UltimateSecurityDashboard = lazy(() => import("@/components/admin/UltimateSecurityDashboard"));
-const AdGenerationDashboard = lazy(() => import("@/components/admin/AdGenerationDashboard"));
-const EnhancedAdGenerationDashboard = lazy(() => import("@/components/admin/EnhancedAdGenerationDashboard"));
-const LibraryAdGenerationDashboard = lazy(() => import("@/components/admin/LibraryAdGenerationDashboard"));
-const AdPerformanceDashboard = lazy(() => import("@/components/admin/AdPerformanceDashboard"));
-const WorldMapDashboard = lazy(() => import("./pages/admin/WorldMapDashboard"));
+const WhatsAppCollection = lazy(() => import("@/features/admin/pages/WhatsAppCollection"));
+const WhatsAppDirectory = lazy(() => import("@/features/admin/components/WhatsAppDirectory"));
+const SecurityDashboard = lazy(() => import("@/features/admin/components/SecurityDashboard"));
+const UltimateSecurityDashboard = lazy(() => import("@/features/admin/components/UltimateSecurityDashboard"));
+const WorldMapDashboard = lazy(() => import("@/features/admin/pages/WorldMapDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -51,14 +46,17 @@ const AppContent = () => {
         <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppDirectory /></Suspense></ProtectedRoute>} />
         <Route path="/admin/security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SecurityDashboard /></Suspense></ProtectedRoute>} />
         <Route path="/admin/ultimate-security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><UltimateSecurityDashboard /></Suspense></ProtectedRoute>} />
+<<<<<<< HEAD
         <Route path="/admin/ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><AdGenerationDashboard /></Suspense></ProtectedRoute>} />
         <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><EnhancedAdGenerationDashboard /></Suspense></ProtectedRoute>} />
         <Route path="/admin/library-ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><LibraryAdGenerationDashboard /></Suspense></ProtectedRoute>} />
         <Route path="/admin/ad-performance" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><AdPerformanceDashboard /></Suspense></ProtectedRoute>} />
+=======
+>>>>>>> eb64a17 (Diamond Reset: System Restored)
         <Route path="/admin/world-map" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WorldMapDashboard /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
-      </Routes>
-    </BrowserRouter>
+      </Routes >
+    </BrowserRouter >
   );
 };
 
@@ -67,11 +65,15 @@ const App = () => (
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
+<<<<<<< HEAD
         <Sonner />
+=======
+        <SonnerToaster />
+>>>>>>> eb64a17 (Diamond Reset: System Restored)
         <AppContent />
-      </TooltipProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
+      </TooltipProvider >
+    </LanguageProvider >
+  </QueryClientProvider >
 );
 
 export default App;

@@ -1,0 +1,93 @@
+export interface BasicInfo {
+  height?: string;
+  body_type?: string;
+  ethnicity?: string;
+  education?: string;
+  occupation?: string;
+  income?: string;
+  lives_with?: string;
+  children?: string;
+  languages?: string[];
+}
+
+export interface LifestyleInfo {
+  smoking?: string;
+  drinking?: string;
+  exercise?: string;
+  diet?: string;
+  sleep?: string;
+  social_style?: string;
+  love_language?: string;
+  pets?: string;
+  social_media?: string;
+  hobbies?: string[];
+}
+
+export interface RelationshipGoals {
+  looking_for?: string;
+  timeline?: string;
+  date_type?: string;
+  marital_status?: string;
+  religion?: string;
+  prayer?: string;
+  hijab?: string;
+  partner_religion?: string;
+  dowry?: string;
+  family_involvement?: string;
+  polygamy?: string;
+  relocate?: string;
+  about_partner?: string;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  age: number;
+  city: string;
+  country: string;
+  bio: string;
+  image: string;
+  images: string[];
+  gender: string;
+  avatar_url?: string;
+  latitude?: number;
+  longitude?: number;
+  available_tonight?: boolean;
+  voice_intro_url?: string | null;
+  expires_at?: string | null;
+  is_rose?: boolean;
+  last_seen_at?: string | null;
+  looking_for?: string;
+  height_cm?: number | null;
+  drinking?: string | null;
+  smoking?: string | null;
+  fitness?: string | null;
+  pets?: string | null;
+  interests?: string[] | null;
+  main_image_pos?: string;
+  main_image_zoom?: number;
+  first_date_idea?: string | null;
+  first_date_places?: Array<{ idea: string; url: string; google_url?: string; image_url: string | null; title: string | null }>;
+  languages?: string[];
+  is_plusone?: boolean;
+  generous_lifestyle?: boolean;
+  weekend_plans?: boolean;
+  late_night_chat?: boolean;
+  no_drama?: boolean;
+  is_verified?: boolean;
+  verification_status?: "pending" | "approved" | "rejected" | null;
+  verification_id_type?: "ktp" | "passport" | null;
+  verification_name?: string | null;
+  verification_age?: number | null;
+  verification_id_url?: string | null;
+  whatsapp_connections_count?: number;
+  date_canceled_count?: number;
+  orientation?: string | null;
+  basic_info?: BasicInfo;
+  lifestyle_info?: LifestyleInfo;
+  relationship_goals?: RelationshipGoals;
+  selected_date_ideas?: string[];
+  is_mock?: boolean;
+  mock_online_hours?: number | null;
+  mock_offline_days?: number[] | null;
+}
