@@ -45,13 +45,6 @@ const AppContent = () => {
         <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppDirectory /></Suspense></ProtectedRoute>} />
         <Route path="/admin/security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SecurityDashboard /></Suspense></ProtectedRoute>} />
         <Route path="/admin/ultimate-security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><UltimateSecurityDashboard /></Suspense></ProtectedRoute>} />
-<<<<<<< HEAD
-        <Route path="/admin/ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><AdGenerationDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/enhanced-ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><EnhancedAdGenerationDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/library-ad-generation" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><LibraryAdGenerationDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/admin/ad-performance" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><AdPerformanceDashboard /></Suspense></ProtectedRoute>} />
-=======
->>>>>>> eb64a17 (Diamond Reset: System Restored)
         <Route path="/admin/world-map" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WorldMapDashboard /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes >
@@ -64,11 +57,7 @@ const App = () => (
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
-<<<<<<< HEAD
         <Sonner />
-=======
-        <SonnerToaster />
->>>>>>> eb64a17 (Diamond Reset: System Restored)
         <AppContent />
       </TooltipProvider >
     </LanguageProvider >
