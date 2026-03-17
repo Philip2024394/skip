@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Video, VideoOff, X, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/shared/components/button';
+import { Progress } from '@/shared/components/progress';
 
 interface VideoRecorderProps {
   onRecordingComplete?: (blob: Blob) => void;
@@ -9,8 +9,8 @@ interface VideoRecorderProps {
   className?: string;
 }
 
-export default function VideoRecorder({ 
-  onRecordingComplete, 
+export default function VideoRecorder({
+  onRecordingComplete,
   maxDuration = 30,
   className = ""
 }: VideoRecorderProps) {
@@ -20,7 +20,7 @@ export default function VideoRecorder({
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null);
   const [recordedUrl, setRecordedUrl] = useState<string>('');
-  
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -38,7 +38,7 @@ export default function VideoRecorder({
       });
 
       setStream(mediaStream);
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
@@ -61,7 +61,7 @@ export default function VideoRecorder({
         const url = URL.createObjectURL(blob);
         setRecordedBlob(blob);
         setRecordedUrl(url);
-        
+
         if (onRecordingComplete) {
           onRecordingComplete(blob);
         }
@@ -94,7 +94,7 @@ export default function VideoRecorder({
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setIsPaused(false);
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -111,7 +111,7 @@ export default function VideoRecorder({
     if (mediaRecorderRef.current && isRecording && !isPaused) {
       mediaRecorderRef.current.pause();
       setIsPaused(true);
-      
+
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -123,7 +123,7 @@ export default function VideoRecorder({
     if (mediaRecorderRef.current && isRecording && isPaused) {
       mediaRecorderRef.current.resume();
       setIsPaused(false);
-      
+
       timerRef.current = setInterval(() => {
         setRecordingTime(prev => {
           const newTime = prev + 0.1;
@@ -141,7 +141,7 @@ export default function VideoRecorder({
     setRecordedBlob(null);
     setRecordedUrl('');
     setRecordingTime(0);
-    
+
     if (recordedUrl) {
       URL.revokeObjectURL(recordedUrl);
     }
@@ -236,7 +236,7 @@ export default function VideoRecorder({
                     Resume
                   </Button>
                 )}
-                
+
                 <Button
                   onClick={stopRecording}
                   variant="outline"
@@ -258,7 +258,7 @@ export default function VideoRecorder({
               <Camera className="w-5 h-5 mr-2" />
               Record New
             </Button>
-            
+
             <Button
               className="bg-green-500 hover:bg-green-600 text-white"
             >

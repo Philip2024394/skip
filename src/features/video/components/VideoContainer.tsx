@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Play, Video, Plus } from 'lucide-react';
-import VideoPlayer from '@/components/video/VideoPlayer';
+import VideoPlayer from '@/features/video/components/VideoPlayer';
 import { useNavigate } from 'react-router-dom';
 
 // Default video for users who haven't uploaded
@@ -13,8 +13,8 @@ interface VideoContainerProps {
   className?: string;
 }
 
-export default function VideoContainer({ 
-  profileId, 
+export default function VideoContainer({
+  profileId,
   profileName = "Profile",
   userVideoUrl,
   className = ""
@@ -39,7 +39,7 @@ export default function VideoContainer({
   const videoSrc = userVideo || DEFAULT_VIDEO_URL;
 
   return (
-    <div 
+    <div
       className={`relative bg-black rounded-xl overflow-hidden cursor-pointer group ${className}`}
       onClick={handleContainerClick}
     >
@@ -51,7 +51,7 @@ export default function VideoContainer({
           autoPlay={false}
           className="w-full h-full"
         />
-        
+
         {/* Overlay on hover */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
           <div className="bg-white/20 backdrop-blur-sm rounded-full p-4 border border-white/30">
@@ -78,7 +78,7 @@ export default function VideoContainer({
               {userVideo ? 'Personal video' : 'Default video'}
             </p>
           </div>
-          
+
           <div className="flex items-center gap-1">
             <Video className="w-4 h-4 text-white/60" />
             <span className="text-white/60 text-xs">0:30</span>
