@@ -46,7 +46,6 @@ export default defineConfig({
     'process.env.NODE_ENV': JSON.stringify('production')
   },
   esbuild: {
-    target: 'es2015',
-    drop: ['console', 'debugger']
+    target: 'es2015'
   }
 })

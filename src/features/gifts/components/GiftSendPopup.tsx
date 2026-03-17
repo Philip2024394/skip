@@ -49,6 +49,22 @@ export default function GiftSendPopup({
   const [showRefuel, setShowRefuel] = useState(false);
   const [sent, setSent] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [spamError, setSpamError] = useState<string | null>(null);
+
+  const validateMessage = (text: string): string | null => {
+    if (!text.trim()) return null; // empty is fine
+    // Block URLs
+    if (/https?:\/\//i.test(text) || /www\./i.test(text)) return "Links are not allowed in gift messages";
+    // Block digit phone numbers (7+ consecutive digits)
+    if (/\d{7,}/.test(text.replace(/[\s\-().]/g, ""))) return "Phone numbers are not allowed";
+    // Block formatted phone numbers
+    if (/\b\d{3,4}[\s\-.]?\d{3,4}[\s\-.]?\d{3,4}\b/.test(text)) return "Phone numbers are not allowed";
+    // Block text-format numbers (English)
+    if (/\b(zero|one|two|three|four|five|six|seven|eight|nine)\b.*\b(zero|one|two|three|four|five|six|seven|eight|nine)\b/i.test(text)) return "Contact information in text format is not allowed";
+    // Block text-format numbers (Indonesian)
+    if (/\b(nol|satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan)\b.*\b(nol|satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan)\b/i.test(text)) return "Informasi kontak dalam format teks tidak diizinkan";
+    return null;
+  };
 
   const isFreeGift = freeGiftsRemaining > 0;
   const canAfford = userTokens >= gift.token_price;
@@ -57,6 +73,10 @@ export default function GiftSendPopup({
 
   const handleSend = async () => {
     if (!canSend) return;
+
+    const spamCheck = validateMessage(message);
+    if (spamCheck) { setSpamError(spamCheck); return; }
+    setSpamError(null);
 
     setIsSending(true);
     try {
@@ -150,32 +170,34 @@ export default function GiftSendPopup({
   // Sent success animation
   if (sent) {
     return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
+        style={{ background: "radial-gradient(ellipse at center, rgba(190,24,93,0.35) 0%, rgba(0,0,0,0.88) 70%)" }}>
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 18 }}
           className="flex flex-col items-center gap-3"
         >
           <motion.div
-            animate={{ scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 0.6 }}
-            className="text-7xl"
+            animate={{ scale: [1, 1.35, 1], rotate: [0, 12, -12, 0] }}
+            transition={{ duration: 0.7 }}
+            className="text-8xl drop-shadow-[0_0_30px_rgba(251,113,133,0.7)]"
           >
-            {gift.emoji || "\u{1F381}"}
+            {gift.emoji || "🎁"}
           </motion.div>
           <motion.p
-            initial={{ y: 10, opacity: 0 }}
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-white font-bold text-lg"
+            transition={{ delay: 0.25 }}
+            className="text-white font-black text-xl tracking-tight"
           >
-            Gift sent!
+            Gift sent! 💕
           </motion.p>
           <motion.p
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-white/50 text-sm"
+            transition={{ delay: 0.45 }}
+            className="text-rose-300/80 text-sm"
           >
             {recipientName} will love it
           </motion.p>
@@ -190,101 +212,136 @@ export default function GiftSendPopup({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        style={{ background: "radial-gradient(ellipse at 50% 60%, rgba(190,24,93,0.28) 0%, rgba(6,0,20,0.82) 70%)" }}
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.div
-          initial={{ scale: 0.9, y: 30 }}
+          initial={{ scale: 0.92, y: 28 }}
           animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.9, y: 30 }}
-          className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-3xl border border-pink-400/20 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_30px_rgba(236,72,153,0.08)] max-w-sm w-full overflow-hidden"
+          exit={{ scale: 0.92, y: 28 }}
+          transition={{ type: "spring", stiffness: 280, damping: 22 }}
+          className="max-w-sm w-full rounded-3xl overflow-hidden"
+          style={{
+            background: "linear-gradient(160deg, #2d0022 0%, #100018 45%, #1a0010 100%)",
+            border: "1.5px solid rgba(251,113,133,0.30)",
+            boxShadow: "0 24px 70px rgba(190,24,93,0.30), 0 0 0 1px rgba(251,113,133,0.08), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}
         >
-          {/* Top accent line */}
-          <div className="h-0.5 bg-gradient-to-r from-transparent via-pink-500/60 to-transparent" />
+          {/* Top warm glow stripe */}
+          <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #f43f5e, #ec4899, #fb923c, #ec4899, #f43f5e)" }} />
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 pt-5 pb-2">
+          <div className="flex items-center justify-between px-5 pt-4 pb-2">
             <div className="flex items-center gap-2">
-              <Gift className="w-4 h-4 text-pink-400" />
-              <span className="text-white/60 text-xs font-medium uppercase tracking-wider">Send Gift</span>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #f43f5e, #fb923c)" }}>
+                <Gift className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-rose-200/80 text-xs font-semibold uppercase tracking-widest">Send Gift</span>
             </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+              style={{ background: "rgba(251,113,133,0.10)", border: "1px solid rgba(251,113,133,0.20)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(251,113,133,0.22)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(251,113,133,0.10)")}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5 text-rose-300/70" />
             </button>
           </div>
 
-          {/* Gift Preview — centered emoji + name + slogan */}
-          <div className="flex flex-col items-center px-5 py-4">
+          {/* Gift Preview */}
+          <div className="flex flex-col items-center px-5 py-3">
             <motion.div
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500/15 to-violet-500/15 border border-pink-400/20 flex items-center justify-center mb-3"
+              initial={{ scale: 0.75, rotate: -6 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 18 }}
+              className="w-22 h-22 rounded-2xl flex items-center justify-center mb-3"
+              style={{
+                width: 88, height: 88,
+                background: "linear-gradient(135deg, rgba(244,63,94,0.18), rgba(251,146,60,0.14))",
+                border: "1.5px solid rgba(251,113,133,0.28)",
+                boxShadow: "0 0 28px rgba(244,63,94,0.20), inset 0 1px 0 rgba(255,255,255,0.07)",
+              }}
             >
               {gift.image_url ? (
                 <img
                   src={gift.image_url}
                   alt={gift.name}
-                  className="w-14 h-14 object-contain"
+                  className="w-14 h-14 object-contain drop-shadow-[0_2px_10px_rgba(244,63,94,0.35)]"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                     const p = (e.target as HTMLImageElement).parentElement;
                     if (p && !p.querySelector(".efb")) {
                       const s = document.createElement("span");
                       s.className = "efb";
-                      s.textContent = gift.emoji || "\u{1F381}";
+                      s.textContent = gift.emoji || "🎁";
                       s.style.cssText = "font-size:40px;line-height:1;";
                       p.appendChild(s);
                     }
                   }}
                 />
               ) : (
-                <span className="text-[40px] leading-none select-none">{gift.emoji || "\u{1F381}"}</span>
+                <span className="text-[40px] leading-none select-none">{gift.emoji || "🎁"}</span>
               )}
             </motion.div>
 
-            <h4 className="text-white font-bold text-base">{gift.name}</h4>
-
-            {/* Slogan */}
-            <p className="text-pink-300/60 text-[11px] italic mt-1">{slogan}</p>
+            <h4 className="text-white font-black text-base tracking-tight">{gift.name}</h4>
+            <p className="text-rose-300/60 text-[11px] italic mt-0.5">{slogan}</p>
 
             {/* Price badge */}
-            <div className="flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full bg-black/30 border border-white/10">
+            <div className="flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full"
+              style={{ background: "rgba(251,113,133,0.10)", border: "1px solid rgba(251,113,133,0.22)" }}>
               {isFreeGift ? (
-                <span className="text-green-400 text-xs font-bold">FREE</span>
+                <span className="text-emerald-400 text-xs font-bold">✦ FREE</span>
               ) : (
                 <>
-                  <Coins className="w-3.5 h-3.5 text-yellow-400" />
-                  <span className="text-yellow-400 text-xs font-bold">{gift.token_price} coins</span>
+                  <Coins className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-amber-300 text-xs font-bold">{gift.token_price} coins</span>
                 </>
               )}
             </div>
           </div>
 
           {/* Recipient chip */}
-          <div className="mx-5 mb-3 flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
-            <Heart className="w-3.5 h-3.5 text-pink-400/70" />
+          <div className="mx-5 mb-3 flex items-center gap-2 rounded-xl px-3 py-2"
+            style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(251,113,133,0.18)" }}>
+            <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/50" />
             <div className="flex-1 min-w-0">
-              <p className="text-white/40 text-[10px]">Sending to</p>
-              <p className="text-white/90 text-sm font-medium truncate">{recipientName}</p>
+              <p className="text-rose-300/50 text-[10px]">Sending to</p>
+              <p className="text-white font-semibold text-sm truncate">{recipientName}</p>
             </div>
+            <Sparkles className="w-3.5 h-3.5 text-amber-400/60" />
           </div>
 
           {/* Message Input */}
           <div className="px-5 mb-4">
-            <SecureTextarea
-              id="gift-message"
-              value={message}
-              onChange={setMessage}
-              placeholder="Add a sweet note..."
-              rows={2}
-              maxLength={350}
-              label=""
-              context="gift_message"
-              userId={user?.id}
-            />
+            <div className="rounded-xl overflow-hidden"
+              style={{ border: "1px solid rgba(251,113,133,0.22)", background: "rgba(255,255,255,0.04)" }}>
+              <SecureTextarea
+                id="gift-message"
+                value={message}
+                onChange={setMessage}
+                placeholder="Add a sweet note... 💌"
+                rows={2}
+                maxLength={350}
+                label=""
+                context="gift_message"
+                userId={user?.id}
+              />
+            </div>
+            {spamError && (
+              <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                <span>⚠️</span> {spamError}
+              </p>
+            )}
+            <div className="flex justify-between items-center mt-1.5">
+              <span className="text-rose-300/30 text-[10px]">No links or phone numbers</span>
+              <span className={`text-[10px] font-medium ${message.length > 320 ? "text-amber-400" : "text-rose-300/30"}`}>
+                {message.length}/350
+              </span>
+            </div>
           </div>
 
           {/* Insufficient coins — Refuel Gate */}
@@ -292,13 +349,14 @@ export default function GiftSendPopup({
             <div className="mx-5 mb-3">
               <button
                 onClick={() => setShowRefuel(true)}
-                className="w-full bg-gradient-to-r from-yellow-400/10 to-amber-500/10 border border-yellow-400/30 rounded-xl px-4 py-2.5 flex items-center justify-between hover:border-yellow-400/50 transition-colors"
+                className="w-full rounded-xl px-4 py-2.5 flex items-center justify-between transition-all"
+                style={{ background: "linear-gradient(135deg, rgba(251,191,36,0.10), rgba(251,146,60,0.10))", border: "1px solid rgba(251,191,36,0.28)" }}
               >
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-yellow-400" />
-                  <span className="text-yellow-300 text-xs font-medium">Need {gift.token_price - userTokens} more coins</span>
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span className="text-amber-300 text-xs font-semibold">Need {gift.token_price - userTokens} more coins</span>
                 </div>
-                <span className="text-yellow-400 text-xs font-bold">Refuel</span>
+                <span className="text-amber-400 text-xs font-black">Top up →</span>
               </button>
             </div>
           )}
@@ -308,7 +366,12 @@ export default function GiftSendPopup({
             <Button
               variant="outline"
               onClick={onClose}
-              className="flex-1 bg-white/5 border-white/10 text-white/60 hover:text-white hover:bg-white/10 h-10 text-sm"
+              className="flex-1 h-11 text-sm font-semibold transition-all"
+              style={{
+                background: "rgba(251,113,133,0.07)",
+                border: "1px solid rgba(251,113,133,0.20)",
+                color: "rgba(251,113,133,0.70)",
+              }}
               aria-label="Cancel gift sending"
             >
               Cancel
@@ -316,7 +379,11 @@ export default function GiftSendPopup({
             <Button
               onClick={handleSend}
               disabled={!canSend || isSending || message.length > 350}
-              className="flex-1 bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-semibold h-10 text-sm shadow-[0_4px_20px_rgba(236,72,153,0.3)] disabled:opacity-40 disabled:shadow-none"
+              className="flex-1 h-11 text-sm font-black text-white disabled:opacity-40"
+              style={{
+                background: canSend ? "linear-gradient(135deg, #f43f5e, #ec4899, #fb923c)" : undefined,
+                boxShadow: canSend ? "0 4px 22px rgba(244,63,94,0.45), 0 0 0 1px rgba(251,113,133,0.20)" : undefined,
+              }}
               aria-label={`Send ${gift.name} gift to ${recipientName}`}
             >
               {isSending ? (
@@ -324,7 +391,7 @@ export default function GiftSendPopup({
               ) : (
                 <>
                   <Gift className="w-4 h-4 mr-1.5" />
-                  {isFreeGift ? "Send Free" : "Send Gift"}
+                  {isFreeGift ? "Send Free 💫" : "Send Gift 💝"}
                 </>
               )}
             </Button>

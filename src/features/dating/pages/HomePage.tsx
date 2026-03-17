@@ -20,6 +20,7 @@ import { TermsAcceptanceDialog } from "@/features/auth/components";
 import { TreatOverlay, AppDialogs, DailyMatchSuggestion, shouldShowDailyMatch, markDailyMatchShown } from "@/features/dating/components";
 import PackageTermsOverlay from "@/features/dating/components/PackageTermsOverlay";
 import { ProfileBottomSheet, ProfileInfoPanel, ProfileImagesPanel, DateIdeaDetailPanel, TreatDetailPanel } from "@/features/dating/components";
+import VideoIntroPanel from "@/features/dating/components/profile-view/VideoIntroPanel";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/shared/services/constants";
 import { isNetworkError } from "@/shared/utils/payments";
@@ -36,7 +37,7 @@ import { TopCard } from "@/features/dating/components";
 import { useVideoCall } from "@/shared/hooks/useVideoCall";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
 import CoinHub from "@/shared/components/CoinHub";
-import { TokenPurchase } from "@/features/gifts/components";
+import { TokenPurchase, GiftReceiver, MatchPopup, GiftReceivePopup } from "@/features/gifts/components";
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
 import logoHeart from "@/assets/images/logo-heart.png";
@@ -254,7 +255,10 @@ const Index = () => {
   const mockProfiles = useMemo(() => generateIndonesianProfiles(50), []);
   // Always use mock profiles to ensure content always shows, regardless of user status
   const useMocks = true; // Always true for all users
-  const allProfiles = dbProfiles.length > 0 ? [...mockProfiles, ...dbProfiles] : mockProfiles;
+  const allProfiles = useMemo(
+    () => dbProfiles.length > 0 ? [...mockProfiles, ...dbProfiles] : mockProfiles,
+    [mockProfiles, dbProfiles]
+  );
 
   // Apply filters
   const filteredProfiles = useMemo(() => {
@@ -509,7 +513,7 @@ const Index = () => {
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
-  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "gifts" | "unlock" | "distance">("new");
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "gifts" | "unlock" | "distance" | "video">("new");
   const [homeUnlockKey, setHomeUnlockKey] = useState<string>("");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
@@ -575,6 +579,13 @@ const Index = () => {
     }
   }, [daysSinceLastActive, getBehaviorStorageKey, iLiked, likedMe]);
 
+
+  // Reset tab state whenever the viewed profile changes so Video panel never auto-shows
+  useEffect(() => {
+    setAboutMeTab("new");
+    setSelectedProfileSection(null);
+    setSelectedDateIdeaIndex(null);
+  }, [profileRouteId]);
 
   // Track profile views + repeated views in-session
   useEffect(() => {
@@ -867,7 +878,7 @@ const Index = () => {
         className="w-32 h-32 object-contain drop-shadow-[0_0_24px_rgba(220,80,150,0.6)]"
         style={{ imageRendering: "auto" }}
       />
-      <p className="mt-5 text-white text-xl font-bold tracking-widest" style={{ fontFamily: "inherit" }}>2DateMe</p>
+      <p className="mt-5 text-white text-xl font-bold tracking-widest" style={{ fontFamily: "inherit" }}>Date2me.com</p>
       <p className="mt-1 text-white/40 text-xs tracking-wider">Connect Instantly</p>
       <div className="mt-8 flex gap-1.5">
         {[0, 1, 2].map(i => (
@@ -885,6 +896,10 @@ const Index = () => {
 
   const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "Guest";
   const currentUser = userName;
+
+  // Diamond Gift Match state
+  const [matchData, setMatchData] = useState<{ name: string; id: string; avatar?: string } | null>(null);
+  const [testGiftOpen, setTestGiftOpen] = useState(false);
 
   return (
     <div className="h-screen-safe flex flex-col overflow-hidden relative" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
@@ -946,15 +961,24 @@ const Index = () => {
           : null;
         const showDateIdeaPanel = !!dateIdeaPlace;
         const showProfilePanel = isProfileRoute && aboutMeTab === "new" && selectedProfileSection !== null;
-        const showFullPanel = showDateIdeaPanel || showProfilePanel;
+        const showVideoPanel = isProfileRoute && aboutMeTab === "video";
+        const showFullPanel = showDateIdeaPanel || showProfilePanel || showVideoPanel;
 
         return (
-          <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? (showFullPanel ? "1fr" : "1fr auto") : "1fr auto 1fr" }}>
+          <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? (showFullPanel ? "1fr" : "1fr auto") : "1fr 12rem 1fr" }}>
             {showDateIdeaPanel ? (
               <DateIdeaDetailPanel
                 dateIdea={dateIdeaPlace.idea}
                 imageUrl={dateIdeaPlace.image_url || undefined}
                 onClose={() => setSelectedDateIdeaIndex(null)}
+              />
+            ) : showVideoPanel && selectedProfile ? (
+              <VideoIntroPanel
+                profile={selectedProfile}
+                currentUserId={user?.id}
+                currentUserName={userName}
+                onClose={() => setAboutMeTab("new")}
+                onMatch={(name, id) => setMatchData({ name, id })}
               />
             ) : showProfilePanel ? (
               selectedProfileSection === "images" ? (
@@ -1039,10 +1063,18 @@ const Index = () => {
                             sent: "Date Ideas",
                             treat: "Treat",
                             distance: "Distance",
+                            video: "Video",
                           }
                           : undefined
                       }
                       onTabChange={(t) => {
+                        // Video tab — clear other panel state
+                        if (t === "video") {
+                          setSelectedProfileSection(null);
+                          setSelectedDateIdeaIndex(null);
+                          setAboutMeTab(t);
+                          return;
+                        }
                         // Allow treat tab on both home and profile pages
                         if (t === "treat") {
                           setAboutMeTab(t);
@@ -1242,6 +1274,13 @@ const Index = () => {
                       >
                         ✨ Test Daily Match
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setTestGiftOpen(true)}
+                        className="w-full flex items-center gap-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        🎁 Test Gift Popup
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1361,6 +1400,49 @@ const Index = () => {
           }}
         />
       )}
+
+      {/* Dev: test gift receive popup */}
+      {testGiftOpen && (
+        <GiftReceivePopup
+          gift={{
+            id: "test-gift-001",
+            sender_id: "test-sender",
+            sender_name: filteredProfiles[0]?.name || "Jessica",
+            gift_id: "g11",
+            gift_name: "Flower Bouquet",
+            gift_image_url: "https://ik.imagekit.io/7grri5v7d/flower-bouquet-removebg-preview.png",
+            gift_emoji: "💐",
+            message: "Thinking of you — hope this brightens your day! 🌸",
+            status: "pending",
+            created_at: new Date().toISOString(),
+          }}
+          onClose={() => setTestGiftOpen(false)}
+          onGiftAccepted={() => setTestGiftOpen(false)}
+          onGiftRefused={() => setTestGiftOpen(false)}
+          onMatch={(name, id) => { setTestGiftOpen(false); setMatchData({ name, id }); }}
+        />
+      )}
+
+      {/* Gift Receiver — listens for incoming gifts for the current user */}
+      <GiftReceiver
+        currentUserId={user?.id}
+        onMatch={(senderName, senderId) =>
+          setMatchData({ name: senderName, id: senderId })
+        }
+      />
+
+      {/* Match Popup — shown when a mutual like is detected after gift acceptance */}
+      <AnimatePresence>
+        {matchData && (
+          <MatchPopup
+            matchedProfileId={matchData.id}
+            matchedProfileName={matchData.name}
+            matchedProfileAvatar={matchData.avatar}
+            currentUserName={userName}
+            onClose={() => setMatchData(null)}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );

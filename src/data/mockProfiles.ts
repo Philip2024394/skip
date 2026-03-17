@@ -1,4 +1,4 @@
-import type { Profile } from "@/types/profile";
+import type { Profile } from "@/shared/types/profile";
 
 const MOCK_IMAGES = [
   "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=500&fit=crop",

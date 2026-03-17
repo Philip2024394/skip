@@ -28,33 +28,36 @@ interface GiftSelectorProps {
   onGiftSent?: () => void;
 }
 
-// Diamond Standard fallback gift catalogue — matches Supabase virtual_gifts with ImageKit URLs
+// Diamond Standard fallback gift catalogue.
+// g01–g19: no confirmed ImageKit upload → image_url left empty, emoji shows instead.
+// g20–g25: have real ?updatedAt= timestamps from actual ImageKit uploads → images load.
+// To add a real image for any gift: paste the full ImageKit URL (with ?updatedAt=...) into image_url.
 const DIAMOND_GIFTS: VirtualGift[] = [
-  { id: "g01", name: "Love Letter", emoji: "\u{1F48C}", image_url: "https://ik.imagekit.io/7grri5v7d/love-letter-removebg-preview.png", image_name: "love_letter", token_price: 5, tier: "standard" },
-  { id: "g02", name: "Classic Rose", emoji: "\u{1F339}", image_url: "https://ik.imagekit.io/7grri5v7d/classic-rose-removebg-preview.png", image_name: "classic_rose", token_price: 6, tier: "standard" },
-  { id: "g03", name: "Candle Light", emoji: "\u{1F56F}\uFE0F", image_url: "https://ik.imagekit.io/7grri5v7d/candle-light-removebg-preview.png", image_name: "candle_light", token_price: 6, tier: "standard" },
-  { id: "g04", name: "Romantic Heart", emoji: "\u2764\uFE0F", image_url: "https://ik.imagekit.io/7grri5v7d/romantic-heart-removebg-preview.png", image_name: "romantic_heart", token_price: 7, tier: "standard" },
-  { id: "g05", name: "Cake Slice", emoji: "\u{1F370}", image_url: "https://ik.imagekit.io/7grri5v7d/cake-slice-removebg-preview.png", image_name: "cake_slice", token_price: 8, tier: "standard" },
-  { id: "g06", name: "Chocolate Box", emoji: "\u{1F36B}", image_url: "https://ik.imagekit.io/7grri5v7d/chocolate-box-removebg-preview.png", image_name: "chocolate_box", token_price: 9, tier: "standard" },
-  { id: "g07", name: "Teddy Bear", emoji: "\u{1F9F8}", image_url: "https://ik.imagekit.io/7grri5v7d/teddy-bear-removebg-preview.png", image_name: "teddy_bear", token_price: 10, tier: "standard" },
-  { id: "g08", name: "Keychain", emoji: "\u{1F511}", image_url: "https://ik.imagekit.io/7grri5v7d/keychain-removebg-preview.png", image_name: "keychain", token_price: 6, tier: "standard" },
-  { id: "g09", name: "Music Box", emoji: "\u{1F3B5}", image_url: "https://ik.imagekit.io/7grri5v7d/music-box-removebg-preview.png", image_name: "music_box", token_price: 12, tier: "premium" },
-  { id: "g10", name: "Photo Frame", emoji: "\u{1F5BC}\uFE0F", image_url: "https://ik.imagekit.io/7grri5v7d/photo-frame-removebg-preview.png", image_name: "photo_frame", token_price: 11, tier: "premium" },
-  { id: "g11", name: "Flower Bouquet", emoji: "\u{1F490}", image_url: "https://ik.imagekit.io/7grri5v7d/flower-bouquet-removebg-preview.png", image_name: "flower_bouquet", token_price: 13, tier: "premium" },
-  { id: "g12", name: "Bracelet", emoji: "\u{1F4FF}", image_url: "https://ik.imagekit.io/7grri5v7d/bracelet-removebg-preview.png", image_name: "bracelet", token_price: 14, tier: "premium" },
-  { id: "g13", name: "Earrings", emoji: "\u2728", image_url: "https://ik.imagekit.io/7grri5v7d/earrings-removebg-preview.png", image_name: "earrings", token_price: 14, tier: "premium" },
-  { id: "g14", name: "Perfume", emoji: "\u{1F48E}", image_url: "https://ik.imagekit.io/7grri5v7d/perfume-removebg-preview.png", image_name: "perfume", token_price: 15, tier: "premium" },
-  { id: "g15", name: "Diamond Ring", emoji: "\u{1F48D}", image_url: "https://ik.imagekit.io/7grri5v7d/diamond-ring-removebg-preview.png", image_name: "diamond_ring", token_price: 16, tier: "luxury" },
-  { id: "g16", name: "Wine Bottle", emoji: "\u{1F377}", image_url: "https://ik.imagekit.io/7grri5v7d/wine-bottle-removebg-preview.png", image_name: "wine_bottle", token_price: 17, tier: "luxury" },
-  { id: "g17", name: "Necklace", emoji: "\u{1F4AB}", image_url: "https://ik.imagekit.io/7grri5v7d/necklace-removebg-preview.png", image_name: "necklace", token_price: 18, tier: "luxury" },
-  { id: "g18", name: "Jewelry Box", emoji: "\u{1F48E}", image_url: "https://ik.imagekit.io/7grri5v7d/jewelry-box-removebg-preview.png", image_name: "jewelry_box", token_price: 19, tier: "luxury" },
-  { id: "g19", name: "Watch", emoji: "\u231A", image_url: "https://ik.imagekit.io/7grri5v7d/watch-removebg-preview.png", image_name: "watch", token_price: 23, tier: "luxury" },
-  { id: "g20", name: "Special Gift 1", emoji: "\u{1F381}", image_url: "https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgds-removebg-preview.png?updatedAt=1773600046900", image_name: "special_gift_1", token_price: 8, tier: "standard" },
-  { id: "g21", name: "Special Gift 2", emoji: "\u{1F380}", image_url: "https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgdgsfgsdfg-removebg-preview.png?updatedAt=1773600149048", image_name: "special_gift_2", token_price: 9, tier: "standard" },
-  { id: "g22", name: "Special Gift 3", emoji: "\u{1F389}", image_url: "https://ik.imagekit.io/7grri5v7d/dgafsgsdfgsdfgsdfgd-removebg-preview.png?updatedAt=1773600246313", image_name: "special_gift_3", token_price: 10, tier: "premium" },
-  { id: "g23", name: "Special Gift 4", emoji: "\u{1F388}", image_url: "https://ik.imagekit.io/7grri5v7d/sdfasdfasdfasdfasdf-removebg-preview.png?updatedAt=1773601143240", image_name: "special_gift_4", token_price: 11, tier: "premium" },
-  { id: "g24", name: "Special Gift 5", emoji: "\u{1F38A}", image_url: "https://ik.imagekit.io/7grri5v7d/sdfasdfasdfaasdfasdf-removebg-preview.png?updatedAt=1773601223203", image_name: "special_gift_5", token_price: 12, tier: "premium" },
-  { id: "g25", name: "Special Gift 6", emoji: "\u{1F38B}", image_url: "https://ik.imagekit.io/7grri5v7d/dfsgdfgsdfgd-removebg-preview.png?updatedAt=1773601367483", image_name: "special_gift_6", token_price: 14, tier: "luxury" },
+  { id: "g01", name: "Love Letter",    emoji: "\u{1F48C}",   image_url: "", image_name: "love_letter",    token_price: 5,  tier: "standard" },
+  { id: "g02", name: "Classic Rose",   emoji: "\u{1F339}",   image_url: "", image_name: "classic_rose",   token_price: 6,  tier: "standard" },
+  { id: "g03", name: "Candle Light",   emoji: "\u{1F56F}\uFE0F", image_url: "", image_name: "candle_light",   token_price: 6,  tier: "standard" },
+  { id: "g04", name: "Romantic Heart", emoji: "\u2764\uFE0F", image_url: "", image_name: "romantic_heart", token_price: 7,  tier: "standard" },
+  { id: "g05", name: "Cake Slice",     emoji: "\u{1F370}",   image_url: "", image_name: "cake_slice",     token_price: 8,  tier: "standard" },
+  { id: "g06", name: "Chocolate Box",  emoji: "\u{1F36B}",   image_url: "", image_name: "chocolate_box",  token_price: 9,  tier: "standard" },
+  { id: "g07", name: "Teddy Bear",     emoji: "\u{1F9F8}",   image_url: "", image_name: "teddy_bear",     token_price: 10, tier: "standard" },
+  { id: "g08", name: "Keychain",       emoji: "\u{1F511}",   image_url: "", image_name: "keychain",       token_price: 6,  tier: "standard" },
+  { id: "g09", name: "Music Box",      emoji: "\u{1F3B5}",   image_url: "", image_name: "music_box",      token_price: 12, tier: "premium"  },
+  { id: "g10", name: "Photo Frame",    emoji: "\u{1F5BC}\uFE0F", image_url: "", image_name: "photo_frame",    token_price: 11, tier: "premium"  },
+  { id: "g11", name: "Flower Bouquet", emoji: "\u{1F490}",   image_url: "", image_name: "flower_bouquet", token_price: 13, tier: "premium"  },
+  { id: "g12", name: "Bracelet",       emoji: "\u{1F4FF}",   image_url: "", image_name: "bracelet",       token_price: 14, tier: "premium"  },
+  { id: "g13", name: "Earrings",       emoji: "\u2728",      image_url: "", image_name: "earrings",       token_price: 14, tier: "premium"  },
+  { id: "g14", name: "Perfume",        emoji: "\u{1F48E}",   image_url: "", image_name: "perfume",        token_price: 15, tier: "premium"  },
+  { id: "g15", name: "Diamond Ring",   emoji: "\u{1F48D}",   image_url: "", image_name: "diamond_ring",   token_price: 16, tier: "luxury"   },
+  { id: "g16", name: "Wine Bottle",    emoji: "\u{1F377}",   image_url: "", image_name: "wine_bottle",    token_price: 17, tier: "luxury"   },
+  { id: "g17", name: "Necklace",       emoji: "\u{1F4AB}",   image_url: "", image_name: "necklace",       token_price: 18, tier: "luxury"   },
+  { id: "g18", name: "Jewelry Box",    emoji: "\u{1F48E}",   image_url: "", image_name: "jewelry_box",    token_price: 19, tier: "luxury"   },
+  { id: "g19", name: "Watch",          emoji: "\u231A",      image_url: "", image_name: "watch",          token_price: 23, tier: "luxury"   },
+  { id: "g20", name: "Special Gift 1", emoji: "\u{1F381}", image_url: "https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgds-removebg-preview.png?updatedAt=1773600046900",        image_name: "special_gift_1", token_price: 8,  tier: "standard" },
+  { id: "g21", name: "Special Gift 2", emoji: "\u{1F380}", image_url: "https://ik.imagekit.io/7grri5v7d/dsfgsdfgsdfgdgsfgsdfg-removebg-preview.png?updatedAt=1773600149048", image_name: "special_gift_2", token_price: 9,  tier: "standard" },
+  { id: "g22", name: "Special Gift 3", emoji: "\u{1F389}", image_url: "https://ik.imagekit.io/7grri5v7d/dgafsgsdfgsdfgsdfgd-removebg-preview.png?updatedAt=1773600246313",   image_name: "special_gift_3", token_price: 10, tier: "premium"  },
+  { id: "g23", name: "Special Gift 4", emoji: "\u{1F388}", image_url: "https://ik.imagekit.io/7grri5v7d/sdfasdfasdfasdfasdf-removebg-preview.png?updatedAt=1773601143240",   image_name: "special_gift_4", token_price: 11, tier: "premium"  },
+  { id: "g24", name: "Special Gift 5", emoji: "\u{1F38A}", image_url: "https://ik.imagekit.io/7grri5v7d/sdfasdfasdfaasdfasdf-removebg-preview.png?updatedAt=1773601223203",  image_name: "special_gift_5", token_price: 12, tier: "premium"  },
+  { id: "g25", name: "Special Gift 6", emoji: "\u{1F38B}", image_url: "https://ik.imagekit.io/7grri5v7d/dfsgdfgsdfgd-removebg-preview.png?updatedAt=1773601367483",          image_name: "special_gift_6", token_price: 14, tier: "luxury"   },
 ];
 
 const TIER_GRADIENT: Record<string, string> = {
@@ -69,13 +72,15 @@ const TIER_BORDER: Record<string, string> = {
   luxury: "border-yellow-400/40",
 };
 
-export default function GiftSelector({ userId, profileId, profileName, onGiftSent }: GiftSelectorProps) {
+export default function GiftSelector({ profileId, profileName, onGiftSent }: GiftSelectorProps) {
   const [gifts, setGifts] = useState<VirtualGift[]>([]);
   const [loading, setLoading] = useState(true);
   const [userTokens, setUserTokens] = useState<UserTokens | null>(null);
   const [showSendPopup, setShowSendPopup] = useState(false);
   const [showTokenPurchase, setShowTokenPurchase] = useState(false);
   const [selectedGift, setSelectedGift] = useState<VirtualGift | null>(null);
+  // Tracks which gift image URLs failed to load so we show emoji instead
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchGifts();
@@ -134,7 +139,7 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
 
   if (loading) {
     return (
-      <div className="rounded-2xl p-4 h-44 relative border border-white/10 bg-black/30 backdrop-blur-md flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="flex items-center gap-2 text-white/50 text-sm">
           <Sparkles className="w-4 h-4 animate-pulse" />
           <span>Loading gifts...</span>
@@ -147,11 +152,8 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
 
   return (
     <>
-      <div className="rounded-2xl h-44 overflow-hidden relative border border-white/10">
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-md rounded-2xl pointer-events-none" />
-
-        {/* Scrollable gift grid */}
-        <div className="relative z-10 h-full overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-2 py-2 flex items-start gap-2">
+      {/* Scrollable gift grid — no background wrapper, cards carry their own tier colour */}
+      <div className="h-full overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-2 py-1 flex items-start gap-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {gifts.map((gift, i) => {
             const isFree = freeGiftsRemaining > 0;
             const canAfford = userTokens && userTokens.tokens_balance >= gift.token_price;
@@ -171,24 +173,14 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
                 `}
                 onClick={() => canSend && handleGiftClick(gift)}
               >
-                {/* Emoji icon */}
+                {/* Gift image — falls back to emoji if URL is empty or 404s */}
                 <div className="w-12 h-12 rounded-lg bg-black/20 flex items-center justify-center mb-1 relative overflow-hidden">
-                  {gift.image_url ? (
+                  {gift.image_url && !brokenImages.has(gift.id) ? (
                     <img
                       src={gift.image_url}
                       alt={gift.name}
                       className="w-full h-full object-contain"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                        const parent = (e.target as HTMLImageElement).parentElement;
-                        if (parent && !parent.querySelector(".emoji-fb")) {
-                          const fb = document.createElement("span");
-                          fb.className = "emoji-fb";
-                          fb.textContent = gift.emoji;
-                          fb.style.cssText = "font-size:28px;line-height:1;";
-                          parent.appendChild(fb);
-                        }
-                      }}
+                      onError={() => setBrokenImages(prev => new Set(prev).add(gift.id))}
                     />
                   ) : (
                     <span className="text-[28px] leading-none select-none">{gift.emoji}</span>
@@ -219,7 +211,6 @@ export default function GiftSelector({ userId, profileId, profileName, onGiftSen
               </motion.div>
             );
           })}
-        </div>
       </div>
 
       {/* Send Gift Modal */}

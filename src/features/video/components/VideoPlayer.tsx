@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Play, Pause, Square, RotateCcw, Upload, Camera, X, ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Button } from '@/shared/components/button';
+import { Progress } from '@/shared/components/progress';
 
 interface VideoPlayerProps {
   src?: string;
@@ -137,7 +137,7 @@ export default function VideoPlayer({
       {/* Brand Overlay */}
       <div className="absolute top-4 right-4 pointer-events-none">
         <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-white/20">
-          <span className="text-white text-sm font-medium">2DateMe</span>
+          <span className="text-white text-sm font-medium">Date2me.com</span>
         </div>
       </div>
 

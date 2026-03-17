@@ -14,8 +14,7 @@ import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
 import { supabase } from "@/integrations/supabase/client";
 import GiftSelector from "@/features/gifts/components/GiftSelector";
 import VideoContainer from "@/features/video/components/VideoContainer";
-import CountdownBadge from "@/features/dating/components/likes-library/CountdownBadge";
-import { useNavigate } from "react-router-dom";
+import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
 // ── How "new" a profile is (joined in last 7 days) ────────────────────────────
 const isNewProfile = (p: Profile) => {
@@ -67,7 +66,7 @@ interface LikesLibraryProps {
   onPurchaseFeature: (feature: PremiumFeature) => void;
 }
 
-type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts";
+type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
 type DisplayItem =
   | { type: "profile"; profile: Profile }
   | { type: "promo"; profile: null };
@@ -81,9 +80,10 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   unlock: () => "Unlock",
   distance: () => "Distance",
   gifts: () => "Gifts",
+  video: () => "Video",
 };
 // Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
-const HOME_TABS: Tab[] = ["new", "sent", "received", "unlock", "gifts"];
+const HOME_TABS: Tab[] = ["new", "sent", "received", "unlock"];
 const PROFILE_TABS: Tab[] = ["new", "sent", "treat", "gifts"];
 
 const TREAT_ITEMS = [
@@ -121,7 +121,6 @@ const LikesLibrary = ({
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
   onUnlock, onSelectProfile, onPurchaseFeature,
 }: LikesLibraryProps) => {
-  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
   const [promoPosition, setPromoPosition] = useState(0);
@@ -154,6 +153,7 @@ const LikesLibrary = ({
     unlock: 0,
     distance: 0,
     gifts: 0,
+    video: 0,
   };
 
   // Scroll back to left whenever tab changes
@@ -331,6 +331,22 @@ const LikesLibrary = ({
         )}
       </AnimatePresence>
 
+      {/* ── Gifts label ── */}
+      <AnimatePresence>
+        {tab === "gifts" && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-1.5 mb-1.5 flex-shrink-0 overflow-hidden"
+          >
+            <Gift className="w-3 h-3 text-pink-400 flex-shrink-0" />
+            <span className="text-[9px] text-white/50 flex-1">Make a Impression — Send a Gift</span>
+            <span className="text-[9px] font-bold text-green-400 flex-shrink-0">3 Free</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Scrollable card row — native scroll, no tab-switch interference ── */}
       <div
         ref={scrollRef}
@@ -385,9 +401,7 @@ const LikesLibrary = ({
                       e.preventDefault();
                       e.stopPropagation();
                       if (s.key === "video") {
-                        // Navigate to video playlist page
-                        const profileId = selectedProfile?.id || 'default';
-                        navigate(`/video-playlist/${profileId}`);
+                        onTabChange?.("video");
                       } else {
                         onSelectProfileSection?.(s.key);
                       }
@@ -562,7 +576,7 @@ const LikesLibrary = ({
               )
             ) : tab === "gifts" ? (
               <GiftSelector
-                userId={selectedProfile?.id || ""}
+                userId={currentUserId || ""}
                 profileId={selectedProfile?.id || ""}
                 profileName={selectedProfile?.name || ""}
                 onGiftSent={onGiftSent}

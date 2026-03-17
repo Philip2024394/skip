@@ -8,7 +8,7 @@ import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
 import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
-type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance";
+type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
 
 interface LikesCarouselProps {
   displayItemsWithTarot: any[];
@@ -53,7 +53,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
             >
               {/* Card image with subtle heartbeat glow — no container */}
               <motion.img
-                src="https://ik.imagekit.io/7grri5v7d/tarot%20card%20back.png?updatedAt=1773487777679"
+                src="https://ik.imagekit.io/7grri5v7d/tarot%20card%20backy.png?updatedAt=1773488446618"
                 alt="Daily Tarot"
                 className="w-full rounded-lg"
                 style={{ filter: "drop-shadow(0 0 8px rgba(255,105,180,0.5))" }}

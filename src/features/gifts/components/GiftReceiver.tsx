@@ -1,14 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import GiftReceivePopup from "./GiftReceivePopup";
 import GiftRefusedNotification from "./GiftRefusedNotification";
 
-interface DemoGift {
+// How long after the app opens before the first queued gift popup appears
+const OPEN_DELAY_MS = 30_000;
+// Gap between consecutive gift popups
+const BETWEEN_GIFTS_MS = 1_500;
+
+interface PendingGift {
   id: string;
+  recipient_id?: string;
   sender_id: string;
   sender_name: string;
   gift_id: string;
   gift_name: string;
   gift_image_url: string;
+  gift_emoji?: string;
   message: string;
   status: string;
   created_at: string;
@@ -16,114 +24,223 @@ interface DemoGift {
 
 interface GiftReceiverProps {
   currentUserId?: string;
+  onMatch?: (senderName: string, senderId: string) => void;
 }
 
-export default function GiftReceiver({ currentUserId }: GiftReceiverProps) {
-  const [pendingGifts, setPendingGifts] = useState<DemoGift[]>([]);
-  const [showReceivePopup, setShowReceivePopup] = useState(false);
-  const [currentGift, setCurrentGift] = useState<DemoGift | null>(null);
+export default function GiftReceiver({ currentUserId, onMatch }: GiftReceiverProps) {
+  // The ordered queue of unprocessed gifts
+  const queueRef = useRef<PendingGift[]>([]);
+  // IDs we've already enqueued so we never double-add
+  const seenIdsRef = useRef<Set<string>>(new Set());
+
+  const [activeGift, setActiveGift] = useState<PendingGift | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [readyToShow, setReadyToShow] = useState(false);
   const [showRefusedNotification, setShowRefusedNotification] = useState(false);
 
+  // Dequeue and display the next gift if nothing is currently showing
+  const showNextGift = useCallback(() => {
+    if (showPopup) return; // already showing one
+    const next = queueRef.current.shift();
+    if (next) {
+      setActiveGift(next);
+      setShowPopup(true);
+    }
+  }, [showPopup]);
+
+  // Add a gift to the queue (idempotent)
+  const enqueue = useCallback((gift: PendingGift) => {
+    if (seenIdsRef.current.has(gift.id)) return;
+    seenIdsRef.current.add(gift.id);
+    queueRef.current.push(gift);
+  }, []);
+
+  // ── On mount: load all existing pending gifts, then wait OPEN_DELAY_MS ──────
   useEffect(() => {
-    // Check for pending gifts every 5 seconds (demo simulation)
-    const checkGifts = () => {
-      const sentGifts = JSON.parse(localStorage.getItem('sent_gifts_demo') || '[]');
-      const pending = sentGifts.filter((gift: DemoGift) => 
-        gift.recipient_id === currentUserId && gift.status === 'pending'
-      );
-      
-      if (pending.length > 0 && !showReceivePopup) {
-        setCurrentGift(pending[0]);
-        setShowReceivePopup(true);
+    if (!currentUserId) return;
+
+    const loadPending = async () => {
+      // 1. Try Supabase first
+      try {
+        const { data, error } = await (supabase as any)
+          .from("sent_gifts")
+          .select("id, sender_id, sender_name, gift_id, gift_name, gift_image_url, gift_emoji, message, status, created_at, recipient_id")
+          .eq("recipient_id", currentUserId)
+          .eq("status", "pending")
+          .order("created_at", { ascending: true });
+
+        if (!error && data) {
+          (data as PendingGift[]).forEach(enqueue);
+        }
+      } catch {
+        // Supabase table may not exist yet — fall through to localStorage
+      }
+
+      // 2. Always also pull from localStorage (demo / offline gifts)
+      try {
+        const local: PendingGift[] = JSON.parse(localStorage.getItem("sent_gifts_demo") || "[]");
+        local
+          .filter((g) => g.recipient_id === currentUserId && g.status === "pending")
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+          .forEach(enqueue);
+      } catch {
+        // ignore
       }
     };
 
-    checkGifts();
-    const interval = setInterval(checkGifts, 5000);
-    return () => clearInterval(interval);
-  }, [currentUserId, showReceivePopup]);
+    loadPending();
 
-  const handleAccept = () => {
-    if (currentGift) {
-      // Update gift status in localStorage
-      const sentGifts = JSON.parse(localStorage.getItem('sent_gifts_demo') || '[]');
-      const updatedGifts = sentGifts.map((gift: DemoGift) => 
-        gift.id === currentGift.id ? { ...gift, status: 'accepted' } : gift
-      );
-      localStorage.setItem('sent_gifts_demo', JSON.stringify(updatedGifts));
-      
-      // Add to likes (simulate)
-      const likes = JSON.parse(localStorage.getItem('demo_likes') || '[]');
-      likes.push({
-        liker_id: currentGift.sender_id,
-        liked_id: currentUserId,
-        created_at: new Date().toISOString(),
-        gift_received: currentGift,
-      });
-      localStorage.setItem('demo_likes', JSON.stringify(likes));
-      
-      console.log('GiftReceiver: Gift accepted, like created');
-    }
-    setShowReceivePopup(false);
-    setCurrentGift(null);
-  };
+    // Wait ~30s then start draining the queue
+    const openTimer = setTimeout(() => {
+      setReadyToShow(true);
+    }, OPEN_DELAY_MS);
 
-  const handleRefuse = () => {
-    if (currentGift) {
-      // Update gift status in localStorage
-      const sentGifts = JSON.parse(localStorage.getItem('sent_gifts_demo') || '[]');
-      const updatedGifts = sentGifts.map((gift: DemoGift) => 
-        gift.id === currentGift.id ? { ...gift, status: 'refused' } : gift
-      );
-      localStorage.setItem('sent_gifts_demo', JSON.stringify(updatedGifts));
-      
-      // Store refusal notification for sender
-      const refusals = JSON.parse(localStorage.getItem('gift_refusals') || '[]');
-      refusals.push({
-        sender_id: currentGift.sender_id,
-        message: "Unfortunately, this profile has refused your gift for now. Let's try again.",
-        timestamp: new Date().toISOString(),
-      });
-      localStorage.setItem('gift_refusals', JSON.stringify(refusals));
-      
-      console.log('GiftReceiver: Gift refused, notification sent to sender');
-    }
-    setShowReceivePopup(false);
-    setCurrentGift(null);
-  };
+    return () => clearTimeout(openTimer);
+  }, [currentUserId, enqueue]);
 
-  // Check for refusal notifications
+  // ── When readyToShow flips true, show the first queued gift ─────────────────
   useEffect(() => {
-    if (currentUserId) {
-      const refusals = JSON.parse(localStorage.getItem('gift_refusals') || '[]');
-      const userRefusals = refusals.filter((r: any) => r.sender_id === currentUserId);
-      if (userRefusals.length > 0 && !showRefusedNotification) {
-        setShowRefusedNotification(true);
+    if (readyToShow && !showPopup) {
+      showNextGift();
+    }
+  }, [readyToShow, showPopup, showNextGift]);
+
+  // ── Supabase realtime — catch gifts that arrive while the app is open ────────
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    try {
+      channel = supabase
+        .channel(`gift-inbox-${currentUserId}`)
+        .on(
+          "postgres_changes" as any,
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "sent_gifts",
+            filter: `recipient_id=eq.${currentUserId}`,
+          },
+          (payload: any) => {
+            const gift = payload.new as PendingGift;
+            if (gift.status !== "pending") return;
+            enqueue(gift);
+            // If we're past the open-delay and nothing is showing, display now
+            if (readyToShow && !showPopup) {
+              showNextGift();
+            }
+          }
+        )
+        .subscribe();
+    } catch {
+      // Realtime not available — polling fallback below handles it
+    }
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [currentUserId, readyToShow, showPopup, enqueue, showNextGift]);
+
+  // ── Polling fallback for localStorage gifts (catches demo / offline flow) ────
+  useEffect(() => {
+    if (!currentUserId || !readyToShow) return;
+
+    const poll = () => {
+      try {
+        const local: PendingGift[] = JSON.parse(localStorage.getItem("sent_gifts_demo") || "[]");
+        local
+          .filter((g) => g.recipient_id === currentUserId && g.status === "pending")
+          .forEach(enqueue);
+      } catch {
+        // ignore
+      }
+      if (!showPopup) showNextGift();
+    };
+
+    const interval = setInterval(poll, 5_000);
+    return () => clearInterval(interval);
+  }, [currentUserId, readyToShow, showPopup, enqueue, showNextGift]);
+
+  // ── Mark gift handled in localStorage ───────────────────────────────────────
+  const markLocalStatus = (id: string, status: string) => {
+    try {
+      const local: any[] = JSON.parse(localStorage.getItem("sent_gifts_demo") || "[]");
+      localStorage.setItem(
+        "sent_gifts_demo",
+        JSON.stringify(local.map((g) => (g.id === id ? { ...g, status } : g)))
+      );
+    } catch {
+      // ignore
+    }
+  };
+
+  // ── After each gift is handled, advance the queue after a short gap ──────────
+  const advanceQueue = useCallback(() => {
+    setShowPopup(false);
+    setActiveGift(null);
+    setTimeout(() => {
+      showNextGift();
+    }, BETWEEN_GIFTS_MS);
+  }, [showNextGift]);
+
+  const handleAccept = useCallback(() => {
+    if (activeGift) markLocalStatus(activeGift.id, "accepted");
+    advanceQueue();
+  }, [activeGift, advanceQueue]);
+
+  const handleRefuse = useCallback(() => {
+    if (activeGift) {
+      markLocalStatus(activeGift.id, "refused");
+      // Store refusal notification so sender sees it
+      try {
+        const refusals: any[] = JSON.parse(localStorage.getItem("gift_refusals") || "[]");
+        refusals.push({
+          sender_id: activeGift.sender_id,
+          message: "Unfortunately, this profile has refused your gift for now. Let's try again.",
+          timestamp: new Date().toISOString(),
+        });
+        localStorage.setItem("gift_refusals", JSON.stringify(refusals));
+      } catch {
+        // ignore
       }
     }
-  }, [currentUserId, showRefusedNotification]);
+    advanceQueue();
+  }, [activeGift, advanceQueue]);
+
+  // ── Check for refusal notifications aimed at this user (as sender) ──────────
+  useEffect(() => {
+    if (!currentUserId) return;
+    try {
+      const refusals: any[] = JSON.parse(localStorage.getItem("gift_refusals") || "[]");
+      if (refusals.some((r) => r.sender_id === currentUserId)) {
+        setShowRefusedNotification(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, [currentUserId]);
 
   return (
     <>
-      {showReceivePopup && currentGift && (
+      {showPopup && activeGift && (
         <GiftReceivePopup
           gift={{
-            id: currentGift.id,
-            sender_id: currentGift.sender_id,
-            sender_name: currentGift.sender_name || 'Anonymous',
-            gift_id: currentGift.gift_id,
-            gift_name: currentGift.gift_name,
-            gift_image_url: currentGift.gift_image_url,
-            message: currentGift.message,
-            status: currentGift.status,
-            created_at: currentGift.created_at,
+            id: activeGift.id,
+            sender_id: activeGift.sender_id,
+            sender_name: activeGift.sender_name || "Someone",
+            gift_id: activeGift.gift_id,
+            gift_name: activeGift.gift_name,
+            gift_image_url: activeGift.gift_image_url,
+            gift_emoji: activeGift.gift_emoji,
+            message: activeGift.message,
+            status: activeGift.status,
+            created_at: activeGift.created_at,
           }}
-          onClose={() => {
-            setShowReceivePopup(false);
-            setCurrentGift(null);
-          }}
+          onClose={advanceQueue}
           onGiftAccepted={handleAccept}
           onGiftRefused={handleRefuse}
+          onMatch={onMatch}
         />
       )}
 

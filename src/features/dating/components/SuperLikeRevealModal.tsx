@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { Profile } from "@/types/profile";
+import type { Profile } from "@/shared/types/profile";
 
 const BURN_DURATION_MS = 1800;
 const GLITTER_DURATION_MS = 3000;

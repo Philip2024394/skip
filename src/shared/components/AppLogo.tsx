@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import logoHeart from "@/assets/images/logo-heart.png";
+
+const LOGO_URL = "https://ik.imagekit.io/7grri5v7d/sdasdgdsfgsdfg-removebg-preview.png";
 
 const FLOATING_HEARTS_COUNT = 8;
 const FLOAT_DURATION_MS = 2800;
@@ -53,7 +54,7 @@ const AppLogo = ({ alt = "2DateMe", className = "w-12 h-12 object-contain drop-s
       </div>
       {/* Logo on top */}
       <img
-        src={logoHeart}
+        src={LOGO_URL}
         alt={alt}
         className={`relative block ${className}`}
         style={{ zIndex: 1, ...style }}

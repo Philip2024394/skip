@@ -1,5 +1,8 @@
 // Gifts components exports
 export { default as GiftContainer } from './GiftContainer';
+export { default as GiftFloatingAnimation } from './GiftFloatingAnimation';
+export { default as MatchPopup } from './MatchPopup';
+export { default as DiamondConnectionFlow } from './DiamondConnectionFlow';
 export { default as GiftReceivePopup } from './GiftReceivePopup';
 export { default as GiftReceiver } from './GiftReceiver';
 export { default as GiftRefusedNotification } from './GiftRefusedNotification';

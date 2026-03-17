@@ -1,4 +1,4 @@
-import { Profile, BasicInfo, LifestyleInfo, RelationshipGoals } from "@/types/profile";
+import { Profile, BasicInfo, LifestyleInfo, RelationshipGoals } from "@/shared/types/profile";
 import indoGirl1 from "@/assets/images/indo-girl-1.png";
 import indoGirl2 from "@/assets/images/indo-girl-2.png";
 import indoGirl3 from "@/assets/images/indo-girl-3.png";

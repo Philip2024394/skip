@@ -9,7 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthPage } from "@/features/auth/pages";
 import { ProtectedRoute, LoadingFallback } from "@/shared/components";
 
-// Lazy load admin components to reduce initial bundle size
+// Lazy load heavy pages to reduce initial bundle size
+const DashboardPage = lazy(() => import("@/features/dating/pages/DashboardPage"));
 const WhatsAppCollection = lazy(() => import("@/features/admin/pages/WhatsAppCollection"));
 const WhatsAppDirectory = lazy(() => import("@/features/admin/components/WhatsAppDirectory"));
 const SecurityDashboard = lazy(() => import("@/features/admin/components/SecurityDashboard"));
@@ -39,7 +40,7 @@ const AppContent = () => {
         <Route path="/profile/:id" element={<AuthPage />} />
         <Route path="/reset-password" element={<AuthPage />} />
         <Route path="/payment-success" element={<AuthPage />} />
-        <Route path="/dashboard" element={<AuthPage />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><DashboardPage /></Suspense></ProtectedRoute>} />
         <Route path="/admin" element={<AuthPage />} />
         <Route path="/admin/whatsapp-collection" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppCollection /></Suspense></ProtectedRoute>} />
         <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppDirectory /></Suspense></ProtectedRoute>} />
