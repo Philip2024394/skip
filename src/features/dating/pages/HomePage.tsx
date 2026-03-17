@@ -116,10 +116,26 @@ const HOME_UNLOCK_PACKAGES = [
   { key: "unlock:spotlight", emoji: "🌟", name: "Spotlight", price: "$4.99", desc: "Featured at top of everyone's stack for 24 hours!", sub: "Activates immediately · 24 hr", btn: "Get Spotlight", bgImage: SPOTLIGHT_BG_IMAGE },
 ];
 
-function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClose: () => void }) {
+// Maps each unlock carousel key → a PremiumFeature for the payment engine.
+// Unlock packs use synthetic features sharing the WhatsApp price ID.
+const WHATSAPP_PRICE_ID = import.meta.env.VITE_STRIPE_PRICE_WHATSAPP ?? "price_1T8NbHBChzWuxQIpeGY4LLYQ";
+const KEY_TO_FEATURE: Record<string, PremiumFeature> = {
+  "unlock:single":  { id: "unlock_single",  name: "1 Match Unlock",  emoji: "💬", description: "Reveal WhatsApp after a mutual match.",           price: "$1.99",     priceCents: 199,  priceId: WHATSAPP_PRICE_ID,                                                        productId: "prod_U6amf4mWJWevjl", color: "love",    icon: "rocket", perks: ["💬 Reveals 1 WhatsApp number", "✅ Requires mutual match", "🔒 Safe & direct"] },
+  "unlock:pack3":   { id: "unlock_pack3",   name: "3 Unlock Pack",   emoji: "💬", description: "3 WhatsApp unlocks — best for active users.",       price: "$4.99",     priceCents: 499,  priceId: WHATSAPP_PRICE_ID,                                                        productId: "prod_U6amf4mWJWevjl", color: "love",    icon: "rocket", perks: ["💬 Reveals 3 WhatsApp numbers", "💰 Save vs buying singles", "🔒 Credits never expire"] },
+  "unlock:pack10":  { id: "unlock_pack10",  name: "10 Unlock Pack",  emoji: "💬", description: "Best value — lowest cost per unlock.",              price: "$12.99",    priceCents: 1299, priceId: WHATSAPP_PRICE_ID,                                                        productId: "prod_U6amf4mWJWevjl", color: "love",    icon: "rocket", perks: ["💬 Reveals 10 WhatsApp numbers", "💰 Best value — $1.30/unlock", "🔒 Credits never expire"] },
+  "unlock:vip":     PREMIUM_FEATURES.find(f => f.id === "vip")!,
+  "unlock:superlike": PREMIUM_FEATURES.find(f => f.id === "superlike")!,
+  "unlock:boost":   PREMIUM_FEATURES.find(f => f.id === "boost")!,
+  "unlock:verified": PREMIUM_FEATURES.find(f => f.id === "verified")!,
+  "unlock:incognito": PREMIUM_FEATURES.find(f => f.id === "incognito")!,
+  "unlock:spotlight": PREMIUM_FEATURES.find(f => f.id === "spotlight")!,
+};
+
+function HomePackageDetail({ packageKey, onClose, onPurchase }: { packageKey: string; onClose: () => void; onPurchase: (f: PremiumFeature) => void }) {
   const [showTerms, setShowTerms] = useState(false);
   const pkg = HOME_UNLOCK_PACKAGES.find((p) => p.key === packageKey);
   if (!pkg) return null;
+  const feature = KEY_TO_FEATURE[packageKey];
 
   const bgImage = pkg.bgImage;
 
@@ -155,6 +171,7 @@ function HomePackageDetail({ packageKey, onClose }: { packageKey: string; onClos
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", maxWidth: 280, marginTop: 4 }}>
             <p style={{ color: "#fff", fontWeight: 900, fontSize: 22, margin: 0 }}>{pkg.price}</p>
             <button
+              onClick={() => feature && onPurchase(feature)}
               style={{ padding: "8px 18px", borderRadius: 22, fontWeight: 900, fontSize: 12, color: "#fff", border: "none", cursor: "pointer", background: "linear-gradient(135deg, rgba(232,72,199,0.95), rgba(195,60,255,0.95))", boxShadow: "0 4px 18px rgba(195,60,255,0.4)" }}
             >
               {pkg.btn}
@@ -1164,7 +1181,7 @@ const Index = () => {
                 {!isProfileRoute && (
                   <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
                     {aboutMeTab === "unlock" ? (
-                      <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} />
+                      <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} onPurchase={handlePurchaseFeature} />
                     ) : (
                       <SwipeStack
                         key="bottom-stack"
