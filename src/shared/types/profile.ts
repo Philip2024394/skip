@@ -107,4 +107,6 @@ export interface Profile {
   app_user_id?: string;
   bestie_ids?: string[];
   bestie_reviews?: Record<string, string>; // key = bestieId, value = their review about this profile
+  gift_delivery_opted_in?: boolean;
+  delivery_address?: string; // private — only visible to admin, never shown to other users
 }

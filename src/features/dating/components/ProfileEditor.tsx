@@ -24,6 +24,7 @@ import { CONTACT_PREFERENCE_OPTIONS, type ContactPreference } from "@/shared/uti
 import { BasicInfoEditor } from "@/features/dating/components/profile-editor/BasicInfoEditor";
 import { LifestyleEditor } from "@/features/dating/components/profile-editor/LifestyleEditor";
 import { RelationshipGoalsEditor } from "@/features/dating/components/profile-editor/RelationshipGoalsEditor";
+import { GiftDeliverySettings } from "@/features/real-gifts/GiftDeliverySettings";
 import { ALL_COUNTRIES } from "@/data/countries";
 import { detectCountryFromPhone, getDialCode } from "@/shared/services/phoneCountry";
 import { firstName } from "@/shared/utils";
@@ -1041,6 +1042,12 @@ const ProfileEditor = () => {
             <RelationshipGoalsEditor
               value={profile.relationship_goals as any}
               onChange={(v) => update("relationship_goals", v as unknown as Record<string, unknown>)}
+            />
+            <GiftDeliverySettings
+              giftDeliveryOptedIn={!!(profile as any).gift_delivery_opted_in}
+              deliveryAddress={(profile as any).delivery_address || ""}
+              onOptInChange={(val) => update("gift_delivery_opted_in" as any, val)}
+              onAddressChange={(val) => update("delivery_address" as any, val)}
             />
           </div>
 

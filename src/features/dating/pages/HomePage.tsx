@@ -44,6 +44,8 @@ import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
 import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
 import VisitorGuidePage from "@/features/dating/pages/VisitorGuidePage";
+import { RealGiftOrderFlow } from "@/features/real-gifts/RealGiftOrderFlow";
+import { GiftDeliveryNotification } from "@/features/real-gifts/GiftDeliveryNotification";
 import logoHeart from "@/assets/images/logo-heart.png";
 import {
   Dialog,
@@ -587,6 +589,9 @@ const Index = () => {
   const [showCulturalGuide, setShowCulturalGuide] = useState(false);
   // Visitor Guide overlay
   const [showVisitorGuide, setShowVisitorGuide] = useState(false);
+  // Real Gift flow
+  const [showRealGiftFlow, setShowRealGiftFlow] = useState(false);
+  const [realGiftTarget, setRealGiftTarget] = useState<any>(null);
 
   // Diamond Gift Match state
   const [matchData, setMatchData] = useState<{ name: string; id: string; avatar?: string } | null>(null);
@@ -1155,6 +1160,7 @@ const Index = () => {
                   onBestieRequest={handleBestieRequest}
                   isBestie={confirmedBestieIds.includes(selectedProfile?.id)}
                   isBestiePending={sentBestieIds.includes(selectedProfile?.id)}
+                  onSendRealGift={() => { setRealGiftTarget(selectedProfile); setShowRealGiftFlow(true); }}
                 />
               )
             ) : (
@@ -1574,6 +1580,25 @@ const Index = () => {
           <VisitorGuidePage onClose={() => setShowVisitorGuide(false)} />
         )}
       </AnimatePresence>
+
+      {/* ── Real Gift Order Flow ──────────────────────────────────── */}
+      <AnimatePresence>
+        {showRealGiftFlow && (
+          <RealGiftOrderFlow
+            onClose={() => { setShowRealGiftFlow(false); setRealGiftTarget(null); }}
+            currentUserId={user?.id || "guest"}
+            currentUserName={currentUser}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Gift Delivery Notification (for recipient) ────────────── */}
+      {user?.id && (
+        <GiftDeliveryNotification
+          userId={user.id}
+          onDismiss={() => {}}
+        />
+      )}
 
       {/* ── Video Call Overlays ────────────────────────────────────── */}
       <AnimatePresence>

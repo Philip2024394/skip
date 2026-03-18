@@ -15,6 +15,7 @@ interface ProfileInfoPanelProps {
   onBestieRequest?: (profile: any) => void;
   isBestie?: boolean;
   isBestiePending?: boolean;
+  onSendRealGift?: () => void;
 }
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: string }) =>
@@ -218,7 +219,7 @@ function computeMatchStats(profile: any, currentUserQuiz?: Record<string, unknow
   return { compatibility, distanceKm, sharedInterests, activeTime, langMatch, insight, hasRealQuiz };
 }
 
-export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false }: ProfileInfoPanelProps) {
+export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift }: ProfileInfoPanelProps) {
   const navigate = useNavigate();
   const basicInfo = profile?.basic_info || {};
   const lifestyleInfo = profile?.lifestyle_info || {};
@@ -813,6 +814,38 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
             </div>
           );
         })()}
+
+        {/* ── Send Real Gift ── */}
+        {onSendRealGift && (
+          <div style={{ marginTop: 20, padding: "0 2px 8px" }}>
+            <button
+              onClick={onSendRealGift}
+              style={{
+                width: "100%",
+                padding: "14px 16px",
+                borderRadius: 16,
+                background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(234,88,12,0.15))",
+                border: "1px solid rgba(245,158,11,0.35)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                textAlign: "left",
+              }}
+            >
+              <span style={{ fontSize: 28, flexShrink: 0 }}>🎁</span>
+              <div>
+                <p style={{ color: "#fde68a", fontWeight: 700, fontSize: 13, margin: 0 }}>
+                  Send a Real Gift
+                </p>
+                <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, margin: "2px 0 0" }}>
+                  Flowers, jewellery, spa & more — her address stays private
+                </p>
+              </div>
+              <span style={{ color: "rgba(245,158,11,0.6)", fontSize: 18, marginLeft: "auto", flexShrink: 0 }}>→</span>
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -6,7 +6,7 @@ import {
   TrendingUp, Heart, Star, Zap, Eye, MessageSquare, UserCheck,
   Activity, Calendar, Globe, BarChart2, BadgeCheck, AlertTriangle,
   AlertCircle, CheckCircle2, Bell, WifiOff, CreditCard, Image,
-  MapPin, Settings, ChevronUp, ChevronDown, Download,
+  MapPin, Settings, ChevronUp, ChevronDown, Download, Gift,
 } from "lucide-react";
 import { Input } from "@/shared/components/input";
 import { Badge } from "@/shared/components/badge";
@@ -22,6 +22,7 @@ import SetupTab from "../components/SetupTab";
 import AlertsTab from "../components/AlertsTab";
 import { AlertItem } from "../components/AlertsTab";
 import AdCreatorTab from "../components/AdCreatorTab";
+import GiftOrdersTab from "../components/GiftOrdersTab";
 
 // ── Main component ────────────────────────────────────────────────────────────
 const AdminPage = () => {
@@ -528,6 +529,7 @@ const AdminPage = () => {
     { id: "verify", label: "Verify", icon: <UserCheck className="w-3.5 h-3.5" />, badge: pendingVerifyCount || undefined },
     { id: "setup", label: "Setup", icon: <Settings className="w-3.5 h-3.5" /> },
     { id: "ads", label: "Ads", icon: <Image className="w-3.5 h-3.5" /> },
+    { id: "gifts", label: "Gifts", icon: <Gift className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -1053,6 +1055,11 @@ const AdminPage = () => {
         {/* ══ ADS TAB ════════════════════════════════════════════════════ */}
         {tab === "ads" && (
           <AdCreatorTab profiles={profiles} />
+        )}
+
+        {/* ══ GIFTS TAB ════════════════════════════════════════════════════ */}
+        {tab === "gifts" && (
+          <GiftOrdersTab />
         )}
 
         {tab === "verify" && (
