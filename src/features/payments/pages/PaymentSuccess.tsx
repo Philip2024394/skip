@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { setProfileLock, setMyProfileLock } from "@/features/dating/utils/profileLock";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -189,6 +190,10 @@ const PaymentSuccess = () => {
             name: data.name,
             connectionType: data.connectionType,
           });
+          // Lock both profiles for 3 days (activates after 1 hour)
+          const targetProfileId = searchParams.get("target");
+          if (targetProfileId) setProfileLock(targetProfileId);
+          setMyProfileLock();
         }
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 4500);

@@ -25,6 +25,44 @@ import { BasicInfoEditor } from "@/features/dating/components/profile-editor/Bas
 import { LifestyleEditor } from "@/features/dating/components/profile-editor/LifestyleEditor";
 import { RelationshipGoalsEditor } from "@/features/dating/components/profile-editor/RelationshipGoalsEditor";
 import { GiftDeliverySettings } from "@/features/real-gifts/GiftDeliverySettings";
+import { isMyProfileLocked, getMyLockExpiry, upliftMyProfileLock } from "@/features/dating/utils/profileLock";
+
+// ── Profile Lock uplift section ───────────────────────────────────────────────
+const ProfileLockSection = () => {
+  const [locked, setLocked] = useState(isMyProfileLocked());
+  const expiry = getMyLockExpiry();
+  if (!locked) return null;
+  const daysLeft = expiry ? Math.ceil((expiry.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
+  return (
+    <div className="mx-0 mb-4 rounded-2xl overflow-hidden border border-rose-900/40" style={{ background: "rgba(180,20,40,0.08)" }}>
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <img
+            src="https://ik.imagekit.io/7grri5v7d/tr:bg-remove/profile%20locked.png"
+            alt="Locked"
+            style={{ width: 36, height: 36, objectFit: "contain", mixBlendMode: "screen" as any }}
+          />
+          <div>
+            <p className="text-rose-300 font-bold text-sm">Profile Locked</p>
+            <p className="text-white/40 text-xs">
+              {daysLeft > 0 ? `${daysLeft} day${daysLeft !== 1 ? "s" : ""} remaining` : "Expiring soon"} · auto-unlocks
+            </p>
+          </div>
+        </div>
+        <p className="text-white/40 text-xs leading-relaxed mb-3">
+          Your profile is currently locked after a WhatsApp connection was made. Other users can see your profile but cannot open it. You can uplift this at any time.
+        </p>
+        <button
+          onClick={() => { upliftMyProfileLock(); setLocked(false); }}
+          className="w-full py-2.5 rounded-xl text-xs font-semibold text-rose-200 border border-rose-800/60 hover:border-rose-600/60 hover:text-white transition-colors"
+          style={{ background: "rgba(180,20,40,0.15)" }}
+        >
+          🔓 Uplift Badge — Unlock My Profile
+        </button>
+      </div>
+    </div>
+  );
+};
 import { ALL_COUNTRIES } from "@/data/countries";
 import { detectCountryFromPhone, getDialCode } from "@/shared/services/phoneCountry";
 import { firstName } from "@/shared/utils";
@@ -1698,6 +1736,9 @@ const ProfileEditor = () => {
           );
         })()}
       </div>
+
+      {/* Uplift badge — shown when own profile is locked */}
+      <ProfileLockSection />
 
       {/* Deactivate / Delete account */}
       <div className="pt-2 border-t border-white/10 space-y-1">

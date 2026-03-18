@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CalendarDays, Gift, Heart, MapPin, MoonStar, ShieldCheck, Unlock } from "lucide-react";
+import { isProfileLocked } from "@/features/dating/utils/profileLock";
 import { Button } from "@/shared/components/button";
 import PromoCard from "@/shared/components/PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
@@ -92,6 +93,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
         const fresh = props.tab === "new" && props.isNewProfile(profile);
         const iLikedThis = props.iLiked.some((p) => p.id === profile.id);
         const isSuperGlow = props.tab === "received" && props.superLikeGlowProfileId === profile.id;
+        const locked = isProfileLocked(profile.id);
 
         // Red glow when ≤ 60 min remaining — computed synchronously, no hook needed
         const msLeft = profile.expires_at
@@ -106,12 +108,14 @@ export default function LikesCarousel(props: LikesCarouselProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.88 }}
             transition={{ delay: Math.min(idx * 0.04, 0.3) }}
-            onClick={() => props.onSelectProfile(profile, props.currentList)}
+            onClick={locked ? undefined : () => props.onSelectProfile(profile, props.currentList)}
             data-likes-library-profile-id={profile.id}
-            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border relative ${isSuperGlow ? "border-amber-400/60 super-like-heartbeat" : isUrgent ? "border-red-500/60" : "border-white/10"}`}
+            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all bg-black/50 backdrop-blur-md border relative ${locked ? "cursor-default opacity-75" : "cursor-pointer hover:scale-105"} ${isSuperGlow ? "border-amber-400/60 super-like-heartbeat" : isUrgent ? "border-red-500/60" : locked ? "border-rose-900/60" : "border-white/10"}`}
             style={{
               width: 80,
-              boxShadow: isUrgent ? "0 0 10px 2px rgba(239,68,68,0.5), 0 0 0 1px rgba(239,68,68,0.3)" : undefined,
+              boxShadow: locked
+                ? "0 0 10px 2px rgba(180,20,40,0.35), 0 0 0 1px rgba(180,20,40,0.2)"
+                : isUrgent ? "0 0 10px 2px rgba(239,68,68,0.5), 0 0 0 1px rgba(239,68,68,0.3)" : undefined,
             }}
           >
             {/* NEW badge */}
@@ -133,11 +137,36 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                   if (img.src !== window.location.origin + "/placeholder.svg") img.src = "/placeholder.svg";
                 }}
               />
-              {/* Heart when I liked this profile */}
-              {iLikedThis && (
-                <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/30 pointer-events-none">
-                  <Heart className="w-6 h-6 text-primary drop-shadow-lg" fill="currentColor" />
+              {/* Lock badge — replaces heart when profile is in active WhatsApp lock */}
+              {locked ? (
+                <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-20"
+                  style={{ background: "rgba(0,0,0,0.55)" }}>
+                  <img
+                    src="https://ik.imagekit.io/7grri5v7d/tr:bg-remove/profile%20locked.png"
+                    alt="Locked"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      mixBlendMode: "screen",
+                    }}
+                    onError={(e) => {
+                      // Fallback: show a lock emoji if image fails
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent) {
+                        (e.target as HTMLImageElement).style.display = "none";
+                        parent.innerHTML += '<span style="font-size:22px;display:flex;align-items:center;justify-content:center;width:100%;height:100%">🔒</span>';
+                      }
+                    }}
+                  />
                 </div>
+              ) : (
+                /* Heart when I liked this profile */
+                iLikedThis && (
+                  <div className="absolute inset-0 rounded-full flex items-center justify-center bg-black/30 pointer-events-none">
+                    <Heart className="w-6 h-6 text-primary drop-shadow-lg" fill="currentColor" />
+                  </div>
+                )
               )}
               {profile.is_rose && props.tab !== "new" && (
                 <span className="absolute -top-1 -right-1 text-sm">❤️</span>
