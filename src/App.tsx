@@ -21,10 +21,17 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   useEffect(() => {
+    // Track ad link opens (for ad analytics)
+    try {
+      const ref = new URLSearchParams(window.location.search).get("ref");
+      if (ref?.startsWith("ad_")) {
+        const k = "2dateme_adv_" + ref.slice(3);
+        localStorage.setItem(k, String((parseInt(localStorage.getItem(k) || "0")) + 1));
+      }
+    } catch {}
     // Check if user is already logged in and redirect to auth if needed
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        // User is logged in, but we want to keep them on landing page for WhatsApp collection
         console.log("User session found, keeping on landing page");
       }
     });

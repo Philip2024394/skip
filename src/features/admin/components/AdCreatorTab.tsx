@@ -1,12 +1,14 @@
-import React, { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
-  Copy, Download, Plus, Trash2, Edit3, CheckCircle2, Search,
-  RefreshCw, X, Layers, Globe, Users, Zap, Image, ChevronDown,
-  Crop, Shuffle, ClipboardCopy, Package, Eye, RotateCcw,
+  Copy, Download, Plus, Trash2, CheckCircle2, Search,
+  RefreshCw, X, Users, Zap, Image, ChevronDown,
+  Shuffle, ClipboardCopy, Eye, RotateCcw, Video, Link,
+  TrendingUp, BarChart2, Play,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AdminProfile } from "../types";
+import logoHeart from "@/assets/images/logo-heart.png";
 
 // ── Platform presets ────────────────────────────────────────────────────────
 const PLATFORMS = [
@@ -166,14 +168,19 @@ const COUNTRY_PACKS: Record<string, {
 };
 
 // ── Ad item type ────────────────────────────────────────────────────────────
+type AdType = "image" | "video";
+type OverlayPos = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
 interface AdItem {
   id: string;
+  adType: AdType;
   profileId?: string;
   profileName?: string;
   profileAge?: number;
   profileCity?: string;
   profileAvatar?: string;
   imageUrl: string;
+  videoUrl?: string;
   caption: string;
   hashtags: string[];
   country: string;
@@ -183,13 +190,16 @@ interface AdItem {
   status: "queued" | "used";
   createdAt: string;
   copiedAt?: string;
-  // crop parameters (0-1 relative)
   cropX: number;
   cropY: number;
   cropZoom: number;
+  overlayEnabled: boolean;
+  overlayPosition: OverlayPos;
+  overlayOpacity: number;
 }
 
 const AD_QUEUE_KEY = "2dateme_ad_queue";
+const AD_TRACK_PREFIX = "2dateme_adv_";
 const genId = () => Math.random().toString(36).slice(2, 10);
 
 function loadQueue(): AdItem[] {
@@ -197,6 +207,27 @@ function loadQueue(): AdItem[] {
 }
 function saveQueue(q: AdItem[]) {
   try { localStorage.setItem(AD_QUEUE_KEY, JSON.stringify(q)); } catch {}
+}
+export function trackAdView(adId: string): void {
+  try {
+    const k = AD_TRACK_PREFIX + adId;
+    localStorage.setItem(k, String((parseInt(localStorage.getItem(k) || "0")) + 1));
+  } catch {}
+}
+function getAdViews(adId: string): number {
+  try { return parseInt(localStorage.getItem(AD_TRACK_PREFIX + adId) || "0"); } catch { return 0; }
+}
+function getAllAdViews(): Record<string, number> {
+  const out: Record<string, number> = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k?.startsWith(AD_TRACK_PREFIX)) {
+        out[k.slice(AD_TRACK_PREFIX.length)] = parseInt(localStorage.getItem(k) || "0");
+      }
+    }
+  } catch {}
+  return out;
 }
 
 // ── Image Cropper ───────────────────────────────────────────────────────────
@@ -291,7 +322,8 @@ function ImageCropper({ src, ratio, cropX, cropY, cropZoom, onChange }: CropperP
 // ── Canvas export helper ────────────────────────────────────────────────────
 async function exportCroppedImage(
   imgSrc: string, cropX: number, cropY: number, cropZoom: number,
-  outW: number, outH: number
+  outW: number, outH: number,
+  overlayEnabled?: boolean, overlayPosition?: OverlayPos, overlayOpacity?: number,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = document.createElement("img");
@@ -300,18 +332,47 @@ async function exportCroppedImage(
       const canvas = document.createElement("canvas");
       canvas.width = outW; canvas.height = outH;
       const ctx = canvas.getContext("2d")!;
-      // Determine source dimensions
       const srcAspect = img.naturalWidth / img.naturalHeight;
       const outAspect = outW / outH;
       let sw = img.naturalWidth, sh = img.naturalHeight;
       let sx = 0, sy = 0;
       if (srcAspect > outAspect) { sw = sh * outAspect; sx = (img.naturalWidth - sw) / 2; }
       else { sh = sw / outAspect; sy = (img.naturalHeight - sh) / 2; }
-      // Apply zoom and pan
       const zSW = sw / cropZoom, zSH = sh / cropZoom;
       const zSX = sx + (sw - zSW) / 2 - cropX * zSW;
       const zSY = sy + (sh - zSH) / 2 - cropY * zSH;
       ctx.drawImage(img, zSX, zSY, zSW, zSH, 0, 0, outW, outH);
+
+      // Brand overlay
+      if (overlayEnabled) {
+        const op = overlayOpacity ?? 0.9;
+        const pillH = Math.round(outH * 0.055);
+        const pillW = Math.round(outW * 0.38);
+        const pad = Math.round(outW * 0.025);
+        let px = pad, py = pad;
+        if (overlayPosition === "top-right")    { px = outW - pillW - pad; py = pad; }
+        if (overlayPosition === "bottom-left")  { px = pad; py = outH - pillH - pad; }
+        if (overlayPosition === "bottom-right") { px = outW - pillW - pad; py = outH - pillH - pad; }
+        ctx.globalAlpha = op;
+        ctx.fillStyle = "rgba(0,0,0,0.62)";
+        ctx.beginPath();
+        if ((ctx as any).roundRect) (ctx as any).roundRect(px, py, pillW, pillH, pillH / 2);
+        else ctx.rect(px, py, pillW, pillH);
+        ctx.fill();
+        // Heart icon placeholder (pink circle)
+        const iconR = pillH * 0.32;
+        ctx.fillStyle = "#ec4899";
+        ctx.beginPath();
+        ctx.arc(px + pillH * 0.5, py + pillH / 2, iconR, 0, Math.PI * 2);
+        ctx.fill();
+        // Text
+        const fs = Math.round(pillH * 0.42);
+        ctx.fillStyle = "#fff";
+        ctx.font = `900 ${fs}px system-ui, sans-serif`;
+        ctx.textBaseline = "middle";
+        ctx.fillText("2DateMe", px + pillH + 6, py + pillH / 2);
+        ctx.globalAlpha = 1;
+      }
       resolve(canvas.toDataURL("image/jpeg", 0.92));
     };
     img.onerror = reject;
@@ -323,15 +384,17 @@ async function exportCroppedImage(
 interface Props { profiles: AdminProfile[]; }
 
 export default function AdCreatorTab({ profiles }: Props) {
-  const [section, setSection] = useState<"create" | "queue" | "batch">("create");
+  const [section, setSection] = useState<"create" | "queue" | "batch" | "analytics">("create");
 
   // Create form state
+  const [adType, setAdType] = useState<AdType>("image");
   const [selectedPlatform, setSelectedPlatform] = useState(PLATFORMS[0]);
   const [customW, setCustomW] = useState(1080);
   const [customH, setCustomH] = useState(1080);
   const [selectedCountry, setSelectedCountry] = useState("indonesia");
   const [imageUrl, setImageUrl] = useState("");
-  const [imageFile, setImageFile] = useState<string | null>(null); // data URL
+  const [imageFile, setImageFile] = useState<string | null>(null);
+  const [videoFile, setVideoFile] = useState<string | null>(null);
   const [cropX, setCropX] = useState(0);
   const [cropY, setCropY] = useState(0);
   const [cropZoom, setCropZoom] = useState(1);
@@ -343,12 +406,17 @@ export default function AdCreatorTab({ profiles }: Props) {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [showPlatformPicker, setShowPlatformPicker] = useState(false);
   const [captionTemplate, setCaptionTemplate] = useState(0);
+  // Overlay state
+  const [overlayEnabled, setOverlayEnabled] = useState(true);
+  const [overlayPosition, setOverlayPosition] = useState<OverlayPos>("bottom-right");
+  const [overlayOpacity, setOverlayOpacity] = useState(0.9);
 
   // Queue state
   const [queue, setQueue] = useState<AdItem[]>(loadQueue);
   const [queueFilter, setQueueFilter] = useState<"all" | "queued" | "used">("queued");
-  const [editingAd, setEditingAd] = useState<AdItem | null>(null);
   const [copiedIds, setCopiedIds] = useState<Set<string>>(new Set());
+  const [linkCopiedIds, setLinkCopiedIds] = useState<Set<string>>(new Set());
+  const [adViews, setAdViews] = useState<Record<string, number>>({});
 
   // Batch state
   const [batchIds, setBatchIds] = useState("");
@@ -357,6 +425,11 @@ export default function AdCreatorTab({ profiles }: Props) {
   const [batchGenerating, setBatchGenerating] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Load view counts on mount and refresh
+  useEffect(() => { setAdViews(getAllAdViews()); }, [queue.length]);
 
   const pack = COUNTRY_PACKS[selectedCountry] || COUNTRY_PACKS.indonesia;
   const platform = selectedPlatform.id === "custom"
@@ -406,19 +479,54 @@ export default function AdCreatorTab({ profiles }: Props) {
     reader.readAsDataURL(file);
   };
 
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setVideoFile(url);
+  };
+
+  const handleCaptureFrame = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 1080;
+    canvas.height = video.videoHeight || 1920;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    setImageFile(dataUrl);
+    setAdType("image");
+    toast.success("Frame captured! Now crop and save.");
+  };
+
   const activeImageSrc = imageFile || imageUrl;
 
+  const handleCopyTrackingUrl = async (ad: AdItem) => {
+    const url = `${window.location.origin}/?ref=ad_${ad.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopiedIds(s => new Set(s).add(ad.id));
+      toast.success("Tracking link copied! Use this as your bio link.");
+      setTimeout(() => setLinkCopiedIds(s => { const n = new Set(s); n.delete(ad.id); return n; }), 2500);
+    } catch { toast.error("Copy failed"); }
+  };
+
   const handleSaveToQueue = () => {
-    if (!activeImageSrc) { toast.error("Add an image first"); return; }
+    if (adType === "image" && !activeImageSrc) { toast.error("Add an image first"); return; }
+    if (adType === "video" && !videoFile) { toast.error("Upload a video first"); return; }
     if (!caption.trim()) { toast.error("Add a caption"); return; }
     const ad: AdItem = {
       id: genId(),
+      adType,
       profileId: selectedProfile?.id,
       profileName: selectedProfile?.name,
       profileAge: selectedProfile?.age,
       profileCity: selectedProfile?.city || undefined,
       profileAvatar: selectedProfile?.avatar_url || undefined,
-      imageUrl: activeImageSrc,
+      imageUrl: activeImageSrc || "",
+      videoUrl: adType === "video" ? videoFile || undefined : undefined,
       caption: caption.trim(),
       hashtags: [...hashtags],
       country: selectedCountry,
@@ -428,6 +536,7 @@ export default function AdCreatorTab({ profiles }: Props) {
       status: "queued",
       createdAt: new Date().toISOString(),
       cropX, cropY, cropZoom,
+      overlayEnabled, overlayPosition, overlayOpacity,
     };
     const newQueue = [ad, ...queue];
     setQueue(newQueue);
@@ -463,13 +572,16 @@ export default function AdCreatorTab({ profiles }: Props) {
     const outH = ad.customH || pw?.h || 1080;
     try {
       toast.loading("Preparing image...");
-      const dataUrl = await exportCroppedImage(ad.imageUrl, ad.cropX, ad.cropY, ad.cropZoom, outW, outH);
+      const dataUrl = await exportCroppedImage(
+        ad.imageUrl, ad.cropX, ad.cropY, ad.cropZoom, outW, outH,
+        ad.overlayEnabled, ad.overlayPosition, ad.overlayOpacity,
+      );
       const a = document.createElement("a");
       a.href = dataUrl;
       a.download = `2dateme_ad_${ad.id}.jpg`;
       a.click();
       toast.dismiss();
-      toast.success("Image downloaded!");
+      toast.success("Image downloaded with brand overlay!");
     } catch {
       toast.dismiss();
       toast.error("Download failed — image may be cross-origin");
@@ -596,11 +708,12 @@ export default function AdCreatorTab({ profiles }: Props) {
     <div style={{ display: "flex", flexDirection: "column", gap: 16, paddingBottom: 40 }}>
 
       {/* Section switcher */}
-      <div style={{ display: "flex", gap: 6, background: "rgba(255,255,255,0.04)", padding: 6, borderRadius: 18, border: "1px solid rgba(255,255,255,0.07)" }}>
+      <div style={{ display: "flex", gap: 4, background: "rgba(255,255,255,0.04)", padding: 5, borderRadius: 18, border: "1px solid rgba(255,255,255,0.07)", flexWrap: "wrap" }}>
         {[
-          { id: "create", label: "Create Ad", icon: "✏️" },
-          { id: "queue",  label: `Queue (${queuedCount})`, icon: "📋" },
-          { id: "batch",  label: "Batch Generate", icon: "⚡" },
+          { id: "create",    label: "Create",          icon: "✏️" },
+          { id: "queue",     label: `Queue (${queuedCount})`, icon: "📋" },
+          { id: "batch",     label: "Batch",           icon: "⚡" },
+          { id: "analytics", label: `Stats (${Object.values(adViews).reduce((a,b)=>a+b,0)})`, icon: "📊" },
         ].map(s => (
           <button key={s.id} onClick={() => setSection(s.id as any)} style={S.sectionBtn(section === s.id)}>
             {s.icon} {s.label}
@@ -750,33 +863,145 @@ export default function AdCreatorTab({ profiles }: Props) {
             )}
           </div>
 
-          {/* Image upload + crop */}
-          <div style={S.card}>
-            <label style={S.label}>Image</label>
-            <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-              <button onClick={() => fileInputRef.current?.click()} style={S.btn("rgba(255,255,255,0.1)")}>
-                <Image size={13} /> Upload Image
+          {/* Image / Video toggle */}
+          <div style={{ display: "flex", gap: 6 }}>
+            {(["image","video"] as AdType[]).map(t => (
+              <button key={t} onClick={() => setAdType(t)} style={{
+                flex: 1, padding: "9px 0", borderRadius: 12, fontSize: 12, fontWeight: 700, border: "none", cursor: "pointer",
+                background: adType === t ? "linear-gradient(135deg,#ec4899,#f472b6)" : "rgba(255,255,255,0.08)",
+                color: adType === t ? "#fff" : "rgba(255,255,255,0.5)",
+              }}>
+                {t === "image" ? <><Image size={12} style={{display:"inline",marginRight:5}}/>Image Ad</> : <><Video size={12} style={{display:"inline",marginRight:5}}/>Video Ad</>}
               </button>
-              <input
-                value={imageUrl}
-                onChange={e => { setImageUrl(e.target.value); setImageFile(null); }}
-                placeholder="...or paste image URL"
-                style={{ ...S.input, flex: 1 }}
-              />
-              <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileUpload} />
-            </div>
-            {activeImageSrc && (
-              <ImageCropper
-                src={activeImageSrc}
-                ratio={platform.ratio}
-                cropX={cropX} cropY={cropY} cropZoom={cropZoom}
-                onChange={(x, y, z) => { setCropX(x); setCropY(y); setCropZoom(z); }}
-              />
-            )}
-            {!activeImageSrc && (
-              <div style={{ height: 140, borderRadius: 12, border: "1.5px dashed rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
-                Upload or paste an image URL above
+            ))}
+          </div>
+
+          {/* Image upload + crop */}
+          {adType === "image" && (
+            <div style={S.card}>
+              <label style={S.label}>Image</label>
+              <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+                <button onClick={() => fileInputRef.current?.click()} style={S.btn("rgba(255,255,255,0.1)")}>
+                  <Image size={13} /> Upload
+                </button>
+                <input
+                  value={imageUrl}
+                  onChange={e => { setImageUrl(e.target.value); setImageFile(null); }}
+                  placeholder="...or paste image URL"
+                  style={{ ...S.input, flex: 1 }}
+                />
+                <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileUpload} />
               </div>
+              {activeImageSrc && (
+                <ImageCropper
+                  src={activeImageSrc}
+                  ratio={platform.ratio}
+                  cropX={cropX} cropY={cropY} cropZoom={cropZoom}
+                  onChange={(x, y, z) => { setCropX(x); setCropY(y); setCropZoom(z); }}
+                />
+              )}
+              {!activeImageSrc && (
+                <div style={{ height: 140, borderRadius: 12, border: "1.5px dashed rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
+                  Upload or paste an image URL above
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Video upload */}
+          {adType === "video" && (
+            <div style={S.card}>
+              <label style={S.label}>Video</label>
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <button onClick={() => videoInputRef.current?.click()} style={S.btn("rgba(255,255,255,0.1)")}>
+                  <Video size={13} /> Upload Video
+                </button>
+                <input ref={videoInputRef} type="file" accept="video/*" style={{ display: "none" }} onChange={handleVideoUpload} />
+                {videoFile && (
+                  <button onClick={handleCaptureFrame} style={S.btn("rgba(236,72,153,0.2)")}>
+                    <Play size={13} /> Capture Frame
+                  </button>
+                )}
+              </div>
+              {videoFile ? (
+                <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", background: "#000" }}>
+                  <video
+                    ref={videoRef}
+                    src={videoFile}
+                    controls
+                    style={{ width: "100%", maxHeight: 240, display: "block" }}
+                  />
+                  {/* Brand overlay on video preview */}
+                  {overlayEnabled && (
+                    <div style={{
+                      position: "absolute",
+                      ...(overlayPosition === "top-left"     ? { top: 10, left: 10 } : {}),
+                      ...(overlayPosition === "top-right"    ? { top: 10, right: 10 } : {}),
+                      ...(overlayPosition === "bottom-left"  ? { bottom: 10, left: 10 } : {}),
+                      ...(overlayPosition === "bottom-right" ? { bottom: 10, right: 10 } : {}),
+                      background: "rgba(0,0,0,0.65)",
+                      borderRadius: 20, padding: "5px 12px 5px 8px",
+                      display: "flex", alignItems: "center", gap: 6,
+                      opacity: overlayOpacity,
+                    }}>
+                      <img src={logoHeart} style={{ width: 18, height: 18, objectFit: "contain" }} />
+                      <span style={{ color: "#fff", fontWeight: 900, fontSize: 11 }}>2DateMe</span>
+                    </div>
+                  )}
+                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", margin: "6px 0 0", textAlign: "center" }}>
+                    Press Capture Frame to extract a still image for the ad
+                  </p>
+                </div>
+              ) : (
+                <div style={{ height: 140, borderRadius: 12, border: "1.5px dashed rgba(255,255,255,0.15)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, color: "rgba(255,255,255,0.25)", fontSize: 12 }}>
+                  <Video size={28} style={{ color: "rgba(255,255,255,0.15)" }} />
+                  Upload your video above
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Brand Overlay Controls */}
+          <div style={S.card}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <label style={{ ...S.label, marginBottom: 0 }}>Brand Overlay</label>
+              <button onClick={() => setOverlayEnabled(v => !v)} style={{
+                padding: "4px 12px", borderRadius: 8, border: "none", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                background: overlayEnabled ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.08)",
+                color: overlayEnabled ? "#22c55e" : "rgba(255,255,255,0.4)",
+              }}>
+                {overlayEnabled ? "ON" : "OFF"}
+              </button>
+            </div>
+            {overlayEnabled && (
+              <>
+                {/* Logo preview */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", background: "rgba(0,0,0,0.4)", borderRadius: 20, width: "fit-content", marginBottom: 10 }}>
+                  <img src={logoHeart} style={{ width: 20, height: 20, objectFit: "contain" }} />
+                  <span style={{ color: "#fff", fontWeight: 900, fontSize: 12 }}>2DateMe</span>
+                </div>
+                {/* Position */}
+                <label style={S.label}>Position</label>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                  {(["top-left","top-right","bottom-left","bottom-right"] as OverlayPos[]).map(pos => (
+                    <button key={pos} onClick={() => setOverlayPosition(pos)} style={{
+                      padding: "5px 10px", borderRadius: 8, fontSize: 10, fontWeight: 700, border: "none", cursor: "pointer",
+                      background: overlayPosition === pos ? "rgba(236,72,153,0.25)" : "rgba(255,255,255,0.07)",
+                      color: overlayPosition === pos ? "#ec4899" : "rgba(255,255,255,0.5)",
+                    }}>
+                      {pos === "top-left" ? "↖ Top Left" : pos === "top-right" ? "↗ Top Right" : pos === "bottom-left" ? "↙ Bottom Left" : "↘ Bottom Right"}
+                    </button>
+                  ))}
+                </div>
+                {/* Opacity */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", flexShrink: 0 }}>Opacity</span>
+                  <input type="range" min={0.3} max={1} step={0.05} value={overlayOpacity}
+                    onChange={e => setOverlayOpacity(parseFloat(e.target.value))}
+                    style={{ flex: 1, accentColor: "#ec4899" }} />
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", width: 30 }}>{Math.round(overlayOpacity*100)}%</span>
+                </div>
+              </>
             )}
           </div>
 
@@ -1001,23 +1226,39 @@ export default function AdCreatorTab({ profiles }: Props) {
                         display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                         {ad.hashtags.slice(0, 10).join(" ")}
                       </p>
+                      {/* View count badge */}
+                      {(adViews[ad.id] || 0) > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <Eye size={10} style={{ color: "#22c55e" }} />
+                          <span style={{ fontSize: 10, color: "#22c55e", fontWeight: 700 }}>
+                            {adViews[ad.id]} link open{adViews[ad.id] !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      )}
                       {/* Action buttons */}
-                      <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
+                      <div style={{ display: "flex", gap: 5, marginTop: 2, flexWrap: "wrap" }}>
                         <button onClick={() => handleCopyAd(ad)} style={{
                           ...S.btn(isCopied ? "#22c55e" : "linear-gradient(135deg,#ec4899,#f472b6)"),
-                          flex: 2, padding: "7px 10px", fontSize: 11,
-                          boxShadow: isCopied ? "none" : "0 2px 12px rgba(236,72,153,0.3)",
+                          flex: 2, padding: "7px 8px", fontSize: 10,
                         }}>
-                          {isCopied ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+                          {isCopied ? <CheckCircle2 size={11} /> : <Copy size={11} />}
                           {isCopied ? "Copied!" : "Copy Caption"}
                         </button>
+                        <button onClick={() => handleCopyTrackingUrl(ad)} style={{
+                          ...S.btn(linkCopiedIds.has(ad.id) ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.1)"),
+                          flex: 2, padding: "7px 8px", fontSize: 10,
+                          color: linkCopiedIds.has(ad.id) ? "#22c55e" : "#fff",
+                        }}>
+                          <Link size={11} />
+                          {linkCopiedIds.has(ad.id) ? "Link Copied!" : "Track Link"}
+                        </button>
                         {ad.imageUrl && (
-                          <button onClick={() => handleDownloadImage(ad)} style={{ ...S.btn("rgba(255,255,255,0.08)"), padding: "7px 10px" }}>
-                            <Download size={12} />
+                          <button onClick={() => handleDownloadImage(ad)} style={{ ...S.btn("rgba(255,255,255,0.08)"), padding: "7px 9px" }}>
+                            <Download size={11} />
                           </button>
                         )}
-                        <button onClick={() => handleDeleteAd(ad.id)} style={{ ...S.btn("rgba(239,68,68,0.15)"), padding: "7px 10px" }}>
-                          <Trash2 size={12} style={{ color: "#ef4444" }} />
+                        <button onClick={() => handleDeleteAd(ad.id)} style={{ ...S.btn("rgba(239,68,68,0.15)"), padding: "7px 9px" }}>
+                          <Trash2 size={11} style={{ color: "#ef4444" }} />
                         </button>
                       </div>
                     </div>
@@ -1131,6 +1372,7 @@ export default function AdCreatorTab({ profiles }: Props) {
               opacity: batchGenerating ? 0.7 : 1,
             }}
           >
+
             {batchGenerating
               ? <><RefreshCw size={15} style={{ animation: "spin 1s linear infinite" }} /> Generating...</>
               : <><Zap size={15} /> Generate All Ads</>
@@ -1159,6 +1401,115 @@ export default function AdCreatorTab({ profiles }: Props) {
           </div>
         </div>
       )}
+
+      {/* ══ ANALYTICS ═══════════════════════════════════════════════════════ */}
+      {section === "analytics" && (() => {
+        const totalViews = Object.values(adViews).reduce((a, b) => a + b, 0);
+        const adsWithViews = queue
+          .map(a => ({ ...a, views: adViews[a.id] || 0 }))
+          .filter(a => a.views > 0)
+          .sort((a, b) => b.views - a.views);
+        const countryViews: Record<string, number> = {};
+        adsWithViews.forEach(a => { countryViews[a.country] = (countryViews[a.country] || 0) + a.views; });
+        const topCountries = Object.entries(countryViews).sort((a, b) => b[1] - a[1]);
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {/* Summary cards */}
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1, ...S.card, textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: "#22c55e" }}>{totalViews}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>Total Link Opens</div>
+              </div>
+              <div style={{ flex: 1, ...S.card, textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: "#f472b6" }}>{adsWithViews.length}</div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>Ads with Views</div>
+              </div>
+              <div style={{ flex: 1, ...S.card, textAlign: "center" }}>
+                <div style={{ fontSize: 28, fontWeight: 900, color: "#facc15" }}>
+                  {adsWithViews.length > 0 ? Math.round(totalViews / adsWithViews.length) : 0}
+                </div>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)" }}>Avg per Ad</div>
+              </div>
+            </div>
+
+            {/* How tracking works */}
+            <div style={{ ...S.card, borderColor: "rgba(34,197,94,0.2)", background: "rgba(34,197,94,0.05)" }}>
+              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", margin: 0, lineHeight: 1.7 }}>
+                📊 <strong>How it works:</strong> Each ad has a unique <strong>Track Link</strong> (copy from queue).
+                Put this as your Instagram/TikTok bio link. Every click is counted here automatically.
+                Change the bio link for each new ad to track which content performs best.
+              </p>
+            </div>
+
+            {/* Country breakdown */}
+            {topCountries.length > 0 && (
+              <div style={S.card}>
+                <label style={S.label}>Views by Country</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {topCountries.map(([country, views]) => {
+                    const cp = COUNTRY_PACKS[country];
+                    const pct = Math.round((views / totalViews) * 100);
+                    return (
+                      <div key={country} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ fontSize: 14 }}>{cp?.flag || "🌍"}</span>
+                        <span style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", flex: 1 }}>{cp?.label || country}</span>
+                        <div style={{ width: 80, height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
+                          <div style={{ width: `${pct}%`, height: "100%", background: "linear-gradient(90deg,#ec4899,#f472b6)", borderRadius: 3 }} />
+                        </div>
+                        <span style={{ fontSize: 11, color: "#f472b6", fontWeight: 700, minWidth: 28, textAlign: "right" }}>{views}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Top performing ads */}
+            {adsWithViews.length > 0 ? (
+              <div style={S.card}>
+                <label style={S.label}>Best Performing Ads</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {adsWithViews.slice(0, 10).map((ad, i) => {
+                    const pl = PLATFORMS.find(p => p.id === ad.platform);
+                    const cp = COUNTRY_PACKS[ad.country];
+                    return (
+                      <div key={ad.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: i === 0 ? "rgba(250,204,21,0.08)" : "rgba(255,255,255,0.03)", borderRadius: 12, border: `1px solid ${i === 0 ? "rgba(250,204,21,0.2)" : "rgba(255,255,255,0.06)"}` }}>
+                        {i === 0 && <span style={{ fontSize: 16 }}>🥇</span>}
+                        {i === 1 && <span style={{ fontSize: 16 }}>🥈</span>}
+                        {i === 2 && <span style={{ fontSize: 16 }}>🥉</span>}
+                        {i > 2 && <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", minWidth: 18 }}>#{i+1}</span>}
+                        {ad.imageUrl && <img src={ad.imageUrl} style={{ width: 36, height: 36, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {ad.caption.slice(0, 50)}...
+                          </p>
+                          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", margin: "2px 0 0" }}>
+                            {cp?.flag} {cp?.label} · {pl?.icon} {pl?.label}
+                            {ad.profileName ? ` · 👤 ${ad.profileName}` : ""}
+                          </p>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                          <TrendingUp size={12} style={{ color: "#22c55e" }} />
+                          <span style={{ fontSize: 14, fontWeight: 900, color: "#22c55e" }}>{ad.views}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: 40, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+                <BarChart2 size={32} style={{ margin: "0 auto 10px", color: "rgba(255,255,255,0.1)" }} />
+                No views yet. Copy a tracking link from the Queue tab and use it as your bio link.
+              </div>
+            )}
+
+            <button onClick={() => setAdViews(getAllAdViews())} style={{ ...S.btn("rgba(255,255,255,0.08)"), padding: "10px" }}>
+              <RefreshCw size={13} /> Refresh Stats
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 }

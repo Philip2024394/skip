@@ -28,6 +28,9 @@ const TEST_PASSWORD = import.meta.env.VITE_TEST_PASSWORD || "TestPass123";
 const LANDING_BG_URL = (import.meta.env.VITE_LANDING_BG_URL as string | undefined) || "https://ik.imagekit.io/7grri5v7d/uytg.png";
 const LANDING_BG_URL_VERSION = (import.meta.env.VITE_LANDING_BG_URL_VERSION as string | undefined) || "v2";
 
+// Set to true when ready to go live — until then only admin (12345) can access the dating app
+const APP_LIVE = false;
+
 const isoToFlag = (iso: string) =>
   iso.toUpperCase().replace(/./g, (c) =>
     String.fromCodePoint(0x1f1e6 - 65 + c.charCodeAt(0))
@@ -321,7 +324,7 @@ const AuthPage = () => {
       // Check if there's a real Supabase session
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        setShowHomePage(session !== null);
+        setShowHomePage(APP_LIVE && session !== null);
       } catch (error) {
         console.error('Error checking session:', error);
         setShowHomePage(false);
@@ -333,7 +336,7 @@ const AuthPage = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        setShowHomePage(true);
+        setShowHomePage(APP_LIVE);
       } else if (event === 'SIGNED_OUT') {
         setShowHomePage(false);
       }
