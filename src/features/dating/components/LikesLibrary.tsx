@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Unlock, Clock, Sparkles, MapPin, Gift, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
+import { Heart, Unlock, Clock, Sparkles, MapPin, Star, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Profile } from "./SwipeCard";
 import TarotDrawer from "@/features/dating/components/TarotDrawer";
 import { useTarotState } from "@/features/dating/components/useTarotState";
@@ -12,7 +12,7 @@ import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
 // import GiftsTab from "@/components/gifts/GiftsTab";
 import { supabase } from "@/integrations/supabase/client";
-import GiftSelector from "@/features/gifts/components/GiftSelector";
+import SuperLikeSelector from "@/features/dating/components/SuperLikeSelector";
 import VideoContainer from "@/features/video/components/VideoContainer";
 import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
@@ -79,7 +79,7 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   treat: () => "Treat",
   unlock: () => "Unlock",
   distance: () => "Distance",
-  gifts: () => "Gifts",
+  gifts: () => "Super",
   video: () => "Video",
 };
 // Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
@@ -331,7 +331,7 @@ const LikesLibrary = ({
         )}
       </AnimatePresence>
 
-      {/* ── Gifts label ── */}
+      {/* ── Super label ── */}
       <AnimatePresence>
         {tab === "gifts" && (
           <motion.div
@@ -340,9 +340,8 @@ const LikesLibrary = ({
             exit={{ opacity: 0, height: 0 }}
             className="flex items-center gap-1.5 mb-1.5 flex-shrink-0 overflow-hidden"
           >
-            <Gift className="w-3 h-3 text-pink-400 flex-shrink-0" />
-            <span className="text-[9px] text-white/50 flex-1">Make a Impression — Send a Gift</span>
-            <span className="text-[9px] font-bold text-green-400 flex-shrink-0">3 Free</span>
+            <Star className="w-3 h-3 text-yellow-400 flex-shrink-0" fill="currentColor" />
+            <span className="text-[9px] text-white/50 flex-1">Stand out — Send a Super Like with a message</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -350,7 +349,7 @@ const LikesLibrary = ({
       {/* ── Scrollable card row — native scroll, no tab-switch interference ── */}
       <div
         ref={scrollRef}
-        className={`flex-1 [&::-webkit-scrollbar]:hidden ${isDateIdeasTab || isProfileInfoTab || isTreatTab
+        className={`flex-1 [&::-webkit-scrollbar]:hidden ${isDateIdeasTab || isProfileInfoTab || isTreatTab || tab === "gifts"
           ? "overflow-y-auto overflow-x-hidden"
           : "overflow-x-auto overflow-y-hidden"
           }`}
@@ -358,7 +357,7 @@ const LikesLibrary = ({
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          ...(isDateIdeasTab || isProfileInfoTab || isTreatTab
+          ...(isDateIdeasTab || isProfileInfoTab || isTreatTab || tab === "gifts"
             ? { overscrollBehaviorY: "contain", touchAction: "pan-y" }
             : { overscrollBehaviorX: "contain", touchAction: "pan-x" }),
         }}
@@ -575,12 +574,14 @@ const LikesLibrary = ({
                 </div>
               )
             ) : tab === "gifts" ? (
-              <GiftSelector
-                userId={currentUserId || ""}
-                profileId={selectedProfile?.id || ""}
-                profileName={selectedProfile?.name || ""}
-                onGiftSent={onGiftSent}
-              />
+              <div className="overflow-y-auto flex-1 px-1 py-1">
+                <SuperLikeSelector
+                  userId={currentUserId}
+                  recipientId={selectedProfile?.id}
+                  recipientName={selectedProfile?.name}
+                  onSent={onGiftSent}
+                />
+              </div>
             ) : displayItemsWithTarot.length === 0 ? (
               <div className="flex items-center justify-center flex-1 px-4">
                 <p className="text-white/40 text-xs text-center">{emptyText}</p>
