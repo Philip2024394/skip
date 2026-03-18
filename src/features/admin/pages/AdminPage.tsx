@@ -21,6 +21,7 @@ import VerifyTab from "../components/VerifyTab";
 import SetupTab from "../components/SetupTab";
 import AlertsTab from "../components/AlertsTab";
 import { AlertItem } from "../components/AlertsTab";
+import AdCreatorTab from "../components/AdCreatorTab";
 
 // ── Main component ────────────────────────────────────────────────────────────
 const AdminPage = () => {
@@ -526,6 +527,7 @@ const AdminPage = () => {
     { id: "alerts", label: "Alerts", icon: <Bell className="w-3.5 h-3.5" />, badge: alertsBadge || undefined },
     { id: "verify", label: "Verify", icon: <UserCheck className="w-3.5 h-3.5" />, badge: pendingVerifyCount || undefined },
     { id: "setup", label: "Setup", icon: <Settings className="w-3.5 h-3.5" /> },
+    { id: "ads", label: "Ads", icon: <Image className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -1048,6 +1050,11 @@ const AdminPage = () => {
         )}
 
         {/* ══ VERIFY TAB ════════════════════════════════════════════ */}
+        {/* ══ ADS TAB ════════════════════════════════════════════════════ */}
+        {tab === "ads" && (
+          <AdCreatorTab profiles={profiles} />
+        )}
+
         {tab === "verify" && (
           <VerifyTab profiles={profiles} onApprove={async (id) => {
             await supabase.from("profiles").update({ is_verified: true, verification_status: "approved" } as any).eq("id", id);
