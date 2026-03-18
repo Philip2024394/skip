@@ -194,6 +194,19 @@ export default function TopCard(props: TopCardProps) {
             <p className="text-white/60 text-sm flex items-center gap-1 mt-1">
               <MapPin className="w-3 h-3" /> {props.selectedProfile.city}, {props.selectedProfile.country}
             </p>
+            {(props.selectedProfile as any).intent && (
+              <span className={`inline-flex items-center mt-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${
+                (props.selectedProfile as any).intent === "marriage"
+                  ? "bg-amber-500/25 border-amber-400/50 text-amber-200"
+                  : (props.selectedProfile as any).intent === "dating"
+                    ? "bg-pink-500/25 border-pink-400/50 text-pink-200"
+                    : "bg-white/10 border-white/20 text-white/70"
+              }`}>
+                {(props.selectedProfile as any).intent === "marriage" ? "💍 Open to Marriage"
+                  : (props.selectedProfile as any).intent === "dating" ? "💕 Dating First"
+                  : "🤔 Not Sure Yet"}
+              </span>
+            )}
             <SentGiftsDisplay profileId={props.selectedProfile.id} />
             {props.selectedProfile.contact_preference && (
               <div className="mt-1.5">

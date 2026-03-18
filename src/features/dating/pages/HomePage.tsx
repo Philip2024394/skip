@@ -21,6 +21,8 @@ import { TreatOverlay, AppDialogs, DailyMatchSuggestion, shouldShowDailyMatch, m
 import PackageTermsOverlay from "@/features/dating/components/PackageTermsOverlay";
 import { ProfileBottomSheet, ProfileInfoPanel, ProfileImagesPanel, DateIdeaDetailPanel, TreatDetailPanel } from "@/features/dating/components";
 import VideoIntroPanel from "@/features/dating/components/profile-view/VideoIntroPanel";
+import DistanceMapOverlay from "@/features/dating/components/profile-view/DistanceMapOverlay";
+import InternationalMarriagePanel from "@/features/dating/components/profile-view/InternationalMarriagePanel";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { LIKE_EXPIRY_MS, ROSE_RESET_DAYS, MS_PER_DAY, APP_NAME } from "@/shared/services/constants";
 import { isNetworkError } from "@/shared/utils/payments";
@@ -49,6 +51,10 @@ import {
   DialogTitle,
 } from "@/shared/components/dialog";
 import { FlaskConical, Sparkles, X } from "lucide-react";
+import { useUserCurrency } from "@/shared/hooks/useUserCurrency";
+import BestieRequestPopup, { BestieRequest } from "@/features/dating/components/BestieRequestPopup";
+import BestieReferralPopup, { BestieReferral } from "@/features/dating/components/BestieReferralPopup";
+import { generateAppUserId } from "@/shared/utils/userIdUtils";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -133,9 +139,12 @@ const KEY_TO_FEATURE: Record<string, PremiumFeature> = {
 
 function HomePackageDetail({ packageKey, onClose, onPurchase }: { packageKey: string; onClose: () => void; onPurchase: (f: PremiumFeature) => void }) {
   const [showTerms, setShowTerms] = useState(false);
+  const { fmt } = useUserCurrency();
   const pkg = HOME_UNLOCK_PACKAGES.find((p) => p.key === packageKey);
   if (!pkg) return null;
   const feature = KEY_TO_FEATURE[packageKey];
+  const priceSuffix = pkg.price.includes("/mo") ? "/mo" : "";
+  const displayPrice = feature ? fmt(feature.priceCents, priceSuffix) : pkg.price;
 
   const bgImage = pkg.bgImage;
 
@@ -169,7 +178,7 @@ function HomePackageDetail({ packageKey, onClose, onPurchase }: { packageKey: st
 
           {/* price + buy */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", maxWidth: 280, marginTop: 4 }}>
-            <p style={{ color: "#fff", fontWeight: 900, fontSize: 22, margin: 0 }}>{pkg.price}</p>
+            <p style={{ color: "#fff", fontWeight: 900, fontSize: 22, margin: 0 }}>{displayPrice}</p>
             <button
               onClick={() => feature && onPurchase(feature)}
               style={{ padding: "8px 18px", borderRadius: 22, fontWeight: 900, fontSize: 12, color: "#fff", border: "none", cursor: "pointer", background: "linear-gradient(135deg, rgba(232,72,199,0.95), rgba(195,60,255,0.95))", boxShadow: "0 4px 18px rgba(195,60,255,0.4)" }}
@@ -515,6 +524,8 @@ const Index = () => {
   const [superLikeRevealProfile, setSuperLikeRevealProfile] = useState<Profile | null>(null);
   const [superLikeGlowProfileId, setSuperLikeGlowProfileId] = useState<string | null>(null);
 
+  const [mapProfile, setMapProfile] = useState<any>(null);
+
   const [devFeaturesEnabled, setDevFeaturesEnabled] = useDevFeatures();
   const [devPanelOpen, setDevPanelOpen] = useState(false);
 
@@ -539,6 +550,70 @@ const Index = () => {
   const [profileImageViewIndex, setProfileImageViewIndex] = useState(0);
   const [selectedDatePlace, setSelectedDatePlace] = useState<any | null>(null);
   const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
+
+  // Diamond Gift Match state
+  const [matchData, setMatchData] = useState<{ name: string; id: string; avatar?: string } | null>(null);
+  const [testGiftOpen, setTestGiftOpen] = useState(false);
+
+  // Bestie system
+  const [pendingBestieRequest, setPendingBestieRequest] = useState<BestieRequest | null>(null);
+  const [sentBestieIds, setSentBestieIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("bestie_sent_ids") || "[]"); } catch { return []; }
+  });
+  const [confirmedBestieIds, setConfirmedBestieIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("bestie_confirmed_ids") || "[]"); } catch { return []; }
+  });
+
+  const handleBestieRequest = (targetProfile: any) => {
+    if (!user) { showGuestPrompt("generic"); return; }
+    const targetId = targetProfile?.id;
+    if (!targetId || confirmedBestieIds.includes(targetId) || sentBestieIds.includes(targetId)) return;
+    const updated = [...sentBestieIds, targetId];
+    setSentBestieIds(updated);
+    try { localStorage.setItem("bestie_sent_ids", JSON.stringify(updated)); } catch { /* ignore */ }
+    toast.success(`Bestie request sent to ${targetProfile.name}! 💕`);
+
+    // Simulate the target accepting after 3 seconds (mock — no real backend yet)
+    setTimeout(() => {
+      const req: BestieRequest = {
+        fromId: targetId,
+        fromName: targetProfile.name,
+        fromAvatar: targetProfile.avatar_url || targetProfile.image || "/placeholder.svg",
+        fromAppUserId: targetProfile.app_user_id || generateAppUserId(targetId),
+        toId: user?.id || "guest",
+        toName: user?.user_metadata?.name || "You",
+      };
+      setPendingBestieRequest(req);
+    }, 3000);
+  };
+
+  const handleBestieAccept = (req: BestieRequest) => {
+    const updated = [...confirmedBestieIds, req.fromId];
+    setConfirmedBestieIds(updated);
+    try { localStorage.setItem("bestie_confirmed_ids", JSON.stringify(updated)); } catch { /* ignore */ }
+    setPendingBestieRequest(null);
+    setSuperLikesCount(prev => prev + 1);
+    toast.success(`${req.fromName} accepted! You earned a free Super Like ⭐`);
+  };
+
+  const handleBestieDecline = (_req: BestieRequest) => {
+    setPendingBestieRequest(null);
+  };
+
+  // Bestie referral — shown to User A when User B suggests a bestie instead
+  const [bestieReferral, setBestieReferral] = useState<BestieReferral | null>(null);
+
+  const handleBestieReferred = (bestieAppId: string, fromName: string, _fromId: string) => {
+    // Look up the referred profile by app_user_id
+    const bestieProfile = allProfiles.find((p: Profile) => p.app_user_id === bestieAppId);
+    setBestieReferral({
+      fromName,
+      bestieAppId,
+      bestieName: bestieProfile?.name,
+      bestieAvatar: bestieProfile?.avatar_url || bestieProfile?.image,
+      bestieProfileId: bestieProfile?.id,
+    });
+  };
 
   const {
     dailyTarot,
@@ -914,10 +989,6 @@ const Index = () => {
   const userName = user?.user_metadata?.name || user?.email?.split("@")[0] || "Guest";
   const currentUser = userName;
 
-  // Diamond Gift Match state
-  const [matchData, setMatchData] = useState<{ name: string; id: string; avatar?: string } | null>(null);
-  const [testGiftOpen, setTestGiftOpen] = useState(false);
-
   return (
     <div className="h-screen-safe flex flex-col overflow-hidden relative" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
@@ -1007,11 +1078,19 @@ const Index = () => {
                   iLiked={iLiked}
                   handleLike={handleLike}
                   likedMe={likedMe}
+                  onOpenMap={(p) => setMapProfile(p)}
+                  onBestieRequest={handleBestieRequest}
+                  isBestie={confirmedBestieIds.includes(selectedProfile?.id)}
+                  isBestiePending={sentBestieIds.includes(selectedProfile?.id)}
                 />
               ) : (
                 <ProfileInfoPanel
                   profile={selectedProfile}
                   onClose={() => setSelectedProfileSection(null)}
+                  allProfiles={allProfiles}
+                  onBestieRequest={handleBestieRequest}
+                  isBestie={confirmedBestieIds.includes(selectedProfile?.id)}
+                  isBestiePending={sentBestieIds.includes(selectedProfile?.id)}
                 />
               )
             ) : (
@@ -1036,6 +1115,7 @@ const Index = () => {
                   setProfileImageDirection={setProfileImageDirection}
                   handleLike={handleLike}
                   handleRose={handleRose}
+                  onOpenMap={(p) => setMapProfile(p)}
                   handleLibraryCardDrag={handleLibraryCardDrag}
                   advanceQueue={advanceTopQueue}
                   navigate={navigate}
@@ -1177,7 +1257,7 @@ const Index = () => {
                   </div>
                 </motion.div>
 
-                {/* Bottom Card — only on home page, not profile page */}
+                {/* Bottom Card — home page: swipe stack / package detail */}
                 {!isProfileRoute && (
                   <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
                     {aboutMeTab === "unlock" ? (
@@ -1201,6 +1281,16 @@ const Index = () => {
                         }}
                       />
                     )}
+                  </div>
+                )}
+
+                {/* Bottom Card — profile page (female only): International Marriage Services */}
+                {isProfileRoute && selectedProfile?.gender?.toLowerCase() === "female" && (
+                  <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-[#0a1428]/80 via-black/60 to-[#0d1f3c]/80 backdrop-blur-xl border border-[#c9a227]/30 shadow-[0_4px_20px_rgba(201,162,39,0.12)] ring-1 ring-[#c9a227]/10" style={{ contain: "layout" }}>
+                    <InternationalMarriagePanel
+                      profile={selectedProfile}
+                      onConsult={handlePurchaseFeature}
+                    />
                   </div>
                 )}
               </>
@@ -1437,6 +1527,7 @@ const Index = () => {
           onGiftAccepted={() => setTestGiftOpen(false)}
           onGiftRefused={() => setTestGiftOpen(false)}
           onMatch={(name, id) => { setTestGiftOpen(false); setMatchData({ name, id }); }}
+          onBestieReferred={(bid, fromName, fromId) => { setTestGiftOpen(false); handleBestieReferred(bid, fromName, fromId); }}
         />
       )}
 
@@ -1457,6 +1548,33 @@ const Index = () => {
             matchedProfileAvatar={matchData.avatar}
             currentUserName={userName}
             onClose={() => setMatchData(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Bestie Referral Popup — shown to User A when User B suggests their bestie */}
+      <BestieReferralPopup
+        referral={bestieReferral}
+        onViewProfile={(profileId) => navigate(`/profile/${profileId}`)}
+        onClose={() => setBestieReferral(null)}
+      />
+
+      {/* Bestie Request Popup */}
+      <BestieRequestPopup
+        request={pendingBestieRequest}
+        onAccept={handleBestieAccept}
+        onDecline={handleBestieDecline}
+      />
+
+      {/* Distance Map Overlay — opens when map badge tapped on a profile */}
+      <AnimatePresence>
+        {mapProfile && (
+          <DistanceMapOverlay
+            profile={mapProfile}
+            allProfiles={allProfiles}
+            onClose={() => setMapProfile(null)}
+            onLike={(p) => { handleLike(p); setMapProfile(null); }}
+            onSuperLike={(p) => { handleRose(p); setMapProfile(null); }}
           />
         )}
       </AnimatePresence>

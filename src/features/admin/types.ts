@@ -61,4 +61,4 @@ export interface Payment {
 }
 
 export type Tab = "overview" | "users" | "income" | "alerts" | "verify" | "setup";
-export type UserFilter = "all" | "active" | "banned" | "hidden" | "spotlight" | "mock";
+export type UserFilter = "all" | "active" | "banned" | "hidden" | "spotlight" | "mock" | "verified";

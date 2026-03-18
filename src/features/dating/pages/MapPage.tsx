@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -56,11 +56,6 @@ const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-/** Approximate radius (km) visible on screen for a given Leaflet zoom level. */
-const zoomToRadiusKm = (zoom: number): number => {
-  // At zoom 10 the visible area is roughly 50km radius on mobile
-  return Math.round(50 * Math.pow(2, 10 - zoom));
-};
 
 const fmtDist = (km: number | undefined) => {
   if (km === undefined || isNaN(km)) return null;
@@ -106,22 +101,26 @@ const createAvatarIcon = (
   online: boolean,
   availableTonight: boolean,
   viewedMe: boolean,
+  dimmed = false,
+  badgeHighlighted = false,
 ) => {
   const size = isSelected ? 56 : 42;
 
   const borderColor = isSelected
     ? PINK
-    : likeState === "superliked" ? AMBER
-      : likeState === "liked" ? PINK
-        : availableTonight ? TEAL
-          : "rgba(255,255,255,0.25)";
+    : badgeHighlighted ? AMBER
+      : likeState === "superliked" ? AMBER
+        : likeState === "liked" ? PINK
+          : availableTonight ? TEAL
+            : "rgba(255,255,255,0.25)";
 
   const glow = isSelected
     ? `0 0 22px ${PINK_GLOW}, 0 0 44px ${PINK_LIGHT}`
-    : likeState === "superliked" ? `0 0 16px ${AMBER_GLOW}, 0 2px 8px rgba(0,0,0,0.6)`
-      : likeState === "liked" ? `0 0 14px ${PINK_GLOW}, 0 2px 8px rgba(0,0,0,0.6)`
-        : availableTonight ? `0 0 14px rgba(56,215,193,0.45), 0 2px 8px rgba(0,0,0,0.6)`
-          : "0 2px 10px rgba(0,0,0,0.6)";
+    : badgeHighlighted ? `0 0 20px ${AMBER_GLOW}, 0 0 40px rgba(251,191,36,0.3), 0 2px 8px rgba(0,0,0,0.6)`
+      : likeState === "superliked" ? `0 0 16px ${AMBER_GLOW}, 0 2px 8px rgba(0,0,0,0.6)`
+        : likeState === "liked" ? `0 0 14px ${PINK_GLOW}, 0 2px 8px rgba(0,0,0,0.6)`
+          : availableTonight ? `0 0 14px rgba(56,215,193,0.45), 0 2px 8px rgba(0,0,0,0.6)`
+            : "0 2px 10px rgba(0,0,0,0.6)";
 
   const badge = likeState === "superliked"
     ? `<div style="position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;
@@ -161,12 +160,18 @@ const createAvatarIcon = (
         width:8px;height:8px;border-radius:50%;background:${PINK};box-shadow:0 0 8px ${PINK_GLOW};"></div>`
     : "";
 
+  const highlightRing = badgeHighlighted && !isSelected
+    ? `<div style="position:absolute;inset:-5px;border-radius:50%;
+        border:2px solid ${AMBER};opacity:0.7;
+        animation:badgeHighlightPulse 1.8s ease-in-out infinite;z-index:1;pointer-events:none;"></div>`
+    : "";
+
   return L.divIcon({
     className: "map-avatar-marker",
-    html: `<div style="position:relative;">
-      ${viewedRing}
+    html: `<div style="position:relative;opacity:${dimmed ? 0.28 : 1};transition:opacity 0.3s;">
+      ${viewedRing}${highlightRing}
       <div style="width:${size}px;height:${size}px;border-radius:50%;
-        border:${isSelected ? "3px" : "2.5px"} solid ${borderColor};overflow:hidden;background:#1a1a1a;
+        border:${isSelected ? "3px" : badgeHighlighted ? "2.5px" : "2.5px"} solid ${borderColor};overflow:hidden;background:#1a1a1a;
         box-shadow:${glow};cursor:pointer;transition:all 0.3s ease;position:relative;z-index:2;">
         <img src="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />
       </div>
@@ -297,7 +302,7 @@ const MapPage = () => {
   const [matchDialog, setMatchDialog] = useState<Profile | null>(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
-  const [mapZoom, setMapZoom] = useState(10);
+  const [, setMapZoom] = useState(10);
   const [filterTonight, setFilterTonight] = useState(false);
   const [filterPlusOne, setFilterPlusOne] = useState(false);
   const [filterGenerous, setFilterGenerous] = useState(false);
@@ -496,16 +501,15 @@ const MapPage = () => {
           : [0, 20];
 
     const map = L.map(mapRef.current, {
-      center, zoom: 10,
+      center, zoom: 8,
       maxZoom: 17, minZoom: 2,
-      // Built-in zoom control is kept but we also support pinch-to-zoom on mobile natively
       zoomControl: true,
       attributionControl: false,
-      // Smooth scroll with mouse wheel on desktop
       scrollWheelZoom: true,
     });
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
+    // Dark tile with subtle labels for good visuals
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       maxZoom: 19, noWrap: false,
     }).addTo(map);
 
@@ -591,9 +595,8 @@ const MapPage = () => {
     if (selLineRef.current) { selLineRef.current.remove(); selLineRef.current = null; }
     if (selLabelRef.current) { selLabelRef.current.remove(); selLabelRef.current = null; }
 
-    const withinRadiusIds = userLocation
-      ? new Set(withinRadiusProfiles.map(p => p.id))
-      : null;
+    // Determine which badge filter is active (if any)
+    const anyBadgeFilter = filterTonight || filterPlusOne || filterGenerous || filterWeekend || filterLateNight || filterNoDrama;
 
     markersRef.current.forEach((marker, id) => {
       const p = profiles.find(pr => pr.id === id);
@@ -601,11 +604,24 @@ const MapPage = () => {
       const img = p.avatar_url || p.image || "/placeholder.svg";
       const likeState: LikeState = superLikedIds.has(id) ? "superliked"
         : likedIds.has(id) ? "liked" : "none";
+
+      // badgeHighlighted = profile matches the active badge filter
+      const badgeHighlighted = anyBadgeFilter && (
+        (filterTonight && !!p.available_tonight) ||
+        (filterPlusOne && !!(p as any).is_plusone) ||
+        (filterGenerous && !!(p as any).generous_lifestyle) ||
+        (filterWeekend && !!(p as any).weekend_plans) ||
+        (filterLateNight && !!(p as any).late_night_chat) ||
+        (filterNoDrama && !!(p as any).no_drama)
+      );
+
       marker.setIcon(createAvatarIcon(
         img, id === selectedProfile?.id, likeState,
         isOnline(p.last_seen_at),
         !!p.available_tonight,
         viewedMeIds.has(id),
+        false, // never dim — all markers stay visible
+        badgeHighlighted,
       ));
       const el = marker.getElement();
       if (el) {
@@ -622,7 +638,7 @@ const MapPage = () => {
       const distKm = haversineKm(userPos[0], userPos[1], profPos[0], profPos[1]);
 
       selLineRef.current = L.polyline([userPos, profPos], {
-        color: PINK, weight: 1.8, opacity: 0.45, dashArray: "6 10",
+        color: PINK, weight: 2, opacity: 0.55, dashArray: "7 9",
       }).addTo(map);
 
       const label = fmtDist(distKm) ?? "?";
@@ -631,16 +647,33 @@ const MapPage = () => {
         {
           icon: L.divIcon({
             className: "map-km-label",
-            html: `<span style="font-size:10px;font-weight:600;color:${PINK};
-              background:rgba(0,0,0,0.75);padding:2px 7px;border-radius:8px;
-              white-space:nowrap;pointer-events:none;">${label}</span>`,
-            iconSize: [50, 16], iconAnchor: [25, 8],
+            html: `<div style="
+              display:inline-flex;align-items:center;gap:5px;
+              background:rgba(0,0,0,0.82);
+              border:1.5px solid ${PINK};
+              border-radius:20px;
+              padding:4px 11px;
+              box-shadow:0 0 12px ${PINK_GLOW},0 2px 8px rgba(0,0,0,0.6);
+              pointer-events:none;
+              white-space:nowrap;
+              transform:translateX(-50%);
+            ">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="${PINK}" style="flex-shrink:0;">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <span style="font-size:12px;font-weight:800;color:${PINK};letter-spacing:0.03em;">${label}</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="${PINK}" style="flex-shrink:0;">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>`,
+            iconSize: [90, 26],
+            iconAnchor: [45, 13],
           }),
           interactive: false,
         }
       ).addTo(map);
     }
-  }, [selectedIndex, selectedProfile, profiles, withinRadiusProfiles, userLocation, likedIds, superLikedIds, viewedMeIds]);
+  }, [selectedIndex, selectedProfile, profiles, withinRadiusProfiles, userLocation, likedIds, superLikedIds, viewedMeIds, filterTonight, filterPlusOne, filterGenerous, filterWeekend, filterLateNight, filterNoDrama]);
 
   // ── Like / super-like handlers ─────────────────────────────────────
   const handleLike = useCallback(async (profile: Profile) => {
@@ -805,76 +838,53 @@ const MapPage = () => {
         style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 3rem)`, left: "1rem", right: "5rem" }}
       >
         <div className="bg-black/65 backdrop-blur-xl border border-white/10 rounded-full px-3 py-1.5 flex items-center min-h-0 overflow-hidden">
-          {/* Selected profile name+km or stats only */}
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {selectedProfile ? (
               <>
                 <MapPin className="w-3 h-3 text-primary flex-shrink-0" />
+                {/* Name */}
                 <span className="text-white text-xs font-medium truncate">{selectedProfile.name}, {selectedProfile.age}</span>
-                {selectedProfile.distanceKm !== undefined ? (
-                  <span className="text-primary text-[10px] font-semibold flex-shrink-0">
-                    {fmtDist(selectedProfile.distanceKm)}
-                  </span>
-                ) : (
-                  <span className="text-white/30 text-[10px] flex-shrink-0">— km</span>
-                )}
+                {/* Badge pill — immediately right of name */}
                 {(() => {
                   const key = getPrimaryBadgeKey(selectedProfile as any);
                   if (!key) return null;
-                  if (key === "available_tonight") {
-                    return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                        <Moon className="w-3 h-3" fill="currentColor" />
-                        Available Tonight
-                      </span>
-                    );
-                  }
-                  if (key === "is_plusone") {
-                    return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                        <UserPlus className="w-3 h-3" />
-                        +1 Plus One
-                      </span>
-                    );
-                  }
-                  if (key === "generous_lifestyle") {
-                    return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                        <Gift className="w-3 h-3" />
-                        Generous Lifestyle
-                      </span>
-                    );
-                  }
-                  if (key === "weekend_plans") {
-                    return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                        <CalendarDays className="w-3 h-3" />
-                        Weekend Plans
-                      </span>
-                    );
-                  }
-                  if (key === "late_night_chat") {
-                    return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                        <MoonStar className="w-3 h-3" />
-                        Late Night Chat
-                      </span>
-                    );
-                  }
-                  if (key === "no_drama") {
-                    return (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold text-yellow-400 border border-white/10 bg-black/60 backdrop-blur-md flex-shrink-0">
-                        <ShieldCheck className="w-3 h-3" />
-                        No Drama
-                      </span>
-                    );
-                  }
-                  return null;
+                  const BADGE_MAP: Record<string, { icon: React.ReactNode; label: string }> = {
+                    available_tonight: { icon: <Moon className="w-3 h-3" fill="currentColor" />, label: "Free Tonight" },
+                    is_plusone: { icon: <UserPlus className="w-3 h-3" />, label: "+1 Plus One" },
+                    generous_lifestyle: { icon: <Gift className="w-3 h-3" />, label: "Generous Lifestyle" },
+                    weekend_plans: { icon: <CalendarDays className="w-3 h-3" />, label: "Weekend Plans" },
+                    late_night_chat: { icon: <MoonStar className="w-3 h-3" />, label: "Late Night Chat" },
+                    no_drama: { icon: <ShieldCheck className="w-3 h-3" />, label: "No Drama" },
+                    is_visiting: { icon: <MapPin className="w-3 h-3" />, label: "Visiting" },
+                  };
+                  const b = BADGE_MAP[key];
+                  if (!b) return null;
+                  return (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold text-yellow-400 border border-yellow-400/50 bg-yellow-400/12 flex-shrink-0 shadow-[0_0_8px_rgba(250,204,21,0.25)]">
+                      {b.icon}{b.label}
+                    </span>
+                  );
                 })()}
-                <span className="text-white/40 text-[10px] flex-shrink-0 hidden sm:inline truncate">{selectedProfile.city}</span>
+                {/* Distance — pushed after badge */}
+                {selectedProfile.distanceKm !== undefined ? (
+                  <span className="text-primary text-[10px] font-semibold flex-shrink-0 ml-auto">
+                    {fmtDist(selectedProfile.distanceKm)}
+                  </span>
+                ) : null}
               </>
             ) : (
               <>
+                {/* Active badge filter — shown prominently right after the map-pin icon area */}
+                {(filterTonight || filterPlusOne || filterGenerous || filterWeekend || filterLateNight || filterNoDrama) && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold text-yellow-400 border border-yellow-400/50 bg-yellow-400/12 flex-shrink-0 shadow-[0_0_10px_rgba(250,204,21,0.25)]">
+                    {filterTonight && <><Moon className="w-3.5 h-3.5" fill="currentColor" />Free Tonight</>}
+                    {filterPlusOne && <><UserPlus className="w-3.5 h-3.5" />+1 Plus One</>}
+                    {filterGenerous && <><Gift className="w-3.5 h-3.5" />Generous Lifestyle</>}
+                    {filterWeekend && <><CalendarDays className="w-3.5 h-3.5" />Weekend Plans</>}
+                    {filterLateNight && <><MoonStar className="w-3.5 h-3.5" />Late Night Chat</>}
+                    {filterNoDrama && <><ShieldCheck className="w-3.5 h-3.5" />No Drama</>}
+                  </span>
+                )}
                 <span className="flex items-center gap-1 text-[10px] text-white/70">
                   <Users className="w-3 h-3 text-white/50" />
                   <span className="font-semibold text-white">{stats.total}</span> nearby
@@ -914,83 +924,84 @@ const MapPage = () => {
         </div>
       </motion.div>
 
-      {/* ── Right side: badge filter circles (under Eye / view) ── */}
+      {/* ── Right side: badge filter pills — scrollable ── */}
       <div
-        className="absolute right-4 z-30 flex flex-col gap-2 pointer-events-auto"
-        style={{ top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 5.5rem)` }}
+        className="absolute right-3 z-30 pointer-events-auto flex flex-col gap-2 overflow-y-auto"
+        style={{
+          top: `calc(max(1rem, env(safe-area-inset-top, 0px)) + 5.5rem)`,
+          bottom: "220px",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
       >
-        <button
-          type="button"
-          onClick={() => {
-            if (filterTonight) setFilterTonight(false);
-            else { setFilterTonight(true); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
-          }}
-          aria-label={filterTonight ? "Clear filter" : "Show free tonight only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${filterTonight ? "bg-yellow-400/25 border-yellow-400/60 text-yellow-400" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-            }`}
-        >
-          <Moon className="w-5 h-5" fill={filterTonight ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.5} />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (filterPlusOne) setFilterPlusOne(false);
-            else { setFilterPlusOne(true); setFilterTonight(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
-          }}
-          aria-label={filterPlusOne ? "Clear filter" : "Show +1 Plus One only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${filterPlusOne ? "bg-amber-400/25 border-amber-400/60 text-amber-400" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-            }`}
-        >
-          <UserPlus className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (filterGenerous) setFilterGenerous(false);
-            else { setFilterGenerous(true); setFilterTonight(false); setFilterPlusOne(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); }
-          }}
-          aria-label={filterGenerous ? "Clear filter" : "Show Generous Lifestyle only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${filterGenerous ? "bg-amber-400/25 border-amber-400/60 text-amber-400" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-            }`}
-        >
-          <Gift className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (filterWeekend) setFilterWeekend(false);
-            else { setFilterWeekend(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterLateNight(false); setFilterNoDrama(false); }
-          }}
-          aria-label={filterWeekend ? "Clear filter" : "Show Weekend Plans only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${filterWeekend ? "bg-primary/25 border-primary/60 text-primary" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-            }`}
-        >
-          <CalendarDays className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (filterLateNight) setFilterLateNight(false);
-            else { setFilterLateNight(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterNoDrama(false); }
-          }}
-          aria-label={filterLateNight ? "Clear filter" : "Show Late Night Chat only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${filterLateNight ? "bg-indigo-400/25 border-indigo-400/60 text-indigo-300" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-            }`}
-        >
-          <MoonStar className="w-5 h-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (filterNoDrama) setFilterNoDrama(false);
-            else { setFilterNoDrama(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); }
-          }}
-          aria-label={filterNoDrama ? "Clear filter" : "Show No Drama only"}
-          className={`w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${filterNoDrama ? "bg-teal-400/25 border-teal-400/60 text-teal-300" : "bg-black/50 border-white/10 text-white/50 hover:text-white/80 hover:border-white/20"
-            }`}
-        >
-          <ShieldCheck className="w-5 h-5" />
-        </button>
+        {([
+          {
+            key: "tonight", active: filterTonight, icon: <Moon className="w-4 h-4" fill={filterTonight ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} />,
+            label: "Free Tonight", color: "yellow",
+            toggle: () => { if (filterTonight) setFilterTonight(false); else { setFilterTonight(true); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); } },
+          },
+          {
+            key: "plusone", active: filterPlusOne, icon: <UserPlus className="w-4 h-4" />,
+            label: "+1 Plus One", color: "amber",
+            toggle: () => { if (filterPlusOne) setFilterPlusOne(false); else { setFilterPlusOne(true); setFilterTonight(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); } },
+          },
+          {
+            key: "generous", active: filterGenerous, icon: <Gift className="w-4 h-4" />,
+            label: "Generous", color: "amber",
+            toggle: () => { if (filterGenerous) setFilterGenerous(false); else { setFilterGenerous(true); setFilterTonight(false); setFilterPlusOne(false); setFilterWeekend(false); setFilterLateNight(false); setFilterNoDrama(false); } },
+          },
+          {
+            key: "weekend", active: filterWeekend, icon: <CalendarDays className="w-4 h-4" />,
+            label: "Weekend", color: "pink",
+            toggle: () => { if (filterWeekend) setFilterWeekend(false); else { setFilterWeekend(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterLateNight(false); setFilterNoDrama(false); } },
+          },
+          {
+            key: "latenight", active: filterLateNight, icon: <MoonStar className="w-4 h-4" />,
+            label: "Late Night", color: "indigo",
+            toggle: () => { if (filterLateNight) setFilterLateNight(false); else { setFilterLateNight(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterNoDrama(false); } },
+          },
+          {
+            key: "nodrama", active: filterNoDrama, icon: <ShieldCheck className="w-4 h-4" />,
+            label: "No Drama", color: "teal",
+            toggle: () => { if (filterNoDrama) setFilterNoDrama(false); else { setFilterNoDrama(true); setFilterTonight(false); setFilterPlusOne(false); setFilterGenerous(false); setFilterWeekend(false); setFilterLateNight(false); } },
+          },
+        ] as const).map((badge) => (
+          <button
+            key={badge.key}
+            type="button"
+            onClick={badge.toggle}
+            aria-label={badge.label}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "7px 10px 7px 8px",
+              borderRadius: 20,
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              whiteSpace: "nowrap",
+              transition: "all 0.18s",
+              cursor: "pointer",
+              border: badge.active
+                ? "1.5px solid rgba(250,204,21,0.7)"
+                : "1.5px solid rgba(255,255,255,0.12)",
+              background: badge.active
+                ? "rgba(250,204,21,0.18)"
+                : "rgba(0,0,0,0.55)",
+              color: badge.active ? "rgb(250,204,21)" : "rgba(255,255,255,0.55)",
+              boxShadow: badge.active
+                ? "0 0 14px rgba(250,204,21,0.3), 0 2px 8px rgba(0,0,0,0.4)"
+                : "0 2px 8px rgba(0,0,0,0.3)",
+            }}
+          >
+            <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+              {badge.icon}
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.02em" }}>
+              {badge.label}
+            </span>
+          </button>
+        ))}
       </div>
 
       {/* ── Radius slider (under badge / stats) ── */}
@@ -1021,10 +1032,159 @@ const MapPage = () => {
 
       {/* ── Bottom UI ── */}
       <div className="absolute bottom-0 left-0 right-0 z-20" style={{ paddingBottom: `env(safe-area-inset-bottom, 0px)` }}>
-        <div className="px-4 pb-10 sm:pb-6">
+        <div className="px-3 pb-6 sm:pb-4 flex flex-col gap-2">
 
-          {/* Avatar strip — extra top padding so circles and badges (-top-1) aren't clipped */}
-          <div className="flex items-end justify-center gap-4 mb-4 overflow-x-auto scroll-touch px-2 pt-5" style={{ scrollbarWidth: "none" }}>
+          {/* ── Profile card — shown when a marker is selected ── */}
+          <AnimatePresence>
+            {selectedProfile && (
+              <motion.div
+                key={selectedProfile.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 16 }}
+                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                className="bg-black/80 backdrop-blur-2xl border border-white/12 rounded-3xl overflow-hidden shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
+              >
+                <div className="flex gap-0">
+                  {/* Profile image — tap to open full profile page */}
+                  <button
+                    onClick={() => {
+                      if (!user) { showGuestPrompt("profile"); return; }
+                      navigate(`/profile/${selectedProfile.id}`);
+                    }}
+                    aria-label={`Open ${selectedProfile.name}'s profile`}
+                    className="relative flex-shrink-0 active:opacity-80 transition-opacity"
+                    style={{ width: 100, height: 120 }}
+                  >
+                    <img
+                      src={selectedProfile.avatar_url || selectedProfile.image || "/placeholder.svg"}
+                      alt={selectedProfile.name}
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: "50% 15%" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30 pointer-events-none" />
+                    {/* Badge overlay on image */}
+                    {(() => {
+                      const key = getPrimaryBadgeKey(selectedProfile as any);
+                      if (!key) return null;
+                      const icons: Record<string, React.ReactNode> = {
+                        available_tonight: <Moon className="w-3 h-3" fill="currentColor" />,
+                        is_plusone: <UserPlus className="w-3 h-3" />,
+                        generous_lifestyle: <Gift className="w-3 h-3" />,
+                        weekend_plans: <CalendarDays className="w-3 h-3" />,
+                        late_night_chat: <MoonStar className="w-3 h-3" />,
+                        no_drama: <ShieldCheck className="w-3 h-3" />,
+                        is_visiting: <MapPin className="w-3 h-3" />,
+                      };
+                      return (
+                        <div className="absolute top-2 left-2 flex items-center gap-1 bg-yellow-400/90 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                          <span className="text-black">{icons[key]}</span>
+                        </div>
+                      );
+                    })()}
+                    {/* Online dot */}
+                    {isOnline(selectedProfile.last_seen_at) && (
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400" />
+                        </span>
+                      </div>
+                    )}
+                    {/* Tap hint */}
+                    <div className="absolute bottom-1 right-1 bg-black/50 rounded-full p-0.5">
+                      <ChevronUp className="w-3 h-3 text-white/60 rotate-45" />
+                    </div>
+                  </button>
+
+                  {/* Info + actions */}
+                  <div className="flex-1 flex flex-col justify-between px-3 py-3 min-w-0">
+                    <div>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="text-white font-bold text-base truncate">{selectedProfile.name}, {selectedProfile.age}</span>
+                        {likedIds.has(selectedProfile.id) && likedMeIds.has(selectedProfile.id) && (
+                          <span className="text-[9px] font-bold text-green-400 bg-green-400/15 border border-green-400/30 px-1.5 py-0.5 rounded-full flex-shrink-0">Match</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-white/50 text-[11px] mt-0.5">
+                        <MapPin className="w-2.5 h-2.5" />
+                        <span className="truncate">{selectedProfile.city}{selectedProfile.distanceKm !== undefined ? ` · ${fmtDist(selectedProfile.distanceKm)}` : ""}</span>
+                      </div>
+                      {/* Badge pill */}
+                      {(() => {
+                        const key = getPrimaryBadgeKey(selectedProfile as any);
+                        if (!key) return null;
+                        const labels: Record<string, string> = {
+                          available_tonight: "Free Tonight",
+                          is_plusone: "+1 Plus One",
+                          generous_lifestyle: "Generous Lifestyle",
+                          weekend_plans: "Weekend Plans",
+                          late_night_chat: "Late Night Chat",
+                          no_drama: "No Drama",
+                          is_visiting: "Visiting",
+                        };
+                        return (
+                          <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold text-yellow-400 border border-yellow-400/30 bg-yellow-400/10">
+                            {labels[key] || key}
+                          </span>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2 mt-2">
+                      <button
+                        onClick={() => handleLike(selectedProfile)}
+                        aria-label={likedIds.has(selectedProfile.id) ? "Already liked" : `Like ${selectedProfile.name}`}
+                        className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all active:scale-90 ${likedIds.has(selectedProfile.id) ? "bg-pink-500/20 border-pink-400/50 text-pink-400" : "bg-white/8 border-white/15 text-white/60 hover:text-pink-400"}`}
+                      >
+                        <Heart className="w-4 h-4" fill={likedIds.has(selectedProfile.id) ? "currentColor" : "none"} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!user) { showGuestPrompt("profile"); return; }
+                          if (likedIds.has(selectedProfile.id) && !likedMeIds.has(selectedProfile.id)) {
+                            setAttentionProfile(selectedProfile);
+                          } else {
+                            navigate(`/profile/${selectedProfile.id}`);
+                          }
+                        }}
+                        aria-label={`View ${selectedProfile.name}'s profile`}
+                        className="flex-1 h-9 rounded-full gradient-love border-0 flex items-center justify-center gap-1.5 text-white text-xs font-bold transition-all active:scale-95 shadow-[0_0_14px_rgba(180,80,150,0.35)]"
+                      >
+                        <ChevronUp className="w-4 h-4" /> View Profile
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (superLikedIds.has(selectedProfile.id)) {
+                            toast("Already Super Liked!", { description: `You already super liked ${selectedProfile.name}` });
+                          } else {
+                            handleSuperLike(selectedProfile);
+                          }
+                        }}
+                        aria-label={`Super Like ${selectedProfile.name}`}
+                        className={`w-9 h-9 rounded-full border flex items-center justify-center transition-all active:scale-90 ${superLikedIds.has(selectedProfile.id) ? "bg-amber-400/20 border-amber-400/50 text-amber-400" : "bg-white/8 border-white/15 text-white/60 hover:text-amber-400"}`}
+                      >
+                        <Star className="w-4 h-4" fill={superLikedIds.has(selectedProfile.id) ? "currentColor" : "none"} />
+                      </button>
+                      {likedIds.has(selectedProfile.id) && likedMeIds.has(selectedProfile.id) && (
+                        <button
+                          onClick={() => setMatchDialog(selectedProfile)}
+                          aria-label={`Unlock WhatsApp with ${selectedProfile.name}`}
+                          className="w-9 h-9 rounded-full bg-green-500/20 border border-green-400/50 text-green-400 flex items-center justify-center transition-all active:scale-90"
+                        >
+                          <MessageCircle className="w-4 h-4" fill="currentColor" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Avatar strip — nearby profiles ── */}
+          <div className="flex items-end justify-center gap-3 overflow-x-auto scroll-touch px-2 pt-2 pb-1" style={{ scrollbarWidth: "none" }}>
             {footerProfiles.map((profile, idx) => {
               const isActive = idx === selectedIndex;
               const isLiked = likedIds.has(profile.id);
@@ -1109,67 +1269,6 @@ const MapPage = () => {
             })}
           </div>
 
-          {/* Action buttons — diamond layout */}
-          {selectedProfile && (
-            <div className="flex items-center justify-center gap-3">
-              {/* Like */}
-              <button
-                onClick={() => handleLike(selectedProfile)}
-                aria-label={likedIds.has(selectedProfile.id) ? "Already liked" : `Like ${selectedProfile.name}`}
-                className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all active:scale-90 hover:scale-105 shadow-lg ${likedIds.has(selectedProfile.id)
-                  ? "bg-pink-500/20 border-pink-400/50 text-pink-400"
-                  : "bg-black/50 border-white/10 text-white/70 hover:text-pink-400 hover:border-pink-400/40"
-                  }`}
-              >
-                <Heart className="w-5 h-5" fill={likedIds.has(selectedProfile.id) ? "currentColor" : "none"} />
-              </button>
-
-              {/* View Profile (centre — bigger) */}
-              <button
-                onClick={() => {
-                  if (!user) { showGuestPrompt("profile"); return; }
-                  if (likedIds.has(selectedProfile.id) && !likedMeIds.has(selectedProfile.id)) {
-                    setAttentionProfile(selectedProfile);
-                  } else {
-                    navigate(`/profile/${selectedProfile.id}`);
-                  }
-                }}
-                aria-label={`View ${selectedProfile.name}'s profile`}
-                className="w-14 h-14 rounded-full gradient-love border-0 flex items-center justify-center transition-all active:scale-90 hover:scale-105 shadow-[0_0_20px_rgba(180,80,150,0.4)]"
-              >
-                <ChevronUp className="w-6 h-6 text-white" />
-              </button>
-
-              {/* Super Like */}
-              <button
-                onClick={() => {
-                  if (superLikedIds.has(selectedProfile.id)) {
-                    toast("Already Super Liked!", { description: `You already super liked ${selectedProfile.name}` });
-                  } else {
-                    handleSuperLike(selectedProfile);
-                  }
-                }}
-                aria-label={`Super Like ${selectedProfile.name}`}
-                className={`w-12 h-12 rounded-full backdrop-blur-md border flex items-center justify-center transition-all active:scale-90 hover:scale-105 shadow-lg ${superLikedIds.has(selectedProfile.id)
-                  ? "bg-amber-400/20 border-amber-400/50 text-amber-400"
-                  : "bg-black/50 border-white/10 text-white/70 hover:text-amber-400 hover:border-amber-400/40"
-                  }`}
-              >
-                <Star className="w-5 h-5" fill={superLikedIds.has(selectedProfile.id) ? "currentColor" : "none"} />
-              </button>
-
-              {/* WhatsApp — mutual match only */}
-              {likedIds.has(selectedProfile.id) && likedMeIds.has(selectedProfile.id) && (
-                <button
-                  onClick={() => setMatchDialog(selectedProfile)}
-                  aria-label={`Unlock WhatsApp with ${selectedProfile.name}`}
-                  className="w-12 h-12 rounded-full bg-green-500/20 border border-green-400/50 text-green-400 flex items-center justify-center transition-all active:scale-90 hover:scale-105 shadow-lg"
-                >
-                  <MessageCircle className="w-5 h-5" fill="currentColor" />
-                </button>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
@@ -1351,6 +1450,12 @@ const MapPage = () => {
           0%,100% { opacity: 0.25; transform: scale(1); }
           50%      { opacity: 0.55; transform: scale(1.08); }
         }
+        @keyframes badgeHighlightPulse {
+          0%,100% { opacity: 0.6; transform: scale(1); }
+          50%      { opacity: 1;   transform: scale(1.12); }
+        }
+        /* Hide scrollbar on badge panel */
+        .badge-panel::-webkit-scrollbar { display: none; }
       `}</style>
     </div>
   );

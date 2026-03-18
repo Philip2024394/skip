@@ -155,7 +155,8 @@ const WhatsAppNumberCollection: React.FC<WhatsAppCollectionProps> = ({
       ];
       const completionScore = Math.round((completionFields.filter(Boolean).length / completionFields.length) * 100);
 
-      // Create or update WhatsApp lead
+      // Upsert WhatsApp lead — conflict on whatsapp_number prevents duplicates
+      // from the same number being submitted multiple times (e.g. re-login).
       const leadData = {
         name: formData.name,
         phone: formData.phone,
@@ -171,12 +172,14 @@ const WhatsAppNumberCollection: React.FC<WhatsAppCollectionProps> = ({
         profile_completion: completionScore,
         verified: false,
         whatsapp_verified: false,
-        status: 'pending'
+        status: 'pending',
+        ...(userId ? { user_id: userId } : {}),
+        last_seen_at: new Date().toISOString(),
       };
 
       const { data, error } = await (supabase as any)
         .from('whatsapp_leads')
-        .insert([leadData])
+        .upsert([leadData], { onConflict: 'whatsapp_number', ignoreDuplicates: false })
         .select()
         .single();
 
@@ -190,19 +193,21 @@ const WhatsAppNumberCollection: React.FC<WhatsAppCollectionProps> = ({
         onWhatsAppCollected(formData.whatsapp_number);
       }
 
-      // Log analytics event
-      await (supabase as any)
-        .from('whatsapp_analytics')
-        .insert([{
-          event_type: 'whatsapp_number_collected',
-          user_id: userId || data.id,
-          metadata: {
-            source: leadData.source,
-            profile_completion: completionScore,
-            interests_count: formData.interests.length
-          },
-          timestamp: new Date().toISOString()
-        }]);
+      // Log analytics only on genuinely new leads (upsert inserts, not updates)
+      if (data) {
+        await (supabase as any)
+          .from('whatsapp_analytics')
+          .upsert([{
+            event_type: 'whatsapp_number_collected',
+            user_id: userId || data.id,
+            metadata: {
+              source: leadData.source,
+              profile_completion: completionScore,
+              interests_count: formData.interests.length,
+            },
+            timestamp: new Date().toISOString(),
+          }], { onConflict: 'user_id,event_type', ignoreDuplicates: true });
+      }
 
     } catch (error) {
       console.error('Error submitting WhatsApp number:', error);

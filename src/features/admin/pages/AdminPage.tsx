@@ -255,6 +255,7 @@ const AdminPage = () => {
       if (userFilter === "hidden") return !!(p.hidden_until && new Date(p.hidden_until) > new Date());
       if (userFilter === "spotlight") return p.is_spotlight;
       if (userFilter === "mock") return !!p.is_mock;
+      if (userFilter === "verified") return !!(p as any).is_verified;
       return true;
     });
     list = [...list].sort((a, b) => {
@@ -274,6 +275,7 @@ const AdminPage = () => {
     hidden: profiles.filter(p => !!(p.hidden_until && new Date(p.hidden_until) > new Date())).length,
     spotlight: profiles.filter(p => p.is_spotlight).length,
     mock: profiles.filter(p => !!p.is_mock).length,
+    verified: profiles.filter(p => !!(p as any).is_verified).length,
   }), [profiles]);
 
   // ── App Alerts computation ───────────────────────────────────────
@@ -366,6 +368,21 @@ const AdminPage = () => {
       toast.success(mock ? "Marked as mock profile" : "Removed mock flag");
       setProfiles(p => p.map(u => u.id === userId ? { ...u, is_mock: mock } : u));
       if (selectedUser?.id === userId) setSelectedUser(u => u ? { ...u, is_mock: mock } : u);
+    }
+    setActionLoading(null);
+  };
+
+  const handleVerify = async (userId: string, verify: boolean) => {
+    setActionLoading(`verify-${userId}`);
+    const { error } = await (supabase.from("profiles").update as any)({
+      is_verified: verify,
+      verification_status: verify ? "approved" : null,
+    }).eq("id", userId);
+    if (error) rlsErr(error);
+    else {
+      toast.success(verify ? "✅ User verified" : "Verification removed");
+      setProfiles(p => p.map(u => u.id === userId ? { ...u, is_verified: verify, verification_status: verify ? "approved" : null } : u));
+      if (selectedUser?.id === userId) setSelectedUser(u => u ? { ...u, is_verified: verify } : u);
     }
     setActionLoading(null);
   };
@@ -752,7 +769,7 @@ const AdminPage = () => {
 
             {/* Filter chips */}
             <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              {(["all", "active", "banned", "hidden", "spotlight", "mock"] as const).map(f => (
+              {(["all", "active", "banned", "hidden", "spotlight", "mock", "verified"] as const).map(f => (
                 <button
                   key={f}
                   onClick={() => setUserFilter(f)}
@@ -801,6 +818,7 @@ const AdminPage = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="text-white font-semibold text-sm truncate">{profile.name}, {profile.age}</p>
+                    {(profile as any).is_verified && <BadgeCheck className="w-3.5 h-3.5 text-sky-400 flex-shrink-0" />}
                     {profile.is_banned && <Badge variant="destructive" className="text-[8px] px-1 py-0 h-3.5">Ban</Badge>}
                     {profile.is_spotlight && <Badge className="text-[8px] px-1 py-0 h-3.5 bg-amber-500 border-0 text-white">⭐</Badge>}
                     {profile.is_mock && <Badge className="text-[8px] px-1 py-0 h-3.5 bg-purple-500 border-0 text-white">Mock</Badge>}
@@ -808,6 +826,14 @@ const AdminPage = () => {
                   </div>
                   <p className="text-white/40 text-[10px] truncate">{profile.gender} · {profile.country || "Unknown"} · {profile.whatsapp}</p>
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleVerify(profile.id, !(profile as any).is_verified); }}
+                  disabled={actionLoading === `verify-${profile.id}`}
+                  className={`flex-shrink-0 flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all border ${(profile as any).is_verified ? "bg-sky-500/15 border-sky-500/40 text-sky-400 hover:bg-sky-500/25" : "bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/70"}`}
+                >
+                  <BadgeCheck className="w-3 h-3" />
+                  {(profile as any).is_verified ? "Verified" : "Verify"}
+                </button>
                 <ChevronDown className="w-4 h-4 text-white/20 flex-shrink-0 -rotate-90" />
               </motion.div>
             ))}

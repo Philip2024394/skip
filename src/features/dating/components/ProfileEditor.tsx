@@ -57,6 +57,12 @@ interface ProfileData {
   first_date_idea: string | null;
   first_date_places: DatePlace[];
   languages: string[];
+  is_verified?: boolean;
+  intent: "marriage" | "dating" | "unsure" | "";
+  is_visiting: boolean;
+  visiting_city: string;
+  visiting_badge_type: "visiting" | "otw" | "just_arrived";
+  visiting_badge_expires_at: string | null;
   is_plusone: boolean;
   generous_lifestyle: boolean;
   weekend_plans: boolean;
@@ -79,7 +85,7 @@ interface ProfileData {
 
 const ProfileEditor = () => {
   const navigate = useNavigate();
-  const [editorStep, setEditorStep] = useState<"profile" | "details">("profile");
+  const [editorStep, setEditorStep] = useState<"photos" | "about" | "details" | "status">("photos");
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -208,10 +214,18 @@ const ProfileEditor = () => {
         interests: ((row.interests as string[]) || []).slice(0, 8),
         orientation: (row.orientation as string) || "",
         contact_preference: (row.contact_preference as string) || "whatsapp",
+        residing_country: (row.residing_country as string) || null,
+        visited_countries: ((row.visited_countries as string[]) || []),
         basic_info: (row.basic_info as Record<string, unknown>) || {},
         lifestyle_info: (row.lifestyle_info as Record<string, unknown>) || {},
         relationship_goals: (row.relationship_goals as Record<string, unknown>) || {},
         ...normalizedBadges,
+        intent: ((row.intent as string) || "") as "marriage" | "dating" | "unsure" | "",
+        is_visiting: !!(row.is_visiting as boolean),
+        visiting_city: (row.visiting_city as string) || "",
+        visiting_badge_type: ((row.visiting_badge_type as string) || "visiting") as "visiting" | "otw" | "just_arrived",
+        visiting_badge_expires_at: (row.visiting_badge_expires_at as string) || null,
+        is_verified: !!(row.is_verified as boolean),
       });
       setSchemaHasBadgeColumns(useBadgeColumns);
       setLoading(false);
@@ -224,11 +238,11 @@ const ProfileEditor = () => {
   };
 
   const clearOtherBadges = (keep: keyof Pick<ProfileData,
-    "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
+    "is_visiting" | "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
   >) => {
     const keys: Array<keyof Pick<ProfileData,
-      "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
-    >> = ["available_tonight", "is_plusone", "generous_lifestyle", "weekend_plans", "late_night_chat", "no_drama"];
+      "is_visiting" | "available_tonight" | "is_plusone" | "generous_lifestyle" | "weekend_plans" | "late_night_chat" | "no_drama"
+    >> = ["is_visiting", "available_tonight", "is_plusone", "generous_lifestyle", "weekend_plans", "late_night_chat", "no_drama"];
     for (const k of keys) {
       if (k !== keep) update(k, false);
     }
@@ -395,6 +409,11 @@ const ProfileEditor = () => {
         basic_info: profile.basic_info as unknown as import("@/integrations/supabase/types").Json,
         lifestyle_info: profile.lifestyle_info as unknown as import("@/integrations/supabase/types").Json,
         relationship_goals: profile.relationship_goals as unknown as import("@/integrations/supabase/types").Json,
+        intent: profile.intent || null,
+        is_visiting: profile.is_visiting,
+        visiting_city: profile.visiting_city || null,
+        visiting_badge_type: profile.visiting_badge_type || null,
+        visiting_badge_expires_at: profile.visiting_badge_expires_at || null,
         is_plusone: profile.is_plusone,
         generous_lifestyle: profile.generous_lifestyle,
         ...(schemaHasBadgeColumns && {
@@ -473,8 +492,66 @@ const ProfileEditor = () => {
 
   const isMainImage = (idx: number) => profile.images[idx] === profile.avatar_url;
 
+  // Completion score
+  const completionItems = [
+    profile.images.length >= 2,
+    profile.images.length >= 4,
+    !!profile.name,
+    !!(profile.bio && profile.bio.length > 20),
+    !!profile.voice_intro_url,
+    !!(profile.basic_info as any)?.height,
+    !!(profile.basic_info as any)?.education,
+    !!(profile.lifestyle_info as any)?.smoking,
+    !!(profile.relationship_goals as any)?.looking_for,
+    !!(profile.relationship_goals as any)?.religion,
+    !!profile.intent,
+    !!profile.latitude,
+  ];
+  const completionScore = Math.round((completionItems.filter(Boolean).length / completionItems.length) * 100);
+
   return (
     <div className="space-y-3 px-3 sm:px-4" style={{ paddingBottom: "100px" }}>
+      {/* ── Completion Banner ───────────────────────────────────────── */}
+      <div style={{
+        margin: "8px 0 0",
+        padding: "10px 14px",
+        borderRadius: 14,
+        background: completionScore >= 80
+          ? "rgba(34,197,94,0.12)"
+          : "rgba(236,72,153,0.10)",
+        border: completionScore >= 80
+          ? "1px solid rgba(34,197,94,0.3)"
+          : "1px solid rgba(236,72,153,0.3)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+          <p style={{ color: "white", fontSize: 12, fontWeight: 700, margin: 0 }}>
+            {completionScore >= 80 ? "🌟 Great profile!" : "🚀 Complete your profile"}
+          </p>
+          <span style={{
+            fontSize: 11,
+            fontWeight: 800,
+            color: completionScore >= 80 ? "#86efac" : "#f9a8d4",
+          }}>{completionScore}%</span>
+        </div>
+        <div style={{
+          height: 5, borderRadius: 99, background: "rgba(255,255,255,0.1)", overflow: "hidden", marginBottom: 5,
+        }}>
+          <div style={{
+            height: "100%",
+            width: `${completionScore}%`,
+            borderRadius: 99,
+            background: completionScore >= 80
+              ? "linear-gradient(90deg,#22c55e,#86efac)"
+              : "linear-gradient(90deg,#EC4899,#8B5CF6)",
+            transition: "width 0.4s",
+          }} />
+        </div>
+        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 10, margin: 0 }}>
+          {completionScore >= 80
+            ? "Your profile stands out — you're getting top visibility!"
+            : `Profiles with 80%+ completion get up to 70% more likes. Keep going! 💪`}
+        </p>
+      </div>
       {/* ── Step Navigation ─────────────────────────────────────────── */}
       <div style={{
         position: "sticky",
@@ -486,8 +563,10 @@ const ProfileEditor = () => {
       }}>
         <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
           {[
-            { key: "profile", emoji: "👤", label: "Profile" },
+            { key: "photos",  emoji: "📸", label: "Photos" },
+            { key: "about",   emoji: "👤", label: "About" },
             { key: "details", emoji: "🌿", label: "Details" },
+            { key: "status",  emoji: "✨", label: "Status" },
           ].map(({ key, emoji, label }) => (
             <button
               key={key}
@@ -520,13 +599,27 @@ const ProfileEditor = () => {
         </div>
       </div>
 
-      {editorStep === "profile" && (
+      {editorStep === "photos" && (
         <>
+          {/* Section header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 18 }}>📸</span>
+            <div>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 800, margin: 0 }}>Your Photos</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>Profiles with 4+ photos get 3× more swipes. Your first photo is your first impression!</p>
+            </div>
+          </div>
           {/* Photo Gallery */}
           <div>
             <Label className="text-white/50 text-xs mb-1 block">
               Photos (min 2, max 5) — tap image to adjust position
             </Label>
+            {profile.is_verified && (
+              <div className="flex items-center gap-2 mb-2 px-3 py-2 rounded-xl bg-sky-500/10 border border-sky-500/25">
+                <span className="text-sky-400 text-sm">✅</span>
+                <p className="text-sky-400/80 text-[10px] leading-snug">Your main photo was confirmed during verification and is locked. Additional photos can still be added or changed.</p>
+              </div>
+            )}
             <p className="text-[10px] text-white/40 mb-2">⭐ = set as main swipe card image</p>
             <div className="grid grid-cols-5 gap-2">
               {Array.from({ length: 5 }).map((_, idx) => {
@@ -568,13 +661,15 @@ const ProfileEditor = () => {
                               }}
                             />
                           </div>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
-                            className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                          {!isMain && (
+                          {!(isMain && profile.is_verified) && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); removeImage(idx); }}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          )}
+                          {!isMain && !profile.is_verified && (
                             <button
                               onClick={(e) => { e.stopPropagation(); setAsMain(idx); }}
                               className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
@@ -712,12 +807,35 @@ const ProfileEditor = () => {
               ⚠️ Please add at least 2 photos (1 main + 1 profile) to save
             </p>
           )}
+        </>
+      )}
 
+      {editorStep === "about" && (
+        <>
+          {/* Section header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 18 }}>👤</span>
+            <div>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 800, margin: 0 }}>About You</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>A great bio gets 50% more messages. Be genuine — tell people who you really are!</p>
+            </div>
+          </div>
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-3 mt-6">
             <div>
-              <Label className="text-white/50 text-xs mb-1 block">Name</Label>
-              <Input value={profile.name} onChange={(e) => update("name", e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none" />
+              <Label className="text-white/50 text-xs mb-1 block flex items-center gap-1.5">
+                Name
+                {profile.is_verified && <span className="inline-flex items-center gap-1 text-sky-400 text-[9px] font-bold"><span>✅</span>Verified — locked</span>}
+              </Label>
+              <Input
+                value={profile.name}
+                onChange={(e) => update("name", e.target.value)}
+                disabled={!!profile.is_verified}
+                className={`w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none ${profile.is_verified ? "opacity-60 cursor-not-allowed" : ""}`}
+              />
+              {profile.is_verified && (
+                <p className="text-sky-400/60 text-[10px] mt-1">Your name was confirmed during verification and cannot be changed.</p>
+              )}
             </div>
             <div>
               <Label className="text-white/50 text-xs mb-1 block">Age</Label>
@@ -739,6 +857,32 @@ const ProfileEditor = () => {
                 <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue /></SelectTrigger>
                 <SelectContent>{LOOKING_FOR.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Serious Intent */}
+          <div>
+            <Label className="text-white/50 text-xs mb-1 block">💍 Serious Intent <span className="text-white/25 font-normal normal-case">(shown prominently on your profile)</span></Label>
+            <div className="flex gap-2">
+              {([
+                { value: "marriage", label: "💍 Open to Marriage", color: "amber" },
+                { value: "dating",   label: "💕 Dating First",     color: "pink"  },
+                { value: "unsure",   label: "🤔 Not Sure Yet",     color: "slate" },
+              ] as const).map(({ value, label, color }) => (
+                <button
+                  key={value}
+                  onClick={() => update("intent", profile.intent === value ? "" : value)}
+                  className={`flex-1 px-2 py-2 rounded-xl text-[10px] font-bold border transition-all ${
+                    profile.intent === value
+                      ? color === "amber" ? "bg-amber-500/25 border-amber-400/60 text-amber-200"
+                        : color === "pink" ? "bg-pink-500/25 border-pink-400/60 text-pink-200"
+                        : "bg-white/15 border-white/30 text-white/80"
+                      : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -869,15 +1013,23 @@ const ProfileEditor = () => {
 
       {editorStep === "details" && (
         <>
+          {/* Section header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 18 }}>🌿</span>
+            <div>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 800, margin: 0 }}>About Your Life</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>Details about your lifestyle help find truly compatible matches. The more you share, the better your matches!</p>
+            </div>
+          </div>
           {/* Lifestyle Section */}
           <div className="pb-2">
             <BasicInfoEditor
               value={profile.basic_info as any}
-              onChange={(v) => update("basic_info", v)}
+              onChange={(v) => update("basic_info", v as unknown as Record<string, unknown>)}
             />
             <LifestyleEditor
               value={profile.lifestyle_info as any}
-              onChange={(v) => update("lifestyle_info", v)}
+              onChange={(v) => update("lifestyle_info", v as unknown as Record<string, unknown>)}
             />
           </div>
 
@@ -885,7 +1037,7 @@ const ProfileEditor = () => {
           <div className="pb-2">
             <RelationshipGoalsEditor
               value={profile.relationship_goals as any}
-              onChange={(v) => update("relationship_goals", v)}
+              onChange={(v) => update("relationship_goals", v as unknown as Record<string, unknown>)}
             />
           </div>
 
@@ -999,6 +1151,19 @@ const ProfileEditor = () => {
             )}
           </div>
 
+        </>
+      )}
+
+      {editorStep === "status" && (
+        <>
+          {/* Section header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+            <span style={{ fontSize: 18 }}>✨</span>
+            <div>
+              <p style={{ color: "white", fontSize: 13, fontWeight: 800, margin: 0 }}>Status & Badges</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>Badges boost your visibility and tell people your vibe immediately. Active badges increase profile views by 40%!</p>
+            </div>
+          </div>
           <div className="flex items-center justify-between">
             <p className="text-white/40 text-xs font-semibold">Badges</p>
             <button
@@ -1047,6 +1212,116 @@ const ProfileEditor = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Travel Badge */}
+          {(() => {
+            const INDO_CITIES = ["Bali","Jogja","Jakarta","Surabaya","Bandung","Lombok","Medan","Makassar","Semarang","Malang","Manado","Labuan Bajo","Solo","Batam","Palembang","Balikpapan","Denpasar","Flores","Raja Ampat","Komodo"];
+            const BADGE_TYPES: { key: "otw" | "just_arrived" | "visiting"; label: string; icon: string; desc: string }[] = [
+              { key: "otw",           label: "On the Way",   icon: "🛫", desc: "Otw [City]" },
+              { key: "just_arrived",  label: "Just Arrived", icon: "🛬", desc: "🛬 [City]" },
+              { key: "visiting",      label: "Visiting",     icon: "📍", desc: "📍 [City]" },
+            ];
+
+            const expiresAt = profile.visiting_badge_expires_at ? new Date(profile.visiting_badge_expires_at) : null;
+            const isLive = profile.is_visiting && expiresAt && expiresAt > new Date();
+            const hoursLeft = expiresAt ? Math.max(0, Math.round((expiresAt.getTime() - Date.now()) / 3600000)) : 0;
+
+            const activateBadge = () => {
+              const expires = new Date(Date.now() + 48 * 3600 * 1000).toISOString();
+              update("is_visiting", true);
+              update("visiting_badge_expires_at", expires);
+              clearOtherBadges("is_visiting");
+            };
+            const deactivateBadge = () => {
+              update("is_visiting", false);
+              update("visiting_city", "");
+              update("visiting_badge_expires_at", null);
+            };
+
+            const previewLabel =
+              profile.visiting_badge_type === "otw" ? `Otw ${profile.visiting_city || "…"}` :
+              profile.visiting_badge_type === "just_arrived" ? `🛬 ${profile.visiting_city || "…"}` :
+              `📍 ${profile.visiting_city || "…"}`;
+
+            return (
+              <div className="rounded-xl p-3 space-y-3 bg-white/5 border border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">✈️</span>
+                    <div>
+                      <p className="text-white text-sm font-medium">Travel Badge</p>
+                      <p className="text-white/40 text-[10px]">Show locals your travel status · auto-clears in 48h</p>
+                    </div>
+                  </div>
+                  {isLive && (
+                    <button
+                      onClick={deactivateBadge}
+                      className="text-[10px] font-bold text-red-400/80 border border-red-400/30 rounded-lg px-2 py-1"
+                    >Clear</button>
+                  )}
+                </div>
+
+                {/* Badge type selector */}
+                <div className="flex gap-2">
+                  {BADGE_TYPES.map((bt) => {
+                    const sel = profile.visiting_badge_type === bt.key;
+                    return (
+                      <button
+                        key={bt.key}
+                        onClick={() => update("visiting_badge_type", bt.key)}
+                        className="flex-1 flex flex-col items-center gap-0.5 rounded-xl py-2 border transition-all"
+                        style={{
+                          background: sel ? "rgba(56,189,248,0.15)" : "rgba(255,255,255,0.04)",
+                          borderColor: sel ? "rgba(56,189,248,0.5)" : "rgba(255,255,255,0.1)",
+                        }}
+                      >
+                        <span className="text-lg">{bt.icon}</span>
+                        <span className="text-[10px] font-bold" style={{ color: sel ? "#7dd3fc" : "rgba(255,255,255,0.5)" }}>{bt.label}</span>
+                        <span className="text-[8px]" style={{ color: "rgba(255,255,255,0.25)" }}>{bt.desc}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* City dropdown */}
+                <select
+                  value={profile.visiting_city}
+                  onChange={(e) => update("visiting_city", e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:border-sky-500/50 focus:outline-none"
+                  style={{ color: profile.visiting_city ? "white" : "rgba(255,255,255,0.3)" }}
+                >
+                  <option value="" disabled style={{ color: "#555" }}>🥂 Select a city…</option>
+                  {INDO_CITIES.map((c) => (
+                    <option key={c} value={c} style={{ color: "white", background: "#111" }}>🥂 {c}</option>
+                  ))}
+                </select>
+
+                {/* Activate / expiry */}
+                {!isLive ? (
+                  <button
+                    onClick={activateBadge}
+                    disabled={!profile.visiting_city}
+                    className="w-full py-2 rounded-xl text-sm font-bold transition-all"
+                    style={{
+                      background: profile.visiting_city ? "rgba(56,189,248,0.25)" : "rgba(255,255,255,0.05)",
+                      border: profile.visiting_city ? "1px solid rgba(56,189,248,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                      color: profile.visiting_city ? "#7dd3fc" : "rgba(255,255,255,0.3)",
+                    }}
+                  >
+                    Activate for 48h
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 bg-sky-400/10 border border-sky-400/30 rounded-lg px-3 py-2">
+                    <span className="text-sm">✅</span>
+                    <div>
+                      <p className="text-sky-300 text-xs font-bold">Badge live · <span className="font-normal">{previewLabel}</span></p>
+                      <p className="text-sky-400/60 text-[10px]">{hoursLeft}h remaining · auto-clears after 48h</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Free Tonight */}
           <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
@@ -1331,7 +1606,7 @@ const ProfileEditor = () => {
         zIndex: 50,
       }}>
         {(() => {
-          const steps = ["profile", "details"];
+          const steps = ["photos", "about", "details", "status"];
           const currentIdx = steps.indexOf(editorStep);
           const isFirst = currentIdx === 0;
           const isLast = currentIdx === steps.length - 1;

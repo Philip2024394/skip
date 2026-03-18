@@ -28,6 +28,12 @@ export interface RelationshipGoals {
   timeline?: string;
   date_type?: string;
   marital_status?: string;
+  /** Type of their last relationship (optional) */
+  last_relationship_type?: string;
+  /** How long their last relationship lasted (optional) */
+  relationship_length?: string;
+  /** How long they have been single (optional) */
+  single_for?: string;
   religion?: string;
   prayer?: string;
   hijab?: string;
@@ -53,6 +59,11 @@ export interface Profile {
   latitude?: number;
   longitude?: number;
   available_tonight?: boolean;
+  is_visiting?: boolean;
+  visiting_city?: string | null;
+  visiting_badge_type?: "visiting" | "otw" | "just_arrived" | null;
+  visiting_badge_expires_at?: string | null;
+  intent?: "marriage" | "dating" | "unsure";
   voice_intro_url?: string | null;
   expires_at?: string | null;
   is_rose?: boolean;
@@ -90,4 +101,6 @@ export interface Profile {
   is_mock?: boolean;
   mock_online_hours?: number | null;
   mock_offline_days?: number[] | null;
+  app_user_id?: string;
+  bestie_ids?: string[];
 }

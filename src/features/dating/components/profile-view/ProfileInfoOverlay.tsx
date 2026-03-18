@@ -1,12 +1,18 @@
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
-import ProfileBadge from "@/features/dating/components/ProfileBadge";
+
+import { calcValuesMatch } from "@/shared/utils/valuesQuiz";
 // import VirtualGiftsDisplay from "@/components/gifts/VirtualGiftsDisplay";
 
 interface ProfileInfoPanelProps {
   profile: any;
   onClose: () => void;
+  currentUserQuiz?: Record<string, unknown> | null;
+  allProfiles?: any[];
+  onBestieRequest?: (profile: any) => void;
+  isBestie?: boolean;
+  isBestiePending?: boolean;
 }
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: string }) =>
@@ -86,6 +92,12 @@ const CompatibilityBar = ({ percent, insight }: { percent: number; insight: stri
 );
 
 const BADGE_INFO: Record<string, { icon: string; label: string; meaning: string; tip: string }> = {
+  is_visiting: {
+    icon: "✈️",
+    label: "Travel Badge",
+    meaning: "This person has set a travel badge to let locals know their status — On the Way (Otw), Just Arrived, or currently Visiting a city. The badge auto-clears after 48 hours.",
+    tip: "A great opportunity — reach out and offer to show them around or meet up while they're in town!",
+  },
   available_tonight: {
     icon: "🌙",
     label: "Free Tonight",
@@ -177,19 +189,21 @@ const RELATIONSHIP_INSIGHTS = [
   "Genuine Feels Right"
 ];
 
-function computeMatchStats(profile: any) {
+function computeMatchStats(profile: any, currentUserQuiz?: Record<string, unknown> | null) {
   const id = profile?.id || "";
   // Deterministic seed from profile id
   let seed = 0;
   for (let i = 0; i < id.length; i++) seed = ((seed << 5) - seed + id.charCodeAt(i)) | 0;
   seed = Math.abs(seed);
 
-  const compatibility = 65 + (seed % 30); // 65-94%
+  // Use real values quiz score if both sides answered
+  const quizScore = calcValuesMatch(currentUserQuiz as any, profile?.relationship_goals);
+  const compatibility = quizScore !== null ? quizScore : 65 + (seed % 30); // real or 65-94%
+  const hasRealQuiz = quizScore !== null;
   const distanceKm = 1 + (seed % 18); // 1-18 km
   const sharedInterests = 2 + (seed % 5); // 2-6
 
   const basicInfo = profile?.basic_info || {};
-  const lifestyleInfo = profile?.lifestyle_info || {};
 
   const timeSlots = ["Both active mornings", "Both active evenings", "Both active afternoons", "Both night owls"];
   const activeTime = timeSlots[seed % timeSlots.length];
@@ -199,14 +213,14 @@ function computeMatchStats(profile: any) {
 
   const insight = RELATIONSHIP_INSIGHTS[seed % RELATIONSHIP_INSIGHTS.length];
 
-  return { compatibility, distanceKm, sharedInterests, activeTime, langMatch, insight };
+  return { compatibility, distanceKm, sharedInterests, activeTime, langMatch, insight, hasRealQuiz };
 }
 
-export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelProps) {
+export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false }: ProfileInfoPanelProps) {
   const basicInfo = profile?.basic_info || {};
   const lifestyleInfo = profile?.lifestyle_info || {};
   const relationshipGoals = profile?.relationship_goals || {};
-  const matchStats = computeMatchStats(profile);
+  const matchStats = computeMatchStats(profile, currentUserQuiz);
   const badgeKey = getPrimaryBadgeKey(profile);
   const badgeInfo = badgeKey ? BADGE_INFO[badgeKey] : null;
 
@@ -238,36 +252,82 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
         alignItems: "center",
         gap: 12,
       }}>
-        {profile?.avatar_url && (
-          <div style={{
-            width: 40,
-            height: 40,
-            borderRadius: "50%",
-            overflow: "hidden",
-            flexShrink: 0,
-            border: "2px solid rgba(236,72,153,0.6)",
-          }}>
-            <img
-              src={profile.avatar_url}
-              alt={profileName}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-            />
-          </div>
-        )}
-        <div>
-          <p style={{ color: "white", fontSize: 14, fontWeight: 800, margin: 0 }}>
-            Hi I'm {profileName}
-            <ProfileBadge profile={profile} isProfilePage={true} />
+        {/* Round profile image — always shown */}
+        <div style={{
+          width: 48,
+          height: 48,
+          borderRadius: "50%",
+          overflow: "hidden",
+          flexShrink: 0,
+          border: "2.5px solid rgba(236,72,153,0.7)",
+          boxShadow: "0 0 12px rgba(236,72,153,0.35)",
+        }}>
+          <img
+            src={profile?.avatar_url || profile?.image || "/placeholder.svg"}
+            alt={profileName}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ color: "white", fontSize: 15, fontWeight: 800, margin: 0 }}>
+            {profileName}, {profile?.age}
           </p>
           <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 11, fontWeight: 600, margin: "2px 0 0 0" }}>
-            Living in {profile?.country || "Indonesia"}
+            {profile?.city ? `${profile.city}, ` : ""}{profile?.country || "Indonesia"}
+          </p>
+          {profile?.app_user_id && (
+            <span style={{
+              display: "inline-block", marginTop: 3,
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: 999, padding: "1px 7px",
+              fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
+              letterSpacing: "0.06em",
+            }}>
+              {profile.app_user_id}
+            </span>
+          )}
+        </div>
+        {/* Badge pill — shown inline in header */}
+        {badgeInfo && (
+          <span style={{
+            padding: "3px 9px",
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 700,
+            background: "rgba(236,72,153,0.2)",
+            border: "1px solid rgba(236,72,153,0.5)",
+            color: "#fbcfe8",
+            flexShrink: 0,
+            whiteSpace: "nowrap" as const,
+          }}>
+            {badgeInfo.icon} {badgeInfo.label}
+          </span>
+        )}
+      </div>
+
+      {/* Badge explanation — shown only when a badge is active */}
+      {badgeInfo && (
+        <div style={{
+          margin: "8px 16px 0",
+          padding: "10px 12px",
+          borderRadius: 12,
+          background: "rgba(236,72,153,0.10)",
+          border: "1px solid rgba(236,72,153,0.35)",
+          flexShrink: 0,
+        }}>
+          <p style={{ color: "rgba(236,72,153,0.95)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
+            {badgeInfo.icon} What This Badge Means
+          </p>
+          <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 11, lineHeight: 1.5, margin: "0 0 5px" }}>
+            {badgeInfo.meaning}
+          </p>
+          <p style={{ color: "rgba(236,72,153,0.7)", fontSize: 10, fontStyle: "italic", margin: 0 }}>
+            💡 {badgeInfo.tip}
           </p>
         </div>
-      </div>
+      )}
 
       {/* Scrollable content — all 3 sections */}
       <div
@@ -359,6 +419,14 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
             <InfoRow icon="💔" label="Status" value={relationshipGoals.marital_status} />
           </>
         )}
+        {(relationshipGoals.last_relationship_type || relationshipGoals.relationship_length || relationshipGoals.single_for) && (
+          <>
+            <SectionTitle title="Relationship History" />
+            <InfoRow icon="💑" label="Last relationship" value={relationshipGoals.last_relationship_type} />
+            <InfoRow icon="⏳" label="It lasted" value={relationshipGoals.relationship_length} />
+            <InfoRow icon="🌱" label="Single for" value={relationshipGoals.single_for} />
+          </>
+        )}
         {(relationshipGoals.religion || relationshipGoals.prayer || relationshipGoals.hijab || relationshipGoals.partner_religion) && (
           <>
             <SectionTitle title="Religion & Culture" />
@@ -406,6 +474,11 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
           marginTop: 6,
         }}>
           <CompatibilityBar percent={matchStats.compatibility} insight={matchStats.insight} />
+          {matchStats.hasRealQuiz && (
+            <p style={{ color: "rgba(168,85,247,0.7)", fontSize: 9, textAlign: "center", margin: "4px 0 0", fontStyle: "italic" }}>
+              Based on your values quiz answers
+            </p>
+          )}
           <div style={{ marginTop: 10, borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 6 }}>
             <MatchRow icon="📍" label="Distance" value={`${matchStats.distanceKm} km away`} />
             <MatchRow icon="🎯" label="Shared Interests" value={String(matchStats.sharedInterests)} />
@@ -544,6 +617,83 @@ export default function ProfileInfoPanel({ profile, onClose }: ProfileInfoPanelP
             </div>
           </div>
         )}
+
+        {/* ── Besties / Mates section ── */}
+        {(() => {
+          const bestieIds: string[] = profile?.bestie_ids || [];
+          const label = profile?.gender?.toLowerCase() === "male" ? "Mates" : "Besties";
+          const icon = profile?.gender?.toLowerCase() === "male" ? "🤝" : "👯";
+          const bestieProfiles = bestieIds
+            .map((bid: string) => allProfiles.find((p: any) => p.id === bid))
+            .filter(Boolean);
+
+          if (bestieProfiles.length === 0 && !onBestieRequest) return null;
+
+          return (
+            <div style={{ padding: "12px 16px 6px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <p style={{
+                  color: "rgba(236,72,153,0.9)", fontSize: 9, fontWeight: 700,
+                  letterSpacing: "0.12em", textTransform: "uppercase", margin: 0,
+                }}>
+                  {icon} My {label}
+                </p>
+                {onBestieRequest && !isBestie && (
+                  <button
+                    onClick={() => onBestieRequest(profile)}
+                    style={{
+                      background: isBestiePending
+                        ? "rgba(255,255,255,0.08)"
+                        : "linear-gradient(135deg, rgba(232,72,199,0.25), rgba(139,92,246,0.25))",
+                      border: "1px solid rgba(232,72,199,0.4)",
+                      borderRadius: 999, padding: "3px 10px",
+                      fontSize: 10, fontWeight: 700,
+                      color: isBestiePending ? "rgba(255,255,255,0.4)" : "rgba(232,72,199,0.9)",
+                      cursor: isBestiePending ? "default" : "pointer",
+                    }}
+                  >
+                    {isBestiePending ? "⏳ Request Sent" : `+ Add as ${label.slice(0, -1)}`}
+                  </button>
+                )}
+                {isBestie && (
+                  <span style={{
+                    background: "rgba(232,72,199,0.15)", border: "1px solid rgba(232,72,199,0.4)",
+                    borderRadius: 999, padding: "3px 10px",
+                    fontSize: 10, fontWeight: 700, color: "rgba(232,72,199,0.9)",
+                  }}>
+                    💕 {label.slice(0, -1)}
+                  </span>
+                )}
+              </div>
+
+              {bestieProfiles.length > 0 ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                  {bestieProfiles.map((bp: any) => (
+                    <div key={bp.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                      <img
+                        src={bp.avatar_url || bp.image || "/placeholder.svg"}
+                        alt={bp.name}
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+                        style={{
+                          width: 42, height: 42, borderRadius: "50%", objectFit: "cover",
+                          border: "2px solid rgba(232,72,199,0.5)",
+                          boxShadow: "0 0 8px rgba(232,72,199,0.2)",
+                        }}
+                      />
+                      <span style={{ fontSize: 8, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>
+                        {bp.app_user_id || bp.id.slice(0, 8)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, margin: 0, fontStyle: "italic" }}>
+                  No {label.toLowerCase()} yet
+                </p>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </motion.div>
   );

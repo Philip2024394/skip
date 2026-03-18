@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/features/dating/components/SwipeCard";
 import { ROSE_RESET_DAYS, MS_PER_DAY, SUPER_LIKES_BALANCE_KEY, REFERRAL_POPUP_SHOWN_KEY } from "@/shared/services/constants";
+import { setUserCountry } from "@/shared/hooks/useUserCurrency";
 
 interface UseAuthAndProfilesProps {
   setUser: (v: any) => void;
@@ -46,7 +47,7 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
         // Check rose availability, terms acceptance, and gender
         const { data: myProfile } = await supabase
           .from("profiles")
-          .select("last_rose_at, terms_accepted_at, gender, is_active, name, super_likes_count, referral_code, last_seen_at")
+          .select("last_rose_at, terms_accepted_at, gender, country, is_active, name, super_likes_count, referral_code, last_seen_at")
           .eq("id", session.user.id)
           .single();
         if (myProfile) {
@@ -85,6 +86,9 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
           }
           if ((myProfile as any).gender) {
             props.setUserGender((myProfile as any).gender);
+          }
+          if ((myProfile as any).country) {
+            setUserCountry((myProfile as any).country);
           }
 
           // Re-activate a previously deactivated account on login

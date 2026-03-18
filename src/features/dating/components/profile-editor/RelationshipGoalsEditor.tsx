@@ -3,6 +3,10 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 const LOOKING_FOR = ["Serious relationship", "Marriage", "Friendship first", "Casual dating", "Not sure yet"];
 const TIMELINE = ["As soon as possible", "Within 1 year", "1–2 years", "3–5 years", "No rush"];
+
+const LAST_REL_TYPE = ["Long-term partner", "Short-term dating", "Marriage / Engaged", "On-and-off relationship", "Long distance", "Never been in a relationship"];
+const REL_LENGTH = ["Less than 6 months", "6–12 months", "1–2 years", "2–4 years", "5–7 years", "8–10 years", "10+ years"];
+const SINGLE_FOR = ["Just ended (< 1 month)", "A few months", "About 6 months", "About a year", "1–2 years", "2–5 years", "5+ years"];
 const RELIGION = ["Islam", "Christian Protestant", "Catholic", "Hindu", "Buddhist", "Konghucu", "Other", "Not religious"];
 const PRAYER = ["Very devout — practise daily", "Moderately religious", "Spiritual but not strict", "Cultural only", "Not religious"];
 const HIJAB = ["Wears hijab", "Does not wear hijab", "Comfortable either way", "Not applicable"];
@@ -23,11 +27,20 @@ interface RelationshipGoals {
   dowry?: string;
   family_involvement?: string;
   marital_status?: string;
+  last_relationship_type?: string;
+  relationship_length?: string;
+  single_for?: string;
   polygamy?: string;
   relocate?: string;
   date_type?: string;
   partner_religion?: string;
   about_partner?: string;
+  // Values quiz
+  values_religion?: number;
+  values_family?: number;
+  values_children?: string;
+  values_finances?: string;
+  values_location?: string;
 }
 
 export const RelationshipGoalsEditor = ({
@@ -116,10 +129,51 @@ export const RelationshipGoalsEditor = ({
           <PillSelect label="⚠️ Polygamy" field="polygamy" options={POLYGAMY} />
 
           <div className="my-4 border-t border-white/10" />
+          <p className="text-white/40 text-xs mb-3 font-semibold uppercase tracking-wider">Relationship History <span style={{ color: "rgba(255,255,255,0.25)", fontWeight: 400, textTransform: "none" }}>(optional)</span></p>
+          <div className="mb-4 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <p className="text-pink-300 text-xs">💡 Sharing your history helps people understand where you are emotionally. All fields are optional.</p>
+          </div>
+          <PillSelect label="💑 My Last Relationship Was" field="last_relationship_type" options={LAST_REL_TYPE} />
+          <PillSelect label="⏳ It Lasted" field="relationship_length" options={REL_LENGTH} />
+          <PillSelect label="🌱 I Have Been Single For" field="single_for" options={SINGLE_FOR} />
+
+          <div className="my-4 border-t border-white/10" />
           <p className="text-white/40 text-xs mb-3 font-semibold uppercase tracking-wider">Dating Style</p>
 
           <PillSelect label="🌹 Type of Courtship" field="date_type" options={DATE_TYPE} />
           <PillSelect label="📍 Willing to Relocate" field="relocate" options={RELOCATE} />
+
+          <div className="my-4 border-t border-white/10" />
+          <p className="text-white/40 text-xs mb-2 font-semibold uppercase tracking-wider">Values Compatibility Quiz</p>
+          <div className="mb-4 p-3 rounded-xl" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.20)" }}>
+            <p className="text-purple-300 text-xs">💡 Your answers are used to calculate a real % compatibility score shown to other users. Not star signs — actual values.</p>
+          </div>
+
+          {/* Religion importance 1–5 */}
+          <div className="mb-4">
+            <p className="text-white/60 text-xs mb-2 font-medium">🕌 How important is religion in your daily life? <span className="text-white/30">(1 = not at all · 5 = very central)</span></p>
+            <div className="flex gap-2">
+              {[1,2,3,4,5].map(n => (
+                <button key={n} onClick={() => update("values_religion", value.values_religion === n ? undefined : n)}
+                  className={`flex-1 h-9 rounded-xl text-sm font-bold border transition-all ${value.values_religion === n ? "bg-purple-500/30 border-purple-400/60 text-purple-200" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"}`}>{n}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Family closeness 1–5 */}
+          <div className="mb-4">
+            <p className="text-white/60 text-xs mb-2 font-medium">👨‍👩‍👧 How close are you to your family? <span className="text-white/30">(1 = very independent · 5 = family-first)</span></p>
+            <div className="flex gap-2">
+              {[1,2,3,4,5].map(n => (
+                <button key={n} onClick={() => update("values_family", value.values_family === n ? undefined : n)}
+                  className={`flex-1 h-9 rounded-xl text-sm font-bold border transition-all ${value.values_family === n ? "bg-purple-500/30 border-purple-400/60 text-purple-200" : "bg-white/5 border-white/10 text-white/40 hover:border-white/20"}`}>{n}</button>
+              ))}
+            </div>
+          </div>
+
+          <PillSelect label="👶 Children" field="values_children" options={["Yes — I want children", "No — I don't want children", "Maybe / open to it"]} />
+          <PillSelect label="💰 Financial Style" field="values_finances" options={["Saver — security first", "Balanced — save & enjoy", "Spender — enjoy life now"]} />
+          <PillSelect label="🌍 Where I Want to Live" field="values_location" options={["My city / stay local", "Flexible — open to moving", "Abroad — prefer overseas"]} />
 
           <div className="mb-4">
             <p className="text-white/60 text-xs mb-2 font-medium">💬 What I Am Looking For In A Partner</p>

@@ -44,7 +44,15 @@ export default function ProfileBadge({ profile, t, isProfilePage = false }: Prof
   const key = getPrimaryBadgeKey(profile);
   if (!key) return null;
 
+  const city = profile?.visiting_city || "";
+  const btype = profile?.visiting_badge_type || "visiting";
+  const visitingLabel =
+    btype === "otw" ? `Otw ${city || "…"}` :
+    btype === "just_arrived" ? `🛬 ${city || "…"}` :
+    `📍 ${city || "…"}`;
+
   const labels: Record<string, { icon: string; label: string }> = {
+    is_visiting: { icon: "", label: visitingLabel },
     available_tonight: { icon: "", label: t?.("popup.freeTonight") ?? "Free Tonight" },
     is_plusone: { icon: "", label: "+1 Plus One" },
     generous_lifestyle: { icon: "", label: "Generous" },

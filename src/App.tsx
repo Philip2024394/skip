@@ -31,7 +31,7 @@ const AppContent = () => {
   }, []);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/" element={<AuthPage />} />
         <Route path="/home" element={<AuthPage />} />

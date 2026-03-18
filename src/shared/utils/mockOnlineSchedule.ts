@@ -186,3 +186,51 @@ export function isMockCurrentlyOnline(
     w => nowMinUTC >= w.start && nowMinUTC < w.end
   );
 }
+
+/**
+ * Returns a 7-element array (index 0 = 6 days ago, index 6 = today) of
+ * activity levels 0–1 suitable for rendering a mini bar chart.
+ *
+ * For mock profiles with mockOnlineHours: derives from session windows per day.
+ * For real profiles: derives from last_seen_at recency with seeded noise.
+ */
+export function getDailyActivityBars(
+  profileId: string,
+  country: string,
+  lastSeenAt: string | null | undefined,
+  mockOnlineHours: number | null | undefined,
+  mockOfflineDays: number[] | null | undefined,
+): number[] {
+  const rand = mulberry32(hashStr(profileId + "|activity7"));
+  const noise = () => rand() * 0.25;
+
+  if (mockOnlineHours && mockOnlineHours > 0) {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      const dayOfWeek = d.getDay();
+      if (mockOfflineDays?.includes(dayOfWeek)) return 0;
+      const dateStr = d.toISOString().slice(0, 10);
+      const windows = getMockOnlineWindows(profileId, country, mockOnlineHours, dateStr);
+      const totalMins = windows.reduce((s, w) => s + (w.end - w.start), 0);
+      const base = Math.min(totalMins / (mockOnlineHours * 60), 1);
+      return Math.min(1, Math.max(0.05, base + noise() - 0.1));
+    });
+  }
+
+  // Real profile — derive from last_seen_at recency
+  const msAgo = lastSeenAt ? Date.now() - new Date(lastSeenAt).getTime() : Infinity;
+  const daysAgo = msAgo / 86_400_000;
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const dayIndex = 6 - i; // 0 = today, 6 = 6 days ago
+    if (daysAgo > 14) return noise() * 0.15; // very inactive
+    if (dayIndex === 0 && daysAgo < 1) return 0.85 + noise(); // active today
+    if (dayIndex <= 1 && daysAgo < 2) return 0.7 + noise();
+    if (dayIndex <= 2 && daysAgo < 4) return 0.5 + noise();
+    // Fade off for older days
+    const base = Math.max(0, 0.6 - dayIndex * 0.08 - daysAgo * 0.04);
+    return Math.min(1, Math.max(0, base + noise() - 0.05));
+  });
+}
+

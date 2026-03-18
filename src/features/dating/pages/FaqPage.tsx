@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle, UserPlus, Gift } from "lucide-react";
+import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle, UserPlus, Gift, BadgeCheck, Users, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppLogo from "@/shared/components/AppLogo";
 
@@ -159,6 +159,106 @@ const FAQ_SECTIONS: FaqSection[] = [
       {
         q: "What does the \"No Drama\" badge mean?",
         a: "The No Drama badge shows that a member prefers relaxed, positive, and respectful connections.\n\nPeople who select this badge usually value simple communication, honesty, and enjoyable interactions without unnecessary conflict or tension. They are generally looking for easygoing connections where both people feel comfortable and respected.\n\nThis badge helps signal a calm and friendly approach to meeting new people.",
+      },
+    ],
+  },
+  {
+    title: "Verified Profiles",
+    icon: <BadgeCheck className="w-4 h-4" />,
+    color: "text-sky-400",
+    items: [
+      {
+        q: "What is the Verified Badge (✅)?",
+        a: "The Verified Badge is awarded by the 2DateMe team after reviewing a member's identity information. It signals to other members that this person's name and main profile photo have been confirmed as genuine — adding a layer of trust to the connection.",
+      },
+      {
+        q: "How do I get verified?",
+        a: "Verification is granted by our admin team. If you'd like to be considered, ensure your profile is complete and your photos are clear and accurate. Our team reviews profiles and may reach out, or you can contact us at support@2DateMe.com to request a review.",
+      },
+      {
+        q: "What happens to my profile after I'm verified?",
+        a: "Once verified, your registered name and main profile photo are confirmed and locked — they cannot be changed. This ensures the verified identity stays accurate for everyone who views your profile.\n\nYour additional photos and all other profile details (bio, interests, relationship goals, etc.) can still be updated freely at any time.",
+      },
+      {
+        q: "Can I still change my photos after verification?",
+        a: "Yes — you can add, remove, and update all photos except your main (verified) profile photo. Your main photo is locked as part of the verification to confirm your identity remains consistent.",
+      },
+      {
+        q: "Does the Verified Badge mean someone has passed a background check?",
+        a: "No. The Verified Badge confirms identity information only — it does not indicate a background check, criminal record review, or personal conduct assessment.\n\nFor members seeking deeper assurance before a serious commitment, our partner agency offers a confidential Personal Due Diligence service, covering criminal records, identity authenticity, and more. Learn more on the International Marriage Services page (visible on female profiles).",
+      },
+    ],
+  },
+  {
+    title: "Partner Services",
+    icon: <UserPlus className="w-4 h-4" />,
+    color: "text-amber-400",
+    items: [
+      {
+        q: "Does 2DateMe charge a fee or take commission from service providers?",
+        a: "No. All services listed on 2DateMe — including international marriage facilitation, visa assistance, and background checks — are offered directly by independent, third-party service providers.\n\n2DateMe does not charge, earn, or receive any fee, commission, or referral payment from any service provider featured on the platform. Our role is solely to introduce members to reputable specialists; all agreements, payments, and arrangements are made directly between you and the service provider.",
+      },
+      {
+        q: "Why am I given 5 WhatsApp contact options for a service provider?",
+        a: "We provide up to 5 consultant contact numbers for each service category to ensure you can always reach someone. In any professional network, individual consultants may occasionally be unavailable, travelling, or temporarily unreachable.\n\nWe cannot guarantee that all 5 contacts will respond, however based on our experience with our listed partners, you can reasonably expect a reply from at least 2 or more. We recommend trying more than one contact if you do not hear back within 24 hours.",
+      },
+    ],
+  },
+  {
+    title: "Besties & Mates",
+    icon: <Users className="w-4 h-4" />,
+    color: "text-pink-400",
+    items: [
+      {
+        q: "What are Besties and Mates?",
+        a: "Besties (for female members) and Mates (for male members) are your trusted friends on 2DateMe. You can add up to 10 people from the app as your Bestie or Mate — they appear as a circle with their unique ID code at the bottom of your profile so everyone can see your social circle.\n\nThis feature is mutual — the other person must accept your request before you are both connected as Besties.",
+      },
+      {
+        q: "How do I send a Bestie or Mate request?",
+        a: "Open any profile in the full-screen view and tap the 👯 button on the top-right of their photo. A request is sent immediately. The other person will see a pop-up notification when they are online asking them to accept or decline.",
+      },
+      {
+        q: "What happens when my Bestie request is accepted?",
+        a: "Once accepted:\n• You both appear in each other's Besties/Mates section at the bottom of your profiles.\n• You earn 1 free Super Like — automatically credited to your account.\n• Their unique 2D-XXXXX ID code is displayed on your profile, and yours on theirs.\n\nYou can earn up to 10 free Super Likes this way — one for each accepted Bestie or Mate (maximum 10 total).",
+      },
+      {
+        q: "Why are Besties and Mates shown on my profile?",
+        a: "Your Besties section lets other members see who you're socially connected with on the app. It adds a layer of authenticity and helps prevent situations where multiple friends are unknowingly pursuing the same person — your social circle is visible, creating a natural awareness and respect between friends.",
+      },
+      {
+        q: "Can I remove a Bestie or Mate?",
+        a: "Yes. Go to your profile settings and remove any Bestie or Mate from your list at any time. The connection is removed from both profiles immediately.",
+      },
+      {
+        q: "Is there a maximum number of Besties I can add?",
+        a: "Yes — the maximum is 10 Besties or Mates per account. This keeps the social circle meaningful and genuine rather than a large list of strangers. You earn 1 Super Like for each accepted Bestie, up to a maximum of 10 free Super Likes total.",
+      },
+    ],
+  },
+  {
+    title: "Free Likes & Rewards",
+    icon: <Star className="w-4 h-4" />,
+    color: "text-yellow-400",
+    items: [
+      {
+        q: "How can I earn free Super Likes?",
+        a: "There are two ways to earn free Super Likes:\n\n1. Besties & Mates — Every time someone accepts your Bestie or Mate request, you earn 1 free Super Like. Add up to 10 Besties to earn up to 10 free Super Likes total.\n\n2. Invite a Friend — Share your unique invite link. Every time a friend signs up using your link and creates a profile, you both receive 5 free Likes as a welcome bonus.",
+      },
+      {
+        q: "How do I invite a friend and get 5 free likes?",
+        a: "Go to Dashboard → Power-ups → scroll to the 'Earn Free Rewards' section. Tap 'Copy Invite Link' to copy your personal invite link.\n\nShare it on WhatsApp, Instagram, or any messaging app. When your friend signs up using your link and completes their profile, you both automatically receive 5 free Likes — no payment required.",
+      },
+      {
+        q: "What is the difference between a Like and a Super Like?",
+        a: "A regular Like signals interest — the other person sees you in their Likes Library.\n\nA Super Like is more powerful — it places your profile at the very top of their Likes Library with a golden glow effect, so you stand out immediately. Super Likes show serious interest and get significantly more attention.",
+      },
+      {
+        q: "Do free Likes and Super Likes expire?",
+        a: "Free Likes and Super Likes earned through Bestie rewards or friend referrals do not expire. They stay in your account until you use them. Purchased packs also never expire.",
+      },
+      {
+        q: "Can I earn rewards more than once from the same friend?",
+        a: "No — the 5 free Likes reward is a one-time bonus per referred friend. Each person can only use one referral link when signing up. However you can invite as many friends as you like — there is no cap on the total referral bonus you can earn.",
       },
     ],
   },

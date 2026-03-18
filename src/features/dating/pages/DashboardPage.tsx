@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle, Gift } from "lucide-react";
+import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle, Star, Copy, UserPlus } from "lucide-react";
 import { VerificationSubmitDialog } from "@/features/dating/components";
 import { Button } from "@/shared/components/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ProfileEditor } from "@/features/dating/components";
-import { GiftSelector } from "@/features/gifts/components";
 import { GiftReceiver } from "@/features/gifts/components";
+import SuperLikeSelector from "@/features/dating/components/SuperLikeSelector";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { isNetworkError } from "@/shared/utils/payments";
 
@@ -35,7 +35,7 @@ const featureDescKeys: Record<string, string> = {
 
 const DashboardPage = () => {
   const navigate = useNavigate();
-  const { t, toggleLocale, locale } = useLanguage();
+  const { t } = useLanguage();
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [tab, setTab] = useState<"profile" | "powerups" | "gifts">("profile");
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
@@ -147,10 +147,7 @@ const DashboardPage = () => {
           <span className="font-display font-bold text-white text-xs sm:text-sm">{t("dash.title")}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <button onClick={toggleLocale} className="px-1.5 py-0.5 rounded-full bg-white/8 text-white/60 hover:text-white transition-colors text-[9px] sm:text-[10px] font-medium">
-            {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
-          </button>
-          <button onClick={handleLogout} className="w-7 h-7 rounded-full bg-white/8 flex items-center justify-center text-white/50 hover:text-white transition-colors" title={t("dash.logout")}>
+<button onClick={handleLogout} className="w-7 h-7 rounded-full bg-white/8 flex items-center justify-center text-white/50 hover:text-white transition-colors" title={t("dash.logout")}>
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -184,7 +181,7 @@ const DashboardPage = () => {
               : "text-white/40 hover:text-white/70"
               }`}
           >
-            <Gift className="w-3 h-3" /> <span className="hidden sm:inline">Gifts</span><span className="sm:hidden">🎁</span>
+            <Star className="w-3 h-3" /> <span className="hidden sm:inline">Super</span><span className="sm:hidden">⭐</span>
           </button>
           <button
             onClick={() => navigate("/faq")}
@@ -201,14 +198,95 @@ const DashboardPage = () => {
             <ProfileEditor />
           </>
         ) : tab === "gifts" ? (
-          <div className="px-3 pt-3 pb-4">
-            <GiftSelector userId={userId || "temp"} profileId="" profileName="" />
+          <div className="px-3 pt-3 pb-4 space-y-4">
+            <div>
+              <p className="text-white font-bold text-sm mb-0.5">⭐ Super Likes</p>
+              <p className="text-white/40 text-xs">Send a Super Like to anyone — they'll see it at the top of their Likes Library with a glow effect.</p>
+            </div>
+            <SuperLikeSelector userId={userId || undefined} />
           </div>
         ) : (
           <div className="px-3 pt-3 pb-4 space-y-3">
             <p className="text-white/40 text-xs text-center pb-1">
               {t("dash.supercharge")}
             </p>
+
+            {/* ── Earn Free Rewards Card ────────────────────────── */}
+            <div className="rounded-2xl overflow-hidden border border-yellow-400/20 shadow-[0_0_20px_rgba(250,204,21,0.08)]"
+              style={{ background: "linear-gradient(135deg, rgba(20,14,0,0.95) 0%, rgba(10,8,0,0.98) 100%)" }}>
+              {/* Header */}
+              <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(250,204,21,0.15)", border: "1px solid rgba(250,204,21,0.3)" }}>
+                  <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm leading-none">Earn Free Rewards</p>
+                  <p className="text-white/40 text-[10px] mt-0.5">Super Likes &amp; Likes — no payment needed</p>
+                </div>
+              </div>
+
+              <div className="px-4 pb-4 space-y-3 mt-1">
+                {/* Reward 1 — Besties */}
+                <div className="flex items-start gap-3 p-3 rounded-xl" style={{ background: "rgba(232,72,199,0.08)", border: "1px solid rgba(232,72,199,0.18)" }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-lg" style={{ background: "rgba(232,72,199,0.15)" }}>
+                    👯
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-white font-bold text-xs">Add a Bestie / Mate</p>
+                      <span className="text-yellow-400 font-black text-xs whitespace-nowrap">+1 ⭐ each</span>
+                    </div>
+                    <p className="text-white/45 text-[11px] mt-0.5 leading-snug">
+                      Tap 👯 on any profile to send a Bestie request. When they accept, you earn 1 free Super Like. Max 10 Besties = 10 free Super Likes.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Reward 2 — Invite a friend */}
+                <div className="flex items-start gap-3 p-3 rounded-xl" style={{ background: "rgba(74,222,128,0.07)", border: "1px solid rgba(74,222,128,0.18)" }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(74,222,128,0.12)" }}>
+                    <UserPlus className="w-4 h-4 text-green-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-white font-bold text-xs">Invite a Friend</p>
+                      <span className="text-green-400 font-black text-xs whitespace-nowrap">+5 ❤️ each</span>
+                    </div>
+                    <p className="text-white/45 text-[11px] mt-0.5 leading-snug">
+                      Share your link. When a friend signs up and completes their profile, you both get 5 free Likes instantly — no expiry.
+                    </p>
+                    <button
+                      onClick={() => {
+                        const link = `https://2dateme.com/?ref=${userId || "friend"}`;
+                        navigator.clipboard.writeText(link).then(() => {
+                          import("sonner").then(({ toast }) => toast.success("Invite link copied! 🎉"));
+                        });
+                      }}
+                      className="mt-2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-green-400 transition-colors hover:bg-green-400/10"
+                      style={{ background: "rgba(74,222,128,0.1)", border: "1px solid rgba(74,222,128,0.3)" }}
+                    >
+                      <Copy className="w-3 h-3" /> Copy Invite Link
+                    </button>
+                  </div>
+                </div>
+
+                {/* Reward summary row */}
+                <div className="flex gap-2">
+                  <div className="flex-1 flex flex-col items-center gap-1 p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span className="text-yellow-400 font-black text-base">10 ⭐</span>
+                    <span className="text-white/35 text-[10px] text-center leading-tight">Max free<br />Super Likes</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1 p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span className="text-pink-400 font-black text-base">5 ❤️</span>
+                    <span className="text-white/35 text-[10px] text-center leading-tight">Per friend<br />invited</span>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center gap-1 p-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <span className="text-white/70 font-black text-base">∞</span>
+                    <span className="text-white/35 text-[10px] text-center leading-tight">Never<br />expire</span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* ── VIP Hero Card ─────────────────────────────────── */}
             {(() => {
@@ -382,7 +460,7 @@ const DashboardPage = () => {
       )}
 
       {/* Gift Receiver for handling incoming gifts */}
-      <GiftReceiver currentUserId={userId} />
+      <GiftReceiver currentUserId={userId ?? undefined} />
     </div>
   );
 };

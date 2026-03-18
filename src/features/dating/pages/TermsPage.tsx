@@ -1,7 +1,46 @@
+import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/components/button";
 import { useSEO } from "@/shared/hooks/useSEO";
+
+const LANGUAGES = [
+  { code: "id", flag: "🇮🇩", name: "Indonesia",  dir: "ltr" },
+  { code: "en", flag: "🇬🇧", name: "English",    dir: "ltr" },
+  { code: "ar", flag: "🇸🇦", name: "العربية",    dir: "rtl" },
+  { code: "zh", flag: "🇨🇳", name: "中文",        dir: "ltr" },
+  { code: "fr", flag: "🇫🇷", name: "Français",   dir: "ltr" },
+] as const;
+
+type LangCode = "id" | "en" | "ar" | "zh" | "fr";
+
+const INTRO: Record<LangCode, { title: string; subtitle: string; body: string }> = {
+  id: {
+    title: "Syarat & Ketentuan",
+    subtitle: "Dengan menggunakan 2DateMe, kamu setuju terikat oleh syarat-syarat berikut.",
+    body: "2DateMe adalah aplikasi kencan online terbaik di Indonesia — platform dating app Indonesia yang memungkinkan kamu cari jodoh, kencan online, dan connect langsung via WhatsApp di Jakarta, Bali, Surabaya, Bandung, dan seluruh Indonesia. Dengan mendaftar dan menggunakan layanan 2DateMe, kamu setuju untuk terikat oleh Syarat dan Ketentuan di bawah ini.",
+  },
+  en: {
+    title: "Terms of Service",
+    subtitle: "By using 2DateMe you agree to be bound by the following terms.",
+    body: "2DateMe is Indonesia's leading online dating platform, connecting singles via WhatsApp across Jakarta, Bali, Surabaya, Bandung, and all of Indonesia. By registering and using 2DateMe, you agree to be legally bound by these Terms and Conditions below.",
+  },
+  ar: {
+    title: "الشروط والأحكام",
+    subtitle: "باستخدام 2DateMe، فأنت توافق على الالتزام بالشروط التالية.",
+    body: "2DateMe هو تطبيق المواعدة الرائد في إندونيسيا، يربط العزاب عبر واتساب في جاكرتا وبالي وسورابايا وباندونغ وجميع أنحاء إندونيسيا. بالتسجيل واستخدام 2DateMe، فأنت توافق على الالتزام بهذه الشروط والأحكام.",
+  },
+  zh: {
+    title: "服务条款",
+    subtitle: "使用 2DateMe 即表示您同意受以下条款的约束。",
+    body: "2DateMe 是印度尼西亚领先的在线约会平台，通过 WhatsApp 连接雅加达、巴厘岛、泗水、万隆及印度尼西亚各地的单身人士。注册并使用 2DateMe，即表示您同意受以下条款和条件的法律约束。",
+  },
+  fr: {
+    title: "Conditions d'Utilisation",
+    subtitle: "En utilisant 2DateMe, vous acceptez d'être lié par les conditions suivantes.",
+    body: "2DateMe est la principale plateforme de rencontres en ligne d'Indonésie, connectant des célibataires via WhatsApp à Jakarta, Bali, Surabaya, Bandung et dans toute l'Indonésie. En vous inscrivant et en utilisant 2DateMe, vous acceptez d'être lié par ces Conditions Générales d'Utilisation.",
+  },
+};
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div className="mt-8">
@@ -12,12 +51,15 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 
 const TermsPage = () => {
   const navigate = useNavigate();
+  const [lang, setLang] = useState<LangCode>("id");
+  const intro = INTRO[lang];
+  const isRtl = lang === "ar";
 
   useSEO({
     title: "Syarat & Ketentuan – 2DateMe Aplikasi Kencan Indonesia",
-    description: "Syarat dan Ketentuan penggunaan 2DateMe, aplikasi kencan online terbaik di Indonesia. Kencan di Jakarta, Bali, Surabaya & seluruh Indonesia via WhatsApp.",
+    description: "Syarat dan Ketentuan penggunaan 2DateMe, aplikasi kencan online terbaik di Indonesia.",
     canonical: "https://2dateme.com/terms",
-    keywords: "syarat ketentuan 2DateMe, terms of service aplikasi kencan Indonesia, aturan dating app Indonesia, kebijakan pengguna kencan online Indonesia",
+    keywords: "syarat ketentuan 2DateMe, terms of service aplikasi kencan Indonesia",
   });
 
   return (
@@ -27,19 +69,101 @@ const TermsPage = () => {
           <ArrowLeft className="w-4 h-4 mr-2" /> Back
         </Button>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-display font-bold mb-2">Terms of Service</h1>
-          <p className="text-white/40 text-xs">2DateMe.com · Last updated: March 7, 2026</p>
+        {/* ── Language Selector ─────────────────────────────── */}
+        <div style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 20,
+          padding: "20px 16px 18px",
+          marginBottom: 32,
+        }}>
+          <p style={{
+            color: "rgba(255,255,255,0.9)",
+            fontSize: 15,
+            fontWeight: 800,
+            textAlign: "center",
+            margin: "0 0 18px",
+            letterSpacing: "0.02em",
+          }}>
+            🌐 Select Your Language
+          </p>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
+            {LANGUAGES.map((l) => {
+              const sel = lang === l.code;
+              return (
+                <button
+                  key={l.code}
+                  onClick={() => setLang(l.code as LangCode)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 6,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                    outline: "none",
+                  }}
+                >
+                  {/* 3D flag circle */}
+                  <div style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 28,
+                    background: sel
+                      ? "linear-gradient(145deg, rgba(236,72,153,0.35), rgba(139,92,246,0.35))"
+                      : "rgba(255,255,255,0.06)",
+                    border: sel
+                      ? "2.5px solid rgba(236,72,153,0.8)"
+                      : "2px solid rgba(255,255,255,0.12)",
+                    boxShadow: sel
+                      ? "0 6px 20px rgba(236,72,153,0.35), inset 0 1px 0 rgba(255,255,255,0.2)"
+                      : "0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)",
+                    transition: "all 0.2s",
+                    transform: sel ? "scale(1.12)" : "scale(1)",
+                  }}>
+                    {l.flag}
+                  </div>
+                  <span style={{
+                    fontSize: 10,
+                    fontWeight: sel ? 700 : 500,
+                    color: sel ? "#f9a8d4" : "rgba(255,255,255,0.45)",
+                    transition: "color 0.2s",
+                  }}>
+                    {l.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Translation disclaimer */}
+          <p style={{
+            color: "rgba(255,255,255,0.25)",
+            fontSize: 9,
+            textAlign: "center",
+            margin: "14px 0 0",
+            fontStyle: "italic",
+          }}>
+            The authoritative version of these Terms is in Bahasa Indonesia and English. Translations are provided for reference only.
+          </p>
         </div>
 
-        <p className="text-white/70 text-sm leading-relaxed mb-4">
-          <strong className="text-white">2DateMe</strong> adalah aplikasi kencan online terbaik di Indonesia — platform <em>dating app Indonesia</em> yang memungkinkan kamu cari jodoh, kencan online, dan connect langsung via WhatsApp di Jakarta, Bali, Surabaya, Bandung, dan seluruh Indonesia. Dengan mendaftar dan menggunakan layanan 2DateMe (<strong className="text-white">aplikasi kencan Indonesia terpercaya</strong>), kamu setuju untuk terikat oleh Syarat dan Ketentuan di bawah ini.
-        </p>
+        {/* ── Title + Intro ─────────────────────────────────── */}
+        <div className="mb-8" dir={isRtl ? "rtl" : "ltr"}>
+          <h1 className="text-3xl font-display font-bold mb-2">{intro.title}</h1>
+          <p className="text-white/40 text-xs mb-3">2DateMe.com · Last updated: March 7, 2026</p>
+          <p className="text-pink-300/80 text-sm font-medium mb-4">{intro.subtitle}</p>
+          <p className="text-white/70 text-sm leading-relaxed">{intro.body}</p>
+        </div>
 
-        <p className="text-white/70 text-sm leading-relaxed">
-          Please read these Terms of Service ("<strong className="text-white">Terms</strong>") carefully before using 2DateMe ("<strong className="text-white">we</strong>", "<strong className="text-white">us</strong>", "<strong className="text-white">our</strong>") at 2DateMe.com or our mobile application (the "<strong className="text-white">Service</strong>"). By accessing or using the Service, you agree to be legally bound by these Terms. If you do not agree, please do not use the Service.
-        </p>
-
+        {/* ── Sections (English authoritative text) ────────── */}
         <Section title="1. Eligibility">
           <p>You must be at least <strong className="text-white">18 years of age</strong> to use 2DateMe. By creating an account, you confirm that you are 18 or older and legally capable of entering into a binding agreement. We reserve the right to verify your age and to terminate accounts where we have reasonable cause to believe a user is under 18.</p>
         </Section>
@@ -167,7 +291,18 @@ const TermsPage = () => {
           <p>We may update these Terms from time to time. We will notify you of material changes by updating the "Last Updated" date at the top of this page and, where appropriate, by sending you an email notification. Your continued use of the Service after changes take effect constitutes your acceptance of the revised Terms.</p>
         </Section>
 
-        <Section title="16. Contact Us">
+        <Section title="16. Verified Profiles">
+          <p>2DateMe offers an optional <strong className="text-white">Verified Badge</strong> programme to help members confirm their identity and build trust within the community.</p>
+          <ul className="list-disc list-inside space-y-1 pl-2 mt-2">
+            <li>Verification is granted solely at the discretion of 2DateMe administrators following a review of the member's submitted information.</li>
+            <li>Once a profile is verified, the member's <strong className="text-white">registered name</strong> and <strong className="text-white">main profile photo</strong> are confirmed and may no longer be changed. This ensures that verified identities remain accurate and trustworthy for all users.</li>
+            <li>Additional photos and all other profile details may still be updated at any time.</li>
+            <li>The Verified Badge indicates that a member's primary identity information has been reviewed — it does not constitute a guarantee of background, criminal history, or personal conduct. Members seeking further assurance may request a <a href="/marriage-agency" className="text-primary underline">Personal Due Diligence Report</a> through our partner agency.</li>
+            <li>2DateMe reserves the right to revoke verification status at any time if information is found to be inaccurate or if the member violates these Terms.</li>
+          </ul>
+        </Section>
+
+        <Section title="17. Contact Us">
           <p>For questions, concerns, or support regarding these Terms:</p>
           <p className="mt-2">
             <strong className="text-white">2DateMe Support</strong><br />

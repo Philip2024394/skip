@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { Button } from "@/shared/components/button";
 import { PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useUserCurrency } from "@/shared/hooks/useUserCurrency";
 
 const featureDetails: Record<string, { bullets: string[]; tagline: string }> = {
   boost: {
@@ -70,11 +71,15 @@ interface FeaturePurchaseDialogProps {
 
 const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: FeaturePurchaseDialogProps) => {
   const { t } = useLanguage();
+  const { fmt } = useUserCurrency();
   if (!feature) return null;
 
   const Icon = getFeatureIcon(feature.icon);
   const gradient = getFeatureGradient(feature.color);
   const details = featureDetails[feature.id] || { tagline: feature.description, bullets: [] };
+  // Detect subscription (VIP) by feature id or price string containing "/mo"
+  const priceSuffix = feature.id === "vip" || feature.price.includes("/mo") ? "/mo" : "";
+  const displayPrice = fmt(feature.priceCents, priceSuffix);
 
   return (
     <AnimatePresence>
@@ -131,7 +136,7 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
             disabled={loading}
             className={`w-full ${gradient} text-primary-foreground border-0 font-bold h-12 rounded-xl text-base`}
           >
-            {loading ? t("popup.processing") : `${t("popup.continueToPayment")} — ${feature.price}`}
+            {loading ? t("popup.processing") : `${t("popup.continueToPayment")} — ${displayPrice}`}
           </Button>
 
           <p className="text-muted-foreground text-[10px] text-center mt-3">

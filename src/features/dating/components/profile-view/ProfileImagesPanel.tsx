@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Heart, MapPin, BadgeCheck, Fingerprint } from "lucide-react";
 import DistanceBadge from "@/features/dating/components/DistanceBadge";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
+import { getDailyActivityBars } from "@/shared/utils/mockOnlineSchedule";
 
 // Mock male likers — always shown so female profiles appear popular
 const MOCK_MALE_LIKERS = [
@@ -21,9 +22,12 @@ interface ProfileImagesPanelProps {
   handleLike?: (p: any) => void;
   likedMe?: any[];
   onOpenMap?: (profile: any) => void;
+  onBestieRequest?: (profile: any) => void;
+  isBestie?: boolean;
+  isBestiePending?: boolean;
 }
 
-export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex, onClose, iLiked = [], handleLike, likedMe = [], onOpenMap }: ProfileImagesPanelProps) {
+export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex, onClose, iLiked = [], handleLike, likedMe = [], onOpenMap, onBestieRequest, isBestie = false, isBestiePending = false }: ProfileImagesPanelProps) {
   const images: string[] =
     Array.isArray(profile?.images) && profile.images.length > 0
       ? profile.images
@@ -138,6 +142,57 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
 
+        {/* Activity bar — shown only on second photo */}
+        {safeIndex === 1 && (() => {
+          const bars = getDailyActivityBars(
+            profile?.id || "",
+            profile?.country || "",
+            profile?.last_seen_at || null,
+            profile?.mock_online_hours ?? null,
+            profile?.mock_offline_days ?? null,
+          );
+          const days = ["6d", "5d", "4d", "3d", "2d", "1d", "now"];
+          return (
+            <div style={{
+              position: "absolute",
+              bottom: 80,
+              left: 14,
+              zIndex: 6,
+              background: "rgba(0,0,0,0.55)",
+              backdropFilter: "blur(8px)",
+              borderRadius: 12,
+              padding: "8px 10px 6px",
+              border: "1px solid rgba(255,255,255,0.1)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              pointerEvents: "none",
+            }}>
+              <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", margin: 0 }}>
+                Activity · Last 7 Days
+              </p>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 32 }}>
+                {bars.map((val, i) => (
+                  <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                    <div style={{
+                      width: 14,
+                      height: Math.max(4, Math.round(val * 28)),
+                      borderRadius: 3,
+                      background: val > 0.6
+                        ? "rgba(74,222,128,0.85)"
+                        : val > 0.3
+                          ? "rgba(250,204,21,0.75)"
+                          : "rgba(255,255,255,0.18)",
+                      transition: "height 0.3s",
+                    }} />
+                    <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 7 }}>{days[i]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Distance badge — top-right */}
         <DistanceBadge
           profile={profile}
@@ -163,6 +218,56 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
             style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           >
             <Heart className="w-5 h-5 text-white" fill="white" />
+          </button>
+        )}
+
+        {/* Bestie / Mate button — top-right, below like button */}
+        {onBestieRequest && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onBestieRequest(profile);
+            }}
+            aria-label="Add as Bestie"
+            title={isBestie ? "Already Besties!" : isBestiePending ? "Request Sent" : "Add as Bestie"}
+            style={{
+              position: "absolute",
+              top: 104,
+              right: 12,
+              zIndex: 20,
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: isBestie
+                ? "linear-gradient(135deg, rgba(232,72,199,0.7), rgba(139,92,246,0.7))"
+                : isBestiePending
+                  ? "rgba(255,255,255,0.15)"
+                  : "rgba(0,0,0,0.45)",
+              border: isBestie
+                ? "1.5px solid rgba(232,72,199,0.7)"
+                : "1.5px solid rgba(255,255,255,0.25)",
+              backdropFilter: "blur(8px)",
+              boxShadow: isBestie ? "0 0 14px rgba(232,72,199,0.4)" : "0 2px 8px rgba(0,0,0,0.3)",
+              cursor: isBestie ? "default" : "pointer",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+              transition: "all 0.2s",
+            }}
+          >
+            {isBestie ? (
+              <span style={{ fontSize: 18 }}>💕</span>
+            ) : isBestiePending ? (
+              <span style={{ fontSize: 16 }}>⏳</span>
+            ) : (
+              <img
+                src="https://ik.imagekit.io/7grri5v7d/bestiii-removebg-preview.png"
+                alt="Add Bestie"
+                style={{ width: 26, height: 26, objectFit: "contain", filter: "drop-shadow(0 1px 4px rgba(0,0,0,0.5))" }}
+              />
+            )}
           </button>
         )}
 

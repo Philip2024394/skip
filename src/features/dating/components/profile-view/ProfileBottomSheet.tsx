@@ -597,7 +597,8 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
 
                 if (props.selectedProfileSection === "interests") {
                   const hasAny = relationshipGoals.looking_for || relationshipGoals.religion ||
-                    relationshipGoals.dowry || relationshipGoals.date_type || relationshipGoals.about_partner;
+                    relationshipGoals.dowry || relationshipGoals.date_type || relationshipGoals.about_partner ||
+                    relationshipGoals.last_relationship_type || relationshipGoals.single_for;
                   if (!hasAny) return (
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
                       <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>No relationship goals added yet</p>
@@ -610,6 +611,12 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       <InfoRow icon="⏱️" label="Timeline" value={relationshipGoals.timeline} />
                       <InfoRow icon="🌹" label="Date type" value={relationshipGoals.date_type} />
                       <InfoRow icon="💔" label="Status" value={relationshipGoals.marital_status} />
+                      {(relationshipGoals.last_relationship_type || relationshipGoals.relationship_length || relationshipGoals.single_for) && (<>
+                        <SectionTitle title="Relationship History" />
+                        <InfoRow icon="💑" label="Last relationship" value={relationshipGoals.last_relationship_type} />
+                        <InfoRow icon="⏳" label="It lasted" value={relationshipGoals.relationship_length} />
+                        <InfoRow icon="🌱" label="Single for" value={relationshipGoals.single_for} />
+                      </>)}
                       <SectionTitle title="Religion & Culture" />
                       <InfoRow icon="🕌" label="Religion" value={relationshipGoals.religion} />
                       <InfoRow icon="🙏" label="Prayer" value={relationshipGoals.prayer} />

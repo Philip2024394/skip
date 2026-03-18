@@ -1,4 +1,5 @@
 import { Profile, BasicInfo, LifestyleInfo, RelationshipGoals } from "@/shared/types/profile";
+import { generateAppUserId } from "@/shared/utils/userIdUtils";
 import indoGirl1 from "@/assets/images/indo-girl-1.png";
 import indoGirl2 from "@/assets/images/indo-girl-2.png";
 import indoGirl3 from "@/assets/images/indo-girl-3.png";
@@ -543,6 +544,9 @@ const HIJAB_OPTS = ["Yes, full hijab", "Yes, sometimes", "No", "Syari", "Prefer 
 const DATE_TYPES = ["Traditional courtship", "Modern casual dating", "Getting to know first", "Halal approach", "Open to both"];
 const TIMELINES = ["Ready when it feels right", "Within 1 year", "1–2 years", "Not rushing", "Serious about marriage"];
 const MARITAL_OPTS = ["Never married", "Divorced", "Widowed", "Prefer not to say"];
+const LAST_REL_TYPE_OPTS = ["Long-term partner", "Short-term dating", "Marriage / Engaged", "On-and-off relationship", "Long distance", "Never been in a relationship"];
+const REL_LENGTH_OPTS = ["Less than 6 months", "6–12 months", "1–2 years", "2–4 years", "5–7 years", "8–10 years", "10+ years"];
+const SINGLE_FOR_OPTS = ["Just ended (< 1 month)", "A few months", "About 6 months", "About a year", "1–2 years", "2–5 years", "5+ years"];
 const DOWRY_OPTS = ["Open to discussion", "Important to my family", "Flexible", "Symbolic amount", "Not required"];
 const FAMILY_OPTS = ["Very important", "Somewhat involved", "Independent decision", "Meet the family first"];
 const ABOUT_PARTNER_POOL = [
@@ -587,6 +591,10 @@ const buildRelationshipGoals = (i: number, gender: string, lookingFor: string): 
   timeline: TIMELINES[i % TIMELINES.length],
   date_type: DATE_TYPES[i % DATE_TYPES.length],
   marital_status: MARITAL_OPTS[i % MARITAL_OPTS.length],
+  // Relationship history — not every profile has these (stagger with modulo)
+  ...(i % 4 !== 0 ? { last_relationship_type: LAST_REL_TYPE_OPTS[i % LAST_REL_TYPE_OPTS.length] } : {}),
+  ...(i % 4 !== 0 && i % 5 !== 0 ? { relationship_length: REL_LENGTH_OPTS[i % REL_LENGTH_OPTS.length] } : {}),
+  ...(i % 3 !== 0 ? { single_for: SINGLE_FOR_OPTS[i % SINGLE_FOR_OPTS.length] } : {}),
   religion: gender === "Female" ? RELIGIONS_F[i % RELIGIONS_F.length] : RELIGIONS_M[i % RELIGIONS_M.length],
   prayer: PRAYER_OPTS[i % PRAYER_OPTS.length],
   ...(gender === "Female" ? { hijab: HIJAB_OPTS[i % HIJAB_OPTS.length] } : {}),
@@ -658,6 +666,12 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       basic_info: buildBasicInfo(fi, "Female", femaleLangs),
       lifestyle_info: buildLifestyleInfo(fi),
       relationship_goals: buildRelationshipGoals(fi, "Female", femaleLookingFor),
+      app_user_id: generateAppUserId(`indo-f-${fi}`),
+      bestie_ids: fi % 4 === 0
+        ? [`indo-f-${(fi + 1) % TOTAL_FEMALE}`, `indo-f-${(fi + 3) % TOTAL_FEMALE}`, `indo-f-${(fi + 7) % TOTAL_FEMALE}`]
+        : fi % 7 === 2
+          ? [`indo-f-${(fi + 2) % TOTAL_FEMALE}`]
+          : [],
     });
   }
 
@@ -701,6 +715,10 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       basic_info: buildBasicInfo(mi, "Male", maleLangs),
       lifestyle_info: buildLifestyleInfo(mi),
       relationship_goals: buildRelationshipGoals(mi, "Male", maleLookingFor),
+      app_user_id: generateAppUserId(`indo-m-${mi}`),
+      bestie_ids: mi % 5 === 0
+        ? [`indo-m-${(mi + 1) % TOTAL_MALE}`, `indo-m-${(mi + 2) % TOTAL_MALE}`]
+        : [],
     });
   }
 
