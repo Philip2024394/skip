@@ -902,6 +902,47 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     }
   }
 
+  // ── Bestie review text pools (max 350 chars, no digits, no social links)
+  const REVIEWS_F_A = [
+    "She is the warmest soul I have ever known. Her kindness, grace, and devotion to family make her truly remarkable. She loves wholeheartedly and stands by the people she chooses. Anyone lucky enough to have her will never feel alone.",
+    "Growing up together, I watched her become the most courageous and compassionate woman. Funny, humble, and fiercely loyal — her traditions run deep and she carries them with quiet pride. She deserves the most genuine love.",
+    "She brings light wherever she goes. Thoughtful, creative, and endlessly giving. She will make a wonderful life partner and her soul is as beautiful as her smile. She never stops surprising me with how deep she really is.",
+    "I am lucky to call her my bestie. Confident but never arrogant, elegant but grounded. Her faith guides everything she does and she treats every person with the deepest respect. A truly rare and beautiful human being.",
+    "She has been my sister in spirit for years. Patient, hilarious, and the most nurturing person I know. She dreams of building a beautiful family and has everything it takes to make that dream real and lasting.",
+    "Her heart is pure and her intentions are always sincere. She remembers everyone, checks in when you are struggling, and celebrates your wins louder than her own. Choose her and she will choose you back every single day.",
+    "She is disciplined, ambitious, and deeply caring — a combination that is so rare. She takes every commitment seriously and brings the same dedication to her relationships as everything else. Absolutely worth knowing.",
+    "We met in university and she has been my anchor ever since. Sharp, emotionally intelligent, and endlessly kind. She will challenge you to be better while making you feel completely accepted as you are. That is her gift.",
+    "She is the person you call at midnight and she answers every time. She has walked through hard things and come out softer, not harder. Her empathy runs deep and she loves with everything she has.",
+    "There is no one more loyal, more genuine, or more full of life. She makes every room warmer and every conversation worth having. I would choose her as my best friend again in every lifetime.",
+  ];
+  const REVIEWS_F_B = [
+    "She has been my closest friend through everything and I can honestly say she is one of the most sincere people alive. She gives without expecting anything back and loves without conditions. Recognising this will make someone very lucky.",
+    "Funny, real, and completely without pretense. What you see is what you get — and what you get is extraordinary. She has a rare ability to make everyone around her feel truly seen and valued.",
+    "I have watched her grow into the most incredible woman. Her strength is quiet but it is there in everything she does. She is the kind of partner who builds you up while standing tall herself.",
+    "She is the definition of wife material — and I do not say that lightly. She is caring, devoted, and deeply intentional about the life she wants to build. She has high standards and she meets them herself every single day.",
+    "She makes everything better just by being in the room. Her laugh, her honesty, her warmth — all of it. But what sets her apart is her loyalty. She does not give up on people. She fights for the ones she loves.",
+    "The most thoughtful person I have ever met. She remembers the small things and shows up in big ways. She is modest about her gifts but they are many. Anyone who earns her trust will have a partner for life.",
+    "She is radiant and she does not even know it. Humble to her core, deeply spiritual, and impossibly kind. She wants a love that is real and lasting — and she inspires exactly that kind of love in return.",
+    "From the first day we met I knew she was someone remarkable. Calm, wise, and deeply warm — she has a way of making hard things feel manageable. She will bring that same steadiness to her relationship.",
+    "She has so much to offer and she offers it quietly, without show. Her heart, her time, her energy — she gives generously. She is traditional in the best way and modern in all the right ways too.",
+    "She is everything a person could want in a best friend — and she will be everything someone needs in a partner. Honest, funny, caring, and endlessly patient. She deserves a love story as beautiful as she is.",
+  ];
+  const REVIEWS_M_ABOUT_F = [
+    "She is one of the most genuine people I know — kind, dependable, and full of warmth. I have seen how she treats the people she loves and it is something truly special. Whoever she chooses will be incredibly fortunate.",
+    "We have been close for years and she is someone I trust completely. Thoughtful, strong, and deeply caring — she brings out the best in everyone around her. Whoever she chooses will be so lucky.",
+    "She is honest and hardworking and she treats everyone around her with real dignity. Her ambition is matched only by her humility. Any person would be fortunate to have her choose them.",
+    "She is thoughtful in a way that is rare. She listens — truly listens — and she remembers. She is steady, kind, and knows what she wants. The right person will see that very clearly.",
+    "I have watched her grow into a person of real character. She is not flashy but she is the most reliable one in any room. She takes care of the people she loves quietly and consistently.",
+  ];
+  const REVIEWS_F_ABOUT_M = [
+    "He is the most dependable man I know. Calm under pressure, generous to a fault, and deeply respectful. He takes his responsibilities seriously and leads with integrity. He is the kind of man who shows up every single time.",
+    "We have been close friends for years and I have never met anyone more loyal or more genuine. He works hard, treats everyone with dignity, and has a heart that is bigger than he ever lets on.",
+    "Honest, ambitious, and completely without ego. He builds people up instead of tearing them down. He is looking for something real and he brings the same sincerity to relationships as he does to everything else.",
+    "He is thoughtful in a way that is rare in men his age. He listens — truly listens — and he remembers. He is steady, kind, and knows what he wants. The right person will see that clearly.",
+    "I have watched him grow into a man of real character. He is not flashy but he is the most reliable person in any room. He takes care of the people he loves quietly and consistently. That is who he is.",
+    "He is the friend everyone wishes they had. Funny, grounded, and incredibly loyal. He never speaks badly about anyone and always gives people the benefit of the doubt. He will make a wonderful partner.",
+  ];
+
   // ── Wire featured female besties (after male overrides so we can cross-reference males)
   for (let g = 0; g < featuredFemaleIds.length; g++) {
     const idx = profiles.findIndex(p => p.id === featuredFemaleIds[g]);
@@ -915,6 +956,17 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
         : g % 2 === 0
         ? [a, b]
         : [a];
+      // Add bestie reviews
+      const reviews: Record<string, string> = {
+        [a]: REVIEWS_F_A[g % REVIEWS_F_A.length],
+      };
+      if (g % 3 === 0) {
+        reviews[b] = REVIEWS_F_B[g % REVIEWS_F_B.length];
+        reviews[m] = REVIEWS_M_ABOUT_F[g % REVIEWS_M_ABOUT_F.length];
+      } else if (g % 2 === 0) {
+        reviews[b] = REVIEWS_F_B[g % REVIEWS_F_B.length];
+      }
+      profiles[idx].bestie_reviews = reviews;
     }
   }
 
@@ -931,6 +983,17 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
         : g % 2 === 0
         ? [a, b]
         : [a];
+      // Add bestie reviews
+      const reviews: Record<string, string> = {
+        [a]: REVIEWS_F_ABOUT_M[g % REVIEWS_F_ABOUT_M.length],
+      };
+      if (g % 3 === 0) {
+        reviews[b] = REVIEWS_F_ABOUT_M[(g + 1) % REVIEWS_F_ABOUT_M.length];
+        reviews[f] = REVIEWS_F_ABOUT_M[(g + 2) % REVIEWS_F_ABOUT_M.length];
+      } else if (g % 2 === 0) {
+        reviews[b] = REVIEWS_F_ABOUT_M[(g + 1) % REVIEWS_F_ABOUT_M.length];
+      }
+      profiles[idx].bestie_reviews = reviews;
     }
   }
 

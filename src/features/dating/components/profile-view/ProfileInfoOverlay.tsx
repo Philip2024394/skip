@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
@@ -227,6 +228,30 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
   const badgeInfo = badgeKey ? BADGE_INFO[badgeKey] : null;
 
   const profileName = profile?.name || profile?.full_name || profile?.first_name || "Profile";
+
+  // Bestie review state
+  const lsReviewKey = `bestie_review_written_for_${profile?.id}`;
+  const [reviewDraft, setReviewDraft] = useState<string>(() => {
+    try { return localStorage.getItem(lsReviewKey) || ""; } catch { return ""; }
+  });
+  const [reviewEditing, setReviewEditing] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+
+  const validateReview = (text: string): string => {
+    if (!text.trim()) return "Review cannot be empty";
+    if (text.length > 350) return `Too long — ${text.length}/350 characters`;
+    if (/[0-9]/.test(text)) return "No numbers or digits allowed";
+    if (/https?:\/\/|www\.|@\w+|\.(com|net|org|io|co)\b/i.test(text)) return "No social links or handles allowed";
+    return "";
+  };
+
+  const saveReview = () => {
+    const err = validateReview(reviewDraft);
+    if (err) { setReviewError(err); return; }
+    try { localStorage.setItem(lsReviewKey, reviewDraft.trim()); } catch {}
+    setReviewEditing(false);
+    setReviewError("");
+  };
 
   return (
     <motion.div
@@ -600,25 +625,42 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
 
           if (bestieProfiles.length === 0 && !onBestieRequest) return null;
 
+          const profileReviews: Record<string, string> = profile?.bestie_reviews || {};
+          const myWrittenReview = (() => { try { return localStorage.getItem(lsReviewKey) || ""; } catch { return ""; } })();
+
           return (
             <div style={{ marginTop: 8 }}>
+              {/* Section header */}
               <div style={{
-                margin: "6px 0",
+                margin: "6px 0 10px",
                 paddingBottom: 6,
                 borderBottom: "1.5px solid rgba(236,72,153,0.6)",
-                display: "flex", alignItems: "center", gap: 6,
+                display: "flex", alignItems: "center", justifyContent: "space-between",
               }}>
-                <span style={{ fontSize: 13 }}>👯</span>
-                <p style={{
-                  color: "rgba(236,72,153,1)", fontSize: 11, fontWeight: 800,
-                  letterSpacing: "0.1em", textTransform: "uppercase", margin: 0,
-                }}>
-                  My Bestie's
-                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 13 }}>👯</span>
+                  <p style={{
+                    color: "rgba(236,72,153,1)", fontSize: 11, fontWeight: 800,
+                    letterSpacing: "0.1em", textTransform: "uppercase", margin: 0,
+                  }}>My Bestie's</p>
+                </div>
+                {isBestie && (
+                  <button
+                    onClick={() => { setReviewEditing(e => !e); setReviewError(""); }}
+                    style={{
+                      fontSize: 9, fontWeight: 700, color: "rgba(236,72,153,0.9)",
+                      background: "rgba(236,72,153,0.12)", border: "1px solid rgba(236,72,153,0.3)",
+                      borderRadius: 8, padding: "3px 8px", cursor: "pointer", letterSpacing: "0.04em",
+                    }}
+                  >
+                    {reviewEditing ? "✕ Cancel" : myWrittenReview ? "✏️ Edit Review" : "✍️ Write Review"}
+                  </button>
+                )}
               </div>
 
+              {/* Bestie avatars */}
               {bestieProfiles.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, paddingTop: 8 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
                   {bestieProfiles.map((bp: any) => (
                     <button
                       key={bp.id}
@@ -654,6 +696,111 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
                 <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, margin: "8px 0 0", fontStyle: "italic" }}>
                   No bestie's yet
                 </p>
+              )}
+
+              {/* Bestie reviews */}
+              {(Object.keys(profileReviews).length > 0 || myWrittenReview) && !reviewEditing && (
+                <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {bestieProfiles.map((bp: any) => {
+                    const review = profileReviews[bp.id];
+                    if (!review) return null;
+                    return (
+                      <div key={bp.id} style={{
+                        background: "rgba(236,72,153,0.07)",
+                        border: "1px solid rgba(236,72,153,0.2)",
+                        borderRadius: 10,
+                        padding: "9px 11px",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 6 }}>
+                          <img
+                            src={bp.avatar_url || bp.image || "/placeholder.svg"}
+                            alt={bp.name}
+                            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+                            style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", border: "1.5px solid rgba(236,72,153,0.4)", flexShrink: 0 }}
+                          />
+                          <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(236,72,153,0.9)" }}>{bp.name?.split(" ")[0]}</span>
+                          <span style={{ fontSize: 8, color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>{bp.app_user_id || bp.id.slice(0, 8)}</span>
+                        </div>
+                        <p style={{
+                          fontSize: 11, color: "rgba(255,255,255,0.82)", lineHeight: 1.6,
+                          fontStyle: "italic", margin: 0,
+                        }}>
+                          <span style={{ color: "rgba(236,72,153,0.7)", fontSize: 14, lineHeight: 0, verticalAlign: "-3px", marginRight: 3 }}>"</span>
+                          {review}
+                          <span style={{ color: "rgba(236,72,153,0.7)", fontSize: 14, lineHeight: 0, verticalAlign: "-3px", marginLeft: 3 }}>"</span>
+                        </p>
+                      </div>
+                    );
+                  })}
+                  {myWrittenReview && (
+                    <div style={{
+                      background: "rgba(236,72,153,0.1)",
+                      border: "1px solid rgba(236,72,153,0.35)",
+                      borderRadius: 10,
+                      padding: "9px 11px",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+                        <span style={{ fontSize: 12 }}>💕</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: "rgba(236,72,153,1)" }}>Your Review</span>
+                      </div>
+                      <p style={{
+                        fontSize: 11, color: "rgba(255,255,255,0.82)", lineHeight: 1.6,
+                        fontStyle: "italic", margin: 0,
+                      }}>
+                        <span style={{ color: "rgba(236,72,153,0.7)", fontSize: 14, lineHeight: 0, verticalAlign: "-3px", marginRight: 3 }}>"</span>
+                        {myWrittenReview}
+                        <span style={{ color: "rgba(236,72,153,0.7)", fontSize: 14, lineHeight: 0, verticalAlign: "-3px", marginLeft: 3 }}>"</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Write / edit review form */}
+              {isBestie && reviewEditing && (
+                <div style={{ marginTop: 12 }}>
+                  <textarea
+                    value={reviewDraft}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setReviewDraft(val);
+                      if (reviewError) setReviewError(validateReview(val));
+                    }}
+                    placeholder={`Tell the world what makes ${profileName.split(" ")[0]} special... (max 350 characters, no numbers or links)`}
+                    maxLength={400}
+                    rows={4}
+                    style={{
+                      width: "100%", boxSizing: "border-box",
+                      background: "rgba(0,0,0,0.45)", border: "1.5px solid rgba(236,72,153,0.35)",
+                      borderRadius: 10, color: "white", fontSize: 12, lineHeight: 1.6,
+                      padding: "9px 11px", resize: "none", outline: "none",
+                      fontFamily: "inherit", fontStyle: "italic",
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(236,72,153,0.7)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(236,72,153,0.35)"; }}
+                  />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 5 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 600,
+                      color: reviewDraft.length > 350 ? "rgba(255,80,80,0.9)" : "rgba(255,255,255,0.35)",
+                    }}>
+                      {reviewDraft.length}/350
+                    </span>
+                    {reviewError && (
+                      <span style={{ fontSize: 10, color: "rgba(255,80,80,0.9)", fontWeight: 600 }}>{reviewError}</span>
+                    )}
+                    <button
+                      onClick={saveReview}
+                      style={{
+                        fontSize: 11, fontWeight: 700, color: "white",
+                        background: "linear-gradient(135deg, rgba(236,72,153,0.85), rgba(190,50,120,0.85))",
+                        border: "none", borderRadius: 8, padding: "5px 14px", cursor: "pointer",
+                      }}
+                    >
+                      Save Review 💕
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           );

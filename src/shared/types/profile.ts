@@ -103,4 +103,5 @@ export interface Profile {
   mock_offline_days?: number[] | null;
   app_user_id?: string;
   bestie_ids?: string[];
+  bestie_reviews?: Record<string, string>; // key = bestieId, value = their review about this profile
 }
