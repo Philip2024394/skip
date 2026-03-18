@@ -43,6 +43,9 @@ export interface RelationshipGoals {
   polygamy?: string;
   relocate?: string;
   about_partner?: string;
+  parent_financial_support?: string;
+  marriage_count?: string;
+  marriage_registration?: string;
 }
 
 export interface Profile {

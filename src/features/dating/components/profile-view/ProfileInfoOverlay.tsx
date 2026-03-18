@@ -480,12 +480,20 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
             <InfoRow icon="💔" label="Status" value={relationshipGoals.marital_status} />
           </>
         )}
-        {(relationshipGoals.last_relationship_type || relationshipGoals.relationship_length || relationshipGoals.single_for) && (
+        {(relationshipGoals.last_relationship_type || relationshipGoals.relationship_length || relationshipGoals.single_for || relationshipGoals.marriage_count || relationshipGoals.marriage_registration) && (
           <>
             <SectionTitle title="Relationship History" />
             <InfoRow icon="💑" label="Last relationship" value={relationshipGoals.last_relationship_type} />
             <InfoRow icon="⏳" label="It lasted" value={relationshipGoals.relationship_length} />
             <InfoRow icon="🌱" label="Single for" value={relationshipGoals.single_for} />
+            <InfoRow icon="💍" label="Times married" value={relationshipGoals.marriage_count} />
+            <InfoRow icon="📋" label="Registration" value={relationshipGoals.marriage_registration} />
+          </>
+        )}
+        {relationshipGoals.parent_financial_support && (
+          <>
+            <SectionTitle title="Family Financial Responsibility" />
+            <InfoRow icon="🏠" label="Parent support" value={relationshipGoals.parent_financial_support} />
           </>
         )}
         {(relationshipGoals.religion || relationshipGoals.prayer || relationshipGoals.hijab || relationshipGoals.partner_religion) && (

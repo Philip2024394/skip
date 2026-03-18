@@ -40,6 +40,20 @@ const POLYGAMY = ["Not open to polygamy", "Open to discuss", "Currently open to 
 const RELOCATE = ["Happy to relocate anywhere", "Within same city only", "Within same island", "Would discuss together", "Not willing to relocate"];
 const DATE_TYPE = ["Modern dating", "Traditional courting", "Ta'aruf process", "Family introduction first", "Open to any approach"];
 const PARTNER_RELIGION = ["Same religion only", "Open to all religions", "Prefer same but flexible", "No preference"];
+const PARENT_SUPPORT = [
+  "Yes — I fully support my parents financially",
+  "Yes — I contribute regularly to household expenses",
+  "Occasionally when they need help",
+  "No — my parents are financially independent",
+  "Not applicable",
+];
+const MARRIAGE_COUNT = ["Never been married", "Married once", "Married twice", "Married three or more times"];
+const MARRIAGE_REGISTRATION = [
+  "State / legally registered",
+  "Religious or traditional ceremony only",
+  "Both state-registered and religious",
+  "Not applicable",
+];
 
 interface RelationshipGoals {
   looking_for?: string;
@@ -58,6 +72,9 @@ interface RelationshipGoals {
   date_type?: string;
   partner_religion?: string;
   about_partner?: string;
+  parent_financial_support?: string;
+  marriage_count?: string;
+  marriage_registration?: string;
   // Values quiz
   values_religion?: number;
   values_family?: number;
@@ -159,6 +176,15 @@ export const RelationshipGoalsEditor = ({
           <PillSelect label="💑 My Last Relationship Was" field="last_relationship_type" options={LAST_REL_TYPE} />
           <PillSelect label="⏳ It Lasted" field="relationship_length" options={REL_LENGTH} />
           <PillSelect label="🌱 I Have Been Single For" field="single_for" options={SINGLE_FOR} />
+          <PillSelect label="💍 Times Married" field="marriage_count" options={MARRIAGE_COUNT} />
+          <PillSelect label="📋 Marriage Registration" field="marriage_registration" options={MARRIAGE_REGISTRATION} />
+
+          <div className="my-4 border-t border-white/10" />
+          <p className="text-white/40 text-xs mb-3 font-semibold uppercase tracking-wider">Family Financial Responsibility</p>
+          <div className="mb-4 p-3 rounded-xl" style={{ background: "rgba(255,200,0,0.06)", border: "1px solid rgba(255,200,0,0.15)" }}>
+            <p className="text-yellow-300/70 text-xs">🏠 In many Indonesian families, children are expected to support parents financially. Being transparent about this helps set honest expectations with a future partner.</p>
+          </div>
+          <PillSelect label="🏠 I Support My Parents Financially" field="parent_financial_support" options={PARENT_SUPPORT} />
 
           <div className="my-4 border-t border-white/10" />
           <p className="text-white/40 text-xs mb-3 font-semibold uppercase tracking-wider">Dating Style</p>

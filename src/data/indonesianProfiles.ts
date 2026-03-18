@@ -549,6 +549,14 @@ const REL_LENGTH_OPTS = ["Less than 6 months", "6–12 months", "1–2 years", "
 const SINGLE_FOR_OPTS = ["Just ended (< 1 month)", "A few months", "About 6 months", "About a year", "1–2 years", "2–5 years", "5+ years"];
 const DOWRY_OPTS = ["Open to discussion", "Important to my family", "Flexible", "Symbolic amount", "Not required"];
 const FAMILY_OPTS = ["Very important", "Somewhat involved", "Independent decision", "Meet the family first"];
+const PARENT_SUPPORT_OPTS = [
+  "Yes — I fully support my parents financially",
+  "Yes — I contribute regularly to household expenses",
+  "Occasionally when they need help",
+  "No — my parents are financially independent",
+];
+const MARRIAGE_COUNT_OPTS = ["Never been married", "Never been married", "Never been married", "Married once", "Never been married", "Never been married", "Married once", "Never been married"];
+const MARRIAGE_REG_OPTS = ["State / legally registered", "Religious or traditional ceremony only", "Both state-registered and religious", "Not applicable"];
 const ABOUT_PARTNER_POOL = [
   "Someone who is honest, kind, and values family. I appreciate a person who communicates openly.",
   "Looking for someone with a good sense of humour and a warm heart. Ambition is attractive.",
@@ -601,6 +609,11 @@ const buildRelationshipGoals = (i: number, gender: string, lookingFor: string): 
   dowry: DOWRY_OPTS[i % DOWRY_OPTS.length],
   family_involvement: FAMILY_OPTS[i % FAMILY_OPTS.length],
   about_partner: ABOUT_PARTNER_POOL[i % ABOUT_PARTNER_POOL.length],
+  parent_financial_support: PARENT_SUPPORT_OPTS[i % PARENT_SUPPORT_OPTS.length],
+  marriage_count: MARRIAGE_COUNT_OPTS[i % MARRIAGE_COUNT_OPTS.length],
+  ...(MARRIAGE_COUNT_OPTS[i % MARRIAGE_COUNT_OPTS.length] !== "Never been married"
+    ? { marriage_registration: MARRIAGE_REG_OPTS[i % MARRIAGE_REG_OPTS.length] }
+    : {}),
 });
 
 // Derive the primary badge for a profile index + gender, mirroring the flag logic below.

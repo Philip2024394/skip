@@ -313,28 +313,6 @@ const LikesLibrary = ({
         </div>
       </div>
 
-      {/* ── Cultural Bridge entry (home mode only) ── */}
-      {!tabLabelOverrides && onCulturalGuide && (
-        <button
-          onClick={onCulturalGuide}
-          style={{
-            width: "100%", marginBottom: 6, display: "flex", alignItems: "center",
-            gap: 8, background: "linear-gradient(135deg, rgba(20,80,40,0.35), rgba(30,40,80,0.25))",
-            border: "1px solid rgba(34,197,94,0.2)", borderRadius: 10,
-            padding: "7px 10px", cursor: "pointer", textAlign: "left", flexShrink: 0,
-          }}
-        >
-          <span style={{ fontSize: 16, flexShrink: 0 }}>🌏</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 10, fontWeight: 700, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              Cultural Bridge Guide
-            </p>
-            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 9, margin: 0 }}>Dating in Indonesia — what you need to know</p>
-          </div>
-          <span style={{ color: "rgba(34,197,94,0.7)", fontSize: 10, flexShrink: 0 }}>→</span>
-        </button>
-      )}
-
       {/* ── New profiles label ── */}
       <AnimatePresence>
         {tab === "new" && !isProfileInfoTab && (
