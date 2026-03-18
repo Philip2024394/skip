@@ -126,7 +126,7 @@ const ProfileEditor = () => {
   useEffect(() => {
     const loadProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) { setLoading(false); return; }
       setUserId(user.id);
 
       // Use select("*") so we never 400 on missing columns — any column absent

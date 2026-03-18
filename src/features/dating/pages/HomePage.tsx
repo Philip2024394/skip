@@ -1013,9 +1013,6 @@ const Index = () => {
             </button>
           ) : (
             <>
-              <button onClick={toggleLocale} className="px-2 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white/70 hover:text-white transition-colors text-[10px] font-medium">
-                {locale === "en" ? "🇮🇩 ID" : "🇬🇧 EN"}
-              </button>
               {user ? (
                 <>
                   <CoinHub
