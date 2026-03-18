@@ -5,6 +5,8 @@ import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 
 import { calcValuesMatch } from "@/shared/utils/valuesQuiz";
+import { QUESTION_TEMPLATES } from "@/features/dating/data/profileQuestions";
+import type { QuestionTemplate } from "@/features/dating/data/profileQuestions";
 // import VirtualGiftsDisplay from "@/components/gifts/VirtualGiftsDisplay";
 
 interface ProfileInfoPanelProps {
@@ -16,6 +18,10 @@ interface ProfileInfoPanelProps {
   isBestie?: boolean;
   isBestiePending?: boolean;
   onSendRealGift?: () => void;
+  onAskQuestion?: (template: QuestionTemplate) => void;
+  askedStates?: Record<string, "pending" | "answered">;
+  answeredValues?: Record<string, string>;
+  coinBalance?: number;
 }
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: string }) =>
@@ -219,7 +225,180 @@ function computeMatchStats(profile: any, currentUserQuiz?: Record<string, unknow
   return { compatibility, distanceKm, sharedInterests, activeTime, langMatch, insight, hasRealQuiz };
 }
 
-export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift }: ProfileInfoPanelProps) {
+// ── Shy fields section ────────────────────────────────────────────────────────
+function ShyFieldsSection({
+  profile,
+  onAskQuestion,
+  askedStates,
+  answeredValues,
+  coinBalance,
+}: {
+  profile: any;
+  onAskQuestion?: (t: QuestionTemplate) => void;
+  askedStates: Record<string, "pending" | "answered">;
+  answeredValues: Record<string, string>;
+  coinBalance: number;
+}) {
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  const emptyTemplates = QUESTION_TEMPLATES.filter(t => !t.getValue(profile));
+  if (emptyTemplates.length === 0) return null;
+
+  const firstName = profile?.name ? profile.name.split(" ")[0] : "her";
+
+  return (
+    <>
+      <div style={{
+        margin: "14px 0 6px",
+        paddingBottom: 6,
+        borderBottom: "1.5px solid rgba(236,72,153,0.6)",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+      }}>
+        <p style={{
+          color: "rgba(236,72,153,1)",
+          fontSize: 11,
+          fontWeight: 800,
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          margin: 0,
+        }}>Unlock {firstName}'s Story</p>
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>• {emptyTemplates.length} questions available</span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 6 }}>
+        {emptyTemplates.map((t) => {
+          const state = askedStates[t.id];
+          const answer = answeredValues[t.id];
+          const isConfirming = confirming === t.id;
+
+          return (
+            <div
+              key={t.id}
+              style={{
+                background: state === "answered"
+                  ? "rgba(168,85,247,0.08)"
+                  : "rgba(236,72,153,0.06)",
+                border: `1px solid ${state === "answered" ? "rgba(168,85,247,0.25)" : "rgba(236,72,153,0.15)"}`,
+                borderRadius: 10,
+                padding: "10px 12px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: state === "answered" ? 6 : 4 }}>
+                <span style={{ fontSize: 16 }}>{t.emoji}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>{t.fieldLabel}</span>
+                {state === "pending" && (
+                  <span style={{
+                    marginLeft: "auto",
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: "rgba(236,72,153,0.7)",
+                    background: "rgba(236,72,153,0.1)",
+                    border: "1px solid rgba(236,72,153,0.2)",
+                    borderRadius: 6,
+                    padding: "2px 6px",
+                    letterSpacing: "0.06em",
+                    textTransform: "uppercase",
+                  }}>Waiting...</span>
+                )}
+              </div>
+
+              {state === "answered" && answer ? (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    fontSize: 13,
+                    color: "rgba(255,255,255,0.9)",
+                    fontWeight: 600,
+                    padding: "6px 0 2px",
+                    borderTop: "1px solid rgba(168,85,247,0.15)",
+                  }}
+                >
+                  {answer}
+                </motion.div>
+              ) : state === "pending" ? (
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", margin: 0, fontStyle: "italic" }}>
+                  Waiting for {firstName}'s answer 💭
+                </p>
+              ) : (
+                <>
+                  <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "0 0 8px", fontStyle: "italic" }}>
+                    {t.shyMessage} 🌸
+                  </p>
+                  {isConfirming ? (
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <button
+                        onClick={() => {
+                          setConfirming(null);
+                          onAskQuestion?.(t);
+                        }}
+                        disabled={coinBalance < t.coinCost}
+                        style={{
+                          flex: 1,
+                          padding: "7px 0",
+                          borderRadius: 8,
+                          border: "none",
+                          cursor: coinBalance >= t.coinCost ? "pointer" : "not-allowed",
+                          background: coinBalance >= t.coinCost
+                            ? "linear-gradient(135deg, #ec4899, #a855f7)"
+                            : "rgba(255,255,255,0.08)",
+                          color: coinBalance >= t.coinCost ? "white" : "rgba(255,255,255,0.3)",
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {coinBalance >= t.coinCost ? `Spend ${t.coinCost} coins ✓` : "Not enough coins"}
+                      </button>
+                      <button
+                        onClick={() => setConfirming(null)}
+                        style={{
+                          padding: "7px 14px",
+                          borderRadius: 8,
+                          border: "1px solid rgba(255,255,255,0.12)",
+                          background: "transparent",
+                          color: "rgba(255,255,255,0.5)",
+                          fontSize: 12,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirming(t.id)}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: 8,
+                        border: "1px solid rgba(236,72,153,0.3)",
+                        background: "rgba(236,72,153,0.1)",
+                        color: "rgba(244,114,182,0.9)",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                      }}
+                    >
+                      <span>💰</span>
+                      <span>Ask for {t.coinCost} coins</span>
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
+export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift, onAskQuestion, askedStates = {}, answeredValues = {}, coinBalance = 0 }: ProfileInfoPanelProps) {
   const navigate = useNavigate();
   const basicInfo = profile?.basic_info || {};
   const lifestyleInfo = profile?.lifestyle_info || {};
@@ -515,6 +694,15 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
             <InfoRow icon="📍" label="Relocate" value={relationshipGoals.relocate} />
           </>
         )}
+
+        {/* -- Shy / Unlock Questions -- */}
+        <ShyFieldsSection
+          profile={profile}
+          onAskQuestion={onAskQuestion}
+          askedStates={askedStates}
+          answeredValues={answeredValues}
+          coinBalance={coinBalance}
+        />
 
         {/* -- Match With You -- */}
         <SectionHeader title="Match With You" />

@@ -1,6 +1,37 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown, ChevronUp, ExternalLink, Plane, MapPin, Smartphone, CreditCard, ShieldCheck, Heart } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Plane, Smartphone, Heart } from "lucide-react";
+
+// ── Floating hearts (same as MatchCelebrationOverlay) ─────────────────────────
+const HEART_COUNT = 14;
+function HeartParticles() {
+  const particles = useRef(
+    Array.from({ length: HEART_COUNT }, (_, i) => ({
+      id: i,
+      left: 4 + Math.random() * 92,
+      delay: Math.random() * 3,
+      duration: 3 + Math.random() * 2.5,
+      size: 8 + Math.random() * 12,
+      drift: (Math.random() - 0.5) * 50,
+      emoji: Math.random() > 0.5 ? "❤️" : Math.random() > 0.5 ? "💕" : "💖",
+    }))
+  ).current;
+  return (
+    <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0, opacity: 0.35 }}>
+      {particles.map((p) => (
+        <motion.span
+          key={p.id}
+          initial={{ y: "105%", x: 0, opacity: 0.8, scale: 0.8 }}
+          animate={{ y: "-10%", x: p.drift, opacity: 0, scale: 1.2 }}
+          transition={{ duration: p.duration, delay: p.delay, ease: "easeOut", repeat: Infinity, repeatDelay: Math.random() * 2 }}
+          style={{ position: "absolute", left: `${p.left}%`, bottom: 0, fontSize: p.size, lineHeight: 1, display: "block" }}
+        >
+          {p.emoji}
+        </motion.span>
+      ))}
+    </div>
+  );
+}
 
 // ── City data ─────────────────────────────────────────────────────────────────
 
@@ -187,16 +218,27 @@ function Section({ emoji, title, subtitle, children, defaultOpen = false, accent
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ borderRadius: 14, overflow: "hidden", border: `1px solid ${accentColor}35`, background: `linear-gradient(135deg, ${accentColor}0d, rgba(0,0,0,0.3))`, marginBottom: 10 }}>
+    <div style={{
+      borderRadius: 16, overflow: "hidden",
+      border: "1px solid rgba(255,255,255,0.08)",
+      background: "rgba(8,8,12,0.88)",
+      backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
+      marginBottom: 10,
+    }}>
       <button onClick={() => setOpen(o => !o)} style={{ width: "100%", padding: "13px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "transparent", border: "none", cursor: "pointer" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 20, width: 38, height: 38, borderRadius: 10, background: `${accentColor}20`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{emoji}</span>
+          <span style={{
+            fontSize: 20, width: 38, height: 38, borderRadius: 10,
+            background: `${accentColor}18`, border: `1px solid ${accentColor}35`,
+            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+          }}>{emoji}</span>
           <div style={{ textAlign: "left" }}>
             <p style={{ color: "white", fontWeight: 700, fontSize: 13, margin: 0 }}>{title}</p>
             {subtitle && <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>{open ? "Tap to close" : subtitle}</p>}
           </div>
         </div>
-        {open ? <ChevronUp size={15} color="rgba(255,255,255,0.4)" /> : <ChevronDown size={15} color="rgba(255,255,255,0.4)" />}
+        {open ? <ChevronUp size={15} color="rgba(255,255,255,0.35)" /> : <ChevronDown size={15} color="rgba(255,255,255,0.35)" />}
       </button>
       <AnimatePresence>
         {open && (
@@ -209,18 +251,34 @@ function Section({ emoji, title, subtitle, children, defaultOpen = false, accent
   );
 }
 
-function InfoCard({ children, accent = "rgba(255,255,255,0.07)" }: { children: React.ReactNode; accent?: string }) {
-  return <div style={{ background: accent, borderRadius: 10, padding: "10px 12px", marginBottom: 8 }}>{children}</div>;
+function InfoCard({ children, accent = "rgba(255,255,255,0.05)" }: { children: React.ReactNode; accent?: string }) {
+  return <div style={{ background: accent, borderRadius: 10, padding: "10px 12px", marginBottom: 8, border: "1px solid rgba(255,255,255,0.06)" }}>{children}</div>;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 interface VisitorGuidePageProps {
   onClose: () => void;
+  profile?: { name?: string; city?: string; country?: string; gender?: string } | null;
 }
 
-export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
-  const [selectedCity, setSelectedCity] = useState<string>("bali");
-  const city = CITIES.find(c => c.id === selectedCity)!;
+// Match profile city to our city list
+function resolveCity(profileCity?: string): string {
+  if (!profileCity) return "bali";
+  const lower = profileCity.toLowerCase();
+  if (lower.includes("jakarta")) return "jakarta";
+  if (lower.includes("yogya") || lower.includes("jogja")) return "yogyakarta";
+  if (lower.includes("bandung")) return "bandung";
+  if (lower.includes("surabaya")) return "surabaya";
+  if (lower.includes("lombok") || lower.includes("mataram")) return "lombok";
+  return "bali"; // default for Bali or unknown Indonesian city
+}
+
+export default function VisitorGuidePage({ onClose, profile }: VisitorGuidePageProps) {
+  const resolvedId = resolveCity(profile?.city);
+  const city = CITIES.find(c => c.id === resolvedId)!;
+  const firstName = profile?.name ? profile.name.split(" ")[0] : null;
+  const pronoun = profile?.gender === "Male" ? "him" : "her";
+  const possessive = profile?.gender === "Male" ? "his" : "her";
 
   return (
     <motion.div
@@ -230,68 +288,93 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
       transition={{ duration: 0.25 }}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
-        background: "linear-gradient(160deg, #0a1628 0%, #0d0d1a 45%, #0a1a14 100%)",
+        background: "rgba(8,8,12,0.97)",
         overflowY: "auto", overflowX: "hidden", fontFamily: "inherit",
       }}
     >
+      {/* Radial glow */}
+      <div style={{
+        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
+        background: "radial-gradient(ellipse at 50% 0%, rgba(236,72,153,0.16) 0%, rgba(168,85,247,0.08) 45%, transparent 70%)",
+      }} />
+
+      {/* Floating hearts */}
+      <HeartParticles />
+
+      {/* Top accent bar */}
+      <div style={{ height: 3, width: "100%", background: "linear-gradient(90deg, #ec4899, #a855f7, #ec4899)", position: "sticky", top: 0, zIndex: 20 }} />
+
       {/* Header */}
       <div style={{
-        position: "sticky", top: 0, zIndex: 10, background: "rgba(8,12,28,0.95)",
-        backdropFilter: "blur(16px)", borderBottom: "1px solid rgba(255,255,255,0.07)",
+        position: "sticky", top: 3, zIndex: 10,
+        background: "rgba(8,8,12,0.92)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
         padding: "13px 16px 11px", display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 22 }}>✈️</span>
           <div>
-            <p style={{ color: "white", fontWeight: 800, fontSize: 15, margin: 0 }}>Visitor Guide</p>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>Everything you need to visit Indonesia</p>
+            <p style={{
+              margin: 0, fontSize: 16, fontWeight: 900, lineHeight: 1.1,
+              background: "linear-gradient(135deg, #f472b6 0%, #ec4899 45%, #a855f7 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            }}>{firstName ? `Visit ${firstName}` : "Visitor Guide"}</p>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>{firstName ? `${city.name} — everything you need to know` : "Everything you need to visit Indonesia"}</p>
           </div>
         </div>
-        <button onClick={onClose} style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "6px 8px", cursor: "pointer", color: "white", display: "flex", alignItems: "center" }}>
+        <button onClick={onClose} style={{
+          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 8, padding: "6px 8px", cursor: "pointer", color: "rgba(255,255,255,0.7)", display: "flex", alignItems: "center",
+        }}>
           <X size={16} />
         </button>
       </div>
 
-      <div style={{ padding: "14px 14px 36px" }}>
+      <div style={{ padding: "14px 14px 36px", position: "relative", zIndex: 1 }}>
 
         {/* Hero */}
-        <div style={{ borderRadius: 16, background: "linear-gradient(135deg, rgba(14,90,50,0.25), rgba(14,50,100,0.2))", border: "1px solid rgba(34,197,94,0.2)", padding: "14px 16px", marginBottom: 16, display: "flex", gap: 12, alignItems: "flex-start" }}>
-          <span style={{ fontSize: 32, flexShrink: 0 }}>🇮🇩</span>
-          <div>
-            <p style={{ color: "white", fontWeight: 700, fontSize: 14, margin: "0 0 5px" }}>Planning to visit your match?</p>
-            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.65, margin: 0 }}>
-              This guide covers airports, transport, hotels, food prices, SIM cards, apps and visas for each major city. All prices are in Indonesian Rupiah (IDR). Current exchange: <span style={{ color: "rgba(255,200,80,0.9)", fontWeight: 600 }}>Rp 15,000–16,000 ≈ USD $1</span>. Always verify visa requirements before travelling.
-            </p>
+        <div style={{
+          borderRadius: 20,
+          background: "rgba(8,8,12,0.88)",
+          backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 8px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)",
+          padding: "16px", marginBottom: 16,
+          position: "relative", overflow: "hidden",
+        }}>
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: "radial-gradient(ellipse at 50% 0%, rgba(236,72,153,0.10) 0%, rgba(168,85,247,0.05) 55%, transparent 75%)",
+          }} />
+          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", position: "relative", zIndex: 1 }}>
+            <span style={{ fontSize: 32, flexShrink: 0 }}>{city.emoji}</span>
+            <div>
+              <p style={{
+                margin: "0 0 5px", fontWeight: 900, fontSize: 16,
+                background: "linear-gradient(135deg, #f472b6 0%, #ec4899 45%, #a855f7 100%)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+              }}>
+                {firstName ? `Visiting ${firstName} in ${city.name}` : `Visiting ${city.name}`}
+              </p>
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.65, margin: 0 }}>
+                {firstName
+                  ? `${firstName} is based in ${city.name}. This guide covers everything you need to visit ${pronoun} — airports, transport, hotels, food prices, SIM cards and visas.`
+                  : `This guide covers airports, transport, hotels, food prices, SIM cards, apps and visas for ${city.name}.`
+                } All prices in IDR. <span style={{ color: "#fbbf24", fontWeight: 600 }}>Rp 15,000–16,000 ≈ USD $1</span>. Always verify visa requirements before travelling.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* City selector */}
-        <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Select her city</p>
-        <div style={{ display: "flex", gap: 7, overflowX: "auto", paddingBottom: 8, marginBottom: 14 }}>
-          {CITIES.map(c => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCity(c.id)}
-              style={{
-                flexShrink: 0, padding: "8px 12px", borderRadius: 12, cursor: "pointer",
-                background: selectedCity === c.id ? "linear-gradient(135deg, rgba(34,197,94,0.35), rgba(14,80,50,0.4))" : "rgba(255,255,255,0.06)",
-                border: selectedCity === c.id ? "1.5px solid rgba(34,197,94,0.5)" : "1px solid rgba(255,255,255,0.1)",
-                display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-              }}
-            >
-              <span style={{ fontSize: 18 }}>{c.emoji}</span>
-              <span style={{ fontSize: 9, fontWeight: 700, color: selectedCity === c.id ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.45)", whiteSpace: "nowrap" }}>{c.name}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* City tagline */}
-        <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: "10px 12px", marginBottom: 12, borderLeft: "3px solid rgba(34,197,94,0.5)" }}>
-          <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 12, margin: 0 }}>{city.emoji} <strong>{city.name}</strong> — {city.tagline}</p>
+        {/* City identity card */}
+        <div style={{ background: "rgba(168,85,247,0.08)", borderRadius: 12, padding: "10px 14px", marginBottom: 14, borderLeft: "3px solid rgba(168,85,247,0.5)" }}>
+          <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, margin: 0 }}>
+            {city.emoji} <strong>{city.name}</strong> — {city.tagline}
+          </p>
         </div>
 
         {/* ── Airport & Transport ── */}
-        <Section emoji="✈️" title="Airport & Getting There" subtitle="Terminals, transport options and honest pricing" accentColor="rgba(99,179,237,0.8)" defaultOpen>
+        <Section emoji="✈️" title={`Flying to ${city.name}`} subtitle={firstName ? `How to arrive and get to ${firstName}` : "Terminals, transport and honest pricing"} accentColor="rgba(99,179,237,0.8)" defaultOpen>
           {city.airports.map((a, i) => (
             <InfoCard key={i} accent="rgba(99,179,237,0.08)">
               <p style={{ color: "rgba(99,179,237,0.9)", fontWeight: 700, fontSize: 12, margin: "0 0 3px" }}>
@@ -313,7 +396,7 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
         </Section>
 
         {/* ── Where to Stay ── */}
-        <Section emoji="🏨" title="Where to Stay" subtitle={`Recommended areas and price tiers in ${city.name}`} accentColor="rgba(167,139,250,0.8)">
+        <Section emoji="🏨" title="Where to Stay" subtitle={firstName ? `Best neighbourhoods near ${firstName} in ${city.name}` : `Recommended areas in ${city.name}`} accentColor="rgba(167,139,250,0.8)">
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: "0 0 8px" }}>Best areas</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 12 }}>
             {city.areas.map((a, i) => (
@@ -333,7 +416,7 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
         </Section>
 
         {/* ── Embassy ── */}
-        <Section emoji="🏛️" title="Embassy & Consular Contacts" subtitle="Emergency contacts and nearest consular services" accentColor="rgba(251,191,36,0.8)">
+        <Section emoji="🏛️" title="Embassy & Consular Contacts" subtitle={firstName ? `Emergency support when you're visiting ${firstName}` : "Emergency contacts and nearest consular services"} accentColor="rgba(251,191,36,0.8)">
           <InfoCard accent="rgba(251,191,36,0.08)">
             <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, lineHeight: 1.65, margin: "0 0 8px" }}>{city.embassy}</p>
             <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 8, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -344,9 +427,11 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
         </Section>
 
         {/* ── Marriage Services ── */}
-        <Section emoji="💍" title="Marriage & Legal Services" subtitle="For serious relationships — what you need to know" accentColor="rgba(236,72,153,0.8)">
+        <Section emoji="💍" title="Marriage & Legal Services" subtitle={firstName ? `Building a future with ${firstName} — what you need to know` : "For serious relationships — what you need to know"} accentColor="rgba(236,72,153,0.8)">
           <InfoCard accent="rgba(236,72,153,0.08)">
-            <p style={{ color: "rgba(236,72,153,0.9)", fontWeight: 700, fontSize: 12, margin: "0 0 6px" }}>Marrying an Indonesian citizen as a foreigner</p>
+            <p style={{ color: "rgba(236,72,153,0.9)", fontWeight: 700, fontSize: 12, margin: "0 0 6px" }}>
+              {firstName ? `Marrying ${firstName} — legal steps for a foreign partner` : "Marrying an Indonesian citizen as a foreigner"}
+            </p>
             <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
               {[
                 "You must be legally single — bring a certified 'Certificate of No Impediment' (CNI) or equivalent from your home country",
@@ -391,8 +476,8 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
               </div>
             ))}
           </div>
-          <div style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 10, padding: "10px 12px", marginTop: 6 }}>
-            <p style={{ color: "rgba(34,197,94,0.9)", fontWeight: 700, fontSize: 11, margin: "0 0 4px" }}>💡 The Golden Rule</p>
+          <div style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: 10, padding: "10px 12px", marginTop: 6 }}>
+            <p style={{ color: "rgba(244,114,182,0.95)", fontWeight: 700, fontSize: 11, margin: "0 0 4px" }}>💡 The Golden Rule</p>
             <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, margin: 0, lineHeight: 1.55 }}>Check Shopee Food or GoFood delivery prices for a restaurant before you sit down. If the delivery price and the in-restaurant menu price are wildly different — negotiate or walk.</p>
           </div>
         </Section>
@@ -457,9 +542,9 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
         </Section>
 
         {/* SIM card */}
-        <Section emoji="📶" title="Get a SIM Card — Most Important Purchase" subtitle="Changes everything about how you pay and move in Indonesia" accentColor="rgba(34,197,94,0.8)">
-          <div style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.25)", borderRadius: 10, padding: "11px 13px", marginBottom: 10 }}>
-            <p style={{ color: "rgba(34,197,94,0.95)", fontWeight: 700, fontSize: 12, margin: "0 0 5px" }}>Why this is the first thing to do after landing</p>
+        <Section emoji="📶" title="Get a SIM Card — Most Important Purchase" subtitle="Changes everything about how you pay and move in Indonesia" accentColor="rgba(168,85,247,0.8)">
+          <div style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.25)", borderRadius: 10, padding: "11px 13px", marginBottom: 10 }}>
+            <p style={{ color: "rgba(244,114,182,0.95)", fontWeight: 700, fontSize: 12, margin: "0 0 5px" }}>Why this is the first thing to do after landing</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               {[
                 "Transport: Grab/Gojek requires mobile data — without it you pay negotiated 'tourist price' for every ride (often 3–5× higher)",
@@ -470,7 +555,7 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
                 "Safety: You can call emergency services, your match, and your embassy at any time",
               ].map((item, i) => (
                 <div key={i} style={{ display: "flex", gap: 7, alignItems: "flex-start" }}>
-                  <span style={{ color: "rgba(34,197,94,0.7)", fontSize: 11, flexShrink: 0 }}>✓</span>
+                  <span style={{ color: "rgba(168,85,247,0.8)", fontSize: 11, flexShrink: 0 }}>✓</span>
                   <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 11, margin: 0, lineHeight: 1.5 }}>{item}</p>
                 </div>
               ))}
@@ -483,8 +568,8 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
             { place: "Indomaret / Alfamart (24-hour convenience stores)", note: "Everywhere in Indonesia — literally every 100m in cities. Sell SIM starter packs and top-up credit. Cheapest option." },
             { place: "Authorized carrier shops", note: "Telkomsel GraPARI, XL Centre, myIM3 outlets in malls. Best for larger data bundles and full registration assistance." },
           ].map((s, i) => (
-            <InfoCard key={i} accent="rgba(34,197,94,0.07)">
-              <p style={{ color: "rgba(34,197,94,0.85)", fontWeight: 700, fontSize: 12, margin: "0 0 3px" }}>{s.place}</p>
+            <InfoCard key={i} accent="rgba(168,85,247,0.06)">
+              <p style={{ color: "rgba(196,132,251,0.9)", fontWeight: 700, fontSize: 12, margin: "0 0 3px" }}>{s.place}</p>
               <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, margin: 0 }}>{s.note}</p>
             </InfoCard>
           ))}
@@ -497,7 +582,7 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
           <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: "10px 0 8px" }}>Best providers</p>
           {SIM_PROVIDERS.map((s, i) => (
             <InfoCard key={i}>
-              <p style={{ color: "rgba(34,197,94,0.9)", fontWeight: 700, fontSize: 12, margin: "0 0 2px" }}>{s.name}</p>
+              <p style={{ color: "rgba(244,114,182,0.9)", fontWeight: 700, fontSize: 12, margin: "0 0 2px" }}>{s.name}</p>
               <p style={{ color: "rgba(255,200,80,0.85)", fontSize: 10, fontWeight: 600, margin: "0 0 3px" }}>📡 {s.coverage}</p>
               <p style={{ color: "rgba(255,200,80,0.75)", fontSize: 10, margin: "0 0 4px" }}>💰 {s.price}</p>
               <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, margin: 0 }}>{s.note}</p>
@@ -526,7 +611,7 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
         </Section>
 
         {/* Bule price / integration */}
-        <Section emoji="🤝" title="Foreigner Pricing — What to Expect" subtitle="Honest guide to 'bule price' and how integration changes things" accentColor="rgba(167,139,250,0.8)">
+        <Section emoji="🤝" title="Foreigner Pricing — What to Expect" subtitle={firstName ? `What to know before you arrive in ${firstName}'s world` : "Honest guide to 'bule price' and how integration changes things"} accentColor="rgba(167,139,250,0.8)">
           <div style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)", borderRadius: 10, padding: "10px 12px", marginBottom: 10 }}>
             <p style={{ color: "rgba(167,139,250,0.9)", fontWeight: 700, fontSize: 12, margin: "0 0 5px" }}>Understanding two-tier pricing in Indonesia</p>
             <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, lineHeight: 1.65, margin: 0 }}>
@@ -540,8 +625,8 @@ export default function VisitorGuidePage({ onClose }: VisitorGuidePageProps) {
               </div>
             ))}
           </div>
-          <div style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 10, padding: "10px 12px", marginTop: 8 }}>
-            <p style={{ color: "rgba(34,197,94,0.9)", fontWeight: 700, fontSize: 11, margin: "0 0 4px" }}>The long game</p>
+          <div style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)", borderRadius: 10, padding: "10px 12px", marginTop: 8 }}>
+            <p style={{ color: "rgba(244,114,182,0.95)", fontWeight: 700, fontSize: 11, margin: "0 0 4px" }}>The long game</p>
             <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, lineHeight: 1.6, margin: 0 }}>Visitors who spend extended time in a neighbourhood, visit the same warungs, greet neighbours by name, and show genuine respect for local life — gradually transition from 'tourist bule' to 'regular bule' to simply a welcomed familiar face. This is the most rewarding integration and it happens naturally, on Indonesian time.</p>
           </div>
         </Section>

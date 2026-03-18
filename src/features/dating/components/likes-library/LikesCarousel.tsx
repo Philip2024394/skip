@@ -17,8 +17,6 @@ interface LikesCarouselProps {
   tab: Tab;
   scrollRef: React.RefObject<HTMLDivElement>;
   onSelectProfile: (profile: any, sourceList: any[]) => void;
-  onTarotOpen: () => void;
-  onRevealDailyTarot?: () => void;
   heartDropProfileId: string | null;
   superLikeGlowProfileId: string | null;
   activePromoIndex: number | null;
@@ -27,7 +25,6 @@ interface LikesCarouselProps {
   isNewProfile: (p: any) => boolean;
   iLiked: any[];
   currentList: any[];
-  dailyTarot: any;
   onUnlock: (profile: any) => void;
 }
 
@@ -35,46 +32,6 @@ export default function LikesCarousel(props: LikesCarouselProps) {
   return (
     <>
       {props.displayItemsWithTarot.map((item, idx) => {
-        // ── Tarot card injection (uses the promo slot shape) ──
-        if (props.dailyTarot && props.tab === "new" && item.type === "promo") {
-          return (
-            <motion.div
-              key={`tarot-${props.dailyTarot.cardId}-${idx}`}
-              initial={{ opacity: 0, scale: 0.85 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.7 }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                props.onTarotOpen();
-                window.setTimeout(() => props.onRevealDailyTarot?.(), 0);
-              }}
-              className="flex-shrink-0 cursor-pointer"
-              style={{ width: 68 }}
-              aria-label="Open your Daily Love Reading"
-            >
-              {/* Card image with subtle heartbeat glow — no container */}
-              <motion.img
-                src="https://ik.imagekit.io/7grri5v7d/tarot%20card%20backy.png?updatedAt=1773488446618"
-                alt="Daily Tarot"
-                className="w-full rounded-lg"
-                style={{ filter: "drop-shadow(0 0 8px rgba(255,105,180,0.5))" }}
-                animate={{
-                  filter: [
-                    "drop-shadow(0 0 6px rgba(255,105,180,0.4))",
-                    "drop-shadow(0 0 14px rgba(255,105,180,0.7))",
-                    "drop-shadow(0 0 6px rgba(255,105,180,0.4))",
-                  ],
-                  scale: [1, 1.04, 1],
-                }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                decoding="async"
-                loading="eager"
-              />
-            </motion.div>
-          );
-        }
-
         // ── Promo card ──
         if (item.type === "promo" && props.activePromoIndex !== null) {
           return (

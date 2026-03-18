@@ -1,7 +1,42 @@
 import { useState } from "react";
-import { Gift, Search, MapPin, Clock, Package, CheckCircle, XCircle, Eye, EyeOff, Plus } from "lucide-react";
+import { Gift, Search, MapPin, Package, CheckCircle, Eye, EyeOff, Plus, MessageCircle } from "lucide-react";
+import { QUESTION_TEMPLATES } from "@/features/dating/data/profileQuestions";
+
+// ── Test profile question blocker ─────────────────────────────────────────────
+function injectTestQuestion(templateId: string) {
+  const template = QUESTION_TEMPLATES.find(t => t.id === templateId);
+  if (!template) return;
+  const RECEIVED_KEY = "received_questions_v1";
+  try {
+    const existing = JSON.parse(localStorage.getItem(RECEIVED_KEY) || "[]");
+    existing.push({
+      id: `rq_test_${Date.now()}`,
+      fromName: "Sari",
+      fromAvatar: undefined,
+      templateId: template.id,
+      fieldLabel: template.fieldLabel,
+      question: template.question,
+      askedAt: Date.now(),
+      status: "pending",
+    });
+    localStorage.setItem(RECEIVED_KEY, JSON.stringify(existing));
+    window.location.reload();
+  } catch { /* no-op */ }
+}
 import type { GiftOrder } from "@/features/real-gifts/RealGiftOrderFlow";
 import { setGiftNotificationStage } from "@/features/real-gifts/GiftDeliveryNotification";
+
+// ── City activation ────────────────────────────────────────────────────────────
+const CITY_LS_KEY = "gift_service_cities";
+const ALL_CITIES = ["Yogyakarta", "Jakarta", "Bali", "Surabaya", "Bandung", "Medan"];
+
+export function getActiveCities(): string[] {
+  try { return JSON.parse(localStorage.getItem(CITY_LS_KEY) || '["Yogyakarta"]'); }
+  catch { return ["Yogyakarta"]; }
+}
+function saveActiveCities(cities: string[]) {
+  localStorage.setItem(CITY_LS_KEY, JSON.stringify(cities));
+}
 
 // ── Storage helpers ────────────────────────────────────────────────────────────
 const LS_KEY = "admin_gift_orders";
@@ -49,6 +84,7 @@ const GIFT_EMOJIS: Record<string, string> = {
 // ── Component ─────────────────────────────────────────────────────────────────
 export const GiftOrdersTab = () => {
   const [orders, setOrders] = useState<GiftOrder[]>(loadOrders);
+  const [activeCities, setActiveCities] = useState<string[]>(getActiveCities);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAddressFor, setShowAddressFor] = useState<string | null>(null);
@@ -112,8 +148,6 @@ export const GiftOrdersTab = () => {
         gift_type: order.gift_type,
         sender_name: order.sender_name,
         reveal_sender: false,
-        delivery_eta: etaDate,
-        notif_stage: 1,
         dismissed_stages: [],
         ...(existing || {}),
         notif_stage: 1,
@@ -167,6 +201,69 @@ export const GiftOrdersTab = () => {
 
   return (
     <div className="space-y-4">
+      {/* City Service Activation */}
+      <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center gap-2 mb-1">
+          <MapPin className="w-4 h-4 text-amber-400" />
+          <p className="text-white font-semibold text-sm">Service Cities</p>
+          <span className="ml-auto text-white/40 text-xs">{activeCities.length} active</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {ALL_CITIES.map(city => {
+            const isActive = activeCities.includes(city);
+            return (
+              <button
+                key={city}
+                onClick={() => {
+                  const next = isActive
+                    ? activeCities.filter(c => c !== city)
+                    : [...activeCities, city];
+                  saveActiveCities(next);
+                  setActiveCities(next);
+                }}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: isActive ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.04)",
+                  border: `1px solid ${isActive ? "rgba(34,197,94,0.4)" : "rgba(255,255,255,0.1)"}`,
+                  color: isActive ? "#86EFAC" : "#ffffff60",
+                }}
+              >
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? "bg-green-400" : "bg-white/20"}`} />
+                {city}
+                {city === "Yogyakarta" && <span className="ml-auto text-[9px] opacity-60">launch</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Profile Question Blocker — demo */}
+      <div className="rounded-xl p-4 space-y-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="flex items-center gap-2 mb-1">
+          <MessageCircle className="w-4 h-4 text-pink-400" />
+          <p className="text-white font-semibold text-sm">Profile Questions</p>
+          <span className="ml-auto text-white/40 text-xs">test blocker</span>
+        </div>
+        <p className="text-white/40 text-xs">Send a test question to yourself to preview the blocking popup experience.</p>
+        <div className="grid grid-cols-2 gap-2">
+          {QUESTION_TEMPLATES.slice(0, 6).map(t => (
+            <button
+              key={t.id}
+              onClick={() => injectTestQuestion(t.id)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all text-left"
+              style={{
+                background: "rgba(236,72,153,0.08)",
+                border: "1px solid rgba(236,72,153,0.2)",
+                color: "rgba(244,114,182,0.9)",
+              }}
+            >
+              <span>{t.emoji}</span>
+              <span className="truncate">{t.fieldLabel}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
         {[

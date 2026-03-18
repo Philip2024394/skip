@@ -1,6 +1,37 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown, ChevronUp, Send, RefreshCw } from "lucide-react";
+import { X, ChevronDown, ChevronUp, Send } from "lucide-react";
+
+// ── Floating hearts (same as MatchCelebrationOverlay) ─────────────────────────
+const HEART_COUNT = 14;
+function HeartParticles() {
+  const particles = useRef(
+    Array.from({ length: HEART_COUNT }, (_, i) => ({
+      id: i,
+      left: 4 + Math.random() * 92,
+      delay: Math.random() * 3,
+      duration: 3 + Math.random() * 2.5,
+      size: 8 + Math.random() * 12,
+      drift: (Math.random() - 0.5) * 50,
+      emoji: Math.random() > 0.5 ? "❤️" : Math.random() > 0.5 ? "💕" : "💖",
+    }))
+  ).current;
+  return (
+    <div style={{ position: "fixed", inset: 0, overflow: "hidden", pointerEvents: "none", zIndex: 0, opacity: 0.35 }}>
+      {particles.map((p) => (
+        <motion.span
+          key={p.id}
+          initial={{ y: "105%", x: 0, opacity: 0.8, scale: 0.8 }}
+          animate={{ y: "-10%", x: p.drift, opacity: 0, scale: 1.2 }}
+          transition={{ duration: p.duration, delay: p.delay, ease: "easeOut", repeat: Infinity, repeatDelay: Math.random() * 2 }}
+          style={{ position: "absolute", left: `${p.left}%`, bottom: 0, fontSize: p.size, lineHeight: 1, display: "block" }}
+        >
+          {p.emoji}
+        </motion.span>
+      ))}
+    </div>
+  );
+}
 
 // ── 200 cultural data points across 4 categories ─────────────────────────────
 
@@ -148,9 +179,11 @@ function CultureSection({ emoji, title, tips, accentColor }: {
   const [open, setOpen] = useState(false);
   return (
     <div style={{
-      borderRadius: 14, overflow: "hidden",
-      border: `1px solid ${accentColor}40`,
-      background: `linear-gradient(135deg, ${accentColor}10, rgba(0,0,0,0.35))`,
+      borderRadius: 16, overflow: "hidden",
+      border: "1px solid rgba(255,255,255,0.08)",
+      background: "rgba(8,8,12,0.88)",
+      backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+      boxShadow: "0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
       marginBottom: 10,
     }}>
       <button onClick={() => setOpen(o => !o)} style={{
@@ -160,8 +193,9 @@ function CultureSection({ emoji, title, tips, accentColor }: {
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{
-            fontSize: 22, width: 40, height: 40, borderRadius: 12,
-            background: `${accentColor}25`,
+            fontSize: 20, width: 38, height: 38, borderRadius: 10,
+            background: `${accentColor}22`,
+            border: `1px solid ${accentColor}40`,
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>{emoji}</span>
           <div style={{ textAlign: "left" }}>
@@ -171,7 +205,7 @@ function CultureSection({ emoji, title, tips, accentColor }: {
             </p>
           </div>
         </div>
-        {open ? <ChevronUp size={16} color="rgba(255,255,255,0.5)" /> : <ChevronDown size={16} color="rgba(255,255,255,0.5)" />}
+        {open ? <ChevronUp size={16} color="rgba(255,255,255,0.35)" /> : <ChevronDown size={16} color="rgba(255,255,255,0.35)" />}
       </button>
       <AnimatePresence>
         {open && (
@@ -185,11 +219,11 @@ function CultureSection({ emoji, title, tips, accentColor }: {
             <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
               {tips.map((tip, i) => (
                 <div key={i} style={{
-                  background: "rgba(255,255,255,0.05)", borderRadius: 10,
+                  background: "rgba(255,255,255,0.04)", borderRadius: 10,
                   padding: "10px 12px",
-                  borderLeft: `3px solid ${accentColor}80`,
+                  borderLeft: `3px solid ${accentColor}70`,
                 }}>
-                  <p style={{ color: "rgba(255,255,255,0.88)", fontSize: 12, lineHeight: 1.65, margin: 0 }}>{tip}</p>
+                  <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, lineHeight: 1.65, margin: 0 }}>{tip}</p>
                 </div>
               ))}
             </div>
@@ -205,10 +239,29 @@ interface CulturalBridgePageProps {
   onClose: () => void;
   coinBalance?: number;
   onSpendCoins?: (amount: number) => void;
+  profile?: { name?: string; city?: string; country?: string; religion?: string; gender?: string } | null;
+}
+
+// Derive a regional accent colour and label from the profile's city
+function getCityAccent(city?: string): { label: string; accentColor: string } {
+  if (!city) return { label: "Indonesia", accentColor: "#ec4899" };
+  const lower = city.toLowerCase();
+  if (lower.includes("bali")) return { label: "Bali", accentColor: "#f97316" };
+  if (lower.includes("yogya") || lower.includes("jogja")) return { label: "Yogyakarta", accentColor: "#a855f7" };
+  if (lower.includes("jakarta")) return { label: "Jakarta", accentColor: "#818cf8" };
+  if (lower.includes("bandung")) return { label: "Bandung", accentColor: "#06b6d4" };
+  if (lower.includes("surabaya")) return { label: "Surabaya", accentColor: "#ec4899" };
+  if (lower.includes("lombok") || lower.includes("mataram")) return { label: "Lombok", accentColor: "#22c55e" };
+  if (lower.includes("sumatra") || lower.includes("medan") || lower.includes("padang")) return { label: "Sumatra", accentColor: "#f59e0b" };
+  return { label: city, accentColor: "#ec4899" };
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCoins }: CulturalBridgePageProps) {
+export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCoins, profile }: CulturalBridgePageProps) {
+  const firstName = profile?.name ? profile.name.split(" ")[0] : null;
+  const pronoun = profile?.gender === "Male" ? "him" : "her";
+  const possessive = profile?.gender === "Male" ? "his" : "her";
+  const cityAccent = getCityAccent(profile?.city);
   // Seed changes each time the page opens (using timestamp modulo to give variety)
   const seed = useMemo(() => Math.floor(Date.now() / 1000) % 999983, []);
 
@@ -222,7 +275,7 @@ export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCo
   const [asked, setAsked] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [askError, setAskError] = useState("");
-  const [refreshSeed, setRefreshSeed] = useState(seed);
+  const refreshSeed = seed;
 
   const COIN_COST = 5;
 
@@ -241,9 +294,6 @@ export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCo
     setAskError("");
   };
 
-  const handleRefresh = () => {
-    setRefreshSeed(s => (s + 100003) % 999983);
-  };
 
   const refreshedFood   = useMemo(() => seededPick(FOOD_TIPS,     refreshSeed,       5), [refreshSeed]);
   const refreshedSpirit = useMemo(() => seededPick(SPIRITUAL_TIPS, refreshSeed + 1,  5), [refreshSeed]);
@@ -258,38 +308,49 @@ export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCo
       transition={{ duration: 0.25 }}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
-        background: "linear-gradient(160deg, #1a0a2e 0%, #0d0d1a 40%, #0a1a0d 100%)",
+        background: "rgba(8,8,12,0.97)",
         overflowY: "auto", overflowX: "hidden",
         fontFamily: "inherit",
       }}
     >
+      {/* Radial glow — same as match popup */}
+      <div style={{
+        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
+        background: "radial-gradient(ellipse at 50% 0%, rgba(236,72,153,0.16) 0%, rgba(168,85,247,0.08) 45%, transparent 70%)",
+      }} />
+
+      {/* Floating hearts */}
+      <HeartParticles />
+
+      {/* Top accent bar */}
+      <div style={{ height: 3, width: "100%", background: "linear-gradient(90deg, #ec4899, #a855f7, #ec4899)", position: "sticky", top: 0, zIndex: 20 }} />
+
       {/* Header */}
       <div style={{
-        position: "sticky", top: 0, zIndex: 10,
-        background: "rgba(10,5,20,0.92)", backdropFilter: "blur(16px)",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        position: "sticky", top: 3, zIndex: 10,
+        background: "rgba(8,8,12,0.92)", backdropFilter: "blur(40px)",
+        WebkitBackdropFilter: "blur(40px)",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
         padding: "14px 16px 12px",
         display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 24 }}>🌏</span>
           <div>
-            <p style={{ color: "white", fontWeight: 800, fontSize: 15, margin: 0 }}>Cultural Bridge</p>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>Dating Indonesian women — what you need to know</p>
+            <p style={{
+              margin: 0, fontSize: 16, fontWeight: 900, lineHeight: 1.1,
+              background: "linear-gradient(135deg, #f472b6 0%, #ec4899 45%, #a855f7 100%)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            }}>{firstName ? `${firstName}'s Culture` : "Cultural Bridge"}</p>
+            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>
+              {firstName ? `Understanding ${possessive} world — ${cityAccent.label}` : "Dating Indonesian women — what you need to know"}
+            </p>
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={handleRefresh} style={{
-            background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 8, padding: "6px 8px", cursor: "pointer",
-            display: "flex", alignItems: "center", gap: 5, color: "rgba(255,255,255,0.6)",
-          }}>
-            <RefreshCw size={12} />
-            <span style={{ fontSize: 10, fontWeight: 600 }}>New Tips</span>
-          </button>
           <button onClick={onClose} style={{
-            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 8, padding: "6px 8px", cursor: "pointer", color: "white",
+            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: 8, padding: "6px 8px", cursor: "pointer", color: "rgba(255,255,255,0.7)",
             display: "flex", alignItems: "center",
           }}>
             <X size={16} />
@@ -297,78 +358,97 @@ export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCo
         </div>
       </div>
 
-      <div style={{ padding: "16px 14px 32px" }}>
+      <div style={{ padding: "16px 14px 32px", position: "relative", zIndex: 1 }}>
 
         {/* Hero banner */}
         <div style={{
-          borderRadius: 16,
-          background: "linear-gradient(135deg, rgba(236,72,153,0.2), rgba(120,60,200,0.15), rgba(30,120,60,0.12))",
-          border: "1px solid rgba(236,72,153,0.25)",
-          padding: "16px 16px",
+          borderRadius: 20,
+          background: "rgba(8,8,12,0.88)",
+          backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 8px 48px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.06)",
+          padding: "18px 16px",
           marginBottom: 18,
-          display: "flex", alignItems: "flex-start", gap: 12,
+          position: "relative", overflow: "hidden",
         }}>
-          <span style={{ fontSize: 32, flexShrink: 0 }}>🇮🇩</span>
-          <div>
-            <p style={{ color: "white", fontWeight: 700, fontSize: 14, margin: "0 0 6px" }}>
-              Indonesia — Where Tradition Meets Modernity
-            </p>
-            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.6, margin: 0 }}>
-              Indonesia is the world's fourth most populous nation — a deeply spiritual, traditionally rooted, and remarkably diverse archipelago of over 300 ethnic groups. Dating here means navigating a beautiful tapestry of faith, family, food, and ceremony. The tips below refresh every visit so you are always learning something new.
-            </p>
+          <div style={{
+            position: "absolute", inset: 0, pointerEvents: "none",
+            background: "radial-gradient(ellipse at 50% 0%, rgba(236,72,153,0.12) 0%, rgba(168,85,247,0.06) 55%, transparent 75%)",
+          }} />
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, position: "relative", zIndex: 1 }}>
+            <span style={{ fontSize: 32, flexShrink: 0 }}>🇮🇩</span>
+            <div>
+              <p style={{
+                margin: "0 0 6px", fontWeight: 900, fontSize: 15,
+                background: "linear-gradient(135deg, #f472b6 0%, #ec4899 45%, #a855f7 100%)",
+                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+              }}>
+                {firstName
+                  ? `Understanding ${firstName} — ${cityAccent.label} roots`
+                  : "Indonesia — Where Tradition Meets Modernity"}
+              </p>
+              <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.6, margin: 0 }}>
+                {firstName
+                  ? `${firstName} comes from ${profile?.city || "Indonesia"} — a place shaped by deep spiritual roots, strong family values, and rich food culture. These insights are built around ${possessive} background to help you understand ${pronoun} world.`
+                  : "Indonesia is the world's fourth most populous nation — a deeply spiritual, traditionally rooted, and remarkably diverse archipelago of over 300 ethnic groups. Dating here means navigating a beautiful tapestry of faith, family, food, and ceremony."}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* 4 culture sections */}
         <CultureSection
           emoji="🍳"
-          title="Food & Cooking Culture"
+          title={firstName ? `${firstName}'s Food Culture` : "Food & Cooking Culture"}
           tips={refreshedFood}
           accentColor="#f97316"
         />
         <CultureSection
           emoji="🌿"
-          title="Spirituality & Nature"
+          title={firstName ? `${firstName}'s Spiritual Roots` : "Spirituality & Nature"}
           tips={refreshedSpirit}
-          accentColor="#22c55e"
+          accentColor="#a855f7"
         />
         <CultureSection
           emoji="👨‍👩‍👧"
-          title="Family & Tradition"
+          title={firstName ? `Family Life — ${possessive} World` : "Family & Tradition"}
           tips={refreshedFamily}
           accentColor="#ec4899"
         />
         <CultureSection
           emoji="🏙️"
-          title="City & Regional Guide"
+          title={firstName ? `${cityAccent.label} — ${possessive} City` : "City & Regional Guide"}
           tips={refreshedCity}
-          accentColor="#818cf8"
+          accentColor={cityAccent.accentColor}
         />
 
         {/* Featured Q&A */}
         <div style={{ marginTop: 4, marginBottom: 18 }}>
           <p style={{
-            color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700,
+            color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700,
             letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 10,
-          }}>Common Questions</p>
+          }}>{firstName ? `Questions About ${firstName}'s Culture` : "Common Questions"}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {featuredQA.map((qa, i) => (
-              <details key={i} style={{ borderRadius: 12, overflow: "hidden" }}>
+              <details key={i} style={{ borderRadius: 14, overflow: "hidden" }}>
                 <summary style={{
-                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 12, padding: "11px 14px", cursor: "pointer",
+                  background: "rgba(8,8,12,0.88)", border: "1px solid rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+                  borderRadius: 14, padding: "11px 14px", cursor: "pointer",
                   color: "rgba(255,255,255,0.9)", fontSize: 12, fontWeight: 600, lineHeight: 1.4,
                   listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8,
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
                 }}>
                   <span>💬 {qa.q}</span>
-                  <ChevronDown size={14} style={{ flexShrink: 0, marginTop: 2, color: "rgba(255,255,255,0.4)" }} />
+                  <ChevronDown size={14} style={{ flexShrink: 0, marginTop: 2, color: "rgba(168,85,247,0.7)" }} />
                 </summary>
                 <div style={{
-                  background: "rgba(0,0,0,0.35)", borderRadius: "0 0 12px 12px",
+                  background: "rgba(0,0,0,0.5)",
+                  borderRadius: "0 0 14px 14px",
                   padding: "12px 14px",
-                  borderLeft: "1px solid rgba(255,255,255,0.08)",
-                  borderRight: "1px solid rgba(255,255,255,0.08)",
-                  borderBottom: "1px solid rgba(255,255,255,0.08)",
+                  borderLeft: "1px solid rgba(168,85,247,0.2)",
+                  borderRight: "1px solid rgba(168,85,247,0.2)",
+                  borderBottom: "1px solid rgba(168,85,247,0.2)",
                 }}>
                   <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, lineHeight: 1.7, margin: 0 }}>{qa.a}</p>
                 </div>
@@ -379,15 +459,19 @@ export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCo
 
         {/* Ask a question */}
         <div style={{
-          borderRadius: 16,
-          background: "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(120,60,200,0.08))",
+          borderRadius: 20,
+          background: "rgba(8,8,12,0.88)",
+          backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)",
           border: "1px solid rgba(236,72,153,0.25)",
+          boxShadow: "0 8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(236,72,153,0.08), inset 0 1px 0 rgba(255,255,255,0.06)",
           padding: "16px",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{ fontSize: 18 }}>✍️</span>
             <div>
-              <p style={{ color: "white", fontWeight: 700, fontSize: 13, margin: 0 }}>Ask Your Own Question</p>
+              <p style={{ color: "white", fontWeight: 700, fontSize: 13, margin: 0 }}>
+                {firstName ? `Ask About ${firstName}'s Culture` : "Ask Your Own Question"}
+              </p>
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, margin: 0 }}>
                 {COIN_COST} coins · gets a cultural answer instantly
               </p>
@@ -432,7 +516,9 @@ export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCo
               <textarea
                 value={question}
                 onChange={(e) => { setQuestion(e.target.value); if (askError) setAskError(""); }}
-                placeholder="e.g. How important is meeting her parents? What should I know about dating in Bali?"
+                placeholder={firstName
+                  ? `e.g. What should I know about ${firstName}'s culture in ${profile?.city || "Indonesia"}? How does family work there?`
+                  : "e.g. How important is meeting her parents? What should I know about dating in Bali?"}
                 rows={3}
                 style={{
                   width: "100%", boxSizing: "border-box",

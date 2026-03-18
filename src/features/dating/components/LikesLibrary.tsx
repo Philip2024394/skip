@@ -2,8 +2,6 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Unlock, Clock, Sparkles, MapPin, Star, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
 import { Profile } from "./SwipeCard";
-import TarotDrawer from "@/features/dating/components/TarotDrawer";
-import { useTarotState } from "@/features/dating/components/useTarotState";
 import LikesCarousel from "@/features/dating/components/likes-library/LikesCarousel";
 import { Button } from "@/shared/components/button";
 import PromoCard from "@/shared/components/PromoCard";
@@ -51,14 +49,6 @@ interface LikesLibraryProps {
   receivedHighlightProfileId?: string | null;  // when set, switch to "Likes Me" and butterfly is flying to this profile
   heartDropProfileId?: string | null;          // when set, show dropped heart on this profile's card (Likes Me tab)
   superLikeGlowProfileId?: string | null;     // when set, show yellow glow on this profile's card (Likes Me tab, first in list)
-  dailyTarot?: {
-    cardId: number;
-    cardName: string;
-    cardEmoji: string;
-    reading: string;
-    shown: boolean;
-  } | null;
-  onRevealDailyTarot?: () => void;
   hidePrivateTabs?: boolean;
   currentUserId?: string;
   onUnlock: (profile: Profile) => void;
@@ -116,8 +106,6 @@ const LikesLibrary = ({
   allProfiles,
   onGiftSent,
   iLiked, likedMe, newProfiles, filterCountry,
-  dailyTarot,
-  onRevealDailyTarot,
   hidePrivateTabs,
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
@@ -127,8 +115,6 @@ const LikesLibrary = ({
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
   const [promoPosition, setPromoPosition] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const tarot = useTarotState();
-
   const matches = iLiked.filter((p) => likedMe.some((l) => l.id === p.id));
 
   // Sort new profiles: most recently seen first, cap at 30
@@ -200,18 +186,6 @@ const LikesLibrary = ({
     return items;
   }, [currentList, activePromoIndex, promoPosition, tab]);
 
-  const displayItemsWithTarot = useMemo(() => {
-    if (!dailyTarot || dailyTarot.shown) return displayItems;
-    if (tab !== "new") return displayItems;
-
-    // Insert tarot card at a random position among the profiles
-    const items: DisplayItem[] = [...displayItems];
-    const maxPos = Math.min(items.length, 6);
-    const insertAt = Math.floor(Math.random() * (maxPos + 1));
-    items.splice(insertAt, 0, { type: "promo" as const, profile: null } as any);
-    return items;
-  }, [dailyTarot, displayItems, tab]);
-
   // ── Swipe/scroll tabs on horizontal drag — header area only ────────────────
   const dragStart = useRef<{ x: number; y: number; tab: Tab } | null>(null);
   const handleTabAreaTouchStart = (e: React.TouchEvent) => {
@@ -278,35 +252,6 @@ const LikesLibrary = ({
           {title ?? "Match"}
         </h2>
 
-        {/* Guide shortcuts */}
-        <div className="flex items-center gap-1 mr-1">
-          {onCulturalGuide && (
-            <button
-              onClick={onCulturalGuide}
-              title="Cultural Bridge Guide"
-              style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: "rgba(168,85,247,0.15)",
-                border: "1px solid rgba(168,85,247,0.3)",
-                fontSize: 14, cursor: "pointer", display: "flex",
-                alignItems: "center", justifyContent: "center",
-              }}
-            >🌏</button>
-          )}
-          {onVisitorGuide && (
-            <button
-              onClick={onVisitorGuide}
-              title="Visitor Guide — Travel to Indonesia"
-              style={{
-                width: 28, height: 28, borderRadius: 8,
-                background: "rgba(59,130,246,0.15)",
-                border: "1px solid rgba(59,130,246,0.3)",
-                fontSize: 14, cursor: "pointer", display: "flex",
-                alignItems: "center", justifyContent: "center",
-              }}
-            >✈️</button>
-          )}
-        </div>
 
         {/* 3-tab pill */}
         <div className="relative flex gap-0 p-0.5 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
@@ -405,7 +350,7 @@ const LikesLibrary = ({
           >
             {isProfileInfoTab ? (
               <div
-                className="grid grid-cols-3 gap-2 h-full pb-2 rounded-xl p-2 border border-white/10"
+                className="grid grid-cols-3 gap-2 overflow-y-auto pb-2 rounded-xl p-2 border border-white/10"
                 style={{
                   backgroundImage: "url(https://ik.imagekit.io/7grri5v7d/vip%20jhh33.png)",
                   backgroundSize: "cover",
@@ -416,10 +361,12 @@ const LikesLibrary = ({
               >
                 {(
                   [
-                    { key: "basic" as const, label: "Profile" },
-                    { key: "images" as const, label: "Images" },
-                    { key: "video" as const, label: "Video" },
-                  ]
+                    { key: "basic" as const, label: "Profile", emoji: "👤", action: "section" },
+                    { key: "images" as const, label: "Images", emoji: "📸", action: "section" },
+                    { key: "video" as const, label: "Video", emoji: "🎬", action: "video" },
+                    { key: "cultural" as const, label: "Cultural Guide", emoji: "🌏", action: "cultural" },
+                    { key: "visitor" as const, label: "Travel Guide", emoji: "✈️", action: "visitor" },
+                  ] as { key: string; label: string; emoji: string; action: string }[]
                 ).map((s, idx) => (
                   <motion.button
                     key={s.key}
@@ -431,21 +378,25 @@ const LikesLibrary = ({
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (s.key === "video") {
+                      if (s.action === "video") {
                         onTabChange?.("video");
+                      } else if (s.action === "cultural") {
+                        onCulturalGuide?.();
+                      } else if (s.action === "visitor") {
+                        onVisitorGuide?.();
                       } else {
-                        onSelectProfileSection?.(s.key);
+                        onSelectProfileSection?.(s.key as "basic" | "lifestyle" | "interests" | "images");
                       }
                     }}
                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] backdrop-blur-md border relative w-full ${selectedProfileSection === s.key ? "border-pink-500/70 ring-2 ring-pink-500/40 bg-pink-950/40" : "bg-black/50 border-white/10"}`}
                     style={{
-                      height: 124,
+                      height: 90,
                       ...(selectedProfileSection === s.key ? { boxShadow: "0 0 16px rgba(236,72,153,0.45), 0 0 4px rgba(236,72,153,0.3) inset" } : {}),
                     }}
                     aria-label={s.label}
                   >
-                    <p className="text-white text-[11px] font-bold text-center leading-tight">{s.label}</p>
-                    <p className="text-white/45 text-[9px] font-semibold text-center">Tap to view</p>
+                    <span className="text-xl">{s.emoji}</span>
+                    <p className="text-white text-[10px] font-bold text-center leading-tight">{s.label}</p>
                   </motion.button>
                 ))}
               </div>
@@ -618,18 +569,16 @@ const LikesLibrary = ({
                   onGiftSent={onGiftSent}
                 />
               </div>
-            ) : displayItemsWithTarot.length === 0 ? (
+            ) : displayItems.length === 0 ? (
               <div className="flex items-center justify-center flex-1 px-4">
                 <p className="text-white/40 text-xs text-center">{emptyText}</p>
               </div>
             ) : (
               <LikesCarousel
-                displayItemsWithTarot={displayItemsWithTarot}
+                displayItemsWithTarot={displayItems}
                 tab={tab}
                 scrollRef={scrollRef}
                 onSelectProfile={onSelectProfile}
-                onTarotOpen={() => tarot.setShowTarotDrawer(true)}
-                onRevealDailyTarot={onRevealDailyTarot}
                 heartDropProfileId={heartDropProfileId ?? null}
                 superLikeGlowProfileId={superLikeGlowProfileId ?? null}
                 activePromoIndex={activePromoIndex}
@@ -638,7 +587,6 @@ const LikesLibrary = ({
                 isNewProfile={isNewProfile}
                 iLiked={iLiked}
                 currentList={currentList}
-                dailyTarot={dailyTarot}
                 onUnlock={onUnlock}
               />
             )}
@@ -646,43 +594,6 @@ const LikesLibrary = ({
         </AnimatePresence>
       </div>
 
-      {/* ── Tab dot indicators removed — swipe tabs with finger ── */}
-
-      <TarotDrawer
-        showTarotDrawer={tarot.showTarotDrawer}
-        setShowTarotDrawer={tarot.setShowTarotDrawer}
-        showPremiumReading={tarot.showPremiumReading}
-        setShowPremiumReading={tarot.setShowPremiumReading}
-        premiumReadingType={tarot.premiumReadingType}
-        setPremiumReadingType={tarot.setPremiumReadingType}
-        premiumReadingResult={tarot.premiumReadingResult}
-        setPremiumReadingResult={tarot.setPremiumReadingResult}
-        premiumReadingLoading={tarot.premiumReadingLoading}
-        setPremiumReadingLoading={tarot.setPremiumReadingLoading}
-        selectedCards={tarot.selectedCards}
-        setSelectedCards={tarot.setSelectedCards}
-        revealedCards={tarot.revealedCards}
-        setRevealedCards={tarot.setRevealedCards}
-        madamZofeeReward={tarot.madamZofeeReward}
-        setMadamZofeeReward={tarot.setMadamZofeeReward}
-        showMadamZofee={tarot.showMadamZofee}
-        setShowMadamZofee={tarot.setShowMadamZofee}
-        showMadamZofeeParticles={tarot.showMadamZofeeParticles}
-        setShowMadamZofeeParticles={tarot.setShowMadamZofeeParticles}
-        tarotReaderSrc={tarot.tarotReaderSrc}
-        setTarotReaderSrc={tarot.setTarotReaderSrc}
-        showDailyTarotFront={tarot.showDailyTarotFront}
-        setShowDailyTarotFront={tarot.setShowDailyTarotFront}
-        tarotProgressStep={tarot.tarotProgressStep}
-        setTarotProgressStep={tarot.setTarotProgressStep}
-        tarotHeader={tarot.tarotHeader}
-        setTarotHeader={tarot.setTarotHeader}
-        tarotSequenceTimeoutsRef={tarot.tarotSequenceTimeoutsRef}
-        dailyTarot={dailyTarot}
-        onRevealDailyTarot={() => onRevealDailyTarot?.()}
-        show={tarot.showTarotDrawer}
-        onClose={() => tarot.setShowTarotDrawer(false)}
-      />
     </div>
   );
 };

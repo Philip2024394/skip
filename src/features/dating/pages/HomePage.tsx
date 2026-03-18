@@ -32,9 +32,7 @@ import { useSwipeActions } from "@/shared/hooks/useSwipeActions";
 import { useAuthAndProfiles } from "@/shared/hooks/useAuthAndProfiles";
 import { useRealtimeLikes } from "@/shared/hooks/useRealtimeLikes";
 import { useProfileData } from "@/shared/hooks/useProfileData";
-import { useDailyTarot } from "@/shared/hooks/useDailyTarot";
 import { InfoChip, Section, ContainerBlock } from "@/shared/components/SwipeUIComponents";
-import { getTarotCardById } from "@/data/tarotCards";
 import { TopCard } from "@/features/dating/components";
 import { useVideoCall } from "@/shared/hooks/useVideoCall";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
@@ -60,6 +58,8 @@ import BestieRequestPopup, { BestieRequest } from "@/features/dating/components/
 import BestieReferralPopup, { BestieReferral } from "@/features/dating/components/BestieReferralPopup";
 import BestieConfirmPopup from "@/features/dating/components/BestieConfirmPopup";
 import { generateAppUserId } from "@/shared/utils/userIdUtils";
+import { useProfileQuestions } from "@/features/dating/hooks/useProfileQuestions";
+import ProfileQuestionBlocker from "@/features/dating/components/ProfileQuestionBlocker";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -244,6 +244,7 @@ const Index = () => {
     return adminUser || guestUser;
   });
   const coinBalance = useCoinBalance(user?.id);
+  const profileQuestions = useProfileQuestions(user?.id || "guest");
   const [showCoinRefuel, setShowCoinRefuel] = useState(false);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
@@ -527,8 +528,6 @@ const Index = () => {
   const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
 
-  const DAILY_CARD_KEY_BASE = "dailyTarotCard";
-
   const sessionStatsRef = useRef({
     viewed: 0,
     liked: 0,
@@ -667,47 +666,11 @@ const Index = () => {
     });
   };
 
-  const {
-    dailyTarot,
-    showTarotPopup,
-    setShowTarotPopup,
-    tarotPhase,
-    setTarotPhase,
-    loadOrCreateDailyCard,
-    markDailyCardShown,
-    exportTarotShareImage,
-    getBehaviorStorageKey,
-  } = useDailyTarot({
-    user,
-    iLiked,
-    likedMe,
-    daysSinceLastActive,
-    locale,
-    sessionStatsRef,
-  });
-
-  // Restore persisted session behavior
-  useEffect(() => {
-    try {
-      const raw = sessionStorage.getItem(getBehaviorStorageKey());
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as any;
-      if (typeof parsed?.liked === "number") sessionStatsRef.current.liked = parsed.liked;
-      if (typeof parsed?.passed === "number") sessionStatsRef.current.passed = parsed.passed;
-      if (typeof parsed?.viewed === "number") sessionStatsRef.current.viewed = parsed.viewed;
-      if (parsed?.viewCountsById && typeof parsed.viewCountsById === "object") {
-        sessionStatsRef.current.viewCountsById = parsed.viewCountsById;
-      }
-      if (typeof parsed?.focusedOnOne === "boolean") sessionStatsRef.current.focusedOnOne = parsed.focusedOnOne;
-    } catch {
-      // ignore
-    }
-  }, [getBehaviorStorageKey]);
-
   const persistSessionBehavior = useCallback(() => {
     try {
+      const key = `session_behavior_${user?.id || "guest"}`;
       sessionStorage.setItem(
-        getBehaviorStorageKey(),
+        key,
         JSON.stringify({
           liked: sessionStatsRef.current.liked,
           passed: sessionStatsRef.current.passed,
@@ -721,7 +684,7 @@ const Index = () => {
     } catch {
       // ignore
     }
-  }, [daysSinceLastActive, getBehaviorStorageKey, iLiked, likedMe]);
+  }, [daysSinceLastActive, iLiked, likedMe, user?.id]);
 
 
   // Reset tab state whenever the viewed profile changes so Video panel never auto-shows
@@ -752,7 +715,8 @@ const Index = () => {
     const unseen = filteredProfiles.filter(p => !seenIdsRef.current.has(p.id));
     const pool = unseen.length > 0 ? unseen : filteredProfiles;
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    const t = setTimeout(() => setDailyMatchProfile(pick), 1800);
+    const delay = (6 + Math.random() * 2) * 60 * 1000; // 6–8 minutes
+    const t = setTimeout(() => setDailyMatchProfile(pick), delay);
     return () => clearTimeout(t);
   }, [filteredProfiles]);
 
@@ -1161,6 +1125,30 @@ const Index = () => {
                   isBestie={confirmedBestieIds.includes(selectedProfile?.id)}
                   isBestiePending={sentBestieIds.includes(selectedProfile?.id)}
                   onSendRealGift={() => { setRealGiftTarget(selectedProfile); setShowRealGiftFlow(true); }}
+                  coinBalance={coinBalance.balance}
+                  onAskQuestion={(template) => {
+                    if (coinBalance.balance < template.coinCost) {
+                      toast.error(`Not enough coins — need ${template.coinCost} 💰`);
+                      return;
+                    }
+                    const ok = profileQuestions.askQuestion(template, selectedProfile?.id ?? "");
+                    if (ok) {
+                      coinBalance.addCoins(-template.coinCost);
+                      toast.success(`Question sent to ${selectedProfile?.name?.split(" ")[0] || "her"} 💌`);
+                    } else {
+                      toast.info("Already asked this question");
+                    }
+                  }}
+                  askedStates={Object.fromEntries(
+                    profileQuestions.asked
+                      .filter(q => q.toProfileId === selectedProfile?.id)
+                      .map(q => [q.templateId, q.status])
+                  )}
+                  answeredValues={Object.fromEntries(
+                    profileQuestions.asked
+                      .filter(q => q.toProfileId === selectedProfile?.id && q.status === "answered" && q.answer)
+                      .map(q => [q.templateId, q.answer!])
+                  )}
                 />
               )
             ) : (
@@ -1299,22 +1287,8 @@ const Index = () => {
                       likedMe={likedMe}
                       newProfiles={libraryNewProfiles}
                       filterCountry={filters.country}
-                      dailyTarot={
-                        dailyTarot
-                          ? {
-                            cardId: dailyTarot.card.id,
-                            cardName: dailyTarot.card.name,
-                            cardEmoji: dailyTarot.card.emoji,
-                            reading: dailyTarot.reading,
-                            shown: dailyTarot.shown,
-                          }
-                          : null
-                      }
                       hidePrivateTabs={!isProfileRoute && !user}
                       currentUserId={user?.id}
-                      onRevealDailyTarot={() => {
-                        markDailyCardShown();
-                      }}
                       receivedHighlightProfileId={null}
                       heartDropProfileId={null}
                       superLikeGlowProfileId={superLikeGlowProfileId}
@@ -1477,12 +1451,6 @@ const Index = () => {
         referralCode={myReferralCode}
         user={user}
         REFERRAL_POPUP_SHOWN_KEY={REFERRAL_POPUP_SHOWN_KEY}
-        showTarotPopup={showTarotPopup}
-        setShowTarotPopup={setShowTarotPopup}
-        dailyTarot={dailyTarot}
-        tarotPhase={tarotPhase}
-        markDailyCardShown={markDailyCardShown}
-        exportTarotShareImage={exportTarotShareImage}
         matchedProfile={matchDialog}
         setMatchedProfile={setMatchDialog}
         iLiked={iLiked}
@@ -1570,6 +1538,7 @@ const Index = () => {
             onClose={() => setShowCulturalGuide(false)}
             coinBalance={coinBalance.balance}
             onSpendCoins={(amount) => coinBalance.addCoins(-amount)}
+            profile={selectedProfile}
           />
         )}
       </AnimatePresence>
@@ -1577,7 +1546,7 @@ const Index = () => {
       {/* ── Visitor Guide overlay ─────────────────────────────────── */}
       <AnimatePresence>
         {showVisitorGuide && (
-          <VisitorGuidePage onClose={() => setShowVisitorGuide(false)} />
+          <VisitorGuidePage onClose={() => setShowVisitorGuide(false)} profile={selectedProfile} />
         )}
       </AnimatePresence>
 
@@ -1709,6 +1678,16 @@ const Index = () => {
             onClose={() => setMapProfile(null)}
             onLike={(p) => { handleLike(p); setMapProfile(null); }}
             onSuperLike={(p) => { handleRose(p); setMapProfile(null); }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Profile Question Blocker — shown when a pending question requires an answer */}
+      <AnimatePresence>
+        {profileQuestions.pendingReceived.length > 0 && (
+          <ProfileQuestionBlocker
+            question={profileQuestions.pendingReceived[0]}
+            onAnswer={profileQuestions.answerReceived}
           />
         )}
       </AnimatePresence>

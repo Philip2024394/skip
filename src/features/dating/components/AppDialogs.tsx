@@ -14,7 +14,6 @@ import FilterPanel from "@/features/dating/components/FilterPanel";
 import TermsAcceptanceDialog from "@/features/auth/components/TermsAcceptanceDialog";
 import GuestAuthPrompt from "@/features/auth/components/GuestAuthPrompt";
 import AppLogo from "@/shared/components/AppLogo";
-import { Sparkles } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { hasUnlockBadges } from "@/shared/utils/unlockPrice";
 import { toast } from "sonner";
@@ -26,13 +25,6 @@ interface AppDialogsProps {
   referralCode: string;
   user: any;
   REFERRAL_POPUP_SHOWN_KEY: string;
-  // Daily Tarot
-  showTarotPopup: boolean;
-  setShowTarotPopup: (v: boolean) => void;
-  dailyTarot: any;
-  tarotPhase: string;
-  markDailyCardShown: () => void;
-  exportTarotShareImage: () => Promise<void>;
   // Match
   matchedProfile: any;
   setMatchedProfile: (v: any) => void;
@@ -135,144 +127,6 @@ export default function AppDialogs(props: AppDialogsProps) {
             >
               Maybe later
             </button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Daily Tarot Popup */}
-      <Dialog
-        open={props.showTarotPopup}
-        onOpenChange={(open) => {
-          if (!open) props.setShowTarotPopup(false);
-        }}
-      >
-        <DialogContent className="bg-black/95 backdrop-blur-2xl border border-white/10 text-white w-[95vw] max-w-md mx-auto rounded-3xl overflow-hidden p-0">
-          <div className="relative w-full h-[78vh] min-h-[560px]">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(250,204,21,0.18),rgba(0,0,0,0)_55%)]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,rgba(168,85,247,0.22),rgba(0,0,0,0)_55%)]" />
-
-            {/* stars */}
-            {[...Array(26)].map((_, i) => (
-              <motion.span
-                key={`star-${i}`}
-                className="absolute rounded-full"
-                style={{
-                  width: 2 + (i % 3),
-                  height: 2 + (i % 3),
-                  left: `${(i * 37) % 100}%`,
-                  top: `${(i * 29) % 100}%`,
-                  background: "rgba(255,215,130,0.65)",
-                  boxShadow: "0 0 10px rgba(255,215,130,0.35)",
-                }}
-                animate={{ opacity: [0.25, 0.95, 0.35] }}
-                transition={{ duration: 2.2 + (i % 5) * 0.5, repeat: Infinity, ease: "easeInOut" }}
-              />
-            ))}
-
-            <div className="relative z-10 h-full flex flex-col items-center justify-between px-5 pt-6 pb-5">
-              <div className="text-center">
-                <p className="text-white/70 text-xs font-semibold tracking-wide">2DateMe</p>
-                <h2 className="font-display text-xl font-black text-yellow-200">{locale === "en" ? "Your Daily Love Reading" : "Ramalan Cinta Harianmu"}</h2>
-                <p className="text-white/55 text-[11px] mt-1">{locale === "en" ? "A mystical message, personalized for your vibe" : "Pesan mistis, dipersonalisasi sesuai vibemu"}</p>
-              </div>
-
-              {/* Card */}
-              <motion.div
-                initial={{ y: 140, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="w-full flex items-center justify-center"
-              >
-                <div
-                  className="w-[86%] max-w-[320px] aspect-[3/5] rounded-3xl border border-yellow-300/30 bg-gradient-to-br from-[#2b0a45]/85 via-[#120018]/90 to-black/80 shadow-[0_0_24px_rgba(168,85,247,0.25)] relative overflow-hidden"
-                  style={{ perspective: 1200 }}
-                >
-                  <motion.div
-                    className="absolute inset-0"
-                    animate={{ rotateY: props.tarotPhase === "flip" || props.tarotPhase === "revealed" ? 180 : 0 }}
-                    transition={{ duration: 0.8, ease: "easeInOut" }}
-                    style={{ transformStyle: "preserve-3d" }}
-                  >
-                    {/* back */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center" style={{ backfaceVisibility: "hidden" }}>
-                      <img
-                        src="https://ik.imagekit.io/7grri5v7d/tarot%20card%20back.png?updatedAt=1773487777679"
-                        alt="Tarot card back"
-                        className="absolute inset-0 w-full h-full object-cover rounded-3xl opacity-80"
-                      />
-                      <div className="relative z-10 flex flex-col items-center">
-                        <Sparkles className="w-8 h-8 text-yellow-200 drop-shadow-[0_0_14px_rgba(250,204,21,0.5)]" />
-                        <p className="mt-2 text-white/90 text-xs font-black tracking-wide drop-shadow-lg">{locale === "en" ? "Shuffling the universe…" : "Mengocok semesta…"}</p>
-                      </div>
-                    </div>
-
-                    {/* front */}
-                    <div
-                      className="absolute inset-0 flex flex-col items-center justify-center px-4"
-                      style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
-                    >
-                      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,215,130,0.18),rgba(0,0,0,0)_55%)]" />
-                      <motion.div
-                        className="absolute -inset-16"
-                        animate={{ opacity: props.tarotPhase === "revealed" ? 1 : 0 }}
-                        transition={{ duration: 0.6 }}
-                        style={{
-                          background:
-                            "radial-gradient(circle at center, rgba(250,204,21,0.18), rgba(168,85,247,0.10) 35%, rgba(0,0,0,0) 65%)",
-                        }}
-                      />
-                      <p className="text-yellow-200 font-black text-[13px] tracking-wide text-center drop-shadow-[0_0_10px_rgba(250,204,21,0.35)]">
-                        {props.dailyTarot?.card.name ?? ""}
-                      </p>
-                      <p className="text-6xl mt-3">{props.dailyTarot?.card.emoji ?? ""}</p>
-                      <p className="mt-4 text-white/80 text-[11px] font-black">{locale === "en" ? "Your Reading Today:" : "Ramalan Cintamu Hari Ini:"}</p>
-                      <motion.p
-                        className="mt-2 text-white/85 text-[12px] leading-relaxed text-center"
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: props.tarotPhase === "revealed" ? 1 : 0, y: props.tarotPhase === "revealed" ? 0 : 8 }}
-                        transition={{ duration: 0.6, delay: 0.15 }}
-                      >
-                        {props.dailyTarot?.reading ?? ""}
-                      </motion.p>
-                      <p className="absolute bottom-3 text-white/30 text-[9px] font-semibold">2DateMe Daily Love Reading</p>
-                    </div>
-                  </motion.div>
-                </div>
-              </motion.div>
-
-              <div className="w-full flex flex-col gap-2">
-                <Button
-                  type="button"
-                  className="w-full h-12 rounded-2xl bg-yellow-400 hover:bg-yellow-400/90 text-black font-black"
-                  onClick={async () => {
-                    props.markDailyCardShown();
-                    await props.exportTarotShareImage();
-                  }}
-                >
-                  {locale === "en" ? "Share My Reading 💫" : "Bagikan Ramalanku 💫"}
-                </Button>
-                <Button
-                  type="button"
-                  className="w-full h-12 rounded-2xl gradient-love text-white border-0 font-black"
-                  onClick={() => {
-                    props.markDailyCardShown();
-                    props.setShowTarotPopup(false);
-                  }}
-                >
-                  {locale === "en" ? "Find My Match 💕" : "Cari Jodohku 💕"}
-                </Button>
-                <button
-                  type="button"
-                  className="w-full text-center text-white/55 text-[11px] font-semibold underline underline-offset-2"
-                  onClick={() => {
-                    props.markDailyCardShown();
-                    props.setShowTarotPopup(false);
-                  }}
-                >
-                  {locale === "en" ? "Close" : "Tutup"}
-                </button>
-              </div>
-            </div>
           </div>
         </DialogContent>
       </Dialog>

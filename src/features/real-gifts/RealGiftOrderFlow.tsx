@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronRight, ChevronLeft, Check, MessageCircle, Gift, AlertCircle } from "lucide-react";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
+import { getActiveCities } from "@/features/admin/components/GiftOrdersTab";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 export interface GiftOrder {
@@ -250,6 +251,11 @@ export const RealGiftOrderFlow = ({
                       {!recipientProfile.gift_delivery_opted_in && (
                         <p className="text-amber-300 text-xs mt-2 leading-relaxed">
                           ⚠️ This profile has not opted in to receive physical gifts. No admin delivery service is available for them. You may still proceed but we cannot guarantee delivery.
+                        </p>
+                      )}
+                      {recipientProfile.city && !getActiveCities().includes(recipientProfile.city) && (
+                        <p className="text-red-400 text-xs mt-2 leading-relaxed">
+                          ⚠️ Gift delivery is not yet available in <strong>{recipientProfile.city}</strong>. We currently serve: {getActiveCities().join(", ")}. More cities coming soon.
                         </p>
                       )}
                     </div>

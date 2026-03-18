@@ -1,0 +1,133 @@
+export interface QuestionTemplate {
+  id: string;
+  fieldLabel: string;
+  question: string;
+  placeholder: string;
+  coinCost: number;
+  shyMessage: string;
+  emoji: string;
+  getValue: (profile: any) => string | null | undefined;
+}
+
+export const QUESTION_TEMPLATES: QuestionTemplate[] = [
+  {
+    id: "education",
+    fieldLabel: "Education",
+    question: "What level of education have you completed?",
+    placeholder: "e.g. University degree, College, Still studying...",
+    coinCost: 5,
+    shyMessage: "A little shy about sharing this",
+    emoji: "🎓",
+    getValue: (p) => p?.basic_info?.education,
+  },
+  {
+    id: "occupation",
+    fieldLabel: "Occupation",
+    question: "What do you do for work?",
+    placeholder: "e.g. Teacher, Entrepreneur, Healthcare professional...",
+    coinCost: 5,
+    shyMessage: "Keeping this one private for now",
+    emoji: "💼",
+    getValue: (p) => p?.basic_info?.occupation,
+  },
+  {
+    id: "income",
+    fieldLabel: "Income",
+    question: "How would you describe your income level?",
+    placeholder: "e.g. Comfortable, Working toward goals, Stable...",
+    coinCost: 8,
+    shyMessage: "Prefers to keep finances private",
+    emoji: "💰",
+    getValue: (p) => p?.basic_info?.income,
+  },
+  {
+    id: "children",
+    fieldLabel: "Children",
+    question: "Do you have or would you like to have children?",
+    placeholder: "e.g. No kids yet, 1 child, Would love a family...",
+    coinCost: 5,
+    shyMessage: "A little shy about this topic",
+    emoji: "👶",
+    getValue: (p) => p?.basic_info?.children,
+  },
+  {
+    id: "love_language",
+    fieldLabel: "Love Language",
+    question: "What is your love language?",
+    placeholder: "e.g. Acts of service, Quality time, Words of affirmation...",
+    coinCost: 5,
+    shyMessage: "Still figuring this one out",
+    emoji: "❤️",
+    getValue: (p) => p?.lifestyle_info?.love_language,
+  },
+  {
+    id: "social_style",
+    fieldLabel: "Social Style",
+    question: "Are you more introverted or extroverted?",
+    placeholder: "e.g. Homebody, Social butterfly, Depends on the day...",
+    coinCost: 5,
+    shyMessage: "Personality is a mystery for now",
+    emoji: "🎭",
+    getValue: (p) => p?.lifestyle_info?.social_style,
+  },
+  {
+    id: "religion",
+    fieldLabel: "Religion",
+    question: "What religion do you follow or feel connected to?",
+    placeholder: "e.g. Islam, Christian, Hindu, Spiritual...",
+    coinCost: 5,
+    shyMessage: "Faith is personal — being a little shy here",
+    emoji: "🕌",
+    getValue: (p) => p?.relationship_goals?.religion,
+  },
+  {
+    id: "prayer",
+    fieldLabel: "Prayer Practice",
+    question: "How important is prayer or spiritual practice in your daily life?",
+    placeholder: "e.g. Pray 5 times daily, Weekly worship, Occasionally...",
+    coinCost: 5,
+    shyMessage: "Spiritual practices are private",
+    emoji: "🙏",
+    getValue: (p) => p?.relationship_goals?.prayer,
+  },
+  {
+    id: "looking_for",
+    fieldLabel: "What She's Looking For",
+    question: "What kind of relationship are you hoping to build?",
+    placeholder: "e.g. Marriage, Long-term relationship, Still exploring...",
+    coinCost: 8,
+    shyMessage: "Not ready to share this openly yet",
+    emoji: "💍",
+    getValue: (p) => p?.relationship_goals?.looking_for,
+  },
+  {
+    id: "timeline",
+    fieldLabel: "Relationship Timeline",
+    question: "When would you ideally like to settle down?",
+    placeholder: "e.g. Within 1 year, When the right person comes, No rush...",
+    coinCost: 5,
+    shyMessage: "Thinking about the future privately",
+    emoji: "⏱️",
+    getValue: (p) => p?.relationship_goals?.timeline,
+  },
+  {
+    id: "family_involvement",
+    fieldLabel: "Family Involvement",
+    question: "How involved is your family in your relationship decisions?",
+    placeholder: "e.g. Family approval is important, My own choice, Balance both...",
+    coinCost: 5,
+    shyMessage: "Family matters are personal",
+    emoji: "👨‍👩‍👧",
+    getValue: (p) => p?.relationship_goals?.family_involvement,
+  },
+  {
+    id: "relocate",
+    fieldLabel: "Open to Relocating",
+    question: "Would you consider relocating for the right person?",
+    placeholder: "e.g. Open to it, Would need to discuss, Prefer to stay here...",
+    coinCost: 5,
+    shyMessage: "Still deciding on this one",
+    emoji: "📍",
+    getValue: (p) => p?.relationship_goals?.relocate,
+  },
+];
