@@ -93,7 +93,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
         const fresh = props.tab === "new" && props.isNewProfile(profile);
         const iLikedThis = props.iLiked.some((p) => p.id === profile.id);
         const isSuperGlow = props.tab === "received" && props.superLikeGlowProfileId === profile.id;
-        const locked = isProfileLocked(profile.id);
+        const locked = isProfileLocked(profile.id, profile.is_mock);
 
         // Red glow when ≤ 60 min remaining — computed synchronously, no hook needed
         const msLeft = profile.expires_at

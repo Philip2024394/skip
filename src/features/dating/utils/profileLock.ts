@@ -42,21 +42,46 @@ export function setMyProfileLock() {
   localStorage.setItem(MY_LOCK_KEY, JSON.stringify(entry));
 }
 
+// ── Mock profile rotation lock ────────────────────────────────────────────────
+// 5% of mock profiles appear locked at any time. The selection rotates every
+// 3 days using a deterministic hash of the profile ID + current period number,
+// simulating real matches happening on the platform.
+
+/** Fast deterministic hash of a string + integer seed. */
+function hashId(id: string, seed: number): number {
+  let h = (seed * 2654435761) >>> 0;
+  for (let i = 0; i < id.length; i++) {
+    h = ((h ^ id.charCodeAt(i)) * 2246822519) >>> 0;
+  }
+  return h;
+}
+
+/** Returns true if this mock profile is in the current 5% locked rotation. */
+export function isMockPeriodLocked(profileId: string): boolean {
+  // Period number changes every 3 days — same profiles locked for full period
+  const period = Math.floor(Date.now() / THREE_DAYS_MS);
+  return (hashId(profileId, period) % 20) === 0; // 1/20 = 5%
+}
+
 /** Returns true if a profile is in the active lock window. */
-export function isProfileLocked(profileId: string): boolean {
+export function isProfileLocked(profileId: string, isMock?: boolean): boolean {
+  // 1. Check manual localStorage lock (real payment)
   const locks = getLocks();
   const entry = locks[profileId];
-  if (!entry) return false;
-  const now = Date.now();
-  const activates = new Date(entry.activatesAt).getTime();
-  const expires = new Date(entry.expiresAt).getTime();
-  // Auto-clean expired locks
-  if (now >= expires) {
-    delete locks[profileId];
-    localStorage.setItem(LS_KEY, JSON.stringify(locks));
-    return false;
+  if (entry) {
+    const now = Date.now();
+    const activates = new Date(entry.activatesAt).getTime();
+    const expires = new Date(entry.expiresAt).getTime();
+    if (now >= expires) {
+      delete locks[profileId];
+      localStorage.setItem(LS_KEY, JSON.stringify(locks));
+    } else if (now >= activates) {
+      return true;
+    }
   }
-  return now >= activates;
+  // 2. Mock rotation — 5% locked, rotates every 3 days
+  if (isMock) return isMockPeriodLocked(profileId);
+  return false;
 }
 
 /** Returns true if the current user's own profile is locked. */
