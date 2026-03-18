@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Coins, X, Send } from "lucide-react";
+import { Star, Coins, X, Send, Plus } from "lucide-react";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
 import { toast } from "sonner";
+import TokenPurchase from "@/features/gifts/components/TokenPurchase";
 
 export const SUPER_LIKE_STYLES = [
   { id: "classic",  emoji: "⭐", name: "Classic Star",  desc: "Simple & direct",      coins: 1,  glow: "rgba(250,204,21,0.6)",  border: "rgba(250,204,21,0.4)"  },
@@ -20,10 +21,11 @@ interface SuperLikeSelectorProps {
 }
 
 export default function SuperLikeSelector({ userId, recipientId, recipientName, onSent }: SuperLikeSelectorProps) {
-  const { balance } = useCoinBalance(userId || null);
+  const { balance, addCoins } = useCoinBalance(userId || null);
   const [selected, setSelected] = useState<typeof SUPER_LIKE_STYLES[0] | null>(null);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [showTopUp, setShowTopUp] = useState(false);
 
   const handleSend = () => {
     if (!selected) return;
@@ -49,9 +51,24 @@ export default function SuperLikeSelector({ userId, recipientId, recipientName, 
           <Star className="w-4 h-4 text-yellow-400" fill="currentColor" />
           <span className="text-white/70 text-xs font-semibold">Super Likes</span>
         </div>
-        <div className="flex items-center gap-1 bg-yellow-400/10 border border-yellow-400/20 rounded-full px-3 py-1">
-          <Coins className="w-3 h-3 text-yellow-400" />
-          <span className="text-yellow-400 font-bold text-xs">{balance ?? "—"} coins</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-yellow-400/10 border border-yellow-400/20 rounded-full px-3 py-1">
+            <Coins className="w-3 h-3 text-yellow-400" />
+            <span className="text-yellow-400 font-bold text-xs">{balance ?? "—"} coins</span>
+          </div>
+          <button
+            onClick={() => setShowTopUp(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "linear-gradient(135deg, rgba(250,204,21,0.2), rgba(251,146,60,0.15))",
+              border: "1.5px solid rgba(250,204,21,0.4)",
+              borderRadius: 999, padding: "4px 10px",
+              color: "rgb(250,204,21)", fontSize: 10, fontWeight: 800,
+              cursor: "pointer", whiteSpace: "nowrap",
+            }}
+          >
+            <Plus style={{ width: 10, height: 10 }} /> Top Up
+          </button>
         </div>
       </div>
 
@@ -200,6 +217,17 @@ export default function SuperLikeSelector({ userId, recipientId, recipientName, 
           ))}
         </div>
       </div>
+
+      {/* Top Up modal */}
+      {showTopUp && (
+        <TokenPurchase
+          onClose={() => setShowTopUp(false)}
+          onPurchaseSuccess={() => {
+            setShowTopUp(false);
+            addCoins(50);
+          }}
+        />
+      )}
     </div>
   );
 }
