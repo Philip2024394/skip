@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Profile } from "@/shared/types/profile";
+import { firstName } from "@/shared/utils";
 
 const BURN_DURATION_MS = 1800;
 const GLITTER_DURATION_MS = 3000;
@@ -116,7 +117,7 @@ export default function SuperLikeRevealModal({ profile, onComplete }: SuperLikeR
               className="w-full h-full object-cover"
             />
           </div>
-          <p className="text-white font-display font-bold text-xl mt-3">{profile.name}</p>
+          <p className="text-white font-display font-bold text-xl mt-3">{firstName(profile.name)}</p>
           <p className="text-amber-300/90 text-sm">Super Liked you! ⭐</p>
         </motion.div>
 

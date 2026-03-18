@@ -170,35 +170,32 @@ export default function GiftSendPopup({
   // Sent success animation
   if (sent) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-        style={{ background: "radial-gradient(ellipse at center, rgba(190,24,93,0.35) 0%, rgba(0,0,0,0.88) 70%)" }}>
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 99999,
+        background: "rgba(10,4,24,0.35)",
+        backdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+        WebkitBackdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}>
         <motion.div
           initial={{ scale: 0.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 18 }}
-          className="flex flex-col items-center gap-3"
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}
         >
           <motion.div
             animate={{ scale: [1, 1.35, 1], rotate: [0, 12, -12, 0] }}
             transition={{ duration: 0.7 }}
-            className="text-8xl drop-shadow-[0_0_30px_rgba(251,113,133,0.7)]"
+            style={{ fontSize: 72, filter: "drop-shadow(0 0 24px rgba(236,72,153,0.8))" }}
           >
             {gift.emoji || "🎁"}
           </motion.div>
-          <motion.p
-            initial={{ y: 12, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.25 }}
-            className="text-white font-black text-xl tracking-tight"
-          >
+          <motion.p initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}
+            style={{ color: "#fff", fontWeight: 900, fontSize: 20, margin: 0 }}>
             Gift sent! 💕
           </motion.p>
-          <motion.p
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.45 }}
-            className="text-rose-300/80 text-sm"
-          >
+          <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}
+            style={{ color: "rgba(249,168,212,0.8)", fontSize: 13, margin: 0 }}>
             {recipientName} will love it
           </motion.p>
         </motion.div>
@@ -212,64 +209,84 @@ export default function GiftSendPopup({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        style={{ background: "radial-gradient(ellipse at 50% 60%, rgba(190,24,93,0.28) 0%, rgba(6,0,20,0.82) 70%)" }}
+        style={{
+          position: "fixed", inset: 0, zIndex: 99999,
+          background: "rgba(10,4,24,0.35)",
+          backdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+          WebkitBackdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "0 20px",
+        }}
         onClick={(e) => e.target === e.currentTarget && onClose()}
       >
         <motion.div
-          initial={{ scale: 0.92, y: 28 }}
-          animate={{ scale: 1, y: 0 }}
-          exit={{ scale: 0.92, y: 28 }}
-          transition={{ type: "spring", stiffness: 280, damping: 22 }}
-          className="max-w-sm w-full rounded-3xl overflow-hidden"
+          initial={{ scale: 0.88, opacity: 0, y: 24 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.88, opacity: 0, y: 24 }}
+          transition={{ type: "spring", stiffness: 360, damping: 30 }}
           style={{
-            background: "linear-gradient(160deg, #2d0022 0%, #100018 45%, #1a0010 100%)",
-            border: "1.5px solid rgba(251,113,133,0.30)",
-            boxShadow: "0 24px 70px rgba(190,24,93,0.30), 0 0 0 1px rgba(251,113,133,0.08), inset 0 1px 0 rgba(255,255,255,0.06)",
+            width: "100%", maxWidth: 340,
+            background: "rgba(8,8,12,0.88)",
+            backdropFilter: "blur(40px)",
+            WebkitBackdropFilter: "blur(40px)",
+            borderRadius: 28,
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+            overflow: "hidden",
           }}
         >
-          {/* Top warm glow stripe */}
-          <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #f43f5e, #ec4899, #fb923c, #ec4899, #f43f5e)" }} />
+          {/* Pink accent bar */}
+          <div style={{ height: 3, width: "100%", background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 pt-4 pb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #f43f5e, #fb923c)" }}>
-                <Gift className="w-3 h-3 text-white" />
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px 10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{
+                width: 26, height: 26, borderRadius: "50%",
+                background: "linear-gradient(135deg, #ec4899, #f472b6)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 0 10px rgba(236,72,153,0.5)",
+              }}>
+                <Gift style={{ width: 13, height: 13, color: "#fff" }} />
               </div>
-              <span className="text-rose-200/80 text-xs font-semibold uppercase tracking-widest">Send Gift</span>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(249,168,212,0.9)" }}>
+                Send a Gift
+              </span>
             </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
-              style={{ background: "rgba(251,113,133,0.10)", border: "1px solid rgba(251,113,133,0.20)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(251,113,133,0.22)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(251,113,133,0.10)")}
+              style={{
+                width: 30, height: 30, borderRadius: "50%",
+                background: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.6)", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
             >
-              <X className="w-3.5 h-3.5 text-rose-300/70" />
+              <X style={{ width: 13, height: 13 }} />
             </button>
           </div>
 
-          {/* Gift Preview */}
-          <div className="flex flex-col items-center px-5 py-3">
+          {/* Gift preview */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "4px 20px 12px" }}>
             <motion.div
               initial={{ scale: 0.75, rotate: -6 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 18 }}
-              className="w-22 h-22 rounded-2xl flex items-center justify-center mb-3"
               style={{
-                width: 88, height: 88,
-                background: "linear-gradient(135deg, rgba(244,63,94,0.18), rgba(251,146,60,0.14))",
-                border: "1.5px solid rgba(251,113,133,0.28)",
-                boxShadow: "0 0 28px rgba(244,63,94,0.20), inset 0 1px 0 rgba(255,255,255,0.07)",
+                width: 90, height: 90, borderRadius: 20,
+                background: "rgba(236,72,153,0.1)",
+                border: "1.5px solid rgba(236,72,153,0.25)",
+                boxShadow: "0 0 24px rgba(236,72,153,0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginBottom: 10,
               }}
             >
               {gift.image_url ? (
                 <img
                   src={gift.image_url}
                   alt={gift.name}
-                  className="w-14 h-14 object-contain drop-shadow-[0_2px_10px_rgba(244,63,94,0.35)]"
+                  style={{ width: 58, height: 58, objectFit: "contain" }}
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = "none";
                     const p = (e.target as HTMLImageElement).parentElement;
@@ -283,42 +300,54 @@ export default function GiftSendPopup({
                   }}
                 />
               ) : (
-                <span className="text-[40px] leading-none select-none">{gift.emoji || "🎁"}</span>
+                <span style={{ fontSize: 40, lineHeight: 1 }}>{gift.emoji || "🎁"}</span>
               )}
             </motion.div>
 
-            <h4 className="text-white font-black text-base tracking-tight">{gift.name}</h4>
-            <p className="text-rose-300/60 text-[11px] italic mt-0.5">{slogan}</p>
+            <p style={{ color: "#fff", fontWeight: 900, fontSize: 16, margin: "0 0 2px", textAlign: "center" }}>{gift.name}</p>
+            <p style={{ color: "rgba(249,168,212,0.6)", fontSize: 11, fontStyle: "italic", margin: "0 0 8px" }}>{slogan}</p>
 
             {/* Price badge */}
-            <div className="flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full"
-              style={{ background: "rgba(251,113,133,0.10)", border: "1px solid rgba(251,113,133,0.22)" }}>
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: 5,
+              padding: "4px 12px", borderRadius: 20,
+              background: "rgba(236,72,153,0.1)",
+              border: "1px solid rgba(236,72,153,0.25)",
+            }}>
               {isFreeGift ? (
-                <span className="text-emerald-400 text-xs font-bold">✦ FREE</span>
+                <span style={{ color: "#4ade80", fontSize: 11, fontWeight: 800 }}>✦ FREE</span>
               ) : (
                 <>
-                  <Coins className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-amber-300 text-xs font-bold">{gift.token_price} coins</span>
+                  <Coins style={{ width: 12, height: 12, color: "#fbbf24" }} />
+                  <span style={{ color: "#fcd34d", fontSize: 11, fontWeight: 800 }}>{gift.token_price} coins</span>
                 </>
               )}
             </div>
           </div>
 
           {/* Recipient chip */}
-          <div className="mx-5 mb-3 flex items-center gap-2 rounded-xl px-3 py-2"
-            style={{ background: "rgba(244,63,94,0.08)", border: "1px solid rgba(251,113,133,0.18)" }}>
-            <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/50" />
-            <div className="flex-1 min-w-0">
-              <p className="text-rose-300/50 text-[10px]">Sending to</p>
-              <p className="text-white font-semibold text-sm truncate">{recipientName}</p>
+          <div style={{
+            margin: "0 18px 12px",
+            display: "flex", alignItems: "center", gap: 8,
+            background: "rgba(236,72,153,0.07)",
+            border: "1px solid rgba(236,72,153,0.18)",
+            borderRadius: 14, padding: "8px 12px",
+          }}>
+            <Heart style={{ width: 13, height: 13, color: "#ec4899", flexShrink: 0 }} fill="rgba(236,72,153,0.4)" />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ color: "rgba(249,168,212,0.45)", fontSize: 9, margin: 0, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>Sending to</p>
+              <p style={{ color: "#fff", fontWeight: 700, fontSize: 13, margin: 0 }}>{recipientName}</p>
             </div>
-            <Sparkles className="w-3.5 h-3.5 text-amber-400/60" />
+            <Sparkles style={{ width: 13, height: 13, color: "rgba(250,204,21,0.6)", flexShrink: 0 }} />
           </div>
 
-          {/* Message Input */}
-          <div className="px-5 mb-4">
-            <div className="rounded-xl overflow-hidden"
-              style={{ border: "1px solid rgba(251,113,133,0.22)", background: "rgba(255,255,255,0.04)" }}>
+          {/* Message input */}
+          <div style={{ margin: "0 18px 12px" }}>
+            <div style={{
+              borderRadius: 14, overflow: "hidden",
+              border: "1px solid rgba(255,255,255,0.1)",
+              background: "rgba(255,255,255,0.04)",
+            }}>
               <SecureTextarea
                 id="gift-message"
                 value={message}
@@ -332,74 +361,82 @@ export default function GiftSendPopup({
               />
             </div>
             {spamError && (
-              <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
-                <span>⚠️</span> {spamError}
+              <p style={{ color: "#f87171", fontSize: 11, marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                ⚠️ {spamError}
               </p>
             )}
-            <div className="flex justify-between items-center mt-1.5">
-              <span className="text-rose-300/30 text-[10px]">No links or phone numbers</span>
-              <span className={`text-[10px] font-medium ${message.length > 320 ? "text-amber-400" : "text-rose-300/30"}`}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>No links or phone numbers</span>
+              <span style={{ color: message.length > 320 ? "#fbbf24" : "rgba(255,255,255,0.2)", fontSize: 9, fontWeight: 600 }}>
                 {message.length}/350
               </span>
             </div>
           </div>
 
-          {/* Insufficient coins — Refuel Gate */}
+          {/* Insufficient coins */}
           {!canSend && !isFreeGift && (
-            <div className="mx-5 mb-3">
+            <div style={{ margin: "0 18px 12px" }}>
               <button
                 onClick={() => setShowRefuel(true)}
-                className="w-full rounded-xl px-4 py-2.5 flex items-center justify-between transition-all"
-                style={{ background: "linear-gradient(135deg, rgba(251,191,36,0.10), rgba(251,146,60,0.10))", border: "1px solid rgba(251,191,36,0.28)" }}
+                style={{
+                  width: "100%", borderRadius: 14, padding: "10px 14px",
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.25)",
+                  cursor: "pointer",
+                }}
               >
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-amber-400" />
-                  <span className="text-amber-300 text-xs font-semibold">Need {gift.token_price - userTokens} more coins</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Sparkles style={{ width: 14, height: 14, color: "#fbbf24" }} />
+                  <span style={{ color: "#fcd34d", fontSize: 12, fontWeight: 600 }}>Need {gift.token_price - userTokens} more coins</span>
                 </div>
-                <span className="text-amber-400 text-xs font-black">Top up →</span>
+                <span style={{ color: "#fbbf24", fontSize: 12, fontWeight: 800 }}>Top up →</span>
               </button>
             </div>
           )}
 
-          {/* Action row */}
-          <div className="px-5 pb-5 flex gap-2.5">
-            <Button
-              variant="outline"
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 10, padding: "0 18px 20px" }}>
+            <button
               onClick={onClose}
-              className="flex-1 h-11 text-sm font-semibold transition-all"
-              style={{
-                background: "rgba(251,113,133,0.07)",
-                border: "1px solid rgba(251,113,133,0.20)",
-                color: "rgba(251,113,133,0.70)",
-              }}
               aria-label="Cancel gift sending"
+              style={{
+                flex: 1, padding: "12px 0", borderRadius: 16,
+                background: "rgba(255,255,255,0.06)",
+                border: "1.5px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.5)", fontWeight: 700, fontSize: 13,
+                cursor: "pointer",
+              }}
             >
               Cancel
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={handleSend}
               disabled={!canSend || isSending || message.length > 350}
-              className="flex-1 h-11 text-sm font-black text-white disabled:opacity-40"
-              style={{
-                background: canSend ? "linear-gradient(135deg, #f43f5e, #ec4899, #fb923c)" : undefined,
-                boxShadow: canSend ? "0 4px 22px rgba(244,63,94,0.45), 0 0 0 1px rgba(251,113,133,0.20)" : undefined,
-              }}
               aria-label={`Send ${gift.name} gift to ${recipientName}`}
+              style={{
+                flex: 2, padding: "12px 0", borderRadius: 16,
+                background: canSend ? "linear-gradient(135deg, #f472b6, #ec4899)" : "rgba(255,255,255,0.06)",
+                border: "none",
+                color: "#fff", fontWeight: 800, fontSize: 13,
+                cursor: canSend ? "pointer" : "not-allowed",
+                opacity: !canSend || isSending ? 0.5 : 1,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                boxShadow: canSend ? "0 4px 20px rgba(236,72,153,0.5)" : "none",
+              }}
             >
               {isSending ? (
-                <span className="animate-pulse">Sending...</span>
+                <span style={{ opacity: 0.7 }}>Sending...</span>
               ) : (
                 <>
-                  <Gift className="w-4 h-4 mr-1.5" />
+                  <Gift style={{ width: 14, height: 14 }} />
                   {isFreeGift ? "Send Free 💫" : "Send Gift 💝"}
                 </>
               )}
-            </Button>
+            </button>
           </div>
         </motion.div>
       </motion.div>
 
-      {/* Refuel Gate overlay */}
       {showRefuel && (
         <TokenPurchase
           onClose={() => setShowRefuel(false)}

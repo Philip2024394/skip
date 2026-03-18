@@ -17,8 +17,8 @@ import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { isMockCurrentlyOnline } from "@/shared/utils/mockOnlineSchedule";
 import { GuestAuthPrompt } from "@/features/auth/components";
 import { TermsAcceptanceDialog } from "@/features/auth/components";
-import { TreatOverlay, AppDialogs, DailyMatchSuggestion, shouldShowDailyMatch, markDailyMatchShown } from "@/features/dating/components";
-import PackageTermsOverlay from "@/features/dating/components/PackageTermsOverlay";
+import { TreatOverlay, AppDialogs, DailyMatchSuggestion, shouldShowDailyMatch, markDailyMatchShown, TravelNoticePopup, shouldShowTravelNotice, markTravelNoticeShown } from "@/features/dating/components";
+import type { TravelNoticeType } from "@/features/dating/components";
 import { ProfileBottomSheet, ProfileInfoPanel, ProfileImagesPanel, DateIdeaDetailPanel, TreatDetailPanel } from "@/features/dating/components";
 import VideoIntroPanel from "@/features/dating/components/profile-view/VideoIntroPanel";
 import DistanceMapOverlay from "@/features/dating/components/profile-view/DistanceMapOverlay";
@@ -54,6 +54,7 @@ import { FlaskConical, Sparkles, X } from "lucide-react";
 import { useUserCurrency } from "@/shared/hooks/useUserCurrency";
 import BestieRequestPopup, { BestieRequest } from "@/features/dating/components/BestieRequestPopup";
 import BestieReferralPopup, { BestieReferral } from "@/features/dating/components/BestieReferralPopup";
+import BestieConfirmPopup from "@/features/dating/components/BestieConfirmPopup";
 import { generateAppUserId } from "@/shared/utils/userIdUtils";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
@@ -137,8 +138,7 @@ const KEY_TO_FEATURE: Record<string, PremiumFeature> = {
   "unlock:spotlight": PREMIUM_FEATURES.find(f => f.id === "spotlight")!,
 };
 
-function HomePackageDetail({ packageKey, onClose, onPurchase }: { packageKey: string; onClose: () => void; onPurchase: (f: PremiumFeature) => void }) {
-  const [showTerms, setShowTerms] = useState(false);
+function HomePackageDetail({ packageKey, onPurchase }: { packageKey: string; onClose: () => void; onPurchase: (f: PremiumFeature) => void }) {
   const { fmt } = useUserCurrency();
   const pkg = HOME_UNLOCK_PACKAGES.find((p) => p.key === packageKey);
   if (!pkg) return null;
@@ -167,12 +167,13 @@ function HomePackageDetail({ packageKey, onClose, onPurchase }: { packageKey: st
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.1) 100%)", pointerEvents: "none" }} />
         )}
 
-        {/* close */}
-        <button onClick={onClose} className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center text-white/70 text-xs font-black" style={{ backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.2)" }}>✕</button>
-
         {/* content */}
         <div className="relative z-10 h-full flex flex-col items-center justify-end px-5 pb-4 text-center gap-2">
-          <span style={{ fontSize: bgImage ? 36 : 40 }}>{pkg.emoji}</span>
+          {pkg.emoji === "💬" ? (
+            <img src="https://ik.imagekit.io/7grri5v7d/logo_unlock-removebg-preview.png?updatedAt=1773430238745" alt="unlock" style={{ width: bgImage ? 44 : 50, height: bgImage ? 44 : 50, objectFit: "contain" }} />
+          ) : (
+            <span style={{ fontSize: bgImage ? 36 : 40 }}>{pkg.emoji}</span>
+          )}
           <p className="text-white font-black leading-tight" style={{ fontSize: 17, margin: 0 }}>{pkg.name}</p>
           <p style={{ color: "rgba(255,255,255,0.65)", fontSize: 11, lineHeight: 1.5, margin: 0, maxWidth: 260 }}>{pkg.desc}</p>
 
@@ -187,19 +188,10 @@ function HomePackageDetail({ packageKey, onClose, onPurchase }: { packageKey: st
             </button>
           </div>
 
-          {/* sub label + T&C */}
-          <div style={{ width: "100%", maxWidth: 280, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <p style={{ color: "rgba(255,255,255,0.42)", fontSize: 9.5, fontWeight: 600, margin: 0 }}>{pkg.sub}</p>
-            <button onClick={() => setShowTerms(true)}
-              style={{ color: "rgba(232,72,199,0.75)", fontSize: 9, fontWeight: 700, background: "none", border: "none", cursor: "pointer", textDecoration: "underline", whiteSpace: "nowrap", padding: 0 }}>
-              Terms &amp; Conditions
-            </button>
-          </div>
+          {/* sub label */}
+          <p style={{ color: "rgba(255,255,255,0.42)", fontSize: 9.5, fontWeight: 600, margin: 0, width: "100%", maxWidth: 280 }}>{pkg.sub}</p>
         </div>
       </div>
-
-      {/* T&C overlay */}
-      <PackageTermsOverlay show={showTerms} onClose={() => setShowTerms(false)} highlightPackage={packageKey} />
     </>
   );
 }
@@ -289,12 +281,46 @@ const Index = () => {
   // Apply filters
   const filteredProfiles = useMemo(() => {
     return allProfiles.filter((p) => {
+      // Location
       if (filters.country && p.country?.toLowerCase() !== filters.country.toLowerCase()) return false;
       if (filters.city && !p.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
-      if (p.age < filters.ageRange[0] || p.age > filters.ageRange[1]) return false;
+      if (filters.isVisiting && !(p as any).is_visiting) return false;
+      if (filters.openToTravel && !(p as any).open_to_travel) return false;
+      // Who
       if (filters.gender && p.gender?.toLowerCase() !== filters.gender.toLowerCase()) return false;
-      if (filters.lookingFor && p.looking_for?.toLowerCase() !== filters.lookingFor.toLowerCase()) return false;
       if (filters.orientation && p.orientation?.toLowerCase() !== filters.orientation.toLowerCase()) return false;
+      // Age & Height
+      if (p.age < filters.ageRange[0] || p.age > filters.ageRange[1]) return false;
+      if (filters.heightRange[0] !== 145 || filters.heightRange[1] !== 200) {
+        const heightStr: string = (p as any).basic_info?.height || "";
+        const heightNum = parseInt(heightStr);
+        if (heightNum && (heightNum < filters.heightRange[0] || heightNum > filters.heightRange[1])) return false;
+      }
+      // Intention — partial match so "Marriage" matches "Looking for Marriage" etc.
+      if (filters.lookingFor) {
+        const lf = (p.looking_for || (p as any).relationship_goals?.looking_for || "").toLowerCase();
+        if (!lf.includes(filters.lookingFor.toLowerCase())) return false;
+      }
+      // Lifestyle & Values
+      if (filters.religion) {
+        const rel = ((p as any).relationship_goals?.religion || "").toLowerCase();
+        if (!rel.includes(filters.religion.toLowerCase())) return false;
+      }
+      if (filters.education) {
+        const edu = ((p as any).basic_info?.education || "").toLowerCase();
+        if (!edu.includes(filters.education.split(" / ")[0].toLowerCase())) return false;
+      }
+      if (filters.children) {
+        const ch = ((p as any).basic_info?.children || "").toLowerCase();
+        const wantsCh = ((p as any).relationship_goals?.values_children || "").toLowerCase();
+        if (filters.children === "none" && ch.includes("has")) return false;
+        if (filters.children === "has" && !ch.includes("has")) return false;
+        if (filters.children === "wants" && !wantsCh.includes("yes")) return false;
+      }
+      // Quality
+      if (filters.verifiedOnly && !(p as any).is_verified) return false;
+      if (filters.withPhotoOnly && !(p.avatar_url || (p as any).image)) return false;
+      // Activity badges
       if (filters.availableTonight && !p.available_tonight) return false;
       if (filters.onlineNow) {
         const pm = p as any;
@@ -535,6 +561,10 @@ const Index = () => {
   // Daily match suggestion
   const [dailyMatchProfile, setDailyMatchProfile] = useState<any | null>(null);
 
+  // Travel notice popup
+  const [travelNoticeProfile, setTravelNoticeProfile] = useState<any | null>(null);
+  const [travelNoticeType, setTravelNoticeType] = useState<TravelNoticeType>("open_to_travel");
+
   const POST_LOGIN_LANDING_KEY = "post_login_landing_dismissed";
   const [showPostLoginLanding, setShowPostLoginLanding] = useState(false);
 
@@ -557,6 +587,7 @@ const Index = () => {
 
   // Bestie system
   const [pendingBestieRequest, setPendingBestieRequest] = useState<BestieRequest | null>(null);
+  const [bestieConfirmProfile, setBestieConfirmProfile] = useState<any | null>(null);
   const [sentBestieIds, setSentBestieIds] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("bestie_sent_ids") || "[]"); } catch { return []; }
   });
@@ -564,10 +595,19 @@ const Index = () => {
     try { return JSON.parse(localStorage.getItem("bestie_confirmed_ids") || "[]"); } catch { return []; }
   });
 
+  // Step 1: show confirmation popup with profile details
   const handleBestieRequest = (targetProfile: any) => {
     if (!user) { showGuestPrompt("generic"); return; }
     const targetId = targetProfile?.id;
     if (!targetId || confirmedBestieIds.includes(targetId) || sentBestieIds.includes(targetId)) return;
+    setBestieConfirmProfile(targetProfile);
+  };
+
+  // Step 2: user confirmed — actually send the request
+  const handleBestieConfirmed = (targetProfile: any) => {
+    setBestieConfirmProfile(null);
+    const targetId = targetProfile?.id;
+    if (!targetId) return;
     const updated = [...sentBestieIds, targetId];
     setSentBestieIds(updated);
     try { localStorage.setItem("bestie_sent_ids", JSON.stringify(updated)); } catch { /* ignore */ }
@@ -703,6 +743,26 @@ const Index = () => {
     const t = setTimeout(() => setDailyMatchProfile(pick), 1800);
     return () => clearTimeout(t);
   }, [filteredProfiles]);
+
+  // Show travel notice popup — picks an opposite-sex profile with open_to_travel or is_visiting
+  useEffect(() => {
+    if (filteredProfiles.length === 0) return;
+    if (!shouldShowTravelNotice()) return;
+    const userGender = (currentUser as any)?.gender || "male";
+    const opposite = userGender === "male" ? "female" : "male";
+    const travelPool = filteredProfiles.filter(p =>
+      ((p as any).gender === opposite || (p as any).gender === "female") &&
+      ((p as any).open_to_travel || (p as any).is_visiting)
+    );
+    if (travelPool.length === 0) return;
+    const pick = travelPool[Math.floor(Math.random() * travelPool.length)];
+    const type: TravelNoticeType = (pick as any).is_visiting ? "coming_to_city" : "open_to_travel";
+    const t = setTimeout(() => {
+      setTravelNoticeProfile(pick);
+      setTravelNoticeType(type);
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [filteredProfiles, currentUser]);
 
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
@@ -1470,6 +1530,24 @@ const Index = () => {
         />
       )}
 
+      {/* Travel Notice Popup */}
+      {travelNoticeProfile && (
+        <TravelNoticePopup
+          profile={travelNoticeProfile}
+          type={travelNoticeType}
+          yourCity={(currentUser as any)?.city || "your city"}
+          onLike={(p) => {
+            markTravelNoticeShown();
+            setTravelNoticeProfile(null);
+            handleLike(p);
+          }}
+          onDismiss={() => {
+            markTravelNoticeShown();
+            setTravelNoticeProfile(null);
+          }}
+        />
+      )}
+
       {/* ── Video Call Overlays ────────────────────────────────────── */}
       <AnimatePresence>
         {videoCall.incomingCall && !videoCall.activeCall && (
@@ -1556,7 +1634,14 @@ const Index = () => {
         onClose={() => setBestieReferral(null)}
       />
 
-      {/* Bestie Request Popup */}
+      {/* Bestie Confirm Popup — shown before sending the request */}
+      <BestieConfirmPopup
+        profile={bestieConfirmProfile}
+        onConfirm={handleBestieConfirmed}
+        onCancel={() => setBestieConfirmProfile(null)}
+      />
+
+      {/* Bestie Request Popup — shown when target accepts (simulated) */}
       <BestieRequestPopup
         request={pendingBestieRequest}
         onAccept={handleBestieAccept}

@@ -1,13 +1,13 @@
 import { useRef, useState } from "react";
 
 // ── Tarot image constants ─────────────────────────────────────────────────────
-export const GRAVEYARD_BG = "https://ik.imagekit.io/7grri5v7d/arot%20card.png?updatedAt=1773487551052";
+export const GRAVEYARD_BG = "https://ik.imagekit.io/7grri5v7d/tarot%20card%20backy.png?updatedAt=1773488446618";
 
 export const TAROT_READER_SEQUENCE = [];
 
 export const TAROT_READER_IMAGE_URL = "";
 
-export const TAROT_CARD_BACK = "https://ik.imagekit.io/7grri5v7d/tarot%20card%20backy.png?updatedAt=1773488446618";
+export const TAROT_CARD_BACK = "https://ik.imagekit.io/7grri5v7d/tarot%20card%20back.png?updatedAt=1773487777679";
 
 export const TAROT_CARD_FRONT_IMAGES: Record<number, string> = {
   1: "https://ik.imagekit.io/7grri5v7d/T_1-removebg-preview.png",

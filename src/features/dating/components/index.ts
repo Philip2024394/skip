@@ -17,6 +17,8 @@ export { default as TopCard } from './TopCard';
 export { default as TreatOverlay } from './TreatOverlay';
 export { default as AppDialogs } from './AppDialogs';
 export { default as DailyMatchSuggestion, shouldShowDailyMatch, markDailyMatchShown } from './DailyMatchSuggestion';
+export { default as TravelNoticePopup, shouldShowTravelNotice, markTravelNoticeShown } from './TravelNoticePopup';
+export type { TravelNoticeType } from './TravelNoticePopup';
 export { default as VerificationSubmitDialog } from './VerificationSubmitDialog';
 export { default as ProfileBottomSheet } from './profile-view/ProfileBottomSheet';
 export { default as ProfileInfoPanel } from './profile-view/ProfileInfoOverlay';

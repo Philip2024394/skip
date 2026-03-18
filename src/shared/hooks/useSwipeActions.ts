@@ -68,6 +68,12 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
       props.showGuestPrompt("superlike");
       return;
     }
+    // Mock profiles always decline super likes
+    const isMock = profile.id.startsWith("indo-") || profile.id.startsWith("profile-");
+    if (isMock) {
+      props.toast.error(`${profile.name.split(" ")[0]} is not accepting Super Likes right now.`);
+      return;
+    }
     if (props.superLikesCount > 0) {
       props.sessionStatsRef.current.liked += 1;
       props.setSessionTick((v) => v + 1);

@@ -1,7 +1,30 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
-const LOOKING_FOR = ["Serious relationship", "Marriage", "Friendship first", "Casual dating", "Not sure yet"];
+const LOOKING_FOR = [
+  "Looking for Marriage",
+  "Serious Relationship",
+  "Long-term Partner",
+  "Life Companion",
+  "Friendship First, Then More",
+  "Casual Dating",
+  "Looking for Fun",
+  "New Friends",
+  "Adventure Partner",
+  "Travel Partner",
+  "Open to Foreigners",
+  "Traditional Courtship",
+  "Modern Equal Partnership",
+  "Financial Stability",
+  "Emotional Support & Depth",
+  "Spiritual Partner",
+  "Family-Oriented Partner",
+  "Independent & Ambitious",
+  "Loyal & Committed",
+  "Outgoing & Social",
+  "Calm & Homebody",
+  "Not Sure Yet",
+];
 const TIMELINE = ["As soon as possible", "Within 1 year", "1–2 years", "3–5 years", "No rush"];
 
 const LAST_REL_TYPE = ["Long-term partner", "Short-term dating", "Marriage / Engaged", "On-and-off relationship", "Long distance", "Never been in a relationship"];

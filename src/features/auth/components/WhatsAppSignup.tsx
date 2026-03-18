@@ -63,10 +63,10 @@ export default function WhatsAppSignup() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const value = e.target.name === "name"
+      ? e.target.value.replace(/[^a-zA-ZÀ-ÖØ-öø-ÿ]/g, "")
+      : e.target.value;
+    setFormData(prev => ({ ...prev, [e.target.name]: value }));
   };
 
   if (isSubmitted) {
@@ -165,7 +165,8 @@ export default function WhatsAppSignup() {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Your name"
+                placeholder="First name only"
+                maxLength={30}
                 className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder:text-white/50 focus:outline-none focus:border-purple-400/50"
               />
             </div>

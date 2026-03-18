@@ -26,6 +26,7 @@ export default function VirtualGiftsDisplay({ userId }: VirtualGiftsDisplayProps
   }, [userId]);
 
   const fetchSentGifts = async () => {
+    if (!userId || userId.startsWith('indo-')) return;
     const { data, error } = await supabase
       .from('sent_gifts')
       .select(`

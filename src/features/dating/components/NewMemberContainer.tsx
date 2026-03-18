@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/avatar'
 import { Badge } from '@/shared/components/badge';
 import { MapPin, Heart, Star } from 'lucide-react';
 import { cn } from '@/shared/services/utils';
+import { firstName } from '@/shared/utils';
 import { toast } from 'sonner';
 import { GuestAuthPrompt } from '@/features/auth/components';
 
@@ -36,9 +37,9 @@ const NewMemberContainer = ({ member, user, className }: NewMemberContainerProps
 
     // Proceed with interaction logic
     if (action === 'like') {
-      toast(`❤️ You liked ${member.name}!`);
+      toast(`❤️ You liked ${firstName(member.name)}!`);
     } else if (action === 'message') {
-      toast(`💬 Opening chat with ${member.name}...`);
+      toast(`💬 Opening chat with ${firstName(member.name)}...`);
     }
   };
   return (
@@ -69,7 +70,7 @@ const NewMemberContainer = ({ member, user, className }: NewMemberContainerProps
           {/* Name and Age */}
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-gray-900">
-              {member.name}, {member.age}
+              {firstName(member.name)}, {member.age}
             </h3>
             <div className="flex items-center space-x-1">
               <Star className="w-4 h-4 text-yellow-500 fill-current" />

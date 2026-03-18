@@ -302,8 +302,9 @@ export default function MatchCelebrationOverlay({
         transition={{ duration: 0.3 }}
         style={{
           position: "fixed", inset: 0, zIndex: 300,
-          background: "rgba(4,0,16,0.9)",
-          backdropFilter: "blur(18px)",
+          background: "rgba(10,4,24,0.35)",
+          backdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+          WebkitBackdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: "0 20px",
         }}
@@ -320,9 +321,11 @@ export default function MatchCelebrationOverlay({
             width: "100%", maxWidth: 340,
             borderRadius: 30,
             overflow: "hidden",
-            background: "linear-gradient(145deg, rgba(10,0,24,0.98) 0%, rgba(22,4,44,0.98) 100%)",
-            border: "1.5px solid rgba(236,72,153,0.4)",
-            boxShadow: "0 0 0 1px rgba(168,85,247,0.15), 0 8px 40px rgba(236,72,153,0.28), 0 0 80px rgba(168,85,247,0.12)",
+            background: "rgba(8,8,12,0.88)",
+            backdropFilter: "blur(40px)",
+            WebkitBackdropFilter: "blur(40px)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
             padding: "0 0 6px",
             textAlign: "center",
           }}

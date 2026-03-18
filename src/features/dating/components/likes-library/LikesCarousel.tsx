@@ -6,6 +6,7 @@ import PromoCard from "@/shared/components/PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
+import { firstName } from "@/shared/utils";
 import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
 type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
@@ -86,9 +87,17 @@ export default function LikesCarousel(props: LikesCarouselProps) {
 
         const profile = item.profile;
         if (!profile) return null;
+
         const isMatch = props.matches.some((m) => m.id === profile.id);
         const fresh = props.tab === "new" && props.isNewProfile(profile);
         const iLikedThis = props.iLiked.some((p) => p.id === profile.id);
+        const isSuperGlow = props.tab === "received" && props.superLikeGlowProfileId === profile.id;
+
+        // Red glow when ≤ 60 min remaining — computed synchronously, no hook needed
+        const msLeft = profile.expires_at
+          ? Math.max(0, new Date(profile.expires_at).getTime() - Date.now())
+          : Infinity;
+        const isUrgent = props.tab !== "new" && msLeft <= 3_600_000;
 
         return (
           <motion.div
@@ -99,8 +108,11 @@ export default function LikesCarousel(props: LikesCarouselProps) {
             transition={{ delay: Math.min(idx * 0.04, 0.3) }}
             onClick={() => props.onSelectProfile(profile, props.currentList)}
             data-likes-library-profile-id={profile.id}
-            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border relative ${props.tab === "received" && props.superLikeGlowProfileId === profile.id ? "border-amber-400/60 super-like-heartbeat" : "border-white/10"}`}
-            style={{ width: 80 }}
+            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl cursor-pointer transition-all hover:scale-105 bg-black/50 backdrop-blur-md border relative ${isSuperGlow ? "border-amber-400/60 super-like-heartbeat" : isUrgent ? "border-red-500/60" : "border-white/10"}`}
+            style={{
+              width: 80,
+              boxShadow: isUrgent ? "0 0 10px 2px rgba(239,68,68,0.5), 0 0 0 1px rgba(239,68,68,0.3)" : undefined,
+            }}
           >
             {/* NEW badge */}
             {fresh && (
@@ -110,8 +122,6 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                 </span>
               </div>
             )}
-
-            {/* Available tonight glow — shown as moon badge only, no ring */}
 
             <div className="relative mt-1">
               <img
@@ -133,7 +143,6 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                 <span className="absolute -top-1 -right-1 text-sm">❤️</span>
               )}
               {/* Plus-One badge — top-left corner, always visible */}
-              {/* Single status badge — +1 beats Free Tonight */}
               {profile.is_plusone ? (
                 <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">
                   <span className="text-yellow-300 font-black text-[7px] leading-none">+1</span>
@@ -157,7 +166,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
               ) : props.tab === "new" && profile.available_tonight ? (
                 <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</span>
               ) : null}
-              {/* Single online dot - positioned based on badge presence */}
+              {/* Online dot */}
               {isOnline(profile.last_seen_at) && (
                 <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-70" />
@@ -167,7 +176,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
             </div>
 
             <p className="text-white text-[10px] font-semibold truncate w-full text-center">
-              {profile.name}, {profile.age}
+              {firstName(profile.name)}, {profile.age}
             </p>
 
             {props.tab === "new" ? (

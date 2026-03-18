@@ -12,7 +12,7 @@ import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
 // import GiftsTab from "@/components/gifts/GiftsTab";
 import { supabase } from "@/integrations/supabase/client";
-import SuperLikeSelector from "@/features/dating/components/SuperLikeSelector";
+import GiftSelector from "@/features/gifts/components/GiftSelector";
 import VideoContainer from "@/features/video/components/VideoContainer";
 import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
@@ -467,11 +467,11 @@ const LikesLibrary = ({
                 ))}
               </div>
             ) : isUnlockTab ? (
-              <div className="flex gap-2 h-full pb-2">
+              <div className="flex gap-2 h-full pb-2 pl-2">
                 {([
-                  { key: "unlock:single", emoji: "💬", label: "1 Unlock", price: "$1.99" },
-                  { key: "unlock:pack3", emoji: "💬", label: "3 Pack", price: "$4.99" },
-                  { key: "unlock:pack10", emoji: "💬", label: "10 Pack", price: "$12.99" },
+                  { key: "unlock:single", emoji: null, label: "1 Unlock", price: "$1.99" },
+                  { key: "unlock:pack3", emoji: null, label: "3 Pack", price: "$4.99" },
+                  { key: "unlock:pack10", emoji: null, label: "10 Pack", price: "$12.99" },
                   { key: "unlock:vip", emoji: "👑", label: "VIP", price: "$10.99" },
                   { key: "unlock:superlike", emoji: "⭐", label: "Super Like", price: "$1.99" },
                   { key: "unlock:boost", emoji: "🚀", label: "Boost", price: "$1.99" },
@@ -500,7 +500,11 @@ const LikesLibrary = ({
                     }}
                     aria-label={p.label}
                   >
-                    <span style={{ fontSize: 28, marginTop: 4 }}>{p.emoji}</span>
+                    {p.emoji ? (
+                      <span style={{ fontSize: 28, marginTop: 4 }}>{p.emoji}</span>
+                    ) : (
+                      <img src="https://ik.imagekit.io/7grri5v7d/logo_unlock-removebg-preview.png?updatedAt=1773430238745" alt="unlock" style={{ width: 36, height: 36, marginTop: 4, objectFit: "contain" }} />
+                    )}
                     <div className="flex flex-col items-center gap-0.5">
                       <p className="text-white text-[9px] font-bold text-center leading-tight">{p.label}</p>
                       <p className="text-white/80 text-[9px] font-black">{p.price}</p>
@@ -575,11 +579,11 @@ const LikesLibrary = ({
               )
             ) : tab === "gifts" ? (
               <div className="overflow-y-auto flex-1 px-1 py-1">
-                <SuperLikeSelector
-                  userId={currentUserId}
-                  recipientId={selectedProfile?.id}
-                  recipientName={selectedProfile?.name}
-                  onSent={onGiftSent}
+                <GiftSelector
+                  userId={currentUserId || ""}
+                  profileId={selectedProfile?.id || ""}
+                  profileName={selectedProfile?.name || ""}
+                  onGiftSent={onGiftSent}
                 />
               </div>
             ) : displayItemsWithTarot.length === 0 ? (

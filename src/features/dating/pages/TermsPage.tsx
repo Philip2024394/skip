@@ -208,21 +208,46 @@ const TermsPage = () => {
           <p>We reserve the right to remove any content that violates these Terms or our community standards, without notice.</p>
         </Section>
 
-        <Section title="5. Premium Features & Payments">
-          <p>Certain features of 2DateMe require payment, including but not limited to:</p>
-          <ul className="list-disc list-inside space-y-1 pl-2">
-            <li><strong className="text-white">WhatsApp Connection ($1.99):</strong> Unlocks sharing of WhatsApp contact details between matched users</li>
-            <li><strong className="text-white">Super Like ($1.99):</strong> Elevates your profile to the top of another user's library</li>
-            <li><strong className="text-white">VIP Membership ($10.99/month):</strong> Includes 7 WhatsApp unlocks, 5 super likes, and profile spotlight</li>
-            <li><strong className="text-white">Plus-One Premium ($19.99):</strong> Activates the Plus-One badge for event companion connections and includes WhatsApp access</li>
-            <li><strong className="text-white">Profile Boost, Incognito Mode, Spotlight, Verified Badge:</strong> As described at time of purchase</li>
+        <Section title="5. How 2DateMe Works — Platform Role">
+          <p><strong className="text-white">2DateMe.com is a connection facilitation platform only.</strong> Our sole function is to provide a digital space where consenting adults can discover each other, express interest, and choose to connect. We do not arrange, coordinate, supervise, or take any responsibility for any interaction, meeting, relationship, or outcome that arises between users — on or off the platform.</p>
+          <ul className="list-disc list-inside space-y-1 pl-2 mt-2">
+            <li>We provide the technology and traffic. All connection decisions are made independently by users.</li>
+            <li>We do not vet, interview, background-check, or vouch for any user's character, intentions, history, or suitability as a partner, companion, or contact.</li>
+            <li>A match on 2DateMe means two users expressed mutual interest. It is not an endorsement, introduction, or recommendation by 2DateMe.</li>
+            <li>Once a WhatsApp connection is made, all communication occurs on a third-party platform (WhatsApp / Meta). 2DateMe has no visibility into, control over, or responsibility for those communications.</li>
+            <li>Any arrangement, meeting, date, relationship, or transaction that takes place between users — whether originating on 2DateMe or not — is entirely the responsibility of the individuals involved.</li>
+            <li>2DateMe shall not be held liable for any harm, loss, injury, emotional distress, financial loss, or any other consequence arising from any connection made through the platform.</li>
           </ul>
-          <p>All payments are processed securely by <strong className="text-white">Stripe</strong>. By making a purchase, you authorise the charge to your nominated payment method.</p>
-          <p><strong className="text-white">Refund policy:</strong> All purchases are final and non-refundable, except where required by applicable consumer protection laws. If you believe you have been charged in error, contact us at <a href="mailto:support@2DateMe.com" className="text-primary underline">support@2DateMe.com</a> within 7 days of the charge.</p>
-          <p>Subscription features renew automatically unless cancelled before the renewal date. You may cancel at any time through your account settings.</p>
+          <p className="mt-2">By registering and using 2DateMe, you acknowledge and accept that you are acting of your own free will, exercising your own judgement, and taking full personal responsibility for any and all outcomes of connections made through this platform.</p>
         </Section>
 
-        <Section title="6. WhatsApp Connections — Safety Notice">
+        <Section title="6. Premium Features, Packages & Payments">
+          <p>Certain features of 2DateMe require payment. By purchasing any package you confirm you are 18 or older and agree to these terms in full. All purchases are final and non-refundable except as described below.</p>
+
+          <p className="mt-3 mb-1 font-semibold text-white/80 text-xs uppercase tracking-wide">Package Details</p>
+          <ul className="list-disc list-inside space-y-1 pl-2">
+            <li><strong className="text-white">1 Match Unlock ($1.99):</strong> Reveals the WhatsApp number of one mutual match. Valid indefinitely. Does not expire after unlock.</li>
+            <li><strong className="text-white">3 Unlock Pack ($4.99):</strong> 3 credits to unlock WhatsApp numbers for different matches. Credits added to account and used as you match. Best for users actively matching over days or weeks.</li>
+            <li><strong className="text-white">10 Unlock Pack ($12.99):</strong> 10 unlock credits at the lowest cost-per-connection on the platform. Credits do not expire and can be used at any time.</li>
+            <li><strong className="text-white">Super Like ($1.99):</strong> Your profile appears first in the recipient's Likes Me list with a notification. Does not guarantee a match, reply, or connection. The recipient retains full discretion.</li>
+            <li><strong className="text-white">Profile Boost ($1.99):</strong> Placed at top of swipe stack for 1 hour. Activates immediately. Expected 5–10× increase in views during boost period. Results depend on active user base at time of boost.</li>
+            <li><strong className="text-white">Verified Badge ($1.99):</strong> Permanent ✅ badge on your profile. Once applied, your registered name and main photo are locked. Signals identity review to other users.</li>
+            <li><strong className="text-white">Incognito Mode ($2.99):</strong> Browse profiles invisibly for 24 hours. Activates immediately. 24-hour timer starts at time of purchase.</li>
+            <li><strong className="text-white">Spotlight ($4.99):</strong> Featured at top of every user's swipe stack for 24 hours. Maximum visibility across the active user base. Activates immediately.</li>
+            <li><strong className="text-white">VIP Monthly ($10.99/mo):</strong> 7 WhatsApp unlock credits + 5 Super Like credits refreshed each billing cycle. VIP crown badge for duration of subscription. Priority placement in discovery. Auto-renews monthly — cancel anytime before the next billing date.</li>
+            <li><strong className="text-white">Coins (Gift Economy):</strong> Coins are purchased in bundles and used to send virtual gifts to other users. Coins have no cash value and are non-refundable once purchased. Unused coins do not expire but are forfeited upon account deletion or termination.</li>
+          </ul>
+
+          <p className="mt-3"><strong className="text-white">Important — No Outcome Guarantee:</strong> Purchasing any package does not guarantee that another user will respond, accept a connection, or continue communication. All users act with full independence. 2DateMe makes no promise of romantic, social, or any other outcome from any purchase.</p>
+
+          <p className="mt-2">All payments are processed securely by <strong className="text-white">Stripe</strong>. 2DateMe does not store payment card details. By making a purchase, you authorise the charge to your nominated payment method.</p>
+
+          <p className="mt-2"><strong className="text-white">Refund policy:</strong> All purchases are final and non-refundable except: (a) if a WhatsApp number unlocked is found to be invalid or not in service — contact support within 7 days for verification and credit; (b) if a technical error on our platform prevented a feature from activating — contact support with evidence within 72 hours. VIP subscription refunds are not available for partial billing periods. Boost, Super Like, Spotlight, and Incognito Mode activate immediately and are non-refundable once activated. Fraudulent chargeback requests will result in permanent account suspension.</p>
+
+          <p className="mt-2">Subscription features renew automatically unless cancelled before the renewal date. You may cancel at any time through your account settings or by contacting support.</p>
+        </Section>
+
+        <Section title="7. WhatsApp Connections — Safety Notice">
           <p>By using the WhatsApp connection feature, you acknowledge that:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li>2DateMe facilitates introductions only — we are not responsible for the conduct of users after a connection is made</li>
@@ -234,7 +259,7 @@ const TermsPage = () => {
           <p>2DateMe is not liable for any harm, loss, or damage arising from interactions or meetings that take place outside the platform.</p>
         </Section>
 
-        <Section title="7. Plus-One Feature — Companion Connections">
+        <Section title="8. Plus-One Feature — Companion Connections">
           <p>The Plus-One feature is designed for members seeking event companions and social experiences. It is not a commercial escort service. By activating Plus-One:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li>You confirm the connection is consensual and social in nature</li>
@@ -243,22 +268,22 @@ const TermsPage = () => {
           </ul>
         </Section>
 
-        <Section title="8. Intellectual Property">
+        <Section title="9. Intellectual Property">
           <p>The 2DateMe brand, logo, design, and all proprietary software are owned by 2DateMe and are protected by copyright, trademark, and other intellectual property laws. You may not copy, reproduce, distribute, or create derivative works without our express written permission.</p>
           <p>You retain ownership of content you upload to the Service. By uploading, you grant 2DateMe a non-exclusive, worldwide, royalty-free licence to store, display, and use your content within the Service for the purpose of operating and improving the platform.</p>
         </Section>
 
-        <Section title="9. Privacy">
+        <Section title="10. Privacy">
           <p>Your use of the Service is also governed by our <a href="/privacy" className="text-primary underline">Privacy Policy</a>, which is incorporated into these Terms by reference.</p>
         </Section>
 
-        <Section title="10. Termination & Account Suspension">
+        <Section title="11. Termination & Account Suspension">
           <p>We reserve the right to suspend, restrict, or permanently terminate your account at any time, with or without notice, if we determine that you have violated these Terms, engaged in harmful conduct, or for any other reason we deem necessary to protect the Service or its users.</p>
           <p>You may delete your account at any time from your Dashboard. Upon deletion, your profile is removed from public view and your data is purged within 30 days in accordance with our Privacy Policy.</p>
           <p>No refunds will be issued upon account termination due to a breach of these Terms.</p>
         </Section>
 
-        <Section title="11. Disclaimers">
+        <Section title="12. Disclaimers">
           <p>The Service is provided on an "<strong className="text-white">as is</strong>" and "<strong className="text-white">as available</strong>" basis without warranties of any kind, either express or implied. We do not warrant that:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li>The Service will be uninterrupted, error-free, or secure</li>
@@ -268,30 +293,34 @@ const TermsPage = () => {
           <p>2DateMe is a platform that facilitates connections between independent adult users. We are not a matchmaking agency and make no guarantees regarding the quality, safety, or suitability of any user.</p>
         </Section>
 
-        <Section title="12. Limitation of Liability">
+        <Section title="13. Limitation of Liability">
           <p>To the maximum extent permitted by applicable law, 2DateMe, its directors, officers, employees, and partners shall not be liable for any:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
-            <li>Indirect, incidental, special, consequential, or punitive damages</li>
-            <li>Loss of data, revenue, profits, or goodwill</li>
-            <li>Damages arising from interactions or meetings between users facilitated through the Service</li>
+            <li>Indirect, incidental, special, consequential, or punitive damages of any kind</li>
+            <li>Loss of data, revenue, profits, goodwill, or opportunity</li>
+            <li>Any harm, injury, loss, or damage of any kind — physical, emotional, financial, reputational, or otherwise — arising from any interaction, meeting, relationship, or communication between users facilitated through or originating from the Service</li>
+            <li>The conduct, behaviour, statements, representations, or actions of any user, whether on or off the platform</li>
+            <li>Any interaction that takes place on WhatsApp or any other third-party platform following a connection made on 2DateMe</li>
             <li>Unauthorised access to or alteration of your data</li>
+            <li>Any failure or delay in the operation of a purchased feature due to technical issues beyond our reasonable control</li>
           </ul>
-          <p>Where liability cannot be excluded, our total liability to you shall not exceed the amount you paid to us in the 12 months preceding the claim.</p>
+          <p className="mt-2"><strong className="text-white">2DateMe provides a platform for adults to connect voluntarily. We are not a dating agency, matchmaking service, escort service, or relationship broker. We accept no responsibility for any outcome — romantic, social, financial, physical, or otherwise — that arises from any connection made through the platform.</strong></p>
+          <p className="mt-2">Where liability cannot be excluded under applicable law, our total aggregate liability to you shall not exceed the total amount you paid to us in the 12 months preceding the claim.</p>
         </Section>
 
-        <Section title="13. Indemnification">
+        <Section title="14. Indemnification">
           <p>You agree to indemnify, defend, and hold harmless 2DateMe and its affiliates from and against any claims, liabilities, damages, losses, and expenses (including reasonable legal fees) arising out of or in connection with your use of the Service, your content, or your violation of these Terms.</p>
         </Section>
 
-        <Section title="14. Governing Law & Disputes">
+        <Section title="15. Governing Law & Disputes">
           <p>These Terms shall be governed by and construed in accordance with applicable law. Any disputes arising from these Terms or your use of the Service shall first be attempted to be resolved informally by contacting us at <a href="mailto:support@2DateMe.com" className="text-primary underline">support@2DateMe.com</a>. If a dispute cannot be resolved informally, it shall be subject to the exclusive jurisdiction of the competent courts.</p>
         </Section>
 
-        <Section title="15. Changes to These Terms">
+        <Section title="16. Changes to These Terms">
           <p>We may update these Terms from time to time. We will notify you of material changes by updating the "Last Updated" date at the top of this page and, where appropriate, by sending you an email notification. Your continued use of the Service after changes take effect constitutes your acceptance of the revised Terms.</p>
         </Section>
 
-        <Section title="16. Verified Profiles">
+        <Section title="17. Verified Profiles">
           <p>2DateMe offers an optional <strong className="text-white">Verified Badge</strong> programme to help members confirm their identity and build trust within the community.</p>
           <ul className="list-disc list-inside space-y-1 pl-2 mt-2">
             <li>Verification is granted solely at the discretion of 2DateMe administrators following a review of the member's submitted information.</li>
@@ -302,7 +331,7 @@ const TermsPage = () => {
           </ul>
         </Section>
 
-        <Section title="17. Contact Us">
+        <Section title="18. Contact Us">
           <p>For questions, concerns, or support regarding these Terms:</p>
           <p className="mt-2">
             <strong className="text-white">2DateMe Support</strong><br />

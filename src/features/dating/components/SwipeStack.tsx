@@ -6,6 +6,7 @@ import { Heart, MapPin, Fingerprint, BadgeCheck } from "lucide-react";
 import type { Profile } from "./SwipeCard";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { isMockCurrentlyOnline } from "@/shared/utils/mockOnlineSchedule";
+import { firstName } from "@/shared/utils";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
 import ProfileBadge from "@/features/dating/components/ProfileBadge";
 import DistanceBadge from "@/features/dating/components/DistanceBadge";
@@ -383,7 +384,7 @@ export default function SwipeStack({
                 {profile.is_verified && (
                   <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
                 )}
-                {profile.name}, {profile.age}
+                {firstName(profile.name)}, {profile.age}
                 <ProfileBadge profile={profile} isProfilePage={false} />
               </h3>
               {(profile.is_mock && (profile as any).mock_online_hours

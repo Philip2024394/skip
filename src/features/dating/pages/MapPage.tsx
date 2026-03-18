@@ -22,6 +22,7 @@ import { GuestAuthPrompt } from "@/features/auth/components";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
 import { isNetworkError } from "@/shared/utils/payments";
 import { hasUnlockBadges, getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
+import { firstName } from "@/shared/utils";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
@@ -221,7 +222,7 @@ const AttentionSheet = ({ profile, onSuperLike, onClose }: AttentionSheetProps) 
       <div className="flex items-start justify-between">
         <div>
           <p className="text-white font-display font-bold text-lg leading-tight">
-            {profile.name} hasn't liked back yet
+            {firstName(profile.name)} hasn't liked back yet
           </p>
           <p className="text-white/50 text-xs mt-0.5">Get their attention — Super Like moves you to the top!</p>
         </div>
@@ -1318,7 +1319,7 @@ const MapPage = () => {
               </motion.span>
             </DialogTitle>
             <DialogDescription className="text-white/60 text-center">
-              You and {matchDialog?.name} liked each other!
+              You and {firstName(matchDialog?.name ?? "")} liked each other!
             </DialogDescription>
           </DialogHeader>
           {matchDialog && (
@@ -1356,7 +1357,7 @@ const MapPage = () => {
                   transition={{ duration: 0.2 }}
                 />
               </div>
-              <p className="text-white font-semibold">{matchDialog.name}, {matchDialog.age}</p>
+              <p className="text-white font-semibold">{firstName(matchDialog.name)}, {matchDialog.age}</p>
               <p className="text-white/50 text-sm flex items-center gap-1">
                 <MapPin className="w-3 h-3" /> {matchDialog.city}, {matchDialog.country}
               </p>

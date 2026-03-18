@@ -603,21 +603,66 @@ const buildRelationshipGoals = (i: number, gender: string, lookingFor: string): 
   about_partner: ABOUT_PARTNER_POOL[i % ABOUT_PARTNER_POOL.length],
 });
 
-// Determine if a profile is "online" based on an 18-hour window per day.
-// Each profile gets a unique 6-hour offline block so they stagger naturally.
-const computeOnlineStatus = (profileIndex: number): { isOnline: boolean; last_seen_at: string } => {
+// Derive the primary badge for a profile index + gender, mirroring the flag logic below.
+const derivePrimaryBadge = (i: number, gender: "Female" | "Male"): string | null => {
+  if (gender === "Female") {
+    if (i % 5 === 1) return "is_plusone";
+    if (i % 3 === 0) return "available_tonight";
+    if (i % 6 === 2) return "generous_lifestyle";
+    if (i % 7 === 1) return "weekend_plans";
+    if (i % 8 === 3) return "late_night_chat";
+    if (i % 9 === 0) return "no_drama";
+  } else {
+    if (i % 6 === 2) return "is_plusone";
+    if (i % 4 === 0) return "available_tonight";
+    if (i % 7 === 1) return "generous_lifestyle";
+    if (i % 5 === 3) return "weekend_plans";
+    if (i % 8 === 0) return "late_night_chat";
+    if (i % 9 === 4) return "no_drama";
+  }
+  return null; // no badge — premium profile
+};
+
+// Base offline-window start hour per badge/persona (all windows = 8 hrs → 16 hrs online).
+// Jitter of 0–2 hrs per profile keeps same-badge profiles from all going offline together.
+const BADGE_OFFLINE_START: Record<string, number> = {
+  late_night_chat:   8,  // day sleeper — offline 08–16, awake evenings/nights
+  available_tonight: 3,  // party/social — offline 03–11, active from midday onward
+  is_plusone:        12, // event person — offline 12–20, rests midday, out at night
+  generous_lifestyle: 2, // luxury lifestyle — offline 02–10, late riser
+  weekend_plans:     0,  // regular schedule — offline 00–08
+  no_drama:          22, // early bird — offline 22–06, sleeps early
+  is_visiting:       23, // tourist — offline 23–07, early exploring days
+};
+const PREMIUM_OFFLINE_START = 4; // no-badge premium — offline 04–12, sleeps very late
+
+const computeOnlineStatus = (
+  profileIndex: number,
+  gender: "Female" | "Male" = "Female",
+): { isOnline: boolean; last_seen_at: string } => {
   const now = Date.now();
   const currentHour = new Date().getHours();
-  // Each profile's offline window starts at a different hour (6-hour window)
-  const offlineStart = (profileIndex * 7 + 2) % 24;
-  const offlineEnd = (offlineStart + 6) % 24;
-  const inOfflineWindow = offlineStart < offlineEnd
-    ? currentHour >= offlineStart && currentHour < offlineEnd
-    : currentHour >= offlineStart || currentHour < offlineEnd;
-  const isOnline = !inOfflineWindow;
+  const currentMin  = new Date().getMinutes();
+
+  const badge = derivePrimaryBadge(profileIndex, gender);
+  const baseStart = badge ? (BADGE_OFFLINE_START[badge] ?? PREMIUM_OFFLINE_START) : PREMIUM_OFFLINE_START;
+  // 0–2 hr jitter so same-badge profiles stagger naturally
+  const jitter = (profileIndex * 3 + 1) % 3;
+  const offlineStart = (baseStart + jitter) % 24;
+  const offlineEnd   = (offlineStart + 8) % 24;
+
+  const nowFrac    = currentHour + currentMin / 60;
+  const endFrac    = offlineStart < offlineEnd ? offlineEnd : offlineEnd + 24;
+  const nowFracAdj = nowFrac < offlineStart ? nowFrac + 24 : nowFrac;
+  const inOffline  = nowFracAdj >= offlineStart && nowFracAdj < endFrac;
+
+  const isOnline = !inOffline;
   const last_seen_at = isOnline
-    ? new Date(now - Math.floor((profileIndex % 11) * 45 * 1000)).toISOString()
-    : new Date(now - (30 + (profileIndex % 90)) * 60 * 1000).toISOString();
+    // Within last ~2 min — always passes the 3-min isOnline() threshold
+    ? new Date(now - (profileIndex % 7) * 20_000).toISOString()
+    // 1–3 hrs ago — clearly offline
+    : new Date(now - (60 + (profileIndex % 120)) * 60_000).toISOString();
+
   return { isOnline, last_seen_at };
 };
 
@@ -633,7 +678,7 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     const offset = () => ((fi * 17 + 3) % 100 - 50) / 100 * 0.6;
     const latitude = lat + offset();
     const longitude = lng + offset();
-    const { isOnline, last_seen_at } = computeOnlineStatus(fi);
+    const { last_seen_at } = computeOnlineStatus(fi, "Female");
     const imgUrl = FEMALE_IMAGES_UNSPLASH[fi % FEMALE_IMAGES_UNSPLASH.length];
     const extraLangs = EXTRA_LANGS_POOL[fi % EXTRA_LANGS_POOL.length];
 
@@ -667,11 +712,31 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       lifestyle_info: buildLifestyleInfo(fi),
       relationship_goals: buildRelationshipGoals(fi, "Female", femaleLookingFor),
       app_user_id: generateAppUserId(`indo-f-${fi}`),
-      bestie_ids: fi % 4 === 0
-        ? [`indo-f-${(fi + 1) % TOTAL_FEMALE}`, `indo-f-${(fi + 3) % TOTAL_FEMALE}`, `indo-f-${(fi + 7) % TOTAL_FEMALE}`]
-        : fi % 7 === 2
-          ? [`indo-f-${(fi + 2) % TOTAL_FEMALE}`]
-          : [],
+      bestie_ids: fi % 11 === 0
+        // Mixed: 2 females + 1 male
+        ? [`indo-f-${(fi + 1) % TOTAL_FEMALE}`, `indo-f-${(fi + 5) % TOTAL_FEMALE}`, `indo-m-${fi % TOTAL_MALE}`]
+        : fi % 11 === 1
+        // Female-only: 3 besties
+        ? [`indo-f-${(fi + 2) % TOTAL_FEMALE}`, `indo-f-${(fi + 8) % TOTAL_FEMALE}`, `indo-f-${(fi + 14) % TOTAL_FEMALE}`]
+        : fi % 11 === 2
+        // Mixed: 1 female + 2 males
+        ? [`indo-f-${(fi + 3) % TOTAL_FEMALE}`, `indo-m-${(fi + 1) % TOTAL_MALE}`, `indo-m-${(fi + 4) % TOTAL_MALE}`]
+        : fi % 11 === 3
+        // Female-only: 2 besties
+        ? [`indo-f-${(fi + 4) % TOTAL_FEMALE}`, `indo-f-${(fi + 11) % TOTAL_FEMALE}`]
+        : fi % 11 === 4
+        // Male-only friend (1 mate)
+        ? [`indo-m-${(fi + 2) % TOTAL_MALE}`]
+        : fi % 11 === 5
+        // Mixed: 1 female + 1 male
+        ? [`indo-f-${(fi + 6) % TOTAL_FEMALE}`, `indo-m-${(fi + 3) % TOTAL_MALE}`]
+        : fi % 11 === 6
+        // Female-only: 1 bestie
+        ? [`indo-f-${(fi + 9) % TOTAL_FEMALE}`]
+        : fi % 11 === 7
+        // Mixed: 2 males
+        ? [`indo-m-${(fi + 5) % TOTAL_MALE}`, `indo-m-${(fi + 7) % TOTAL_MALE}`]
+        : [],
     });
   }
 
@@ -682,7 +747,7 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     const offset = () => ((mi * 13 + 7) % 100 - 50) / 100 * 0.6;
     const latitude = lat + offset();
     const longitude = lng + offset();
-    const { isOnline, last_seen_at } = computeOnlineStatus(TOTAL_FEMALE + mi);
+    const { last_seen_at } = computeOnlineStatus(mi, "Male");
     const imgUrl = MALE_IMAGES_UNSPLASH[mi % MALE_IMAGES_UNSPLASH.length];
     const extraLangs = EXTRA_LANGS_POOL[mi % EXTRA_LANGS_POOL.length];
 
@@ -716,8 +781,24 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       lifestyle_info: buildLifestyleInfo(mi),
       relationship_goals: buildRelationshipGoals(mi, "Male", maleLookingFor),
       app_user_id: generateAppUserId(`indo-m-${mi}`),
-      bestie_ids: mi % 5 === 0
-        ? [`indo-m-${(mi + 1) % TOTAL_MALE}`, `indo-m-${(mi + 2) % TOTAL_MALE}`]
+      bestie_ids: mi % 9 === 0
+        // Mixed: 2 males + 1 female
+        ? [`indo-m-${(mi + 1) % TOTAL_MALE}`, `indo-m-${(mi + 3) % TOTAL_MALE}`, `indo-f-${mi % TOTAL_FEMALE}`]
+        : mi % 9 === 1
+        // Male-only: 3 mates
+        ? [`indo-m-${(mi + 2) % TOTAL_MALE}`, `indo-m-${(mi + 4) % TOTAL_MALE}`, `indo-m-${(mi + 6) % TOTAL_MALE}`]
+        : mi % 9 === 2
+        // Mixed: 1 male + 2 females
+        ? [`indo-m-${(mi + 5) % TOTAL_MALE}`, `indo-f-${(mi + 3) % TOTAL_FEMALE}`, `indo-f-${(mi + 9) % TOTAL_FEMALE}`]
+        : mi % 9 === 3
+        // Male-only: 2 mates
+        ? [`indo-m-${(mi + 7) % TOTAL_MALE}`, `indo-m-${(mi + 8) % TOTAL_MALE}`]
+        : mi % 9 === 4
+        // Female friend only
+        ? [`indo-f-${(mi + 5) % TOTAL_FEMALE}`]
+        : mi % 9 === 5
+        // Mixed: 1 male + 1 female
+        ? [`indo-m-${(mi + 2) % TOTAL_MALE}`, `indo-f-${(mi + 7) % TOTAL_FEMALE}`]
         : [],
     });
   }
@@ -728,44 +809,51 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     [profiles[i], profiles[j]] = [profiles[j], profiles[i]];
   }
 
-  // Override female profiles with real uploaded local assets (faces guaranteed)
-  const girlOverrides: { img: string; gallery: string[]; pos: string }[] = [
-    { img: indoGirl1, gallery: [indoGirl1, indoGirl2], pos: "50% 20%" },
-    { img: indoGirl3, gallery: [indoGirl3, indoGirl27], pos: "50% 15%" },
-    { img: indoGirl4, gallery: [indoGirl4, indoGirl26], pos: "50% 20%" },
-    { img: indoGirl5, gallery: [indoGirl5, indoGirl7], pos: "50% 15%" },
-    { img: indoGirl6, gallery: [indoGirl6, indoGirl29], pos: "50% 25%" },
-    { img: indoGirl8, gallery: [indoGirl8, indoGirl30], pos: "50% 20%" },
-    { img: indoGirl9, gallery: [indoGirl9, indoGirl32], pos: "50% 20%" },
-    { img: indoGirl10, gallery: [indoGirl10, indoGirl33], pos: "50% 15%" },
-    { img: indoGirl11, gallery: [indoGirl11, indoGirl34], pos: "50% 15%" },
-    { img: indoGirl12, gallery: [indoGirl12, indoGirl28], pos: "50% 20%" },
-    { img: indoGirl13, gallery: [indoGirl13, indoGirl31], pos: "50% 15%" },
-    { img: indoGirl14, gallery: [indoGirl14, indoGirl20], pos: "50% 20%" },
-    { img: indoGirl15, gallery: [indoGirl15, indoGirl21], pos: "50% 15%" },
-    { img: indoGirl16, gallery: [indoGirl16, indoGirl26], pos: "50% 15%" },
-    { img: indoGirl17, gallery: [indoGirl17, indoGirl34], pos: "50% 15%" },
-    { img: indoGirl18, gallery: [indoGirl18, indoGirl27], pos: "50% 15%" },
-    { img: indoGirl19, gallery: [indoGirl19, indoGirl30], pos: "50% 15%" },
-    { img: indoGirl20, gallery: [indoGirl20, indoGirl2], pos: "50% 15%" },
-    { img: indoGirl21, gallery: [indoGirl21, indoGirl4], pos: "50% 15%" },
-    { img: indoGirl22, gallery: [indoGirl22, indoGirl6], pos: "50% 15%" },
-    { img: indoGirl23, gallery: [indoGirl23, indoGirl8], pos: "50% 15%" },
-    { img: indoGirl24, gallery: [indoGirl24, indoGirl9], pos: "50% 15%" },
-    { img: indoGirl25, gallery: [indoGirl25, indoGirl11], pos: "50% 15%" },
-    { img: indoGirl26, gallery: [indoGirl26, indoGirl13], pos: "50% 15%" },
-    { img: indoGirl27, gallery: [indoGirl27, indoGirl1], pos: "50% 15%" },
-    { img: indoGirl28, gallery: [indoGirl28, indoGirl3], pos: "50% 15%" },
-    { img: indoGirl29, gallery: [indoGirl29, indoGirl5], pos: "50% 15%" },
-    { img: indoGirl30, gallery: [indoGirl30, indoGirl8], pos: "50% 20%" },
-    { img: indoGirl31, gallery: [indoGirl31, indoGirl10], pos: "50% 15%" },
-    { img: indoGirl32, gallery: [indoGirl32, indoGirl12], pos: "50% 15%" },
-    { img: indoGirl33, gallery: [indoGirl33, indoGirl14], pos: "50% 15%" },
-    { img: indoGirl34, gallery: [indoGirl34, indoGirl16], pos: "50% 15%" },
-    { img: indoGirl2, gallery: [indoGirl2, indoGirl18], pos: "50% 15%" },
-    { img: indoGirl7, gallery: [indoGirl7, indoGirl19], pos: "50% 15%" },
+  // Override female profiles with real uploaded local assets + handcrafted profile data
+  type FeaturedOverride = {
+    img: string; gallery: string[]; pos: string;
+    name: string; age: number; city: string; bio: string;
+    hobbies: string[]; looking_for: string;
+  };
+
+  const girlOverrides: FeaturedOverride[] = [
+    { img: indoGirl1,  gallery: [indoGirl1, indoGirl2],   pos: "50% 20%", name: "Ayu Maharani",    age: 24, city: "Jakarta",     bio: "Marketing exec at a tech startup ✨ Professionally caffeinated and weekend warung hunter — DM me if you know hidden gems in South Jakarta", hobbies: ["Coffee", "Food tours", "Running"],          looking_for: "Dating"       },
+    { img: indoGirl3,  gallery: [indoGirl3, indoGirl27],  pos: "50% 15%", name: "Dewi Kartika",    age: 26, city: "Bali",        bio: "Yoga & meditation teacher in Ubud 🌿 I believe slow mornings and honest conversations are the real luxury. What does your ideal Sunday look like?", hobbies: ["Yoga", "Meditation", "Hiking"],           looking_for: "Relationship" },
+    { img: indoGirl4,  gallery: [indoGirl4, indoGirl26],  pos: "50% 20%", name: "Sari Widyastuti", age: 22, city: "Bandung",     bio: "Architecture student drowning in studio deadlines ☕ I survive on kopi susu and live music. Take me to a gig?", hobbies: ["Music", "Coffee", "Sketching"],             looking_for: "Dating"       },
+    { img: indoGirl5,  gallery: [indoGirl5, indoGirl7],   pos: "50% 15%", name: "Nadia Lestari",   age: 28, city: "Jakarta",     bio: "UX designer at a fintech startup 💻 I run 10K every Saturday then ruin it all at brunch. Priorities, right?", hobbies: ["Running", "Travel", "Cooking"],             looking_for: "Relationship" },
+    { img: indoGirl6,  gallery: [indoGirl6, indoGirl29],  pos: "50% 25%", name: "Kirana Suci",     age: 25, city: "Yogyakarta",  bio: "Batik designer and cultural storyteller 🧵 Born in Jogja, heart in the archipelago. Looking for someone who actually wants to slow down with me", hobbies: ["Batik arts", "Cycling", "Coffee"],          looking_for: "Relationship" },
+    { img: indoGirl8,  gallery: [indoGirl8, indoGirl30],  pos: "50% 20%", name: "Bella Rahayu",    age: 23, city: "Surabaya",    bio: "Med student, 3rd year and surviving 😅 I cook as therapy. If you want homemade soto Lamongan, maybe we can work something out", hobbies: ["Cooking", "Reading", "Badminton"],          looking_for: "Dating"       },
+    { img: indoGirl9,  gallery: [indoGirl9, indoGirl32],  pos: "50% 20%", name: "Citra Wulandari", age: 27, city: "Jakarta",     bio: "Food content creator 📱 If I stop mid-date to photograph the plate — that's a compliment. It means the food and company are both worth showing off", hobbies: ["Food styling", "Photography", "Travel"],  looking_for: "Dating"       },
+    { img: indoGirl10, gallery: [indoGirl10, indoGirl33], pos: "50% 15%", name: "Intan Samudera",  age: 24, city: "Bali",        bio: "Surf instructor and ocean conservationist 🌊 My happy place is anywhere the water is clear. I'll teach you to stand up if you're brave enough", hobbies: ["Surfing", "Diving", "Beach volleyball"], looking_for: "Dating"       },
+    { img: indoGirl11, gallery: [indoGirl11, indoGirl34], pos: "50% 15%", name: "Maya Andriani",   age: 29, city: "Bandung",     bio: "Brand strategist, INFJ, proud overthinker 📚 I love a good bookshop date, hilly Bandung roads, and conversations that actually go somewhere", hobbies: ["Reading", "Hiking", "Coffee"],             looking_for: "Relationship" },
+    { img: indoGirl12, gallery: [indoGirl12, indoGirl28], pos: "50% 20%", name: "Tiara Chandra",   age: 21, city: "Jakarta",     bio: "Fashion design student ✨ Aesthetic obsessive, K-drama addict, secretly makes the best sambal in my dorm. Swipe right for chaos", hobbies: ["Fashion", "K-dramas", "Cooking"],          looking_for: "Dating"       },
+    { img: indoGirl13, gallery: [indoGirl13, indoGirl31], pos: "50% 15%", name: "Ratna Wibowo",    age: 30, city: "Surabaya",    bio: "Pediatrician at RS Premier 🩺 Half-marathons on weekends, banana bread at midnight. Life is about balance — sort of", hobbies: ["Running", "Baking", "Swimming"],            looking_for: "Relationship" },
+    { img: indoGirl14, gallery: [indoGirl14, indoGirl20], pos: "50% 20%", name: "Laras Pramudita", age: 25, city: "Yogyakarta",  bio: "Javanese classical dance teacher 💃 I perform at Prambanan and teach children. Looking for someone who appreciates that beauty takes real discipline", hobbies: ["Dance", "Batik", "Travel"],                looking_for: "Relationship" },
+    { img: indoGirl15, gallery: [indoGirl15, indoGirl21], pos: "50% 15%", name: "Widya Ningrum",   age: 27, city: "Jakarta",     bio: "Investment analyst at a local bank 💼 By day I analyse numbers, by night I'm unbeatable at board games. Don't judge", hobbies: ["Gaming", "Cycling", "Cooking"],             looking_for: "Dating"       },
+    { img: indoGirl16, gallery: [indoGirl16, indoGirl26], pos: "50% 15%", name: "Dinda Asmara",    age: 23, city: "Bandung",     bio: "Barista training for my first SCA competition ☕ I will absolutely judge your coffee order — but only with love", hobbies: ["Coffee", "Baking", "Music"],               looking_for: "Dating"       },
+    { img: indoGirl17, gallery: [indoGirl17, indoGirl34], pos: "50% 15%", name: "Nova Prastika",   age: 26, city: "Bali",        bio: "Marine biologist & scuba instructor 🐠 Studying coral reef recovery in Nusa Penida. The ocean keeps giving and so do I", hobbies: ["Scuba diving", "Marine research", "Surfing"], looking_for: "Relationship" },
+    { img: indoGirl18, gallery: [indoGirl18, indoGirl27], pos: "50% 15%", name: "Jasmine Utami",   age: 24, city: "Jakarta",     bio: "Law student, debate team captain ⚖️ I like true crime, black coffee, and a good argument. Looking for someone who can hold their own", hobbies: ["Debate", "True crime podcasts", "Reading"], looking_for: "Dating"       },
+    { img: indoGirl19, gallery: [indoGirl19, indoGirl30], pos: "50% 15%", name: "Ariani Putri",    age: 28, city: "Surabaya",    bio: "Professional event organizer 🎉 I've planned 200+ events. My social battery is huge — but I save the real me for small settings", hobbies: ["Event planning", "Travel", "Dancing"],    looking_for: "Relationship" },
+    { img: indoGirl20, gallery: [indoGirl20, indoGirl2],  pos: "50% 15%", name: "Salma Nafisa",    age: 22, city: "Yogyakarta",  bio: "Psychology student & plant mum 🌿 I have 40 plants and zero chill. Looking for someone to repot succulents with on lazy Sundays", hobbies: ["Plants", "Psychology", "Journaling"],     looking_for: "Dating"       },
+    { img: indoGirl21, gallery: [indoGirl21, indoGirl4],  pos: "50% 15%", name: "Fitri Ramadhani", age: 29, city: "Jakarta",     bio: "Senior journalist at Kompas 📰 Chasing stories by day, chasing street food by night. I will talk your ear off — you've been warned", hobbies: ["Journalism", "Street food", "Travel"],    looking_for: "Dating"       },
+    { img: indoGirl22, gallery: [indoGirl22, indoGirl6],  pos: "50% 15%", name: "Bunga Pratiwi",   age: 25, city: "Bali",        bio: "Ceramics artist with a studio in Ubud 🏺 My hands are always dirty but my soul is clean. Come throw a pot with me?", hobbies: ["Ceramics", "Painting", "Hiking"],          looking_for: "Relationship" },
+    { img: indoGirl23, gallery: [indoGirl23, indoGirl8],  pos: "50% 15%", name: "Eka Yunita",      age: 27, city: "Bandung",     bio: "Software engineer at a local unicorn 💻 Board game nights are my love language. If you beat me at Catan I might propose", hobbies: ["Board games", "Gaming", "Cooking"],        looking_for: "Dating"       },
+    { img: indoGirl24, gallery: [indoGirl24, indoGirl9],  pos: "50% 15%", name: "Farah Zahra",     age: 24, city: "Jakarta",     bio: "Flight attendant based in CGK ✈️ 23 countries visited. Currently accepting applications for a travel partner who doesn't overpack", hobbies: ["Travel", "Photography", "Yoga"],          looking_for: "Dating"       },
+    { img: indoGirl25, gallery: [indoGirl25, indoGirl11], pos: "50% 15%", name: "Gita Maharani",   age: 26, city: "Surabaya",    bio: "Singer-songwriter playing open mics 🎵 Also a nurse between sets. Life is complicated and I like it that way", hobbies: ["Music", "Singing", "Cooking"],              looking_for: "Relationship" },
+    { img: indoGirl26, gallery: [indoGirl26, indoGirl13], pos: "50% 15%", name: "Hana Wijaya",     age: 23, city: "Bali",        bio: "Freelance graphic designer & digital nomad 🎨 Working from cafes in Canggu and pretending I have it figured out. Spoiler: I don't", hobbies: ["Design", "Surfing", "Photography"],       looking_for: "Dating"       },
+    { img: indoGirl27, gallery: [indoGirl27, indoGirl1],  pos: "50% 15%", name: "Kartika Dewi",    age: 30, city: "Yogyakarta",  bio: "University lecturer — philosophy & literature 📖 I read Pramoedya for fun. If that doesn't scare you, we'll get along just fine", hobbies: ["Reading", "Writing", "Coffee"],            looking_for: "Relationship" },
+    { img: indoGirl28, gallery: [indoGirl28, indoGirl3],  pos: "50% 15%", name: "Mira Santoso",    age: 25, city: "Jakarta",     bio: "Pilates instructor & wellness coach 🧘‍♀️ Helping people find their posture and their peace. Yes, I will comment on how you sit", hobbies: ["Pilates", "Nutrition", "Running"],         looking_for: "Dating"       },
+    { img: indoGirl29, gallery: [indoGirl29, indoGirl5],  pos: "50% 15%", name: "Nurul Fajri",     age: 27, city: "Bandung",     bio: "Environmental scientist at ITB 🌿 Organising beach cleanups, studying ocean plastic. Looking for someone who brings their own bag", hobbies: ["Environment", "Hiking", "Cycling"],        looking_for: "Relationship" },
+    { img: indoGirl30, gallery: [indoGirl30, indoGirl8],  pos: "50% 20%", name: "Olivia Tanaka",   age: 24, city: "Jakarta",     bio: "Interior designer & half-Japanese ✨ My apartment looks like a magazine and my fridge is always stocked. Come over?", hobbies: ["Interior design", "Cooking", "Movies"],   looking_for: "Dating"       },
+    { img: indoGirl31, gallery: [indoGirl31, indoGirl10], pos: "50% 15%", name: "Puspita Handari", age: 28, city: "Surabaya",    bio: "Hotel manager at Shangri-La Surabaya 🏨 I live for exceptional experiences — give me yours and I promise to match it", hobbies: ["Hospitality", "Travel", "Food"],           looking_for: "Relationship" },
+    { img: indoGirl32, gallery: [indoGirl32, indoGirl12], pos: "50% 15%", name: "Rara Amelia",     age: 22, city: "Bali",        bio: "Photographer chasing golden hour 📷 Based in Seminyak, shooting portraits and landscapes. I see beauty in things people walk straight past", hobbies: ["Photography", "Travel", "Music"],         looking_for: "Dating"       },
+    { img: indoGirl33, gallery: [indoGirl33, indoGirl14], pos: "50% 15%", name: "Tari Handayani",  age: 26, city: "Jakarta",     bio: "Product manager at a B2B startup 🚀 Ship fast, iterate faster. Offline I hike, bake sourdough, and yell at football on TV", hobbies: ["Hiking", "Baking", "Football"],            looking_for: "Dating"       },
+    { img: indoGirl34, gallery: [indoGirl34, indoGirl16], pos: "50% 15%", name: "Ulfa Nadia",      age: 29, city: "Bandung",     bio: "Hospital pharmacist & travel blogger 🌏 Visited 18 provinces and counting. Writing about Indonesia's hidden places between night shifts", hobbies: ["Travel", "Writing", "Photography"],       looking_for: "Relationship" },
+    { img: indoGirl2,  gallery: [indoGirl2, indoGirl18],  pos: "50% 15%", name: "Vina Kusumawati", age: 23, city: "Yogyakarta",  bio: "Culinary arts student specializing in Javanese cuisine 🍱 Grandma taught me everything. I'm modernizing it — very carefully", hobbies: ["Cooking", "Food history", "Cycling"],     looking_for: "Dating"       },
+    { img: indoGirl7,  gallery: [indoGirl7, indoGirl19],  pos: "50% 15%", name: "Wulan Saraswati", age: 25, city: "Jakarta",     bio: "Tattoo artist based in Kemang 🖋️ Covered in ink and full of opinions. Cat mum to two rescues 🐱 The studio is my home", hobbies: ["Tattoo art", "Music", "Cats"],             looking_for: "Dating"       },
   ];
 
+  const featuredFemaleIds: string[] = [];
   let girlIdx = 0;
   for (let i = 0; i < profiles.length && girlIdx < girlOverrides.length; i++) {
     if (profiles[i].gender === "Female") {
@@ -773,22 +861,30 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       profiles[i].image = o.img;
       profiles[i].images = o.gallery;
       profiles[i].main_image_pos = o.pos;
+      profiles[i].name = o.name;
+      profiles[i].age = o.age;
+      profiles[i].city = o.city;
+      profiles[i].bio = o.bio;
+      profiles[i].looking_for = o.looking_for;
+      if (profiles[i].lifestyle_info) profiles[i].lifestyle_info!.hobbies = o.hobbies;
+      featuredFemaleIds.push(profiles[i].id);
     }
   }
 
-  // Override male profiles with real uploaded local assets
-  const guyOverrides: { img: string; gallery: string[]; pos: string }[] = [
-    { img: indoGuy1, gallery: [indoGuy1, indoGuy7], pos: "50% 15%" },
-    { img: indoGuy2, gallery: [indoGuy2, indoGuy8], pos: "50% 15%" },
-    { img: indoGuy3, gallery: [indoGuy3, indoGuy9], pos: "50% 15%" },
-    { img: indoGuy4, gallery: [indoGuy4, indoGuy7], pos: "50% 15%" },
-    { img: indoGuy5, gallery: [indoGuy5, indoGuy8], pos: "50% 15%" },
-    { img: indoGuy6, gallery: [indoGuy6, indoGuy9], pos: "50% 15%" },
-    { img: indoGuy7, gallery: [indoGuy7, indoGuy1], pos: "50% 15%" },
-    { img: indoGuy8, gallery: [indoGuy8, indoGuy2], pos: "50% 15%" },
-    { img: indoGuy9, gallery: [indoGuy9, indoGuy3], pos: "50% 15%" },
+  // Override male profiles with real uploaded local assets + handcrafted profile data
+  const guyOverrides: FeaturedOverride[] = [
+    { img: indoGuy1, gallery: [indoGuy1, indoGuy7], pos: "50% 15%", name: "Rizky Firmansyah", age: 27, city: "Jakarta",    bio: "Backend developer at a fintech company 💻 Surf Kuta on weekends, cold brew every morning. Let's debate whether Bali is overrated (it's not)", hobbies: ["Surfing", "Coffee", "Gaming"],            looking_for: "Dating"       },
+    { img: indoGuy2, gallery: [indoGuy2, indoGuy8], pos: "50% 15%", name: "Dimas Pratama",    age: 30, city: "Bandung",    bio: "Former VC analyst, now running a coffee roastery ☕ Best decision I ever made. Come try something not on any menu yet", hobbies: ["Coffee", "Business", "Hiking"],            looking_for: "Relationship" },
+    { img: indoGuy3, gallery: [indoGuy3, indoGuy9], pos: "50% 15%", name: "Arief Nugroho",    age: 28, city: "Yogyakarta", bio: "Civil engineer building bridges — literally 🌉 Trail run every weekend, Bromo twice a year. Looking for someone to share the summit view with", hobbies: ["Trail running", "Hiking", "Photography"], looking_for: "Relationship" },
+    { img: indoGuy4, gallery: [indoGuy4, indoGuy7], pos: "50% 15%", name: "Bayu Santoso",     age: 25, city: "Jakarta",    bio: "Freelance photographer chasing golden hours across Indonesia 📸 Java, Flores, Kalimantan — if there's good light, I'm there", hobbies: ["Photography", "Travel", "Music"],         looking_for: "Dating"       },
+    { img: indoGuy5, gallery: [indoGuy5, indoGuy8], pos: "50% 15%", name: "Eko Prasetyo",     age: 32, city: "Surabaya",   bio: "Co-founder of an edtech platform 🚀 Went from public school kid to building classrooms for 50,000 students. Still figuring the rest out", hobbies: ["Education tech", "Running", "Reading"],   looking_for: "Relationship" },
+    { img: indoGuy6, gallery: [indoGuy6, indoGuy9], pos: "50% 15%", name: "Gilang Wibowo",    age: 26, city: "Bali",       bio: "Surf instructor by day, yoga at sunset 🏄 Canggu life. Spiritually fed, professionally salty. Looking for a co-pilot, not a passenger", hobbies: ["Surfing", "Yoga", "Cooking"],              looking_for: "Dating"       },
+    { img: indoGuy7, gallery: [indoGuy7, indoGuy1], pos: "50% 15%", name: "Hendra Santoso",   age: 29, city: "Jakarta",    bio: "Music producer & session guitarist 🎵 Vinyl collector and gig junkie. If you know the difference between reverb and delay, let's talk", hobbies: ["Music production", "Guitar", "Live music"], looking_for: "Relationship" },
+    { img: indoGuy8, gallery: [indoGuy8, indoGuy2], pos: "50% 15%", name: "Irfan Hakim",      age: 27, city: "Bandung",    bio: "Personal trainer & sports nutritionist 💪 I help people get strong. Off the clock I'm surprisingly soft — yes I cry at Studio Ghibli", hobbies: ["Fitness", "Cooking", "Movies"],           looking_for: "Dating"       },
+    { img: indoGuy9, gallery: [indoGuy9, indoGuy3], pos: "50% 15%", name: "Kevin Tandean",    age: 31, city: "Jakarta",    bio: "Architect designing sustainable buildings 🏡 Half Chinese-Indonesian. I have strong opinions about mall design in Jakarta. Fight me", hobbies: ["Architecture", "Reading", "Cycling"],    looking_for: "Relationship" },
   ];
 
+  const featuredMaleIds: string[] = [];
   let guyIdx = 0;
   for (let i = 0; i < profiles.length && guyIdx < guyOverrides.length; i++) {
     if (profiles[i].gender === "Male") {
@@ -796,6 +892,45 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
       profiles[i].image = o.img;
       profiles[i].images = o.gallery;
       profiles[i].main_image_pos = o.pos;
+      profiles[i].name = o.name;
+      profiles[i].age = o.age;
+      profiles[i].city = o.city;
+      profiles[i].bio = o.bio;
+      profiles[i].looking_for = o.looking_for;
+      if (profiles[i].lifestyle_info) profiles[i].lifestyle_info!.hobbies = o.hobbies;
+      featuredMaleIds.push(profiles[i].id);
+    }
+  }
+
+  // ── Wire featured female besties (after male overrides so we can cross-reference males)
+  for (let g = 0; g < featuredFemaleIds.length; g++) {
+    const idx = profiles.findIndex(p => p.id === featuredFemaleIds[g]);
+    if (idx !== -1) {
+      const a = featuredFemaleIds[(g + 1) % featuredFemaleIds.length];
+      const b = featuredFemaleIds[(g + 3) % featuredFemaleIds.length];
+      const m = featuredMaleIds[g % featuredMaleIds.length]; // cross-gender bestie
+      // Every featured female always gets at least 1 bestie
+      profiles[idx].bestie_ids = g % 3 === 0
+        ? [a, b, m]
+        : g % 2 === 0
+        ? [a, b]
+        : [a];
+    }
+  }
+
+  // ── Wire featured male besties
+  for (let g = 0; g < featuredMaleIds.length; g++) {
+    const idx = profiles.findIndex(p => p.id === featuredMaleIds[g]);
+    if (idx !== -1) {
+      const a = featuredMaleIds[(g + 1) % featuredMaleIds.length];
+      const b = featuredMaleIds[(g + 2) % featuredMaleIds.length];
+      const f = featuredFemaleIds[g % featuredFemaleIds.length]; // female friend
+      // Every featured male always gets at least 1 bestie
+      profiles[idx].bestie_ids = g % 3 === 0
+        ? [a, b, f]
+        : g % 2 === 0
+        ? [a, b]
+        : [a];
     }
   }
 

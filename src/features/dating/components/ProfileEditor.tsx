@@ -26,6 +26,7 @@ import { LifestyleEditor } from "@/features/dating/components/profile-editor/Lif
 import { RelationshipGoalsEditor } from "@/features/dating/components/profile-editor/RelationshipGoalsEditor";
 import { ALL_COUNTRIES } from "@/data/countries";
 import { detectCountryFromPhone, getDialCode } from "@/shared/services/phoneCountry";
+import { firstName } from "@/shared/utils";
 
 const GENDERS = ["Male", "Female", "Non-binary", "Other"];
 const LOOKING_FOR = ["Men", "Women", "Everyone"];
@@ -740,7 +741,7 @@ const ProfileEditor = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                     <div className="absolute bottom-3 left-3 pointer-events-none">
                       <p className="font-display font-bold text-lg text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-                        {profile.name}, {profile.age}
+                        {firstName(profile.name)}, {profile.age}
                       </p>
                       <p className="text-white/80 text-xs flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3" /> {profile.city || "Your city"}, {profile.country}
@@ -829,7 +830,9 @@ const ProfileEditor = () => {
               </Label>
               <Input
                 value={profile.name}
-                onChange={(e) => update("name", e.target.value)}
+                onChange={(e) => update("name", e.target.value.replace(/[^a-zA-ZÀ-ÖØ-öø-ÿ]/g, ""))}
+                placeholder="First name only"
+                maxLength={30}
                 disabled={!!profile.is_verified}
                 className={`w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none ${profile.is_verified ? "opacity-60 cursor-not-allowed" : ""}`}
               />

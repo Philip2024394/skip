@@ -124,6 +124,12 @@ export default function GiftSelector({ profileId, profileName, onGiftSent }: Gif
 
   const handleGiftClick = (gift: VirtualGift) => {
     if (!profileId) return;
+    const isFree = userTokens ? userTokens.free_gifts_used < 3 : false;
+    const canAfford = userTokens ? userTokens.tokens_balance >= gift.token_price : false;
+    if (!isFree && !canAfford) {
+      setShowTokenPurchase(true);
+      return;
+    }
     setSelectedGift(gift);
     setShowSendPopup(true);
   };
@@ -169,9 +175,9 @@ export default function GiftSelector({ profileId, profileName, onGiftSent }: Gif
                   inline-flex flex-col items-center flex-shrink-0 w-[72px] rounded-xl p-1.5 cursor-pointer
                   transition-all duration-200 border
                   bg-gradient-to-b ${TIER_GRADIENT[gift.tier]} ${TIER_BORDER[gift.tier]}
-                  ${canSend ? "hover:scale-105 hover:shadow-lg hover:shadow-pink-500/10 active:scale-95" : "opacity-40 cursor-not-allowed"}
+                  ${canSend ? "hover:scale-105 hover:shadow-lg hover:shadow-pink-500/10 active:scale-95" : "opacity-50 cursor-pointer"}
                 `}
-                onClick={() => canSend && handleGiftClick(gift)}
+                onClick={() => handleGiftClick(gift)}
               >
                 {/* Gift image — falls back to emoji if URL is empty or 404s */}
                 <div className="w-12 h-12 rounded-lg bg-black/20 flex items-center justify-center mb-1 relative overflow-hidden">

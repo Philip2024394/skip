@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
+import { isOnline } from "@/shared/hooks/useOnlineStatus";
 
 import { calcValuesMatch } from "@/shared/utils/valuesQuiz";
 // import VirtualGiftsDisplay from "@/components/gifts/VirtualGiftsDisplay";
@@ -27,9 +28,9 @@ const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: 
 const SectionTitle = ({ title }: { title: string }) => (
   <p style={{
     color: "rgba(236,72,153,0.9)",
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: 700,
-    letterSpacing: "0.12em",
+    letterSpacing: "0.1em",
     textTransform: "uppercase",
     margin: "10px 0 4px 0",
     borderBottom: "1px solid rgba(236,72,153,0.4)",
@@ -79,7 +80,7 @@ const CompatibilityBar = ({ percent, insight }: { percent: number; insight: stri
       }} />
     </div>
     <p style={{
-      fontSize: 9,
+      fontSize: 10,
       color: "rgba(236,72,153,0.7)",
       fontWeight: 600,
       fontStyle: "italic",
@@ -95,44 +96,44 @@ const BADGE_INFO: Record<string, { icon: string; label: string; meaning: string;
   is_visiting: {
     icon: "✈️",
     label: "Travel Badge",
-    meaning: "This person has set a travel badge to let locals know their status — On the Way (Otw), Just Arrived, or currently Visiting a city. The badge auto-clears after 48 hours.",
-    tip: "A great opportunity — reach out and offer to show them around or meet up while they're in town!",
+    meaning: "This person is visiting your city and set this badge so locals know they're here. They could be passing through, just arrived, or staying for a short time. A great chance to connect with someone new in town.",
+    tip: "Offer to show them around — perfect ice breaker!",
   },
   available_tonight: {
     icon: "🌙",
     label: "Free Tonight",
-    meaning: "This person is free tonight and open to meeting up. They've actively set this badge to signal they're available right now.",
-    tip: "Send a message soon — they're looking to connect tonight!",
+    meaning: "This person has nothing planned tonight and is actively open to meeting up. They set this badge to signal they are available right now — not tomorrow, tonight. The badge auto-clears at midnight.",
+    tip: "Message now — they're actively free tonight.",
   },
   is_plusone: {
     icon: "✚",
     label: "+1 Plus One",
-    meaning: "Looking for a plus one to join them at an event, dinner, or social gathering. They want company for something specific.",
-    tip: "Ask what event they need a plus one for — great conversation starter!",
+    meaning: "This person is looking for someone to come with them as a plus one. It could be a dinner, event, gathering, or outing. They are open to freely accommodating you as a close friend — no strings attached, just good company.",
+    tip: "Ask what the event is — easy conversation starter!",
   },
   generous_lifestyle: {
     icon: "🎁",
     label: "Generous",
-    meaning: "This person enjoys treating others and has a generous approach to dating. They appreciate quality experiences together.",
-    tip: "They enjoy giving — let them know what experiences you love.",
+    meaning: "This person has a generous approach and genuinely enjoys treating others. They appreciate quality experiences and like going the extra mile to make someone feel special. They value giving as much as connection.",
+    tip: "Share what experiences you enjoy most.",
   },
   weekend_plans: {
     icon: "📅",
     label: "Weekend Plans",
-    meaning: "Actively making plans for the weekend and open to including someone special. They're looking for a weekend date.",
-    tip: "Suggest a weekend activity — they're planning ahead!",
+    meaning: "This person is actively planning something for the weekend and is open to having someone join. They are not waiting around — they want to make plans now and include the right person in their weekend.",
+    tip: "Suggest a weekend activity — they're ready to go!",
   },
   late_night_chat: {
     icon: "🌙",
     label: "Late Night",
-    meaning: "A night owl who's most active and social during late hours. They enjoy deep conversations when the world is quiet.",
-    tip: "Send a message late evening — that's when they're most engaged.",
+    meaning: "This person is a night owl and comes alive after dark. They are most active, social and engaged during late hours. If you enjoy deep late-night conversations or spontaneous night plans, this is your match.",
+    tip: "Message late evening for the best response.",
   },
   no_drama: {
     icon: "✨",
     label: "No Drama",
-    meaning: "Values peace, honesty and straightforward communication. They're looking for a relaxed, drama-free connection.",
-    tip: "Be direct and genuine — they appreciate honest conversation.",
+    meaning: "This person values peace, honesty and straightforward communication. They are not interested in games or complications — just a real, calm and genuine connection with someone who means what they say.",
+    tip: "Be direct and genuine — they'll appreciate it.",
   },
 };
 
@@ -217,6 +218,7 @@ function computeMatchStats(profile: any, currentUserQuiz?: Record<string, unknow
 }
 
 export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false }: ProfileInfoPanelProps) {
+  const navigate = useNavigate();
   const basicInfo = profile?.basic_info || {};
   const lifestyleInfo = profile?.lifestyle_info || {};
   const relationshipGoals = profile?.relationship_goals || {};
@@ -253,77 +255,97 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
         gap: 12,
       }}>
         {/* Round profile image — always shown */}
-        <div style={{
-          width: 48,
-          height: 48,
-          borderRadius: "50%",
-          overflow: "hidden",
-          flexShrink: 0,
-          border: "2.5px solid rgba(236,72,153,0.7)",
-          boxShadow: "0 0 12px rgba(236,72,153,0.35)",
-        }}>
-          <img
-            src={profile?.avatar_url || profile?.image || "/placeholder.svg"}
-            alt={profileName}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
-          />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ color: "white", fontSize: 15, fontWeight: 800, margin: 0 }}>
-            {profileName}, {profile?.age}
-          </p>
-          <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 11, fontWeight: 600, margin: "2px 0 0 0" }}>
-            {profile?.city ? `${profile.city}, ` : ""}{profile?.country || "Indonesia"}
-          </p>
-          {profile?.app_user_id && (
+        <div style={{ position: "relative", flexShrink: 0 }}>
+          <div style={{
+            width: 48,
+            height: 48,
+            borderRadius: "50%",
+            overflow: "hidden",
+            border: "2.5px solid rgba(236,72,153,0.7)",
+            boxShadow: "0 0 12px rgba(236,72,153,0.35)",
+          }}>
+            <img
+              src={profile?.avatar_url || profile?.image || "/placeholder.svg"}
+              alt={profileName}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+            />
+          </div>
+          {isOnline(profile?.last_seen_at) && (
             <span style={{
-              display: "inline-block", marginTop: 3,
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: 999, padding: "1px 7px",
-              fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.4)",
-              letterSpacing: "0.06em",
-            }}>
-              {profile.app_user_id}
-            </span>
+              position: "absolute", bottom: 1, right: 1,
+              width: 11, height: 11, borderRadius: "50%",
+              background: "#22c55e",
+              boxShadow: "0 0 6px rgba(34,197,94,0.8)",
+              animation: "heartbeat 1.4s ease-in-out infinite",
+            }} />
           )}
         </div>
-        {/* Badge pill — shown inline in header */}
-        {badgeInfo && (
-          <span style={{
-            padding: "3px 9px",
-            borderRadius: 999,
-            fontSize: 11,
-            fontWeight: 700,
-            background: "rgba(236,72,153,0.2)",
-            border: "1px solid rgba(236,72,153,0.5)",
-            color: "#fbcfe8",
-            flexShrink: 0,
-            whiteSpace: "nowrap" as const,
-          }}>
-            {badgeInfo.icon} {badgeInfo.label}
-          </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ color: "white", fontSize: 16, fontWeight: 800, margin: 0 }}>
+            {profileName}, {profile?.age}
+          </p>
+          <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 12, fontWeight: 600, margin: "2px 0 0 0" }}>
+            {profile?.city ? `${profile.city}, ` : ""}{profile?.country || "Indonesia"}
+          </p>
+        </div>
+        {/* Bestie button — top-right of header */}
+        {onBestieRequest && !isBestie && (
+          isBestiePending ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, flexShrink: 0 }}>
+              <img
+                src="https://ik.imagekit.io/7grri5v7d/bestiii-removebg-preview-removebg-preview.png"
+                alt="Bestie"
+                style={{ width: 52, height: 52, objectFit: "contain", opacity: 0.35 }}
+              />
+              <span style={{ fontSize: 8, fontWeight: 700, color: "rgba(255,255,255,0.35)", letterSpacing: "0.04em" }}>Sent</span>
+            </div>
+          ) : (
+            <button
+              onClick={() => onBestieRequest(profile)}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, flexShrink: 0 }}
+            >
+              <img
+                src="https://ik.imagekit.io/7grri5v7d/bestiii-removebg-preview-removebg-preview.png"
+                alt="Add Bestie"
+                style={{
+                  width: 52, height: 52, objectFit: "contain",
+                  filter: "drop-shadow(0 0 6px rgba(232,72,199,0.85)) drop-shadow(0 0 12px rgba(232,72,199,0.5))",
+                  animation: "bestieGlow 1.6s ease-in-out infinite",
+                }}
+              />
+              <span style={{ fontSize: 8, fontWeight: 700, color: "rgba(232,72,199,0.85)", letterSpacing: "0.04em" }}>
+                Add Bestie
+              </span>
+            </button>
+          )
+        )}
+        {isBestie && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, flexShrink: 0 }}>
+            <img
+              src="https://ik.imagekit.io/7grri5v7d/bestiii-removebg-preview-removebg-preview.png"
+              alt="Bestie"
+              style={{
+                width: 52, height: 52, objectFit: "contain",
+                filter: "drop-shadow(0 0 8px rgba(232,72,199,1)) drop-shadow(0 0 16px rgba(232,72,199,0.6))",
+                animation: "bestieGlow 1.6s ease-in-out infinite",
+              }}
+            />
+            <span style={{ fontSize: 8, fontWeight: 700, color: "rgba(232,72,199,0.9)", letterSpacing: "0.04em" }}>💕 Besties</span>
+          </div>
         )}
       </div>
 
       {/* Badge explanation — shown only when a badge is active */}
       {badgeInfo && (
-        <div style={{
-          margin: "8px 16px 0",
-          padding: "10px 12px",
-          borderRadius: 12,
-          background: "rgba(236,72,153,0.10)",
-          border: "1px solid rgba(236,72,153,0.35)",
-          flexShrink: 0,
-        }}>
-          <p style={{ color: "rgba(236,72,153,0.95)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 4px" }}>
-            {badgeInfo.icon} What This Badge Means
+        <div style={{ margin: "8px 16px 0", flexShrink: 0 }}>
+          <p style={{ color: "rgba(236,72,153,0.95)", fontSize: 12, fontWeight: 800, margin: "0 0 3px", display: "flex", alignItems: "center", gap: 5 }}>
+            <span style={{ fontSize: 15 }}>{badgeInfo.icon}</span> {badgeInfo.label}
           </p>
-          <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 11, lineHeight: 1.5, margin: "0 0 5px" }}>
+          <p style={{ color: "white", fontSize: 11, fontWeight: 500, lineHeight: 1.55, margin: "0 0 4px", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>
             {badgeInfo.meaning}
           </p>
-          <p style={{ color: "rgba(236,72,153,0.7)", fontSize: 10, fontStyle: "italic", margin: 0 }}>
+          <p style={{ color: "rgba(236,72,153,0.65)", fontSize: 10, fontStyle: "italic", margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             💡 {badgeInfo.tip}
           </p>
         </div>
@@ -341,7 +363,21 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
         }}
       >
         {/* -- Profile / Basic Info -- */}
-        <SectionHeader title="Profile" />
+        <div style={{
+          margin: "14px 0 6px 0",
+          paddingBottom: 6,
+          borderBottom: "1.5px solid rgba(236,72,153,0.6)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <p style={{ color: "rgba(236,72,153,1)", fontSize: 11, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
+            Profile
+          </p>
+          {profile?.app_user_id && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: "rgba(236,72,153,1)", letterSpacing: "0.04em" }}>
+              #{profile.app_user_id}
+            </span>
+          )}
+        </div>
         {(basicInfo.height || basicInfo.body_type || basicInfo.ethnicity) && (
           <>
             <SectionTitle title="Physical" />
@@ -445,24 +481,6 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
             <InfoRow icon="📍" label="Relocate" value={relationshipGoals.relocate} />
           </>
         )}
-        {relationshipGoals.about_partner && (
-          <div style={{
-            background: "rgba(0,0,0,0.6)",
-            border: "2px solid rgba(236,72,153,0.8)",
-            borderRadius: 12,
-            padding: "2px",
-            marginTop: 8,
-          }}>
-            <div style={{
-              background: "rgba(236,72,153,0.15)",
-              borderRadius: 10,
-              padding: "8px 12px",
-            }}>
-              <p style={{ color: "rgba(236,72,153,0.95)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", marginBottom: 4 }}>Looking for in a partner</p>
-              <p style={{ color: "white", fontSize: 12, lineHeight: 1.5, margin: 0, textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>{relationshipGoals.about_partner}</p>
-            </div>
-          </div>
-        )}
 
         {/* -- Match With You -- */}
         <SectionHeader title="Match With You" />
@@ -487,142 +505,95 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
           </div>
         </div>
 
-        {/* -- Send Gift Section -- */}
-        <div style={{ marginTop: 12 }}>
+        {/* ── Looking for in a partner ── */}
+        {(relationshipGoals.looking_for || relationshipGoals.about_partner) && (() => {
+          const isMarriage = relationshipGoals.looking_for === "Looking for Marriage";
+          return (
           <div style={{
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 12,
-            padding: 12,
+            position: "relative",
+            overflow: "hidden",
+            background: "rgba(0,0,0,0.88)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: isMarriage ? "1.5px solid rgba(255,215,0,0.85)" : "1.5px solid rgba(201,162,39,0.7)",
+            borderRadius: 14,
+            padding: "10px 14px 12px",
+            marginTop: 4,
+            boxShadow: isMarriage
+              ? "0 0 18px rgba(255,215,0,0.35), 0 0 6px rgba(255,215,0,0.2), inset 0 1px 0 rgba(255,215,0,0.12)"
+              : "0 0 12px rgba(201,162,39,0.15), inset 0 1px 0 rgba(201,162,39,0.1)",
           }}>
-            <div style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 8,
-            }}>
-              <span style={{
-                color: "rgba(236,72,153,0.9)",
-                fontSize: 11,
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-              }}>
-                Send Virtual Gifts
-              </span>
-            </div>
+            {/* Floating mini hearts */}
+            {[
+              { left: 8,  delay: 0,    dur: 3.2, size: 9  },
+              { left: 25, delay: 1.1,  dur: 2.8, size: 7  },
+              { left: 55, delay: 0.4,  dur: 3.6, size: 8  },
+              { left: 75, delay: 1.8,  dur: 2.5, size: 6  },
+              { left: 90, delay: 0.9,  dur: 3.0, size: 7  },
+            ].map((h, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 0 }}
+                animate={{ opacity: [0, 0.55, 0], y: -52 }}
+                transition={{ duration: h.dur, delay: h.delay, repeat: Infinity, repeatDelay: 1.5 + i * 0.4, ease: "easeOut" }}
+                style={{
+                  position: "absolute",
+                  left: `${h.left}%`,
+                  bottom: 6,
+                  fontSize: h.size,
+                  color: "#e8a820",
+                  pointerEvents: "none",
+                  zIndex: 0,
+                }}
+              >
+                ♥
+              </motion.span>
+            ))}
 
-            <div style={{
-              display: "flex",
-              justifyContent: "space-around",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 8,
+            {/* Section label */}
+            <p style={{
+              position: "relative", zIndex: 1,
+              color: "rgba(201,162,39,0.8)",
+              fontSize: 9, fontWeight: 800,
+              textTransform: "uppercase", letterSpacing: "0.12em",
+              margin: "0 0 7px",
+              textShadow: "0 0 8px rgba(201,162,39,0.3)",
             }}>
-              {['🌹', '❤️', '💎', '🍫', '🧸'].map((emoji, index) => (
-                <motion.div
-                  key={index}
-                  whileHover={{ scale: 1.1, rotate: [0, -5, 5, 0] }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    // This will be handled by parent component
-                    if (window.sendGiftToProfile) {
-                      window.sendGiftToProfile(profile);
-                    }
-                  }}
-                  style={{
-                    fontSize: 24,
-                    cursor: "pointer",
-                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
-                    transition: "all 0.2s ease",
-                  }}
-                >
-                  {emoji}
-                </motion.div>
-              ))}
-            </div>
+              ✦ Looking for in a partner
+            </p>
 
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                // This will be handled by parent component
-                if (window.sendGiftToProfile) {
-                  window.sendGiftToProfile(profile);
-                }
-              }}
-              style={{
-                background: "linear-gradient(135deg, rgba(236,72,153,0.8), rgba(168,85,247,0.8))",
-                border: "none",
-                borderRadius: 8,
-                padding: "8px 12px",
-                color: "white",
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: "pointer",
-                textAlign: "center",
-                transition: "all 0.2s ease",
-              }}
-            >
-              Select And Send
-            </motion.div>
-          </div>
-        </div>
-
-        {/* -- Active Badge Explanation -- */}
-        {badgeInfo && (
-          <div style={{
-            background: "rgba(0,0,0,0.6)",
-            border: "2px solid rgba(236,72,153,0.8)",
-            borderRadius: 12,
-            padding: "2px",
-            marginTop: 14,
-          }}>
-            <div style={{
-              background: "rgba(236,72,153,0.15)",
-              borderRadius: 10,
-              padding: "12px 14px 10px",
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                <span style={{
-                  fontSize: 18, width: 32, height: 32, borderRadius: "50%",
-                  background: "rgba(236,72,153,0.8)",
-                  border: "2px solid rgba(236,72,153,1)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>{badgeInfo.icon}</span>
-                <div>
-                  <p style={{ color: "rgba(236,72,153,1)", fontSize: 13, fontWeight: 800, margin: 0 }}>
-                    {badgeInfo.label}
-                  </p>
-                  <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", margin: "1px 0 0" }}>
-                    Active Badge
-                  </p>
-                </div>
-              </div>
-              <p style={{ color: "rgba(236,72,153,0.95)", fontSize: 12, lineHeight: 1.6, margin: "0 0 8px", textShadow: "0 1px 2px rgba(0,0,0,0.8)" }}>
-                {badgeInfo.meaning}
-              </p>
+            {/* looking_for — icon + text, no badge */}
+            {relationshipGoals.looking_for && (
               <div style={{
-                background: "rgba(0,0,0,0.4)",
-                borderRadius: 8,
-                padding: "8px 10px",
-                display: "flex", alignItems: "flex-start", gap: 6,
+                position: "relative", zIndex: 1,
+                display: "flex", alignItems: "center", gap: 7,
+                marginBottom: relationshipGoals.about_partner ? 8 : 0,
               }}>
-                <span style={{ fontSize: 12, flexShrink: 0 }}>💡</span>
-                <p style={{ color: "rgba(236,72,153,0.9)", fontSize: 11, fontWeight: 600, lineHeight: 1.5, margin: 0 }}>
-                  {badgeInfo.tip}
-                </p>
+                <span style={{ fontSize: 16 }}>💍</span>
+                <span style={{
+                  fontSize: 13, fontWeight: 800,
+                  color: "rgba(255,220,100,1)",
+                  textShadow: "0 0 12px rgba(201,162,39,0.6)",
+                  letterSpacing: "0.01em",
+                }}>
+                  {relationshipGoals.looking_for}
+                </span>
               </div>
-            </div>
-          </div>
-        )}
+            )}
 
-        {/* ── Besties / Mates section ── */}
+            {/* About partner free text */}
+            {relationshipGoals.about_partner && (
+              <p style={{ position: "relative", zIndex: 1, color: "rgba(255,255,255,0.75)", fontSize: 13, lineHeight: 1.6, margin: 0, textShadow: "0 1px 2px rgba(0,0,0,0.9)", fontStyle: "italic" }}>
+                "{relationshipGoals.about_partner}"
+              </p>
+            )}
+          </div>
+          );
+        })()}
+
+        {/* ── My Bestie's section ── */}
         {(() => {
           const bestieIds: string[] = profile?.bestie_ids || [];
-          const label = profile?.gender?.toLowerCase() === "male" ? "Mates" : "Besties";
-          const icon = profile?.gender?.toLowerCase() === "male" ? "🤝" : "👯";
           const bestieProfiles = bestieIds
             .map((bid: string) => allProfiles.find((p: any) => p.id === bid))
             .filter(Boolean);
@@ -630,46 +601,30 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
           if (bestieProfiles.length === 0 && !onBestieRequest) return null;
 
           return (
-            <div style={{ padding: "12px 16px 6px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ marginTop: 8 }}>
+              <div style={{
+                margin: "6px 0",
+                paddingBottom: 6,
+                borderBottom: "1.5px solid rgba(236,72,153,0.6)",
+                display: "flex", alignItems: "center", gap: 6,
+              }}>
+                <span style={{ fontSize: 13 }}>👯</span>
                 <p style={{
-                  color: "rgba(236,72,153,0.9)", fontSize: 9, fontWeight: 700,
-                  letterSpacing: "0.12em", textTransform: "uppercase", margin: 0,
+                  color: "rgba(236,72,153,1)", fontSize: 11, fontWeight: 800,
+                  letterSpacing: "0.1em", textTransform: "uppercase", margin: 0,
                 }}>
-                  {icon} My {label}
+                  My Bestie's
                 </p>
-                {onBestieRequest && !isBestie && (
-                  <button
-                    onClick={() => onBestieRequest(profile)}
-                    style={{
-                      background: isBestiePending
-                        ? "rgba(255,255,255,0.08)"
-                        : "linear-gradient(135deg, rgba(232,72,199,0.25), rgba(139,92,246,0.25))",
-                      border: "1px solid rgba(232,72,199,0.4)",
-                      borderRadius: 999, padding: "3px 10px",
-                      fontSize: 10, fontWeight: 700,
-                      color: isBestiePending ? "rgba(255,255,255,0.4)" : "rgba(232,72,199,0.9)",
-                      cursor: isBestiePending ? "default" : "pointer",
-                    }}
-                  >
-                    {isBestiePending ? "⏳ Request Sent" : `+ Add as ${label.slice(0, -1)}`}
-                  </button>
-                )}
-                {isBestie && (
-                  <span style={{
-                    background: "rgba(232,72,199,0.15)", border: "1px solid rgba(232,72,199,0.4)",
-                    borderRadius: 999, padding: "3px 10px",
-                    fontSize: 10, fontWeight: 700, color: "rgba(232,72,199,0.9)",
-                  }}>
-                    💕 {label.slice(0, -1)}
-                  </span>
-                )}
               </div>
 
               {bestieProfiles.length > 0 ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, paddingTop: 8 }}>
                   {bestieProfiles.map((bp: any) => (
-                    <div key={bp.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                    <button
+                      key={bp.id}
+                      onClick={() => navigate(`/profile/${bp.id}`)}
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                    >
                       <img
                         src={bp.avatar_url || bp.image || "/placeholder.svg"}
                         alt={bp.name}
@@ -678,17 +633,26 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
                           width: 42, height: 42, borderRadius: "50%", objectFit: "cover",
                           border: "2px solid rgba(232,72,199,0.5)",
                           boxShadow: "0 0 8px rgba(232,72,199,0.2)",
+                          transition: "transform 0.15s ease, box-shadow 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.transform = "scale(1.08)";
+                          (e.currentTarget as HTMLImageElement).style.boxShadow = "0 0 14px rgba(232,72,199,0.55)";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.transform = "scale(1)";
+                          (e.currentTarget as HTMLImageElement).style.boxShadow = "0 0 8px rgba(232,72,199,0.2)";
                         }}
                       />
                       <span style={{ fontSize: 8, fontWeight: 700, color: "rgba(255,255,255,0.5)", letterSpacing: "0.04em" }}>
                         {bp.app_user_id || bp.id.slice(0, 8)}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               ) : (
-                <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, margin: 0, fontStyle: "italic" }}>
-                  No {label.toLowerCase()} yet
+                <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 11, margin: "8px 0 0", fontStyle: "italic" }}>
+                  No bestie's yet
                 </p>
               )}
             </div>

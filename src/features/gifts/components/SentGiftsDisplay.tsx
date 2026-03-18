@@ -26,6 +26,8 @@ export default function SentGiftsDisplay({ profileId }: SentGiftsDisplayProps) {
   }, [profileId]);
 
   const fetchSentGifts = async () => {
+    // Skip Supabase query for mock profiles (non-UUID IDs)
+    if (!profileId || profileId.startsWith('indo-')) { setLoading(false); return; }
     try {
       const { data, error } = await supabase
         .from('sent_gifts')
