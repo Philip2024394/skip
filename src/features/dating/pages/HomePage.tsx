@@ -748,7 +748,7 @@ const Index = () => {
   useEffect(() => {
     if (filteredProfiles.length === 0) return;
     if (!shouldShowTravelNotice()) return;
-    const userGender = (currentUser as any)?.gender || "male";
+    const userGender = (user as any)?.user_metadata?.gender || "male";
     const opposite = userGender === "male" ? "female" : "male";
     const travelPool = filteredProfiles.filter(p =>
       ((p as any).gender === opposite || (p as any).gender === "female") &&
@@ -762,7 +762,7 @@ const Index = () => {
       setTravelNoticeType(type);
     }, 5000);
     return () => clearTimeout(t);
-  }, [filteredProfiles, currentUser]);
+  }, [filteredProfiles, user]);
 
   // Guest auth prompt
   const [guestPrompt, setGuestPrompt] = useState<{ open: boolean; trigger: "like" | "superlike" | "profile" | "map" | "match" | "filter" | "purchase" | "generic" }>({ open: false, trigger: "generic" });
@@ -1535,7 +1535,7 @@ const Index = () => {
         <TravelNoticePopup
           profile={travelNoticeProfile}
           type={travelNoticeType}
-          yourCity={(currentUser as any)?.city || "your city"}
+          yourCity={(user as any)?.user_metadata?.city || "your city"}
           onLike={(p) => {
             markTravelNoticeShown();
             setTravelNoticeProfile(null);
