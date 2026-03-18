@@ -42,6 +42,7 @@ import CoinHub from "@/shared/components/CoinHub";
 import { TokenPurchase, GiftReceiver, MatchPopup, GiftReceivePopup } from "@/features/gifts/components";
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
+import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
 import logoHeart from "@/assets/images/logo-heart.png";
 import {
   Dialog,
@@ -580,6 +581,9 @@ const Index = () => {
   const [profileImageViewIndex, setProfileImageViewIndex] = useState(0);
   const [selectedDatePlace, setSelectedDatePlace] = useState<any | null>(null);
   const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
+
+  // Cultural Bridge Guide overlay
+  const [showCulturalGuide, setShowCulturalGuide] = useState(false);
 
   // Diamond Gift Match state
   const [matchData, setMatchData] = useState<{ name: string; id: string; avatar?: string } | null>(null);
@@ -1310,6 +1314,7 @@ const Index = () => {
                         handleSelectProfile(profile, sourceList);
                       }}
                       onPurchaseFeature={handlePurchaseFeature}
+                      onCulturalGuide={() => setShowCulturalGuide(true)}
                     />
                   </div>
                 </motion.div>
@@ -1547,6 +1552,17 @@ const Index = () => {
           }}
         />
       )}
+
+      {/* ── Cultural Bridge Guide overlay ────────────────────────────── */}
+      <AnimatePresence>
+        {showCulturalGuide && (
+          <CulturalBridgePage
+            onClose={() => setShowCulturalGuide(false)}
+            coinBalance={coinBalance.balance}
+            onSpendCoins={(amount) => coinBalance.addCoins(-amount)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ── Video Call Overlays ────────────────────────────────────── */}
       <AnimatePresence>
