@@ -163,7 +163,7 @@ const DashboardPage = () => {
               : "text-white/40 hover:text-white/70"
               }`}
           >
-            <User className="w-3 h-3" /> <span className="hidden sm:inline">{t("dash.myProfile")}</span><span className="sm:hidden">Profile</span>
+            <User className="w-3 h-3" /> Profile
           </button>
           <button
             onClick={() => setTab("powerups")}
@@ -172,7 +172,7 @@ const DashboardPage = () => {
               : "text-white/40 hover:text-white/70"
               }`}
           >
-            <Zap className="w-3 h-3" /> <span className="hidden sm:inline">{t("dash.powerups")}</span><span className="sm:hidden">Power</span>
+            <Zap className="w-3 h-3" /> Power-ups
           </button>
           <button
             onClick={() => setTab("gifts")}
@@ -181,13 +181,13 @@ const DashboardPage = () => {
               : "text-white/40 hover:text-white/70"
               }`}
           >
-            <Star className="w-3 h-3" /> <span className="hidden sm:inline">Super</span><span className="sm:hidden">⭐</span>
+            <Star className="w-3 h-3" /> Super
           </button>
           <button
             onClick={() => navigate("/faq")}
             className="flex-1 py-2 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 text-white/40 hover:text-white/70 transition-all"
           >
-            <HelpCircle className="w-3 h-3" /> <span className="hidden sm:inline">Help</span><span className="sm:hidden">?</span>
+            <HelpCircle className="w-3 h-3" /> Help
           </button>
         </div>
       </div>
