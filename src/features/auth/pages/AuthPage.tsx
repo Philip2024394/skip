@@ -29,7 +29,7 @@ const LANDING_BG_URL = (import.meta.env.VITE_LANDING_BG_URL as string | undefine
 const LANDING_BG_URL_VERSION = (import.meta.env.VITE_LANDING_BG_URL_VERSION as string | undefined) || "v2";
 
 // Set to true when ready to go live — until then only admin (12345) can access the dating app
-const APP_LIVE = false;
+const APP_LIVE = true;
 
 const isoToFlag = (iso: string) =>
   iso.toUpperCase().replace(/./g, (c) =>
