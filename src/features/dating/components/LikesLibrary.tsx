@@ -65,6 +65,7 @@ interface LikesLibraryProps {
   onSelectProfile: (profile: Profile, sourceList: Profile[]) => void;
   onPurchaseFeature: (feature: PremiumFeature) => void;
   onCulturalGuide?: () => void;
+  onVisitorGuide?: () => void;
 }
 
 type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
@@ -120,7 +121,7 @@ const LikesLibrary = ({
   hidePrivateTabs,
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
-  onUnlock, onSelectProfile, onPurchaseFeature, onCulturalGuide,
+  onUnlock, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide,
 }: LikesLibraryProps) => {
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
@@ -276,6 +277,36 @@ const LikesLibrary = ({
           <Heart className="w-4 h-4 text-primary" fill="currentColor" />
           {title ?? "Match"}
         </h2>
+
+        {/* Guide shortcuts */}
+        <div className="flex items-center gap-1 mr-1">
+          {onCulturalGuide && (
+            <button
+              onClick={onCulturalGuide}
+              title="Cultural Bridge Guide"
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: "rgba(168,85,247,0.15)",
+                border: "1px solid rgba(168,85,247,0.3)",
+                fontSize: 14, cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center",
+              }}
+            >🌏</button>
+          )}
+          {onVisitorGuide && (
+            <button
+              onClick={onVisitorGuide}
+              title="Visitor Guide — Travel to Indonesia"
+              style={{
+                width: 28, height: 28, borderRadius: 8,
+                background: "rgba(59,130,246,0.15)",
+                border: "1px solid rgba(59,130,246,0.3)",
+                fontSize: 14, cursor: "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center",
+              }}
+            >✈️</button>
+          )}
+        </div>
 
         {/* 3-tab pill */}
         <div className="relative flex gap-0 p-0.5 bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">

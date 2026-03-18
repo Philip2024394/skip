@@ -43,6 +43,7 @@ import { TokenPurchase, GiftReceiver, MatchPopup, GiftReceivePopup } from "@/fea
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
 import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
+import VisitorGuidePage from "@/features/dating/pages/VisitorGuidePage";
 import logoHeart from "@/assets/images/logo-heart.png";
 import {
   Dialog,
@@ -584,6 +585,8 @@ const Index = () => {
 
   // Cultural Bridge Guide overlay
   const [showCulturalGuide, setShowCulturalGuide] = useState(false);
+  // Visitor Guide overlay
+  const [showVisitorGuide, setShowVisitorGuide] = useState(false);
 
   // Diamond Gift Match state
   const [matchData, setMatchData] = useState<{ name: string; id: string; avatar?: string } | null>(null);
@@ -1315,6 +1318,7 @@ const Index = () => {
                       }}
                       onPurchaseFeature={handlePurchaseFeature}
                       onCulturalGuide={() => setShowCulturalGuide(true)}
+                      onVisitorGuide={() => setShowVisitorGuide(true)}
                     />
                   </div>
                 </motion.div>
@@ -1561,6 +1565,13 @@ const Index = () => {
             coinBalance={coinBalance.balance}
             onSpendCoins={(amount) => coinBalance.addCoins(-amount)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ── Visitor Guide overlay ─────────────────────────────────── */}
+      <AnimatePresence>
+        {showVisitorGuide && (
+          <VisitorGuidePage onClose={() => setShowVisitorGuide(false)} />
         )}
       </AnimatePresence>
 
