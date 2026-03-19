@@ -11,6 +11,7 @@ import { firstName } from "@/shared/utils";
 import ProfileBadge from "@/features/dating/components/ProfileBadge";
 import DistanceBadge from "@/features/dating/components/DistanceBadge";
 import VoicePlayer from "@/features/video/components/VoicePlayer";
+import { isProfileLocked } from "@/features/dating/utils/profileLock";
 
 interface SwipeStackProps {
   profiles: Profile[];
@@ -255,6 +256,7 @@ export default function SwipeStack({
 
   // ── Render ────────────────────────────────────────────────────
   if (!profile) return null;
+  const isLocked = isProfileLocked(profile.id, (profile as any).is_mock);
 
   return (
     <div
@@ -307,6 +309,26 @@ export default function SwipeStack({
               }}
             />
           </div>
+
+          {/* ── WA lock badge overlay ─────────────────────────── */}
+          {isLocked && (
+            <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center"
+              style={{ background: "rgba(0,0,0,0.38)" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+                <img
+                  src="https://ik.imagekit.io/7grri5v7d/Profile%20locked%20with%20heart-shaped%20padlock.png"
+                  alt="Locked"
+                  style={{ width: 72, height: 72, objectFit: "contain", filter: "drop-shadow(0 0 16px rgba(236,72,153,0.6))" }}
+                />
+                <span style={{
+                  color: "rgba(255,255,255,0.85)", fontSize: 11, fontWeight: 800,
+                  letterSpacing: "0.12em", textTransform: "uppercase",
+                  background: "rgba(0,0,0,0.55)", padding: "3px 10px", borderRadius: 20,
+                  border: "1px solid rgba(255,255,255,0.15)",
+                }}>In WhatsApp Connection</span>
+              </div>
+            </div>
+          )}
 
           {/* ── Swipe colour overlay ───────────────────────────── */}
           <motion.div

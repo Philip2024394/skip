@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useGhostMode } from "@/features/ghost/hooks/useGhostMode";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Mail, Lock, User, MapPin, Calendar, ChevronRight, Home } from "lucide-react";
 import { Button } from "@/shared/components/button";
@@ -66,6 +67,7 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { isGhost } = useGhostMode();
 
   const [landingPrefix, setLandingPrefix] = useState<string>(COUNTRY_CODES["Indonesia"] || "+62");
   const [landingNumber, setLandingNumber] = useState<string>("");
@@ -650,6 +652,35 @@ const AuthPage = () => {
                 </div>
               )}
             </div>
+
+            {/* ── Ghost Mode entry ── */}
+            <button
+              onClick={() => navigate("/ghost")}
+              style={{
+                width: "100%", height: 48, borderRadius: 20, marginTop: 10,
+                background: "rgba(0,0,0,0.55)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                border: "1px solid rgba(74,222,128,0.25)",
+                color: "#fff", fontWeight: 800, fontSize: 14,
+                cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                boxShadow: "0 0 20px rgba(74,222,128,0.08)",
+              }}
+            >
+              <span style={{ fontSize: 18 }}>👻</span>
+              {isGhost ? "Enter Ghost Mode" : "Ghost Mode — $9.99/mo"}
+              <span style={{
+                background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.3)",
+                borderRadius: 6, padding: "2px 6px", fontSize: 9, fontWeight: 700,
+                color: "rgba(74,222,128,0.85)", letterSpacing: "0.06em", marginLeft: 2,
+              }}>
+                PRIVATE
+              </span>
+            </button>
+            <p style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 6 }}>
+              Photo · Name · Age · City only · Hidden from map
+            </p>
           </div>
         </div>
         <LegalModal

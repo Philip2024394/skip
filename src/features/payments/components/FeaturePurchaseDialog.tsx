@@ -87,7 +87,8 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
         onClick={onClose}
       >
         <motion.div
@@ -95,9 +96,13 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="w-full max-w-sm bg-card/95 backdrop-blur-xl border border-border rounded-3xl p-6 shadow-xl"
+          className="w-full max-w-sm rounded-3xl overflow-hidden"
+          style={{ background: "rgba(12,12,18,0.72)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)", border: "1px solid rgba(255,255,255,0.10)" }}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Pink top bar */}
+          <div style={{ height: 4, background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
+          <div className="p-6">
           {/* Close button */}
           <button
             onClick={onClose}
@@ -109,7 +114,15 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
           {/* Icon */}
           <div className="flex justify-center mb-4">
             <div className={`w-16 h-16 rounded-2xl ${gradient} flex items-center justify-center shadow-glow`}>
-              <Icon className="w-8 h-8 text-primary-foreground" />
+              {feature.id === "vip" ? (
+                <img
+                  src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png"
+                  alt="VIP"
+                  style={{ width: 40, height: 40, objectFit: "contain" }}
+                />
+              ) : (
+                <Icon className="w-8 h-8 text-primary-foreground" />
+              )}
             </div>
           </div>
 
@@ -142,6 +155,7 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
           <p className="text-muted-foreground text-[10px] text-center mt-3">
             {t("popup.securePayment")}
           </p>
+          </div>{/* /p-6 */}
         </motion.div>
       </motion.div>
     </AnimatePresence>

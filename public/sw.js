@@ -1,9 +1,9 @@
-// 2DateMe Service Worker
+// 2Ghost Service Worker
 // Enables PWA install prompt, offline capability, and auto-update.
 // Bump CACHE_VERSION on each deploy so returning users get the new app.
 
-const CACHE_VERSION = "v3";
-const CACHE_NAME = `2dateme-${CACHE_VERSION}`;
+const CACHE_VERSION = "ghost-v1";
+const CACHE_NAME = `2ghost-${CACHE_VERSION}`;
 
 // Assets to cache on install for offline use
 const PRECACHE_ASSETS = [

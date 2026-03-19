@@ -21,7 +21,15 @@ const PromoCard = ({ feature, onPurchase }: PromoCardProps) => {
       onClick={() => onPurchase(feature)}
     >
       <div className={`w-12 h-12 rounded-full ${gradient} flex items-center justify-center`}>
-        <Icon className="w-5 h-5 text-primary-foreground" />
+        {feature.id === "vip" ? (
+          <img
+            src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png"
+            alt="VIP"
+            style={{ width: 28, height: 28, objectFit: "contain" }}
+          />
+        ) : (
+          <Icon className="w-5 h-5 text-primary-foreground" />
+        )}
       </div>
       <p className="text-foreground text-[10px] font-semibold truncate w-full text-center">
         {feature.emoji} {feature.name}

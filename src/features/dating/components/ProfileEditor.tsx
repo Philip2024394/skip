@@ -38,7 +38,7 @@ const ProfileLockSection = () => {
       <div className="p-4">
         <div className="flex items-center gap-3 mb-3">
           <img
-            src="https://ik.imagekit.io/7grri5v7d/tr:bg-remove/profile%20locked.png"
+            src="https://ik.imagekit.io/7grri5v7d/Profile%20locked%20with%20heart-shaped%20padlock.png"
             alt="Locked"
             style={{ width: 36, height: 36, objectFit: "contain", mixBlendMode: "screen" as any }}
           />

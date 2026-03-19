@@ -41,7 +41,7 @@ export const PREMIUM_FEATURES: PremiumFeature[] = [
     // and replace the priceId and productId below with the real values.
     id: "vip",
     name: "VIP Monthly",
-    emoji: "👑",
+    emoji: "✨",
     description: "Everything you need — unlocks, super likes & a VIP crown badge. Best value!",
     price: "$10.99/mo",
     priceCents: 1099,

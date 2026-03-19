@@ -56,6 +56,7 @@ interface LikesLibraryProps {
   onPurchaseFeature: (feature: PremiumFeature) => void;
   onCulturalGuide?: () => void;
   onVisitorGuide?: () => void;
+  onGhostMode?: () => void;
 }
 
 type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
@@ -109,7 +110,7 @@ const LikesLibrary = ({
   hidePrivateTabs,
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
-  onUnlock, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide,
+  onUnlock, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide, onGhostMode,
 }: LikesLibraryProps) => {
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
@@ -366,6 +367,7 @@ const LikesLibrary = ({
                     { key: "video" as const, label: "Video", emoji: "🎬", action: "video" },
                     { key: "cultural" as const, label: "Cultural Guide", emoji: "🌏", action: "cultural" },
                     { key: "visitor" as const, label: "Travel Guide", emoji: "✈️", action: "visitor" },
+                    { key: "ghost" as const, label: "Ghost Mode", emoji: "👻", action: "ghost" },
                   ] as { key: string; label: string; emoji: string; action: string }[]
                 ).map((s, idx) => (
                   <motion.button
@@ -384,6 +386,8 @@ const LikesLibrary = ({
                         onCulturalGuide?.();
                       } else if (s.action === "visitor") {
                         onVisitorGuide?.();
+                      } else if (s.action === "ghost") {
+                        onGhostMode?.();
                       } else {
                         onSelectProfileSection?.(s.key as "basic" | "lifestyle" | "interests" | "images");
                       }
@@ -474,24 +478,26 @@ const LikesLibrary = ({
                       e.stopPropagation();
                       onSelectUnlockItem?.(p.key);
                     }}
-                    className={`flex flex-col items-center justify-between p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.03] bg-black/50 backdrop-blur-md flex-shrink-0 ${selectedUnlockItemKey === p.key ? "ring-2 ring-fuchsia-400/60" : ""}`}
+                    className="flex flex-col items-center justify-between p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.03] bg-black/50 backdrop-blur-md flex-shrink-0"
                     style={{
                       width: 80, height: 104,
                       border: selectedUnlockItemKey === p.key
-                        ? "1.5px solid rgba(232,72,199,0.7)"
-                        : "1.5px solid rgba(232,72,199,0.35)",
+                        ? "1.5px solid rgba(236,72,153,0.85)"
+                        : "1.5px solid rgba(255,255,255,0.1)",
+                      boxShadow: selectedUnlockItemKey === p.key
+                        ? "0 0 14px rgba(236,72,153,0.55), 0 0 6px rgba(236,72,153,0.35), inset 0 0 10px rgba(236,72,153,0.1)"
+                        : "none",
                     }}
                     aria-label={p.label}
                   >
                     {p.emoji ? (
-                      <span style={{ fontSize: 28, marginTop: 4 }}>{p.emoji}</span>
+                      <span style={{ fontSize: 38 }}>{p.emoji}</span>
                     ) : (
-                      <img src="https://ik.imagekit.io/7grri5v7d/logo_unlock-removebg-preview.png?updatedAt=1773430238745" alt="unlock" style={{ width: 36, height: 36, marginTop: 4, objectFit: "contain" }} />
+                      <img src="https://ik.imagekit.io/7grri5v7d/logo_unlock-removebg-preview.png?updatedAt=1773430238745" alt="unlock" style={{ width: 52, height: 52, objectFit: "contain" }} />
                     )}
                     <div className="flex flex-col items-center gap-0.5">
                       <p className="text-white text-[9px] font-bold text-center leading-tight">{p.label}</p>
-                      <p className="text-white/80 text-[9px] font-black">{p.price}</p>
-                      <span style={{ background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))", color: "#fff", fontSize: 7, fontWeight: 700, padding: "1.5px 6px", borderRadius: 20, whiteSpace: "nowrap", marginBottom: 2 }}>Get</span>
+                      <span style={{ background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))", color: "#fff", fontSize: 7, fontWeight: 700, padding: "1.5px 6px", borderRadius: 20, whiteSpace: "nowrap", marginBottom: 2 }}>View</span>
                     </div>
                   </motion.button>
                 ))}

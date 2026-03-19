@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown, ChevronUp, Plane, Smartphone, Heart } from "lucide-react";
+import { useSEO } from "@/shared/hooks/useSEO";
 
 // ── Floating hearts (same as MatchCelebrationOverlay) ─────────────────────────
 const HEART_COUNT = 14;
@@ -279,6 +280,12 @@ export default function VisitorGuidePage({ onClose, profile }: VisitorGuidePageP
   const firstName = profile?.name ? profile.name.split(" ")[0] : null;
   const pronoun = profile?.gender === "Male" ? "him" : "her";
   const possessive = profile?.gender === "Male" ? "his" : "her";
+
+  useSEO({
+    title: `Kencan di ${city?.name ?? "Indonesia"} – Date2me.com | Tips & Panduan Wisatawan`,
+    description: `Panduan kencan dan wisata di ${city?.name ?? "Indonesia"}. Temukan jodoh online, lokasi kencan terbaik, dan tips cari pasangan di ${city?.name ?? "Indonesia"}. Date2me.com — aplikasi kencan Indonesia terpercaya.`,
+    keywords: `kencan di ${city?.name ?? "Indonesia"}, cari jodoh ${city?.name ?? "Indonesia"}, dating ${city?.name ?? "Indonesia"}, wisata kencan Indonesia, kencan serius, jodoh online Indonesia`,
+  });
 
   return (
     <motion.div

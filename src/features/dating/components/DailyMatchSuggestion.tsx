@@ -135,9 +135,9 @@ export default function DailyMatchSuggestion({ profile, onConnect, onDismiss }: 
         transition={{ duration: 0.35 }}
         style={{
           position: "fixed", inset: 0, zIndex: 295,
-          background: "rgba(10,4,24,0.35)",
-          backdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
-          WebkitBackdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+          background: "rgba(0,0,0,0.52)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: "0 20px",
         }}
@@ -155,11 +155,10 @@ export default function DailyMatchSuggestion({ profile, onConnect, onDismiss }: 
             width: "100%", maxWidth: 340,
             borderRadius: 28,
             overflow: "hidden",
-            background: "rgba(8,8,12,0.88)",
+            background: "rgba(12,12,18,0.72)",
             backdropFilter: "blur(40px)",
             WebkitBackdropFilter: "blur(40px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
             paddingBottom: 22,
           }}
         >

@@ -17,7 +17,7 @@ interface TokenPackage {
 
 const TOKEN_PACKAGES: TokenPackage[] = [
   { tokens: 5, price: 1.25, priceId: "price_5_tokens", label: "Starter", desc: "Try it out", icon: "star", gradient: "from-pink-500/15 to-pink-700/5" },
-  { tokens: 15, price: 3.25, priceId: "price_15_tokens", label: "Popular", desc: "Most chosen", icon: "zap", popular: true, gradient: "from-violet-500/20 to-fuchsia-600/10" },
+  { tokens: 15, price: 3.25, priceId: "price_15_tokens", label: "Popular", desc: "Most chosen", icon: "zap", popular: true, gradient: "from-pink-500/20 to-pink-700/10" },
   { tokens: 35, price: 6.50, priceId: "price_35_tokens", label: "Value", desc: "Save 26%", icon: "sparkles", gradient: "from-blue-500/15 to-cyan-600/10" },
   { tokens: 75, price: 12.50, priceId: "price_75_tokens", label: "Diamond", desc: "Save 33%", icon: "crown", gradient: "from-amber-400/20 to-yellow-600/10" },
 ];
@@ -87,18 +87,35 @@ export default function TokenPurchase({ onClose, onPurchaseSuccess }: TokenPurch
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        background: "rgba(0,0,0,0.52)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: 16,
+      }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
         initial={{ scale: 0.9, y: 30 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 30 }}
-        className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-3xl border border-yellow-400/20 shadow-[0_20px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(250,204,21,0.08)] max-w-md w-full overflow-hidden"
+        style={{
+          background: "rgba(12,12,18,0.72)",
+          backdropFilter: "blur(40px)",
+          WebkitBackdropFilter: "blur(40px)",
+          borderRadius: 28,
+          border: "1px solid rgba(255,255,255,0.10)",
+          maxWidth: 420, width: "100%",
+          overflow: "hidden",
+        }}
       >
-        {/* Header with glow */}
-        <div className="relative px-6 pt-6 pb-4">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-gradient-to-r from-transparent via-yellow-400/60 to-transparent rounded-full" />
+        {/* Pink top bar */}
+        <div style={{ height: 4, background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
+
+        {/* Header */}
+        <div className="relative px-6 pt-5 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-[0_0_16px_rgba(250,204,21,0.3)]">
@@ -138,7 +155,7 @@ export default function TokenPurchase({ onClose, onPurchaseSuccess }: TokenPurch
                 onClick={() => !isProcessing && handlePurchase(pkg)}
               >
                 {pkg.popular && (
-                  <div className="absolute -top-2 right-4 px-2 py-0.5 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full text-[9px] font-bold text-white shadow-lg">
+                  <div className="absolute -top-2 right-4 px-2 py-0.5 bg-gradient-to-r from-pink-500 to-pink-400 rounded-full text-[9px] font-bold text-white shadow-lg">
                     POPULAR
                   </div>
                 )}
@@ -146,7 +163,7 @@ export default function TokenPurchase({ onClose, onPurchaseSuccess }: TokenPurch
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-11 h-11 rounded-xl bg-black/30 border border-white/10 flex items-center justify-center`}>
-                      <Icon className={`w-5 h-5 ${pkg.icon === "crown" ? "text-yellow-400" : pkg.icon === "sparkles" ? "text-blue-400" : pkg.icon === "zap" ? "text-violet-400" : "text-pink-400"}`} />
+                      <Icon className={`w-5 h-5 ${pkg.icon === "crown" ? "text-yellow-400" : pkg.icon === "sparkles" ? "text-pink-300" : pkg.icon === "zap" ? "text-pink-400" : "text-pink-400"}`} />
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">

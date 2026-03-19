@@ -148,7 +148,7 @@ export default function GiftSelector({ profileId, profileName, onGiftSent }: Gif
       <div className="h-full flex items-center justify-center">
         <div className="flex items-center gap-2 text-white/50 text-sm">
           <Sparkles className="w-4 h-4 animate-pulse" />
-          <span>Loading gifts...</span>
+          <span>Loading super likes...</span>
         </div>
       </div>
     );

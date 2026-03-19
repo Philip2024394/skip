@@ -147,26 +147,30 @@ export default function AppDialogs(props: AppDialogsProps) {
 
       {/* Unlock Payment Dialog */}
       <Dialog open={props.showUnlockDialog} onOpenChange={() => props.setShowUnlockDialog(false)}>
-        <DialogContent className="bg-black/90 backdrop-blur-xl border border-white/10 text-white max-w-xs mx-auto rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-center text-white">
-              <MessageCircle className="w-10 h-10 mx-auto mb-2" fill="white" stroke="white" />
-              {t("popup.unlockTitle")}
-            </DialogTitle>
-            <DialogDescription className="text-center text-white/60">
-              {props.unlockProfile && hasUnlockBadges(props.unlockProfile) ? t("popup.unlockDesc299") : t("popup.unlockDesc")}
-            </DialogDescription>
-          </DialogHeader>
-          <ul className="text-white/50 text-xs space-y-1 mt-1">
-            <li>💬 {t("popup.unlockBullet1")}</li>
-            <li>🔒 {t("popup.unlockBullet2")}</li>
-            <li>⏰ {t("popup.unlockBullet3")}</li>
-          </ul>
-          <div className="flex gap-3 mt-2">
-            <Button variant="outline" onClick={() => props.setShowUnlockDialog(false)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("popup.cancel")}</Button>
-            <Button onClick={props.confirmUnlock} disabled={props.paymentLoading} className="flex-1 gradient-love text-primary-foreground border-0 font-bold">
-              {props.paymentLoading ? t("popup.processing") : (props.unlockProfile && hasUnlockBadges(props.unlockProfile) ? t("popup.pay299") : t("popup.pay199"))}
-            </Button>
+        <DialogContent className="text-white max-w-xs mx-auto rounded-3xl overflow-hidden p-0 border-0" style={{ background: "rgba(12,12,18,0.85)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)", border: "1px solid rgba(255,255,255,0.10)" }}>
+          {/* Pink top bar */}
+          <div style={{ height: 4, background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
+          <div className="px-6 pt-5 pb-6">
+            <DialogHeader>
+              <DialogTitle className="font-display text-center text-white">
+                <MessageCircle className="w-10 h-10 mx-auto mb-2" fill="white" stroke="white" />
+                {t("popup.unlockTitle")}
+              </DialogTitle>
+              <DialogDescription className="text-center text-white/60">
+                {props.unlockProfile && hasUnlockBadges(props.unlockProfile) ? t("popup.unlockDesc299") : t("popup.unlockDesc")}
+              </DialogDescription>
+            </DialogHeader>
+            <ul className="text-white/50 text-xs space-y-1 mt-3">
+              <li>💬 {t("popup.unlockBullet1")}</li>
+              <li>🔒 {t("popup.unlockBullet2")}</li>
+              <li>⏰ {t("popup.unlockBullet3")}</li>
+            </ul>
+            <div className="flex gap-3 mt-4">
+              <Button variant="outline" onClick={() => props.setShowUnlockDialog(false)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("popup.cancel")}</Button>
+              <Button onClick={props.confirmUnlock} disabled={props.paymentLoading} className="flex-1 gradient-love text-primary-foreground border-0 font-bold">
+                {props.paymentLoading ? t("popup.processing") : (props.unlockProfile && hasUnlockBadges(props.unlockProfile) ? t("popup.pay299") : t("popup.pay199"))}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

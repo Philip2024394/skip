@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/shared/components/button";
-import { X, Gift, Coins, Heart, Sparkles } from "lucide-react";
+import { X, Star, Coins, Heart, Sparkles } from "lucide-react";
 import analyticsLogger from "@/shared/services/analytics";
 import SecureTextarea from "@/shared/components/SecureTextarea";
 import TokenPurchase from "./TokenPurchase";
@@ -172,9 +172,9 @@ export default function GiftSendPopup({
     return (
       <div style={{
         position: "fixed", inset: 0, zIndex: 99999,
-        background: "rgba(10,4,24,0.35)",
-        backdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
-        WebkitBackdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+        background: "rgba(0,0,0,0.52)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <motion.div
@@ -192,7 +192,7 @@ export default function GiftSendPopup({
           </motion.div>
           <motion.p initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}
             style={{ color: "#fff", fontWeight: 900, fontSize: 20, margin: 0 }}>
-            Gift sent! 💕
+            Super Like sent! ⭐
           </motion.p>
           <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}
             style={{ color: "rgba(249,168,212,0.8)", fontSize: 13, margin: 0 }}>
@@ -211,9 +211,9 @@ export default function GiftSendPopup({
         exit={{ opacity: 0 }}
         style={{
           position: "fixed", inset: 0, zIndex: 99999,
-          background: "rgba(10,4,24,0.35)",
-          backdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
-          WebkitBackdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+          background: "rgba(0,0,0,0.52)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: "0 20px",
         }}
@@ -226,12 +226,11 @@ export default function GiftSendPopup({
           transition={{ type: "spring", stiffness: 360, damping: 30 }}
           style={{
             width: "100%", maxWidth: 340,
-            background: "rgba(8,8,12,0.88)",
+            background: "rgba(12,12,18,0.72)",
             backdropFilter: "blur(40px)",
             WebkitBackdropFilter: "blur(40px)",
             borderRadius: 28,
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
             overflow: "hidden",
           }}
         >
@@ -247,10 +246,10 @@ export default function GiftSendPopup({
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: "0 0 10px rgba(236,72,153,0.5)",
               }}>
-                <Gift style={{ width: 13, height: 13, color: "#fff" }} />
+                <Star style={{ width: 13, height: 13, color: "#fff" }} fill="#fff" />
               </div>
               <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(249,168,212,0.9)" }}>
-                Send a Gift
+                Send Super Like
               </span>
             </div>
             <button
@@ -352,7 +351,7 @@ export default function GiftSendPopup({
                 id="gift-message"
                 value={message}
                 onChange={setMessage}
-                placeholder="Add a sweet note... 💌"
+                placeholder="Add a personal note... 💌 (optional)"
                 rows={2}
                 maxLength={350}
                 label=""
@@ -412,7 +411,7 @@ export default function GiftSendPopup({
             <button
               onClick={handleSend}
               disabled={!canSend || isSending || message.length > 350}
-              aria-label={`Send ${gift.name} gift to ${recipientName}`}
+              aria-label={`Send Super Like to ${recipientName}`}
               style={{
                 flex: 2, padding: "12px 0", borderRadius: 16,
                 background: canSend ? "linear-gradient(135deg, #f472b6, #ec4899)" : "rgba(255,255,255,0.06)",
@@ -428,8 +427,8 @@ export default function GiftSendPopup({
                 <span style={{ opacity: 0.7 }}>Sending...</span>
               ) : (
                 <>
-                  <Gift style={{ width: 14, height: 14 }} />
-                  {isFreeGift ? "Send Free 💫" : "Send Gift 💝"}
+                  <Star style={{ width: 14, height: 14 }} fill="currentColor" />
+                  {isFreeGift ? "Send Free ⭐" : "Send Super Like ⭐"}
                 </>
               )}
             </button>

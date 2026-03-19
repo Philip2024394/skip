@@ -60,14 +60,27 @@ export default function MatchPopup({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+    <div
+      className="fixed inset-0 flex items-center justify-center z-[60] p-4"
+      style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
+    >
       <FloatingHearts />
       <motion.div
         initial={{ scale: 0.7, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 220, damping: 18 }}
-        className="relative z-10 bg-gradient-to-br from-pink-900/95 via-black/95 to-violet-900/95 rounded-3xl border-2 border-pink-400/40 shadow-[0_20px_80px_rgba(236,72,153,0.4)] max-w-sm w-full p-6 text-center"
+        className="relative z-10 max-w-sm w-full text-center overflow-hidden"
+        style={{
+          background: "rgba(12,12,18,0.72)",
+          backdropFilter: "blur(40px)",
+          WebkitBackdropFilter: "blur(40px)",
+          borderRadius: 28,
+          border: "1px solid rgba(255,255,255,0.10)",
+        }}
       >
+        {/* Pink top bar */}
+        <div style={{ height: 4, background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
+        <div className="p-6">
         <button
           onClick={onClose}
           className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white/50 hover:text-white"
@@ -91,7 +104,7 @@ export default function MatchPopup({
 
         {/* Avatars row */}
         <div className="flex items-center justify-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-violet-500 flex items-center justify-center border-2 border-pink-400/50 text-white text-xl font-bold">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-pink-400 flex items-center justify-center border-2 border-pink-400/50 text-white text-xl font-bold">
             {currentUserName.charAt(0).toUpperCase()}
           </div>
           <motion.div
@@ -101,7 +114,7 @@ export default function MatchPopup({
           >
             💕
           </motion.div>
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center border-2 border-violet-400/50 overflow-hidden">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 flex items-center justify-center border-2 border-pink-400/50 overflow-hidden">
             {matchedProfileAvatar ? (
               <img src={matchedProfileAvatar} alt={matchedProfileName} className="w-full h-full object-cover" />
             ) : (
@@ -112,13 +125,15 @@ export default function MatchPopup({
 
         <Button
           onClick={() => setShowConnect(true)}
-          className="w-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-bold h-12 text-base shadow-[0_4px_24px_rgba(236,72,153,0.4)] mb-2"
+          className="w-full text-white font-bold h-12 text-base mb-2 border-0"
+          style={{ background: "linear-gradient(135deg, #ec4899, #f472b6)", boxShadow: "0 4px 20px rgba(236,72,153,0.45)" }}
         >
           💎 Connect Now
         </Button>
         <button onClick={onClose} className="text-white/40 text-xs hover:text-white/60 transition-colors">
           Maybe later
         </button>
+        </div>{/* /p-6 */}
       </motion.div>
     </div>
   );

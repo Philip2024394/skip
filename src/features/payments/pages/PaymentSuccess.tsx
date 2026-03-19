@@ -242,7 +242,7 @@ const PaymentSuccess = () => {
       sub: "Your profile is now featured at the top of everyone's stack for 24 hours.",
     },
     vip: {
-      icon: <span className="text-4xl">👑</span>,
+      icon: <img src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png" alt="VIP" style={{ width: 48, height: 48, objectFit: "contain" }} />,
       headline: "VIP Membership Activated!",
       sub: "You now have 7 WhatsApp unlocks and 5 Super Likes ready to use this month.",
     },

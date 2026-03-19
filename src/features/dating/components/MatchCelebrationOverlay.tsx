@@ -59,9 +59,9 @@ function SparkleRing() {
               top: "50%", left: "50%",
               width: 8, height: 8,
               borderRadius: "50%",
-              background: i % 2 === 0 ? "#ec4899" : "#a855f7",
+              background: i % 2 === 0 ? "#ec4899" : "#f472b6",
               transform: `rotate(${angle}deg) translateX(${100 + Math.random() * 40}px) translateY(-50%)`,
-              boxShadow: `0 0 8px 2px ${i % 2 === 0 ? "#ec4899" : "#a855f7"}`,
+              boxShadow: `0 0 8px 2px ${i % 2 === 0 ? "#ec4899" : "#f472b6"}`,
             }}
           />
         );
@@ -138,7 +138,7 @@ const PACKAGES = [
     price: "$4.99",
     desc: "Save vs singles — great for active users",
     badge: "Popular",
-    badgeColor: "rgba(168,85,247,0.9)",
+    badgeColor: "rgba(236,72,153,0.9)",
   },
   {
     key: "unlock:pack10",
@@ -248,7 +248,7 @@ function PackagePicker({ theirName, connectionType, onSelect, onBack }: {
             </div>
             <span style={{
               color: "#fff", fontWeight: 900, fontSize: 14,
-              background: "linear-gradient(135deg,#ec4899,#a855f7)",
+              background: "linear-gradient(135deg,#ec4899,#f472b6)",
               WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               backgroundClip: "text", flexShrink: 0,
             }}>{pkg.price}</span>
@@ -302,9 +302,9 @@ export default function MatchCelebrationOverlay({
         transition={{ duration: 0.3 }}
         style={{
           position: "fixed", inset: 0, zIndex: 300,
-          background: "rgba(10,4,24,0.35)",
-          backdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
-          WebkitBackdropFilter: "blur(10px) saturate(1.6) brightness(0.78)",
+          background: "rgba(0,0,0,0.52)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
           display: "flex", alignItems: "center", justifyContent: "center",
           padding: "0 20px",
         }}
@@ -321,11 +321,10 @@ export default function MatchCelebrationOverlay({
             width: "100%", maxWidth: 340,
             borderRadius: 30,
             overflow: "hidden",
-            background: "rgba(8,8,12,0.88)",
+            background: "rgba(12,12,18,0.72)",
             backdropFilter: "blur(40px)",
             WebkitBackdropFilter: "blur(40px)",
-            border: "1px solid rgba(255,255,255,0.08)",
-            boxShadow: "0 8px 48px rgba(0,0,0,0.7), 0 2px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.10)",
             padding: "0 0 6px",
             textAlign: "center",
           }}
@@ -333,13 +332,13 @@ export default function MatchCelebrationOverlay({
           {/* App theme radial glow */}
           <div style={{
             position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0,
-            background: "radial-gradient(ellipse at 50% 10%, rgba(236,72,153,0.16) 0%, rgba(168,85,247,0.08) 45%, transparent 70%)",
+            background: "radial-gradient(ellipse at 50% 10%, rgba(236,72,153,0.14) 0%, rgba(236,72,153,0.04) 50%, transparent 70%)",
           }} />
 
           {/* Top accent bar */}
           <div style={{
             height: 3, width: "100%",
-            background: "linear-gradient(90deg, #ec4899, #a855f7, #ec4899)",
+            background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)",
           }} />
 
           <SparkleRing />
@@ -373,7 +372,7 @@ export default function MatchCelebrationOverlay({
                   style={{
                     margin: 0,
                     fontSize: 28, fontWeight: 900, lineHeight: 1.1,
-                    background: "linear-gradient(135deg, #f472b6 0%, #ec4899 45%, #a855f7 100%)",
+                    background: "linear-gradient(135deg, #f472b6 0%, #ec4899 55%, #f43f8e 100%)",
                     WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
                     backgroundClip: "text",
                   }}
@@ -437,7 +436,7 @@ export default function MatchCelebrationOverlay({
                     transition={{ repeat: Infinity, duration: 0.9, ease: "easeInOut" }}
                     style={{
                       width: 40, height: 40, borderRadius: "50%",
-                      background: "linear-gradient(135deg, rgba(236,72,153,0.22), rgba(168,85,247,0.22))",
+                      background: "rgba(236,72,153,0.18)",
                       border: "1.5px solid rgba(236,72,153,0.5)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       boxShadow: "0 0 18px rgba(236,72,153,0.4)"
@@ -450,14 +449,14 @@ export default function MatchCelebrationOverlay({
                     <img src={theirAvatar} alt={theirName}
                       style={{
                         width: 68, height: 68, borderRadius: "50%", objectFit: "cover",
-                        border: "3px solid rgba(168,85,247,0.7)",
-                        boxShadow: "0 0 22px rgba(168,85,247,0.5)"
+                        border: "3px solid rgba(236,72,153,0.5)",
+                        boxShadow: "0 0 22px rgba(236,72,153,0.35)"
                       }}
                       onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
                     />
                     <div style={{
                       position: "absolute", bottom: -2, right: -2, width: 20, height: 20,
-                      borderRadius: "50%", background: "#a855f7", border: "2px solid #0a0018",
+                      borderRadius: "50%", background: "#ec4899", border: "2px solid #0a0018",
                       display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10
                     }}>✓</div>
                   </div>
@@ -470,7 +469,7 @@ export default function MatchCelebrationOverlay({
                   style={{
                     width: "100%", padding: "14px 0", borderRadius: 20,
                     fontSize: 14, fontWeight: 900,
-                    background: "linear-gradient(135deg, #ec4899, #a855f7)",
+                    background: "linear-gradient(135deg, #ec4899, #f472b6)",
                     border: "none", color: "#fff", cursor: "pointer",
                     boxShadow: "0 4px 22px rgba(236,72,153,0.5)",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,

@@ -30,12 +30,14 @@ function SafetyAdvicePopup({ profileName, onClose }: { profileName: string; onCl
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
+      className="fixed inset-0 flex items-center justify-center z-[70] p-4"
+      style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
     >
       <motion.div
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
-        className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-3xl border border-yellow-400/30 shadow-[0_20px_60px_rgba(0,0,0,0.9)] max-w-sm w-full p-6"
+        className="max-w-sm w-full p-6 overflow-hidden"
+        style={{ background: "rgba(12,12,18,0.72)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)", borderRadius: 28, border: "1px solid rgba(255,255,255,0.10)" }}
       >
         <div className="flex items-center gap-2 mb-4">
           <Shield className="w-5 h-5 text-yellow-400" />
@@ -87,7 +89,7 @@ function ConnectionGrantedNotice({ profileName, type, onClose }: { profileName: 
       <p className="text-white/50 text-xs mb-6">
         Once they confirm, your {type === "whatsapp" ? "WhatsApp" : "video call"} details will be shared
       </p>
-      <Button onClick={onClose} className="w-full bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold h-11">
+      <Button onClick={onClose} className="w-full text-white font-bold h-11 border-0" style={{ background: "linear-gradient(135deg, #ec4899, #f472b6)" }}>
         <Heart className="w-4 h-4 mr-2" /> Done
       </Button>
     </motion.div>
@@ -147,13 +149,17 @@ export default function DiamondConnectionFlow({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+      <div
+        className="fixed inset-0 flex items-center justify-center z-[60] p-4"
+        style={{ background: "rgba(0,0,0,0.52)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)" }}
+      >
         <motion.div
           initial={{ scale: 0.92, y: 20, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
-          className="bg-gradient-to-br from-gray-900 via-black to-gray-900 rounded-3xl border border-pink-400/20 shadow-[0_20px_80px_rgba(0,0,0,0.9)] max-w-sm w-full overflow-hidden"
+          className="max-w-sm w-full overflow-hidden"
+          style={{ background: "rgba(12,12,18,0.72)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)", borderRadius: 28, border: "1px solid rgba(255,255,255,0.10)" }}
         >
-          <div className="h-0.5 bg-gradient-to-r from-transparent via-pink-500/60 to-transparent" />
+          <div style={{ height: 4, background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
 
           <div className="p-5">
             {/* Header */}
@@ -198,7 +204,7 @@ export default function DiamondConnectionFlow({
                   {matchedContactPref !== "both" && (
                     <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2">
                       {selectedType === "video" ? (
-                        <Video className="w-4 h-4 text-violet-400" />
+                        <Video className="w-4 h-4 text-pink-400" />
                       ) : (
                         <MessageCircle className="w-4 h-4 text-green-400" />
                       )}
@@ -242,7 +248,8 @@ export default function DiamondConnectionFlow({
                   <Button
                     onClick={handlePurchase}
                     disabled={!selectedPackage || isPurchasing}
-                    className="w-full bg-gradient-to-r from-pink-500 to-violet-500 hover:from-pink-600 hover:to-violet-600 text-white font-bold h-12 shadow-[0_4px_24px_rgba(236,72,153,0.35)] disabled:opacity-40"
+                    className="w-full text-white font-bold h-12 disabled:opacity-40 border-0"
+                    style={{ background: "linear-gradient(135deg, #ec4899, #f472b6)", boxShadow: "0 4px 20px rgba(236,72,153,0.4)" }}
                   >
                     {isPurchasing ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>

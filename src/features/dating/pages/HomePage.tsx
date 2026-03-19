@@ -60,6 +60,9 @@ import BestieConfirmPopup from "@/features/dating/components/BestieConfirmPopup"
 import { generateAppUserId } from "@/shared/utils/userIdUtils";
 import { useProfileQuestions } from "@/features/dating/hooks/useProfileQuestions";
 import ProfileQuestionBlocker from "@/features/dating/components/ProfileQuestionBlocker";
+import WaLockedPopup, { addWaLock, isWaLocked } from "@/features/dating/components/WaLockedPopup";
+import { setProfileLock, isProfileLocked } from "@/features/dating/utils/profileLock";
+import type { WaLock } from "@/features/dating/components/WaLockedPopup";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -175,6 +178,8 @@ function HomePackageDetail({ packageKey, onPurchase }: { packageKey: string; onC
         <div className="relative z-10 h-full flex flex-col items-center justify-end px-5 pb-4 text-center gap-2">
           {pkg.emoji === "💬" ? (
             <img src="https://ik.imagekit.io/7grri5v7d/logo_unlock-removebg-preview.png?updatedAt=1773430238745" alt="unlock" style={{ width: bgImage ? 44 : 50, height: bgImage ? 44 : 50, objectFit: "contain" }} />
+          ) : pkg.key === "unlock:vip" ? (
+            <img src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png" alt="VIP" style={{ width: bgImage ? 44 : 50, height: bgImage ? 44 : 50, objectFit: "contain" }} />
           ) : (
             <span style={{ fontSize: bgImage ? 36 : 40 }}>{pkg.emoji}</span>
           )}
@@ -245,6 +250,7 @@ const Index = () => {
   });
   const coinBalance = useCoinBalance(user?.id);
   const profileQuestions = useProfileQuestions(user?.id || "guest");
+  const [waLockPopup, setWaLockPopup] = useState<WaLock | null>(null);
   const [showCoinRefuel, setShowCoinRefuel] = useState(false);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
@@ -575,7 +581,7 @@ const Index = () => {
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
   const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "gifts" | "unlock" | "distance" | "video">("new");
-  const [homeUnlockKey, setHomeUnlockKey] = useState<string>("");
+  const [homeUnlockKey, setHomeUnlockKey] = useState<string>("unlock:single");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
   const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState<number | null>(null);
@@ -903,7 +909,7 @@ const Index = () => {
 
   const {
     handleLike,
-    handleRose,
+    handleRose: handleRoseRaw,
     handleUnlock,
     confirmUnlock,
     handlePurchaseFeature,
@@ -937,6 +943,22 @@ const Index = () => {
     navigate,
   });
 
+
+  // Intercept swipe-up (rose) to show WA lock popup if profile is locked
+  const handleRose = useCallback((profile: any) => {
+    if (isProfileLocked(profile.id, profile.is_mock)) {
+      // Build popup data from WaLock store or fall back to profile fields
+      const waLock = isWaLocked(profile.id) || {
+        profileId: profile.id,
+        profileName: profile.name,
+        profileImage: profile.avatar_url || profile.images?.[0] || profile.image,
+        lockUntil: Date.now() + 72 * 60 * 60 * 1000,
+      };
+      setWaLockPopup(waLock);
+      return;
+    }
+    handleRoseRaw(profile);
+  }, [handleRoseRaw, setWaLockPopup]);
 
   const handleLibraryCardDrag = (_: any, info: PanInfo) => {
     const { offset } = info;
@@ -1299,6 +1321,7 @@ const Index = () => {
                       onPurchaseFeature={handlePurchaseFeature}
                       onCulturalGuide={() => setShowCulturalGuide(true)}
                       onVisitorGuide={() => setShowVisitorGuide(true)}
+                      onGhostMode={() => navigate("/ghost")}
                     />
                   </div>
                 </motion.div>
@@ -1433,6 +1456,21 @@ const Index = () => {
                         className="w-full flex items-center gap-2 bg-pink-500/20 hover:bg-pink-500/30 text-pink-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
                       >
                         🎁 Test Gift Popup
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const p = topProfiles[0] || filteredProfiles[0];
+                          if (!p) return;
+                          // Write to both lock systems so the badge shows AND the popup shows
+                          setProfileLock(p.id, true); // immediate — badge shows in carousel now
+                          const lock = { profileId: p.id, profileName: p.name, profileImage: p.avatar_url || p.images?.[0] || p.image, lockUntil: Date.now() + 72 * 60 * 60 * 1000 };
+                          addWaLock(lock);
+                          setWaLockPopup(lock);
+                        }}
+                        className="w-full flex items-center gap-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 px-2 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      >
+                        🔒 Test WA Lock Popup
                       </button>
                     </div>
                   </div>
@@ -1688,6 +1726,18 @@ const Index = () => {
           <ProfileQuestionBlocker
             question={profileQuestions.pendingReceived[0]}
             onAnswer={profileQuestions.answerReceived}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* WA Lock Popup — shown when swiping up on a locked profile */}
+      <AnimatePresence>
+        {waLockPopup && (
+          <WaLockedPopup
+            profileName={waLockPopup.profileName}
+            profileImage={waLockPopup.profileImage}
+            lockUntil={waLockPopup.lockUntil}
+            onClose={() => setWaLockPopup(null)}
           />
         )}
       </AnimatePresence>

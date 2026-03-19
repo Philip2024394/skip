@@ -20,12 +20,13 @@ function getLocks(): Record<string, LockEntry> {
   catch { return {}; }
 }
 
-/** Lock a viewed profile (the person whose WhatsApp was purchased). */
-export function setProfileLock(profileId: string) {
+/** Lock a viewed profile (the person whose WhatsApp was purchased).
+ *  Pass `immediate = true` to skip the 1-hour activation delay (dev/test use). */
+export function setProfileLock(profileId: string, immediate = false) {
   const now = Date.now();
   const entry: LockEntry = {
-    activatesAt: new Date(now + ONE_HOUR_MS).toISOString(),
-    expiresAt: new Date(now + ONE_HOUR_MS + THREE_DAYS_MS).toISOString(),
+    activatesAt: immediate ? new Date(now).toISOString() : new Date(now + ONE_HOUR_MS).toISOString(),
+    expiresAt: new Date(now + (immediate ? 0 : ONE_HOUR_MS) + THREE_DAYS_MS).toISOString(),
   };
   const locks = getLocks();
   locks[profileId] = entry;

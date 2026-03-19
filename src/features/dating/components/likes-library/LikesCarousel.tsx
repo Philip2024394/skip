@@ -96,24 +96,15 @@ export default function LikesCarousel(props: LikesCarouselProps) {
               />
               {/* Lock badge — replaces heart when profile is in active WhatsApp lock */}
               {locked ? (
-                <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none z-20"
-                  style={{ background: "rgba(0,0,0,0.55)" }}>
+                <div className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none z-20"
+                  style={{ background: "rgba(0,0,0,0.52)" }}>
                   <img
-                    src="https://ik.imagekit.io/7grri5v7d/tr:bg-remove/profile%20locked.png"
+                    src="https://ik.imagekit.io/7grri5v7d/Profile%20locked%20with%20heart-shaped%20padlock.png"
                     alt="Locked"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      mixBlendMode: "screen",
-                    }}
+                    style={{ width: 38, height: 38, objectFit: "contain" }}
                     onError={(e) => {
-                      // Fallback: show a lock emoji if image fails
-                      const parent = (e.target as HTMLImageElement).parentElement;
-                      if (parent) {
-                        (e.target as HTMLImageElement).style.display = "none";
-                        parent.innerHTML += '<span style="font-size:22px;display:flex;align-items:center;justify-content:center;width:100%;height:100%">🔒</span>';
-                      }
+                      (e.target as HTMLImageElement).style.display = "none";
+                      (e.target as HTMLImageElement).insertAdjacentHTML?.("afterend", '<span style="font-size:22px">🔒</span>');
                     }}
                   />
                 </div>

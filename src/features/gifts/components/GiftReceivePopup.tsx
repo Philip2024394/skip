@@ -131,7 +131,14 @@ export default function GiftReceivePopup({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+        style={{
+          position: "absolute", inset: 0,
+          background: "rgba(0,0,0,0.52)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: 16,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <motion.div
@@ -139,15 +146,18 @@ export default function GiftReceivePopup({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 28 }}
           style={{
-            background: "linear-gradient(160deg, #1a0030 0%, #0d001e 100%)",
+            background: "rgba(12,12,18,0.72)",
+            backdropFilter: "blur(40px)",
+            WebkitBackdropFilter: "blur(40px)",
             borderRadius: 28,
-            border: "1.5px solid rgba(232,72,199,0.25)",
-            boxShadow: "0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(232,72,199,0.1)",
+            border: "1px solid rgba(255,255,255,0.10)",
             width: "100%",
             maxWidth: 360,
             overflow: "hidden",
           }}
         >
+          {/* Pink top bar */}
+          <div style={{ height: 4, background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
           <AnimatePresence mode="wait">
             {view === "main" ? (
               <motion.div
@@ -232,12 +242,12 @@ export default function GiftReceivePopup({
                     disabled={isProcessing}
                     style={{
                       flex: 2, padding: "11px 0", borderRadius: 14,
-                      background: "linear-gradient(135deg, rgba(232,72,199,0.9), rgba(139,92,246,0.9))",
+                      background: "linear-gradient(135deg, #ec4899, #f472b6)",
                       border: "none",
                       color: "#fff", fontWeight: 800, fontSize: 13,
                       cursor: isProcessing ? "not-allowed" : "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-                      boxShadow: "0 4px 16px rgba(232,72,199,0.35)",
+                      boxShadow: "0 4px 16px rgba(236,72,153,0.4)",
                       opacity: isProcessing ? 0.6 : 1,
                     }}
                   >
@@ -253,9 +263,9 @@ export default function GiftReceivePopup({
                   onClick={handleSuggestBestie}
                   style={{
                     width: "100%", padding: "10px 0", borderRadius: 14,
-                    background: "rgba(139,92,246,0.1)",
-                    border: "1px solid rgba(139,92,246,0.3)",
-                    color: "rgba(167,139,250,0.9)", fontWeight: 700, fontSize: 12,
+                    background: "rgba(236,72,153,0.07)",
+                    border: "1px solid rgba(236,72,153,0.25)",
+                    color: "rgba(249,168,212,0.9)", fontWeight: 700, fontSize: 12,
                     cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                   }}
                 >
@@ -287,8 +297,8 @@ export default function GiftReceivePopup({
                 </div>
 
                 {/* Explanation */}
-                <div style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.25)", borderRadius: 14, padding: "12px 14px", marginBottom: 18 }}>
-                  <p style={{ color: "rgba(200,180,255,0.85)", fontSize: 12, lineHeight: 1.55, margin: 0 }}>
+                <div style={{ background: "rgba(236,72,153,0.07)", border: "1px solid rgba(236,72,153,0.2)", borderRadius: 14, padding: "12px 14px", marginBottom: 18 }}>
+                  <p style={{ color: "rgba(255,255,255,0.7)", fontSize: 12, lineHeight: 1.55, margin: 0 }}>
                     Not feeling it with {gift.sender_name}? Enter a Bestie's ID below — they'll receive a message saying you think your friend could be a better match 💕
                   </p>
                 </div>
@@ -310,7 +320,7 @@ export default function GiftReceivePopup({
                     style={{
                       width: "100%",
                       background: "rgba(255,255,255,0.06)",
-                      border: `1.5px solid ${bestieIdError ? "rgba(239,68,68,0.6)" : "rgba(139,92,246,0.4)"}`,
+                      border: `1.5px solid ${bestieIdError ? "rgba(239,68,68,0.6)" : "rgba(255,255,255,0.18)"}`,
                       borderRadius: 12,
                       padding: "11px 14px",
                       color: "#fff",
@@ -348,12 +358,12 @@ export default function GiftReceivePopup({
                     onClick={handleBestieSubmit}
                     style={{
                       flex: 2, padding: "11px 0", borderRadius: 14,
-                      background: "linear-gradient(135deg, rgba(139,92,246,0.9), rgba(99,102,241,0.9))",
+                      background: "linear-gradient(135deg, #ec4899, #f472b6)",
                       border: "none",
                       color: "#fff", fontWeight: 800, fontSize: 13,
                       cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
-                      boxShadow: "0 4px 14px rgba(139,92,246,0.35)",
+                      boxShadow: "0 4px 14px rgba(236,72,153,0.4)",
                     }}
                   >
                     <Send style={{ width: 14, height: 14 }} /> Send Suggestion

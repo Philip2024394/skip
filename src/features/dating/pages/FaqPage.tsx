@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Mail, Heart, Shield, CreditCard, User, Map, Zap, MessageCircle, UserPlus, Gift, BadgeCheck, Users, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppLogo from "@/shared/components/AppLogo";
+import { useSEO } from "@/shared/hooks/useSEO";
 
 interface FaqItem {
   q: string;
@@ -342,6 +343,13 @@ const FaqAccordion = ({ item, isOpen, onToggle }: { item: FaqItem; isOpen: boole
 const FaqPage = () => {
   const navigate = useNavigate();
   const [openId, setOpenId] = useState<string | null>(null);
+
+  useSEO({
+    title: "FAQ – Date2me.com | Cara Kencan Online, Cari Jodoh & WhatsApp Dating Indonesia",
+    description: "Pertanyaan umum tentang Date2me.com — cara kencan online, cari jodoh, unlock WhatsApp, dan fitur premium. Aplikasi kencan terbaik Indonesia.",
+    canonical: "https://2dateme.com/faq",
+    keywords: "faq kencan online, cara cari jodoh, aplikasi kencan Indonesia, kencan via WhatsApp, cari pasangan online, jodoh online Indonesia, kencan serius",
+  });
 
   const toggle = (id: string) => setOpenId(prev => prev === id ? null : id);
 

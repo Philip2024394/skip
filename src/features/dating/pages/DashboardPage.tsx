@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Zap, User, LogOut, Crown, Check, HelpCircle, Star, Copy, UserPlus } from "lucide-react";
+import { ArrowLeft, Zap, User, LogOut, Check, HelpCircle, Star, Copy, UserPlus } from "lucide-react";
 import { VerificationSubmitDialog } from "@/features/dating/components";
 import { Button } from "@/shared/components/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
@@ -308,12 +308,16 @@ const DashboardPage = () => {
 
                     <div className="flex items-start gap-3 mb-4">
                       <div className="w-14 h-14 rounded-2xl bg-black/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 border border-pink-400/30">
-                        <Crown className="w-7 h-7 text-pink-400" fill="currentColor" />
+                        <img
+                          src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png"
+                          alt="VIP"
+                          style={{ width: 36, height: 36, objectFit: "contain" }}
+                        />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-display font-black text-white text-xl">VIP Monthly</h3>
-                          <span className="text-pink-400 text-xs">👑</span>
+                          <img src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png" alt="VIP" style={{ width: 16, height: 16, objectFit: "contain" }} />
                         </div>
                         <p className="text-white/80 text-xs mt-0.5">Everything you need in one plan</p>
                         <div className="flex items-baseline gap-1.5 mt-1">
@@ -358,7 +362,12 @@ const DashboardPage = () => {
                       disabled={loadingId === vip.id}
                       className="w-full bg-black/30 hover:bg-black/40 backdrop-blur-sm text-white border border-white/30 font-black h-12 rounded-xl text-base transition-all hover:scale-[1.02] active:scale-[0.98]"
                     >
-                      {loadingId === vip.id ? "Processing..." : "👑 Get VIP — $10.99/mo"}
+                      {loadingId === vip.id ? "Processing..." : (
+                        <span className="flex items-center justify-center gap-1.5">
+                          <img src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png" alt="VIP" style={{ width: 18, height: 18, objectFit: "contain" }} />
+                          Get VIP — $10.99/mo
+                        </span>
+                      )}
                     </Button>
                   </div>
                 </motion.div>

@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ChevronDown, ChevronUp, Send } from "lucide-react";
+import { useSEO } from "@/shared/hooks/useSEO";
 
 // ── Floating hearts (same as MatchCelebrationOverlay) ─────────────────────────
 const HEART_COUNT = 14;
@@ -262,6 +263,12 @@ export default function CulturalBridgePage({ onClose, coinBalance = 0, onSpendCo
   const pronoun = profile?.gender === "Male" ? "him" : "her";
   const possessive = profile?.gender === "Male" ? "his" : "her";
   const cityAccent = getCityAccent(profile?.city);
+
+  useSEO({
+    title: "Kencan Lintas Budaya Indonesia – Date2me.com | Panduan Budaya & Cari Jodoh",
+    description: "Panduan budaya untuk kencan di Indonesia. Tips cari jodoh, kencan serius, dan memahami budaya Indonesia. Date2me.com — jodoh online Indonesia terpercaya.",
+    keywords: "kencan budaya Indonesia, cari jodoh Indonesia, kencan serius, jodoh online, pasangan hidup Indonesia, dating budaya Indonesia",
+  });
   // Seed changes each time the page opens (using timestamp modulo to give variety)
   const seed = useMemo(() => Math.floor(Date.now() / 1000) % 999983, []);
 
