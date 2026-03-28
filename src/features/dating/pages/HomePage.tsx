@@ -1206,6 +1206,9 @@ const Index = () => {
                   <button onClick={() => { if (!user) { showGuestPrompt("filter"); return; } setShowFilters(true); }} aria-label={t("nav.filters")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.filters")}>
                     <SlidersHorizontal className="w-4 h-4" />
                   </button>
+                  <button onClick={() => navigate("/teddy")} aria-label="My Teddy Room" className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title="My Teddy Room">
+                    <span className="text-base leading-none">🧸</span>
+                  </button>
                   <button onClick={() => navigate("/dashboard")} aria-label={t("nav.powerups")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.powerups")}>
                     <Zap className="w-4 h-4" />
                   </button>
