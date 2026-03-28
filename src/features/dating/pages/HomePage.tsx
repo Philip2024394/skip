@@ -68,6 +68,12 @@ import ProfileQuestionBlocker from "@/features/dating/components/ProfileQuestion
 import WaLockedPopup, { addWaLock, isWaLocked } from "@/features/dating/components/WaLockedPopup";
 import { setProfileLock, isProfileLocked } from "@/features/dating/utils/profileLock";
 import type { WaLock } from "@/features/dating/components/WaLockedPopup";
+import {
+  registerSession, markSwipeStart, canShowTimedPopup,
+  markTimedPopupShown, canShowCommercial, markCommercialShown,
+  canShowReferral, canShowTravelNotice,
+} from "@/shared/hooks/usePopupQueue";
+import ChatPanel from "@/features/messaging/components/ChatPanel";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -261,6 +267,10 @@ const Index = () => {
   const [showCoinRefuel, setShowCoinRefuel] = useState(false);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [userLookingFor, setUserLookingFor] = useState<string | null>(null);
+  const [chatProfile, setChatProfile] = useState<any>(null);
+
+  // Register this as a new browsing session (increments counter for popup gating)
+  useEffect(() => { registerSession(); }, []);
   const [loading, setLoading] = useState(() => {
     // Always false for immediate content display
     return false;
@@ -301,14 +311,13 @@ const Index = () => {
     }
   }, []);
 
-  // Fallback mock profiles if no real DB profiles with images exist
+  // Mock profiles scale back 1-for-1 as real users join
+  // 50 mocks when 0 real users → 0 mocks when ≥50 real users
   const mockProfiles = useMemo(() => generateIndonesianProfiles(50), []);
-  // Always use mock profiles to ensure content always shows, regardless of user status
-  const useMocks = true; // Always true for all users
-  const allProfiles = useMemo(
-    () => dbProfiles.length > 0 ? [...mockProfiles, ...dbProfiles] : mockProfiles,
-    [mockProfiles, dbProfiles]
-  );
+  const allProfiles = useMemo(() => {
+    const mockCount = Math.max(0, 50 - dbProfiles.length);
+    return [...mockProfiles.slice(0, mockCount), ...dbProfiles];
+  }, [mockProfiles, dbProfiles]);
 
   // Apply filters
   const filteredProfiles = useMemo(() => {
@@ -810,24 +819,31 @@ const Index = () => {
   }, [isProfileRoute, profileRouteId, topProfiles]);
 
 
-  // Show daily match suggestion once per day — only picks someone not yet swiped on
+  // Show daily match suggestion once per day — only after 3 min of swiping
   useEffect(() => {
     if (filteredProfiles.length === 0) return;
     if (!shouldShowDailyMatch()) return;
     const unseen = filteredProfiles.filter(p => !seenIdsRef.current.has(p.id));
     const pool = unseen.length > 0 ? unseen : filteredProfiles;
     const pick = pool[Math.floor(Math.random() * pool.length)];
-    const delay = (6 + Math.random() * 2) * 60 * 1000; // 6–8 minutes
-    const t = setTimeout(() => setDailyMatchProfile(pick), delay);
-    return () => clearTimeout(t);
+    // Check every 30s whether the 3-min swipe threshold has been reached
+    const t = setInterval(() => {
+      if (canShowTimedPopup()) {
+        clearInterval(t);
+        markTimedPopupShown();
+        setDailyMatchProfile(pick);
+      }
+    }, 30_000);
+    return () => clearInterval(t);
   }, [filteredProfiles]);
 
-  // Show travel notice popup — picks an opposite-sex profile with open_to_travel or is_visiting
+  // Show travel notice — session 4+ only, after 3 min of swiping (major-player standard)
   useEffect(() => {
     if (filteredProfiles.length === 0) return;
     if (!shouldShowTravelNotice()) return;
-    const userGender = (user as any)?.user_metadata?.gender || "male";
-    const opposite = userGender === "male" ? "female" : "male";
+    if (!canShowTravelNotice()) return; // session 4+ gate
+    const genderVal = (user as any)?.user_metadata?.gender || "male";
+    const opposite = genderVal === "male" ? "female" : "male";
     const travelPool = filteredProfiles.filter(p =>
       ((p as any).gender === opposite || (p as any).gender === "female") &&
       ((p as any).open_to_travel || (p as any).is_visiting)
@@ -835,11 +851,16 @@ const Index = () => {
     if (travelPool.length === 0) return;
     const pick = travelPool[Math.floor(Math.random() * travelPool.length)];
     const type: TravelNoticeType = (pick as any).is_visiting ? "coming_to_city" : "open_to_travel";
-    const t = setTimeout(() => {
-      setTravelNoticeProfile(pick);
-      setTravelNoticeType(type);
-    }, 5000);
-    return () => clearTimeout(t);
+    // Only fire once the 3-min swipe threshold is already confirmed
+    const t = setInterval(() => {
+      if (canShowTravelNotice()) {
+        clearInterval(t);
+        markTimedPopupShown();
+        setTravelNoticeProfile(pick);
+        setTravelNoticeType(type);
+      }
+    }, 30_000);
+    return () => clearInterval(t);
   }, [filteredProfiles, user]);
 
   // Guest auth prompt
@@ -1040,7 +1061,11 @@ const Index = () => {
     navigate,
     userCountry: getUserCountry(),
     isGlobalDater,
-    setGlobalDatingUpsell,
+    setGlobalDatingUpsell: (profile: any) => {
+      if (!canShowCommercial()) return; // respect 24h commercial cooldown
+      markCommercialShown();
+      setGlobalDatingUpsell(profile);
+    },
   });
 
 
@@ -1424,6 +1449,7 @@ const Index = () => {
                       heartDropProfileId={null}
                       superLikeGlowProfileId={superLikeGlowProfileId}
                       onUnlock={handleUnlock}
+                      onChat={(profile) => setChatProfile(profile)}
                       onSelectProfile={(profile, sourceList) => {
                         handleSelectProfile(profile, sourceList);
                       }}
@@ -1603,6 +1629,7 @@ const Index = () => {
         iLiked={iLiked}
         likedMe={likedMe}
         handleUnlock={handleUnlock}
+        onChatWithMatch={(profile) => setChatProfile(profile)}
         confirmUnlock={confirmUnlock}
         showUnlockDialog={!!unlockDialog}
         setShowUnlockDialog={(v) => setUnlockDialog(v ? unlockDialog : null)}
@@ -1901,6 +1928,27 @@ const Index = () => {
         targetCountry={globalDatingUpsell?.country}
         onClose={() => setGlobalDatingUpsell(null)}
       />
+
+      {/* ── In-App Chat ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {chatProfile && user?.id && (
+          <ChatPanel
+            currentUserId={user.id}
+            otherUser={{
+              id: chatProfile.id,
+              name: chatProfile.name,
+              avatar_url: chatProfile.avatar_url ?? chatProfile.images?.[0] ?? null,
+              last_seen_at: chatProfile.last_seen_at ?? null,
+              age: chatProfile.age,
+            }}
+            onClose={() => setChatProfile(null)}
+            onUnlock={() => {
+              setChatProfile(null);
+              handleUnlock(chatProfile);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );

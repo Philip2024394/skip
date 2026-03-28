@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { CalendarDays, Gift, Heart, MapPin, MoonStar, ShieldCheck, Unlock } from "lucide-react";
+import { CalendarDays, Gift, Heart, MapPin, MessageCircle, MoonStar, ShieldCheck, Unlock } from "lucide-react";
 import { isProfileLocked } from "@/features/dating/utils/profileLock";
 import { Button } from "@/shared/components/button";
 import PromoCard from "@/shared/components/PromoCard";
@@ -26,6 +26,7 @@ interface LikesCarouselProps {
   iLiked: any[];
   currentList: any[];
   onUnlock: (profile: any) => void;
+  onChat?: (profile: any) => void;
 }
 
 export default function LikesCarousel(props: LikesCarouselProps) {
@@ -182,17 +183,26 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                 Match expired
               </span>
             ) : isMatch && props.tab !== "new" && (
-              <Button
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  props.onUnlock(profile);
-                }}
-                className="gradient-love text-primary-foreground border-0 text-[8px] h-5 px-1.5 mt-0.5 w-full"
-                aria-label={`Unlock WhatsApp with ${profile.name}`}
-              >
-                <Unlock className="w-2.5 h-2.5 mr-0.5" /> {getUnlockPriceLabel(profile)}
-              </Button>
+              <div className="flex gap-1 mt-0.5 w-full">
+                {props.onChat && (
+                  <Button
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); props.onChat!(profile); }}
+                    className="flex-none bg-sky-500/20 border border-sky-500/30 text-sky-400 hover:bg-sky-500/30 h-5 px-1.5 text-[8px]"
+                    aria-label={`Chat with ${profile.name}`}
+                  >
+                    <MessageCircle className="w-2.5 h-2.5" />
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); props.onUnlock(profile); }}
+                  className="gradient-love text-primary-foreground border-0 text-[8px] h-5 px-1.5 flex-1"
+                  aria-label={`Unlock WhatsApp with ${profile.name}`}
+                >
+                  <Unlock className="w-2.5 h-2.5 mr-0.5" /> {getUnlockPriceLabel(profile)}
+                </Button>
+              </div>
             )}
           </motion.div>
         );

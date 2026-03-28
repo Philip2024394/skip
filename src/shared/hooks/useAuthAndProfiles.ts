@@ -108,7 +108,9 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
 
           try {
             const shown = localStorage.getItem(REFERRAL_POPUP_SHOWN_KEY);
-            if (!shown) {
+            // Only show from session 3+ (major-player standard: earn trust before asking for referrals)
+            const sessionCount = parseInt(localStorage.getItem("2dm_session_count") || "1");
+            if (!shown && sessionCount >= 3) {
               window.setTimeout(() => props.setShowReferralPopup(true), 3000);
             }
           } catch {

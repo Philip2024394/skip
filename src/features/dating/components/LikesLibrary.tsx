@@ -52,6 +52,7 @@ interface LikesLibraryProps {
   hidePrivateTabs?: boolean;
   currentUserId?: string;
   onUnlock: (profile: Profile) => void;
+  onChat?: (profile: Profile) => void;
   onSelectProfile: (profile: Profile, sourceList: Profile[]) => void;
   onPurchaseFeature: (feature: PremiumFeature) => void;
   onCulturalGuide?: () => void;
@@ -110,7 +111,7 @@ const LikesLibrary = ({
   hidePrivateTabs,
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
-  onUnlock, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide, onGhostMode,
+  onUnlock, onChat, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide, onGhostMode,
 }: LikesLibraryProps) => {
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
@@ -594,6 +595,7 @@ const LikesLibrary = ({
                 iLiked={iLiked}
                 currentList={currentList}
                 onUnlock={onUnlock}
+                onChat={onChat}
               />
             )}
           </motion.div>

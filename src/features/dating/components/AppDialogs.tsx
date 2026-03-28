@@ -31,6 +31,7 @@ interface AppDialogsProps {
   iLiked: any[];
   likedMe: any[];
   handleUnlock: (profile: any, packageKey?: string, connectionType?: string) => void;
+  onChatWithMatch?: (profile: any) => void;
   // Unlock payment
   showUnlockDialog: boolean;
   setShowUnlockDialog: (v: boolean) => void;
@@ -142,6 +143,11 @@ export default function AppDialogs(props: AppDialogsProps) {
             props.setMatchedProfile(null);
             props.handleUnlock(props.matchedProfile, packageKey, connectionType);
           }}
+          onChat={props.onChatWithMatch ? () => {
+            const p = props.matchedProfile;
+            props.setMatchedProfile(null);
+            props.onChatWithMatch!(p);
+          } : undefined}
         />
       )}
 

@@ -11,6 +11,7 @@ interface MatchCelebrationOverlayProps {
   currentUser: any;
   onConnect: (packageKey: string, connectionType?: string) => void;
   onDismiss: () => void;
+  onChat?: () => void;
 }
 
 // ── Countdown ring ─────────────────────────────────────────────────────────────
@@ -99,6 +100,7 @@ export default function MatchCelebrationOverlay({
   currentUser,
   onConnect,
   onDismiss,
+  onChat,
 }: MatchCelebrationOverlayProps) {
   const AUTO_DISMISS_S = 12;
   const [videoError, setVideoError] = useState(false);
@@ -332,22 +334,42 @@ export default function MatchCelebrationOverlay({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.58 }}
             >
-              {/* Primary unlock button */}
+              {/* Primary: Start chatting — free */}
+              {onChat && (
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={onChat}
+                  style={{
+                    width: "100%", padding: "16px 0", borderRadius: 22,
+                    fontSize: 16, fontWeight: 900, color: "#fff",
+                    background: "linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #a855f7 100%)",
+                    border: "none", cursor: "pointer",
+                    boxShadow: "0 6px 28px rgba(236,72,153,0.55)",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                    marginBottom: 10,
+                  }}
+                >
+                  <MessageCircle style={{ width: 20, height: 20 }} />
+                  Start Chatting — Free
+                </motion.button>
+              )}
+
+              {/* Secondary: Unlock WhatsApp */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onConnect("unlock:single", resolvedType)}
                 style={{
-                  width: "100%", padding: "16px 0", borderRadius: 22,
-                  fontSize: 16, fontWeight: 900, color: "#fff",
-                  background: "linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #a855f7 100%)",
-                  border: "none", cursor: "pointer",
-                  boxShadow: "0 6px 28px rgba(236,72,153,0.55)",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                  width: "100%", padding: "14px 0", borderRadius: 22,
+                  fontSize: 14, fontWeight: 800, color: "rgba(255,255,255,0.8)",
+                  background: "rgba(255,255,255,0.07)",
+                  border: "1.5px solid rgba(255,255,255,0.15)",
+                  cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                   marginBottom: 10,
                 }}
               >
                 <ConnectIcon type={resolvedType} />
-                Unlock Now — $1.99
+                Unlock WhatsApp — $1.99
               </motion.button>
 
               {/* Connect Monthly note */}

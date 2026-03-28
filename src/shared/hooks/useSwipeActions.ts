@@ -5,6 +5,7 @@ import { PremiumFeature } from "@/data/premiumFeatures";
 import { LIKE_EXPIRY_MS, SUPER_LIKES_BALANCE_KEY, POST_LOGIN_LANDING_KEY } from "@/shared/services/constants";
 import { isNetworkError } from "@/shared/utils/payments";
 import { hasUnlockBadges } from "@/shared/utils/unlockPrice";
+import { markSwipeStart } from "@/shared/hooks/usePopupQueue";
 
 interface UseSwipeActionsProps {
   user: any;
@@ -38,6 +39,7 @@ interface UseSwipeActionsProps {
 
 export const useSwipeActions = (props: UseSwipeActionsProps) => {
   const handleLike = useCallback(async (profile: Profile) => {
+    markSwipeStart(); // start the popup-queue timer on first interaction
     if (!props.user) {
       props.showGuestPrompt("like");
       return;
