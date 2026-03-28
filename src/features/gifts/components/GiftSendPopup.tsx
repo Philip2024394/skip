@@ -6,6 +6,7 @@ import { X, Star, Coins, Heart, Sparkles } from "lucide-react";
 import analyticsLogger from "@/shared/services/analytics";
 import SecureTextarea from "@/shared/components/SecureTextarea";
 import TokenPurchase from "./TokenPurchase";
+import securityFilter from "@/shared/services/securityFilter";
 
 interface VirtualGift {
   id: string;
@@ -51,18 +52,57 @@ export default function GiftSendPopup({
   const [user, setUser] = useState<any>(null);
   const [spamError, setSpamError] = useState<string | null>(null);
 
+  // Hardened validation for free gift messages — strictest level
   const validateMessage = (text: string): string | null => {
     if (!text.trim()) return null; // empty is fine
-    // Block URLs
-    if (/https?:\/\//i.test(text) || /www\./i.test(text)) return "Links are not allowed in gift messages";
-    // Block digit phone numbers (7+ consecutive digits)
-    if (/\d{7,}/.test(text.replace(/[\s\-().]/g, ""))) return "Phone numbers are not allowed";
-    // Block formatted phone numbers
-    if (/\b\d{3,4}[\s\-.]?\d{3,4}[\s\-.]?\d{3,4}\b/.test(text)) return "Phone numbers are not allowed";
-    // Block text-format numbers (English)
-    if (/\b(zero|one|two|three|four|five|six|seven|eight|nine)\b.*\b(zero|one|two|three|four|five|six|seven|eight|nine)\b/i.test(text)) return "Contact information in text format is not allowed";
-    // Block text-format numbers (Indonesian)
-    if (/\b(nol|satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan)\b.*\b(nol|satu|dua|tiga|empat|lima|enam|tujuh|delapan|sembilan)\b/i.test(text)) return "Informasi kontak dalam format teks tidak diizinkan";
+
+    // Layer 1 — full security filter (links, phone patterns, platforms, creative disguises)
+    const result = securityFilter.filterText(text, "gift_message");
+    if (!result.isAllowed) {
+      return result.warningMessage || "Message contains prohibited content";
+    }
+
+    // Layer 2 — zero-tolerance on ANY digit character
+    if (/\d/.test(text)) {
+      return "Numbers are not allowed in gift messages";
+    }
+
+    // Layer 3 — block any written number word (English + Indonesian + Malay)
+    const NUMBER_WORDS = [
+      // English
+      "zero","one","two","three","four","five","six","seven","eight","nine",
+      "ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen",
+      "seventeen","eighteen","nineteen","twenty","thirty","forty","fifty",
+      "sixty","seventy","eighty","ninety","hundred","thousand","million",
+      // Indonesian / Malay
+      "nol","satu","dua","tiga","empat","lima","enam","tujuh","delapan",
+      "sembilan","sepuluh","sebelas","dua belas","seratus","seribu","juta",
+      // Common shorthand
+      "nomer","nomor","no\\.",
+    ];
+    const lowerText = text.toLowerCase();
+    for (const word of NUMBER_WORDS) {
+      if (new RegExp(`\\b${word}\\b`, "i").test(lowerText)) {
+        return "Number words are not allowed in gift messages";
+      }
+    }
+
+    // Layer 4 — block "at" / "@" substitution tricks
+    if (/@/.test(text)) {
+      return "@ symbols are not allowed in gift messages";
+    }
+
+    // Layer 5 — block common contact-sharing phrases
+    const CONTACT_PHRASES = [
+      /\b(call|text|msg|dm|pm|reach|hit me|contact|add me|find me)\b/i,
+      /\b(my number|my no|my id|my handle|my user)\b/i,
+    ];
+    for (const pat of CONTACT_PHRASES) {
+      if (pat.test(text)) {
+        return "Contact-sharing phrases are not allowed in gift messages";
+      }
+    }
+
     return null;
   };
 
@@ -84,22 +124,25 @@ export default function GiftSendPopup({
       if (!user) return;
 
       if (isFreeGift) {
-        const currentUsed = parseInt(localStorage.getItem(`free_gifts_used_${user.id}`) || '0');
-        localStorage.setItem(`free_gifts_used_${user.id}`, (currentUsed + 1).toString());
-
-        const sentGifts = JSON.parse(localStorage.getItem('sent_gifts_demo') || '[]');
-        sentGifts.push({
-          id: `demo_${Date.now()}`,
+        // Persist free gift to DB and increment counter atomically
+        const { error: insertErr } = await (supabase as any).from("sent_gifts").insert({
           sender_id: user.id,
           recipient_id: recipientId,
           gift_id: gift.id,
-          gift_name: gift.name,
-          gift_image_url: gift.image_url,
           message: message.trim(),
-          status: 'pending',
-          created_at: new Date().toISOString(),
+          tokens_used: 0,
+          status: "pending",
+          is_free_gift: true,
         });
-        localStorage.setItem('sent_gifts_demo', JSON.stringify(sentGifts));
+        if (insertErr) {
+          // Fallback to localStorage if DB not ready
+          const sentGifts = JSON.parse(localStorage.getItem("sent_gifts_demo") || "[]");
+          sentGifts.push({ id: `demo_${Date.now()}`, sender_id: user.id, recipient_id: recipientId, gift_id: gift.id, gift_name: gift.name, gift_image_url: gift.image_url, message: message.trim(), status: "pending", created_at: new Date().toISOString() });
+          localStorage.setItem("sent_gifts_demo", JSON.stringify(sentGifts));
+        }
+        // Increment free_gifts_used in profiles (use current count = 3 - freeGiftsRemaining)
+        const newUsed = (3 - freeGiftsRemaining) + 1;
+        await (supabase as any).from("profiles").update({ free_gifts_used: newUsed }).eq("id", user.id);
       } else {
         try {
           const { error } = await (supabase as any).from("sent_gifts").insert({
@@ -192,7 +235,7 @@ export default function GiftSendPopup({
           </motion.div>
           <motion.p initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}
             style={{ color: "#fff", fontWeight: 900, fontSize: 20, margin: 0 }}>
-            Super Like sent! ⭐
+            Gift sent! 🎁
           </motion.p>
           <motion.p initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.45 }}
             style={{ color: "rgba(249,168,212,0.8)", fontSize: 13, margin: 0 }}>
@@ -248,9 +291,16 @@ export default function GiftSendPopup({
               }}>
                 <Star style={{ width: 13, height: 13, color: "#fff" }} fill="#fff" />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(249,168,212,0.9)" }}>
-                Send Super Like
-              </span>
+              <div>
+                <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(249,168,212,0.9)" }}>
+                  Send Gift
+                </span>
+                {isFreeGift && (
+                  <span style={{ display: "block", fontSize: 9, color: "#4ade80", fontWeight: 700 }}>
+                    ✦ Free gift — {freeGiftsRemaining} of 3 remaining
+                  </span>
+                )}
+              </div>
             </div>
             <button
               onClick={onClose}
@@ -365,7 +415,7 @@ export default function GiftSendPopup({
               </p>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>No links or phone numbers</span>
+              <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>No numbers, links or contact info allowed</span>
               <span style={{ color: message.length > 320 ? "#fbbf24" : "rgba(255,255,255,0.2)", fontSize: 9, fontWeight: 600 }}>
                 {message.length}/350
               </span>
@@ -428,7 +478,7 @@ export default function GiftSendPopup({
               ) : (
                 <>
                   <Star style={{ width: 14, height: 14 }} fill="currentColor" />
-                  {isFreeGift ? "Send Free ⭐" : "Send Super Like ⭐"}
+                  {isFreeGift ? "Send Free Gift 🎁" : "Send Gift 🎁"}
                 </>
               )}
             </button>

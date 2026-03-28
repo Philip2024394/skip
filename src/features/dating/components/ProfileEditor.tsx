@@ -931,20 +931,34 @@ const ProfileEditor = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-white/50 text-xs mb-1 block">Gender</Label>
-              <Select value={profile.gender} onValueChange={(v) => update("gender", v)}>
-                <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue /></SelectTrigger>
-                <SelectContent>{GENDERS.map((g) => <SelectItem key={g} value={g}>{g}</SelectItem>)}</SelectContent>
-              </Select>
+          {/* Gender */}
+          <div>
+            <Label className="text-white/50 text-xs mb-1 block">I am a</Label>
+            <div className="grid grid-cols-4 gap-2">
+              {GENDERS.map((g) => (
+                <button key={g} type="button" onClick={() => update("gender", g)}
+                  className={`py-2 rounded-xl text-xs font-bold border transition-all ${profile.gender === g ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white border-pink-500/50" : "bg-white/5 text-white/40 border-white/10 hover:border-pink-500/30"}`}>
+                  {g === "Male" ? "👨 Male" : g === "Female" ? "👩 Female" : g === "Non-binary" ? "🌈 Non-binary" : "🤍 Other"}
+                </button>
+              ))}
             </div>
-            <div>
-              <Label className="text-white/50 text-xs mb-1 block">Looking for</Label>
-              <Select value={profile.looking_for} onValueChange={(v) => update("looking_for", v)}>
-                <SelectTrigger className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none"><SelectValue /></SelectTrigger>
-                <SelectContent>{LOOKING_FOR.map((l) => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent>
-              </Select>
+          </div>
+
+          {/* Seeking — this auto-filters your feed */}
+          <div>
+            <Label className="text-white/50 text-xs mb-1.5 block">I want to meet <span className="text-white/30 font-normal">(auto-filters your feed)</span></Label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: "Women", icon: "👩", label: "Women" },
+                { value: "Men",   icon: "👨", label: "Men" },
+                { value: "Everyone", icon: "💞", label: "Everyone" },
+              ].map((opt) => (
+                <button key={opt.value} type="button" onClick={() => update("looking_for", opt.value)}
+                  className={`flex flex-col items-center gap-1 py-3 rounded-2xl border transition-all ${profile.looking_for === opt.value ? "bg-gradient-to-br from-pink-500/20 to-violet-500/20 border-pink-500/60 text-white shadow-md" : "bg-white/5 text-white/40 border-white/10 hover:border-pink-500/30"}`}>
+                  <span className="text-xl">{opt.icon}</span>
+                  <span className="text-[11px] font-bold">{opt.label}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -1276,22 +1290,26 @@ const ProfileEditor = () => {
           {/* Orientation */}
           <div>
             <Label className="text-white/50 text-xs mb-1 block">Orientation (optional)</Label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
-                { value: "", label: "Not specified" },
-                { value: "Straight", label: "Straight" },
-                { value: "Same-Sex", label: "Gay / Lesbian" },
+                { value: "", label: "Not specified", icon: "✨" },
+                { value: "Straight", label: "Straight", icon: "💑" },
+                { value: "Gay", label: "Gay", icon: "🏳️‍🌈" },
+                { value: "Lesbian", label: "Lesbian", icon: "🌸" },
+                { value: "Bisexual", label: "Bisexual", icon: "💜" },
+                { value: "Pansexual", label: "Pansexual", icon: "🌈" },
               ].map((o) => (
                 <button
                   key={o.value}
                   type="button"
                   onClick={() => update("orientation", o.value)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${profile.orientation === o.value
+                  className={`py-2.5 rounded-xl text-xs font-medium border transition-all flex flex-col items-center gap-1 ${profile.orientation === o.value
                     ? "bg-gradient-to-r from-pink-500 to-violet-500 text-white border-pink-500/50 shadow-md"
                     : "bg-white/5 text-white/50 border-white/10 hover:border-pink-500/30"
                     }`}
                 >
-                  {o.label}
+                  <span className="text-base leading-none">{o.icon}</span>
+                  <span>{o.label}</span>
                 </button>
               ))}
             </div>

@@ -492,8 +492,15 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
           )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ color: "white", fontSize: 16, fontWeight: 800, margin: 0 }}>
+          <p style={{ color: "white", fontSize: 16, fontWeight: 800, margin: 0, display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             {profileName}, {profile?.age}
+            {profile?.video_verified && (
+              <span style={{
+                fontSize: 9, fontWeight: 700, color: "rgba(125,211,252,1)",
+                background: "rgba(14,165,233,0.2)", border: "1px solid rgba(14,165,233,0.35)",
+                borderRadius: 20, padding: "2px 6px", letterSpacing: "0.04em", lineHeight: 1.4,
+              }}>🎥 Verified</span>
+            )}
           </p>
           <p style={{ color: "rgba(236,72,153,0.8)", fontSize: 12, fontWeight: 600, margin: "2px 0 0 0" }}>
             {profile?.city ? `${profile.city}, ` : ""}{profile?.country || "Indonesia"}

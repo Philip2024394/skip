@@ -47,6 +47,9 @@ export interface AdminProfile {
   country_override_approved: boolean;
   residing_country: string | null;
   visited_countries: string[] | null;
+  voice_intro_url: string | null;
+  video_verified: boolean;
+  video_verified_at: string | null;
 }
 
 export interface Payment {

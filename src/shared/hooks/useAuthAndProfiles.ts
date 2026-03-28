@@ -17,6 +17,7 @@ interface UseAuthAndProfilesProps {
   setDaysSinceLastActive: (v: number) => void;
   setShowTerms: (v: boolean) => void;
   setUserGender: (v: string | null) => void;
+  setUserLookingFor?: (v: string | null) => void;
   setShowWelcomeBack: (v: boolean) => void;
   welcomeBackName: React.MutableRefObject<string>;
   setShowReferralPopup: (v: boolean) => void;
@@ -86,6 +87,9 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
           }
           if ((myProfile as any).gender) {
             props.setUserGender((myProfile as any).gender);
+          }
+          if ((myProfile as any).looking_for && props.setUserLookingFor) {
+            props.setUserLookingFor((myProfile as any).looking_for);
           }
           if ((myProfile as any).country) {
             setUserCountry((myProfile as any).country);

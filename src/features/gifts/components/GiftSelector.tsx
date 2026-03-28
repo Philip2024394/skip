@@ -18,6 +18,7 @@ interface VirtualGift {
 interface UserTokens {
   tokens_balance: number;
   free_gifts_used: number;
+  is_verified: boolean;
 }
 
 interface GiftSelectorProps {
@@ -119,12 +120,31 @@ export default function GiftSelector({ profileId, profileName, onGiftSent }: Gif
   };
 
   const fetchUserTokens = async () => {
-    setUserTokens({ tokens_balance: 500, free_gifts_used: 0 });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setUserTokens({ tokens_balance: 0, free_gifts_used: 3, is_verified: false });
+        return;
+      }
+      const { data: profile } = await (supabase as any)
+        .from("profiles")
+        .select("free_gifts_used, is_verified, video_verified")
+        .eq("id", user.id)
+        .single();
+      setUserTokens({
+        tokens_balance: 500, // coin balance handled separately
+        free_gifts_used: profile?.free_gifts_used ?? 0,
+        is_verified: !!(profile?.is_verified || profile?.video_verified),
+      });
+    } catch {
+      setUserTokens({ tokens_balance: 500, free_gifts_used: 0, is_verified: false });
+    }
   };
 
   const handleGiftClick = (gift: VirtualGift) => {
     if (!profileId) return;
-    const isFree = userTokens ? userTokens.free_gifts_used < 3 : false;
+    const isVerified = userTokens?.is_verified ?? false;
+    const isFree = isVerified && (userTokens ? userTokens.free_gifts_used < 3 : false);
     const canAfford = userTokens ? userTokens.tokens_balance >= gift.token_price : false;
     if (!isFree && !canAfford) {
       setShowTokenPurchase(true);
@@ -141,7 +161,8 @@ export default function GiftSelector({ profileId, profileName, onGiftSent }: Gif
     onGiftSent?.();
   };
 
-  const freeGiftsRemaining = userTokens ? Math.max(0, 3 - userTokens.free_gifts_used) : 0;
+  const isVerified = userTokens?.is_verified ?? false;
+  const freeGiftsRemaining = isVerified ? Math.max(0, 3 - (userTokens?.free_gifts_used ?? 0)) : 0;
 
   if (loading) {
     return (
@@ -158,10 +179,30 @@ export default function GiftSelector({ profileId, profileName, onGiftSent }: Gif
 
   return (
     <>
+      {/* Verified free-gift status bar */}
+      <div className="px-2 pt-1 pb-0.5">
+        {isVerified && freeGiftsRemaining > 0 ? (
+          <div className="flex items-center gap-1.5 text-[9px] font-bold text-green-400 bg-green-500/10 border border-green-500/20 rounded-lg px-2.5 py-1">
+            <span>✅</span>
+            <span>{freeGiftsRemaining} of 3 free gift{freeGiftsRemaining !== 1 ? "s" : ""} remaining — verified perk</span>
+          </div>
+        ) : isVerified && freeGiftsRemaining === 0 ? (
+          <div className="flex items-center gap-1.5 text-[9px] font-bold text-white/30 bg-white/5 border border-white/8 rounded-lg px-2.5 py-1">
+            <span>🎁</span>
+            <span>3 free gifts used — use coins to send more</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-[9px] font-bold text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-lg px-2.5 py-1">
+            <span>🎥</span>
+            <span>Get video verified to unlock 3 free message gifts</span>
+          </div>
+        )}
+      </div>
+
       {/* Scrollable gift grid — no background wrapper, cards carry their own tier colour */}
       <div className="h-full overflow-x-auto overflow-y-hidden whitespace-nowrap scrollbar-hide px-2 py-1 flex items-start gap-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {gifts.map((gift, i) => {
-            const isFree = freeGiftsRemaining > 0;
+            const isFree = isVerified && freeGiftsRemaining > 0;
             const canAfford = userTokens && userTokens.tokens_balance >= gift.token_price;
             const canSend = isFree || canAfford;
 

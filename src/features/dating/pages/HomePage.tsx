@@ -260,6 +260,7 @@ const Index = () => {
   const [waLockPopup, setWaLockPopup] = useState<WaLock | null>(null);
   const [showCoinRefuel, setShowCoinRefuel] = useState(false);
   const [userGender, setUserGender] = useState<string | null>(null);
+  const [userLookingFor, setUserLookingFor] = useState<string | null>(null);
   const [loading, setLoading] = useState(() => {
     // Always false for immediate content display
     return false;
@@ -314,6 +315,12 @@ const Index = () => {
     return allProfiles.filter((p) => {
       // Blocked users
       if (blockedIds.has(p.id)) return false;
+      // Auto-filter by user's looking_for preference
+      if (userLookingFor && userLookingFor !== "Everyone") {
+        const profileGender = (p.gender || "").toLowerCase();
+        if (userLookingFor === "Women" && profileGender !== "female") return false;
+        if (userLookingFor === "Men" && profileGender !== "male") return false;
+      }
       // Location
       if (filters.country && p.country?.toLowerCase() !== filters.country.toLowerCase()) return false;
       if (filters.city && !p.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
@@ -370,7 +377,7 @@ const Index = () => {
       if (filters.noDrama && !(p as { no_drama?: boolean }).no_drama) return false;
       return true;
     });
-  }, [allProfiles, filters, blockedIds]);
+  }, [allProfiles, filters, blockedIds, userLookingFor]);
 
   // ── Stable randomised queue ──────────────────────────────────────────────
   // Shuffled ONCE per session. Persists across dashboard/map navigation via
@@ -937,6 +944,7 @@ const Index = () => {
     setDaysSinceLastActive,
     setShowTerms,
     setUserGender,
+    setUserLookingFor,
     setShowWelcomeBack,
     welcomeBackName,
     setShowReferralPopup,

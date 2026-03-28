@@ -182,6 +182,11 @@ export default function TopCard(props: TopCardProps) {
               {props.selectedProfile.is_verified && (
                 <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
               )}
+              {(props.selectedProfile as any).video_verified && (
+                <span className="flex items-center gap-0.5 text-[10px] bg-sky-500/25 border border-sky-500/40 text-sky-300 rounded-full px-1.5 py-0.5 font-bold leading-none flex-shrink-0">
+                  🎥 Verified
+                </span>
+              )}
               {props.selectedProfile.name}, {props.selectedProfile.age}
               {!props.isProfileRoute && <ProfileBadge profile={props.selectedProfile} t={props.t} isProfilePage={false} />}
               {(props.selectedProfile.is_mock && (props.selectedProfile as any).mock_online_hours

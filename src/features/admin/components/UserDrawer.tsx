@@ -664,6 +664,7 @@ const UserDrawer = ({
                       { key: "generous_lifestyle", label: "💎 Generous", color: "amber" },
                       { key: "is_incognito", label: "👁️ Incognito", color: "gray" },
                       { key: "is_verified", label: "✅ Verified", color: "sky" },
+                      { key: "video_verified", label: "🎥 Video Verified", color: "sky" },
                       { key: "is_spotlight", label: "⭐ Spotlight", color: "yellow" },
                       { key: "is_active", label: "🟢 Active", color: "green" },
                       { key: "is_mock", label: "🎭 Mock Profile", color: "pink" },
@@ -954,6 +955,73 @@ const UserDrawer = ({
                   </div>
                 )}
 
+                {/* ── Video Verified review ── */}
+                <div className="p-3 bg-white/5 border border-white/10 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-white/70 text-xs font-bold flex items-center gap-1.5">
+                      🎥 Video Verification
+                    </p>
+                    {profile.video_verified && (
+                      <span className="text-[10px] bg-sky-500/20 border border-sky-500/30 text-sky-400 rounded-full px-2 py-0.5 font-bold">
+                        ✅ Verified {profile.video_verified_at ? new Date(profile.video_verified_at).toLocaleDateString() : ""}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-white/40 text-[10px]">Review profile photos and voice/video intro below, then mark as verified.</p>
+
+                  {/* All profile photos */}
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {adminImages.filter(Boolean).map((img, idx) => (
+                      <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-white/10">
+                        <img src={img} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Voice/video intro */}
+                  {profile.voice_intro_url && (
+                    <div className="space-y-1.5">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-wide">Voice / Video Intro</p>
+                      {profile.voice_intro_url.includes(".mp4") || profile.voice_intro_url.includes(".mov") || profile.voice_intro_url.includes(".webm") ? (
+                        <video
+                          src={profile.voice_intro_url}
+                          controls
+                          className="w-full rounded-xl border border-white/10 max-h-48 bg-black"
+                        />
+                      ) : (
+                        <audio
+                          src={profile.voice_intro_url}
+                          controls
+                          className="w-full"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  {/* Mark as Video Verified button */}
+                  <button
+                    disabled={saving || profile.video_verified}
+                    onClick={async () => {
+                      setSaving(true);
+                      try {
+                        await supabase
+                          .from("profiles")
+                          .update({ video_verified: true, video_verified_at: new Date().toISOString() } as any)
+                          .eq("id", profile.id);
+                        toast.success(`${profile.name} marked as Video Verified`);
+                      } catch {
+                        toast.error("Failed to save");
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    className={`h-11 w-full rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 ${profile.video_verified ? "bg-sky-500/20 border border-sky-500/30 text-sky-400 cursor-default" : "bg-sky-500 text-white shadow-md hover:bg-sky-400"}`}
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    {profile.video_verified ? "Already Video Verified" : saving ? "Saving…" : "Mark as Video Verified"}
+                  </button>
+                </div>
+
                 <button onClick={saveImages} disabled={saving}
                   className="h-12 w-full rounded-2xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md transition-all active:scale-95 disabled:opacity-60">
                   <Save className="w-4 h-4" />{saving ? "Saving…" : "Save Images & Positions"}
@@ -968,15 +1036,18 @@ const UserDrawer = ({
                 {/* Orientation — matches real app 3-button layout */}
                 <div className="p-3 bg-white/5 rounded-2xl border border-white/8 space-y-2">
                   <p className="text-white/50 text-[10px] font-bold uppercase tracking-wide">Orientation (optional)</p>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     {[
                       { value: "", label: "Not specified" },
                       { value: "Straight", label: "Straight" },
-                      { value: "Same-Sex", label: "Gay / Lesbian" },
+                      { value: "Gay", label: "Gay" },
+                      { value: "Lesbian", label: "Lesbian" },
+                      { value: "Bisexual", label: "Bisexual" },
+                      { value: "Pansexual", label: "Pansexual" },
                     ].map(o => (
                       <button key={o.value} type="button"
                         onClick={() => setDetails(d => ({ ...d, orientation: o.value }))}
-                        className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-all ${details.orientation === o.value
+                        className={`py-2 rounded-xl text-xs font-medium border transition-all ${details.orientation === o.value
                           ? "bg-pink-500 text-white border-pink-500 shadow-md"
                           : "bg-white/5 text-white/50 border-white/10 hover:border-pink-500/40"
                           }`}>

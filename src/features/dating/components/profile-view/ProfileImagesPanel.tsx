@@ -300,6 +300,11 @@ export default function ProfileImagesPanel({ profile, imageIndex, setImageIndex,
             {profile?.is_verified && (
               <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
             )}
+            {(profile as any)?.video_verified && (
+              <span className="flex items-center gap-0.5 text-[10px] bg-sky-500/25 border border-sky-500/40 text-sky-300 rounded-full px-1.5 py-0.5 font-bold leading-none flex-shrink-0">
+                🎥 Verified
+              </span>
+            )}
             {profileName}, {profile?.age}
             {isOnline(profile?.last_seen_at) && (
               <span className="relative flex h-3 w-3">
