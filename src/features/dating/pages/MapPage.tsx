@@ -761,7 +761,18 @@ const MapPage = () => {
       }
       const { data, error } = result;
       if (error) throw error;
-      if (data?.url) {
+      if (data?.free) {
+        try {
+          sessionStorage.setItem("free_unlock_result", JSON.stringify({
+            name: data.name,
+            whatsapp: data.whatsapp,
+            contactProvider: data.contactProvider,
+            connectionType: data.connectionType,
+          }));
+        } catch { /* ignore */ }
+        toast.success(`🎉 Contact unlocked! Opening ${data.name}...`);
+        window.location.href = `/payment-success?free=1&target=${matchDialog!.id}`;
+      } else if (data?.url) {
         window.open(data.url, "_blank");
         toast.success(t("popup.checkoutOpen"));
       } else {

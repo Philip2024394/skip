@@ -37,25 +37,47 @@ export interface PremiumFeature {
 
 export const PREMIUM_FEATURES: PremiumFeature[] = [
   {
-    // ⚠️ BEFORE LAUNCH: Create a VIP Monthly recurring price in Stripe dashboard
+    // ⚠️ BEFORE LAUNCH: Create a Global Dating recurring price at $6.99/month in Stripe dashboard
+    // and replace the priceId and productId below with the real values.
+    id: "global_dating",
+    name: "Global Dating",
+    emoji: "🌍",
+    description: "Like and match with anyone worldwide — not just your country. Perfect for expats, travellers, and international connections.",
+    price: "$6.99/mo",
+    priceCents: 699,
+    priceId: import.meta.env.VITE_STRIPE_PRICE_GLOBAL_DATING ?? "price_global_dating_monthly",
+    productId: import.meta.env.VITE_STRIPE_PRODUCT_GLOBAL_DATING ?? "prod_global_dating",
+    color: "vip",
+    icon: "rocket",
+    isSubscription: true,
+    perks: [
+      "🌍 Like & match with profiles from any country",
+      "💬 Unlock contacts worldwide after matching",
+      "✈️ Perfect for expats, travellers & international love",
+      "📍 Local feed still works normally",
+      "🔄 Cancel anytime — no commitment",
+    ],
+  },
+  {
+    // ⚠️ BEFORE LAUNCH: Create a Connect Monthly recurring price at $4.99 in Stripe dashboard
     // and replace the priceId and productId below with the real values.
     id: "vip",
-    name: "VIP Monthly",
-    emoji: "✨",
-    description: "Everything you need — unlocks, super likes & a VIP crown badge. Best value!",
-    price: "$10.99/mo",
-    priceCents: 1099,
+    name: "Connect Monthly",
+    emoji: "⚡",
+    description: "Unlimited contact unlocks for all your matches. Less than a coffee — cancel anytime.",
+    price: "$4.99/mo",
+    priceCents: 499,
     priceId: import.meta.env.VITE_STRIPE_PRICE_VIP ?? "price_vip_monthly",
     productId: import.meta.env.VITE_STRIPE_PRODUCT_VIP ?? "prod_vip_monthly",
     color: "vip",
     icon: "crown",
     isSubscription: true,
     perks: [
-      "💬 7 WhatsApp unlocks (worth $13.93)",
-      "⭐ 5 Super Likes (worth $9.95)",
-      "👑 VIP crown badge on your profile",
+      "💬 Unlimited contact unlocks — no limits",
+      "👑 Connect badge on your profile",
       "🔝 Priority in New Profiles list",
-      "💰 Save 54% vs buying separately",
+      "⭐ 3 Super Likes per month included",
+      "💰 Vs $1.99/unlock — breaks even at 3 unlocks",
     ],
   },
   {

@@ -52,11 +52,14 @@ export default function LikesCarousel(props: LikesCarouselProps) {
         const isSuperGlow = props.tab === "received" && props.superLikeGlowProfileId === profile.id;
         const locked = isProfileLocked(profile.id, profile.is_mock);
 
-        // Red glow when ≤ 60 min remaining — computed synchronously, no hook needed
+        // Expiry — computed synchronously, no hook needed
         const msLeft = profile.expires_at
           ? Math.max(0, new Date(profile.expires_at).getTime() - Date.now())
           : Infinity;
-        const isUrgent = props.tab !== "new" && msLeft <= 3_600_000;
+        const isUrgent = props.tab !== "new" && msLeft > 0 && msLeft <= 3_600_000;
+        const isMatchExpired = props.tab !== "new" && profile.expires_at && msLeft === 0;
+
+        const isBlocked = locked || isMatchExpired;
 
         return (
           <motion.div
@@ -65,9 +68,9 @@ export default function LikesCarousel(props: LikesCarouselProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.88 }}
             transition={{ delay: Math.min(idx * 0.04, 0.3) }}
-            onClick={locked ? undefined : () => props.onSelectProfile(profile, props.currentList)}
+            onClick={isBlocked ? undefined : () => props.onSelectProfile(profile, props.currentList)}
             data-likes-library-profile-id={profile.id}
-            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all bg-black/50 backdrop-blur-md border relative ${locked ? "cursor-default opacity-75" : "cursor-pointer hover:scale-105"} ${isSuperGlow ? "border-amber-400/60 super-like-heartbeat" : isUrgent ? "border-red-500/60" : locked ? "border-rose-900/60" : "border-white/10"}`}
+            className={`flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-xl transition-all bg-black/50 backdrop-blur-md border relative ${isBlocked ? "cursor-default" : "cursor-pointer hover:scale-105"} ${isSuperGlow ? "border-amber-400/60 super-like-heartbeat" : isUrgent ? "border-red-500/60" : isMatchExpired ? "border-white/10 opacity-50" : locked ? "border-rose-900/60" : "border-white/10"}`}
             style={{
               width: 80,
               boxShadow: locked
@@ -107,6 +110,11 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                       (e.target as HTMLImageElement).insertAdjacentHTML?.("afterend", '<span style="font-size:22px">🔒</span>');
                     }}
                   />
+                </div>
+              ) : isMatchExpired ? (
+                <div className="absolute inset-0 rounded-full flex flex-col items-center justify-center pointer-events-none z-20"
+                  style={{ background: "rgba(0,0,0,0.65)" }}>
+                  <span style={{ fontSize: 16 }}>⏰</span>
                 </div>
               ) : (
                 /* Heart when I liked this profile */
@@ -167,9 +175,13 @@ export default function LikesCarousel(props: LikesCarouselProps) {
               </p>
             )}
 
-            {props.tab !== "new" && <CountdownBadge expiresAt={profile.expires_at} />}
+            {props.tab !== "new" && !isMatchExpired && <CountdownBadge expiresAt={profile.expires_at} />}
 
-            {isMatch && props.tab !== "new" && (
+            {isMatchExpired ? (
+              <span className="text-[8px] font-bold text-white/35 text-center leading-tight mt-0.5">
+                Match expired
+              </span>
+            ) : isMatch && props.tab !== "new" && (
               <Button
                 size="sm"
                 onClick={(e) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Zap, User, LogOut, Check, HelpCircle, Star, Copy, UserPlus } from "lucide-react";
+import { ArrowLeft, Zap, User, LogOut, Check, HelpCircle, Star, Copy, UserPlus, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { VerificationSubmitDialog } from "@/features/dating/components";
 import { Button } from "@/shared/components/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
@@ -42,16 +42,54 @@ const DashboardPage = () => {
   const [verifyFeature, setVerifyFeature] = useState<PremiumFeature | null>(null);
   const [userAge, setUserAge] = useState<number | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCount, setReferralCount] = useState(0);
+  const [isProfileActive, setIsProfileActive] = useState(true);
+  const [hiddenUntil, setHiddenUntil] = useState<string | null>(null);
+  const [togglingActivity, setTogglingActivity] = useState(false);
 
-  // Load current user's age and ID for the verification age-match check
+  // Load current user's age, ID, referral code, and visibility status
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       setUserId(session.user.id);
-      const { data } = await supabase.from("profiles").select("age").eq("id", session.user.id).single();
-      if (data) setUserAge((data as any).age ?? null);
+      const { data } = await supabase.from("profiles").select("age, referral_code, is_active, hidden_until").eq("id", session.user.id).single();
+      if (data) {
+        setUserAge((data as any).age ?? null);
+        setReferralCode((data as any).referral_code ?? null);
+        const hu = (data as any).hidden_until;
+        const active = (data as any).is_active !== false && (!hu || new Date(hu) <= new Date());
+        setIsProfileActive(active);
+        setHiddenUntil(hu ?? null);
+      }
+      const { count } = await supabase.from("referrals" as any).select("id", { count: "exact", head: true }).eq("referrer_id", session.user.id);
+      setReferralCount(count ?? 0);
     });
   }, []);
+
+  const handleToggleVisibility = async (goActive: boolean) => {
+    if (!userId) return;
+    setTogglingActivity(true);
+    try {
+      if (goActive) {
+        await supabase.from("profiles").update({ is_active: true, hidden_until: null }).eq("id", userId);
+        setIsProfileActive(true);
+        setHiddenUntil(null);
+        toast.success("Profile is now active — you're visible in feeds!");
+      } else {
+        // Pause: hide for 30 days (user can reactivate any time)
+        const pauseUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        await supabase.from("profiles").update({ is_active: false, hidden_until: pauseUntil }).eq("id", userId);
+        setIsProfileActive(false);
+        setHiddenUntil(pauseUntil);
+        toast.success("Profile paused — you're hidden from all feeds.");
+      }
+    } catch {
+      toast.error("Something went wrong. Try again.");
+    } finally {
+      setTogglingActivity(false);
+    }
+  };
   const [autoOpenFeatureId, setAutoOpenFeatureId] = useState<string | null>(null);
 
   // Handle ?purchase=featureId param from ProfileEditor redirect
@@ -68,7 +106,8 @@ const DashboardPage = () => {
 
   const handlePurchase = async (feature: PremiumFeature) => {
     setLoadingId(feature.id);
-    const fnName = feature.id === "vip" ? "purchase-subscription" : "purchase-feature";
+    const isSubscription = feature.isSubscription === true;
+    const fnName = isSubscription ? "purchase-subscription" : "purchase-feature";
     const invokeFn = () => supabase.functions.invoke(fnName, {
       body: { priceId: feature.priceId, featureId: feature.id },
     });
@@ -196,6 +235,140 @@ const DashboardPage = () => {
         {tab === "profile" ? (
           <>
             <ProfileEditor />
+
+            {/* ── Referral section ──────────────────────────────────── */}
+            {referralCode && (
+              <div className="mx-4 mb-6 rounded-3xl overflow-hidden" style={{
+                background: "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(168,85,247,0.1))",
+                border: "1.5px solid rgba(236,72,153,0.25)",
+              }}>
+                <div className="px-4 pt-4 pb-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">🎁</span>
+                    <p className="text-white font-black text-sm">Invite Friends — Earn Free Unlocks</p>
+                  </div>
+                  <p className="text-white/40 text-xs leading-snug">
+                    Share your link. When a friend joins, you both get <strong className="text-pink-400">10 free Super Likes</strong>.
+                  </p>
+                </div>
+
+                {/* Stats row */}
+                <div className="px-4 pb-3 flex items-center gap-3">
+                  <div className="flex-1 rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
+                    <p className="text-pink-400 font-black text-xl">{referralCount}</p>
+                    <p className="text-white/30 text-[9px] font-semibold uppercase tracking-wider">Friends Joined</p>
+                  </div>
+                  <div className="flex-1 rounded-xl bg-white/5 border border-white/10 p-2.5 text-center">
+                    <p className="text-purple-400 font-black text-xl">{referralCount * 10}</p>
+                    <p className="text-white/30 text-[9px] font-semibold uppercase tracking-wider">Super Likes Earned</p>
+                  </div>
+                </div>
+
+                {/* Referral link */}
+                <div className="px-4 pb-3">
+                  <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5">
+                    <p className="text-white/60 text-xs font-mono flex-1 truncate">
+                      2dateme.com/?ref={referralCode}
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`https://2dateme.com/?ref=${referralCode}`);
+                        toast.success("Link copied!");
+                      }}
+                      className="flex-shrink-0 p-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-white/60" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* WhatsApp share button */}
+                <div className="px-4 pb-4">
+                  <button
+                    onClick={() => {
+                      const msg = encodeURIComponent(
+                        `Hey! 👋 I just joined 2DateMe — Indonesia's dating app where you skip the chat and get their WhatsApp directly! 🇮🇩❤️\n\nJoin free here: https://2dateme.com/?ref=${referralCode}\n\nWomen always free. Matches from $1.99.`
+                      );
+                      window.open(`https://wa.me/?text=${msg}`, "_blank");
+                    }}
+                    className="w-full py-3 rounded-2xl text-sm font-black flex items-center justify-center gap-2.5 transition-all active:scale-[0.98]"
+                    style={{
+                      background: "linear-gradient(135deg, #25D366, #128C7E)",
+                      boxShadow: "0 0 15px rgba(37,211,102,0.25)",
+                      color: "white",
+                    }}
+                  >
+                    <span className="text-lg">💬</span>
+                    Share on WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── Account Visibility ────────────────────────────── */}
+            <div className="mx-4 mb-6 rounded-3xl overflow-hidden" style={{
+              background: isProfileActive
+                ? "linear-gradient(135deg, rgba(34,197,94,0.08), rgba(16,185,129,0.06))"
+                : "linear-gradient(135deg, rgba(239,68,68,0.08), rgba(180,20,40,0.06))",
+              border: `1.5px solid ${isProfileActive ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+            }}>
+              <div className="px-4 pt-4 pb-3">
+                {/* Status row */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isProfileActive ? "bg-green-500/15" : "bg-red-500/15"}`}>
+                    {isProfileActive
+                      ? <Eye className="w-4 h-4 text-green-400" />
+                      : <EyeOff className="w-4 h-4 text-red-400" />
+                    }
+                  </div>
+                  <div>
+                    <p className={`font-black text-sm ${isProfileActive ? "text-green-400" : "text-red-400"}`}>
+                      {isProfileActive ? "Profile Active" : "Profile Paused"}
+                    </p>
+                    <p className="text-white/40 text-[11px] leading-tight">
+                      {isProfileActive
+                        ? "You're visible in feeds — people can find and match you."
+                        : "You're hidden from all feeds. No one can see or match you."
+                      }
+                    </p>
+                  </div>
+                </div>
+
+                {/* Match expiry info */}
+                <div className="rounded-xl px-3 py-2.5 mb-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                  <p className="text-white/60 text-[11px] leading-relaxed">
+                    <span className="text-amber-400 font-bold">⏰ Matches last 3 days.</span> After 3 days, the match card locks and profiles can no longer be viewed from it. If you haven't unlocked by then, you may re-appear in each other's feed naturally.
+                  </p>
+                </div>
+
+                {/* Action buttons */}
+                {isProfileActive ? (
+                  <button
+                    disabled={togglingActivity}
+                    onClick={() => handleToggleVisibility(false)}
+                    className="w-full py-3 rounded-2xl text-[12px] font-black flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+                    style={{ background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)", color: "rgba(239,68,68,0.9)" }}
+                  >
+                    <EyeOff className="w-3.5 h-3.5" />
+                    {togglingActivity ? "Pausing…" : "Pause My Profile"}
+                  </button>
+                ) : (
+                  <button
+                    disabled={togglingActivity}
+                    onClick={() => handleToggleVisibility(true)}
+                    className="w-full py-3 rounded-2xl text-[12px] font-black flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+                    style={{ background: "linear-gradient(135deg, rgba(34,197,94,0.2), rgba(16,185,129,0.15))", border: "1px solid rgba(34,197,94,0.4)", color: "rgba(34,197,94,1)" }}
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    {togglingActivity ? "Activating…" : "Go Live Again"}
+                  </button>
+                )}
+
+                <p className="text-white/25 text-[10px] text-center mt-2">
+                  Changes take effect within 1 hour across all feeds
+                </p>
+              </div>
+            </div>
           </>
         ) : tab === "gifts" ? (
           <div className="px-3 pt-3 pb-4 space-y-4">

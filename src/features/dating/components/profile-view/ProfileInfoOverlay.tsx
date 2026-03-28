@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
+import { useBlockUser } from "@/shared/hooks/useBlockUser";
 
 import { calcValuesMatch } from "@/shared/utils/valuesQuiz";
 import { QUESTION_TEMPLATES } from "@/features/dating/data/profileQuestions";
@@ -22,6 +23,7 @@ interface ProfileInfoPanelProps {
   askedStates?: Record<string, "pending" | "answered">;
   answeredValues?: Record<string, string>;
   coinBalance?: number;
+  onBlock?: () => void;
 }
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: string }) =>
@@ -398,7 +400,7 @@ function ShyFieldsSection({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift, onAskQuestion, askedStates = {}, answeredValues = {}, coinBalance = 0 }: ProfileInfoPanelProps) {
+export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift, onAskQuestion, askedStates = {}, answeredValues = {}, coinBalance = 0, onBlock }: ProfileInfoPanelProps) {
   const navigate = useNavigate();
   const basicInfo = profile?.basic_info || {};
   const lifestyleInfo = profile?.lifestyle_info || {};
@@ -432,6 +434,9 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
     setReviewEditing(false);
     setReviewError("");
   };
+
+  const { blockUser, blocking } = useBlockUser();
+  const [confirmBlock, setConfirmBlock] = useState(false);
 
   return (
     <motion.div
@@ -1032,6 +1037,69 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
               </div>
               <span style={{ color: "rgba(245,158,11,0.6)", fontSize: 18, marginLeft: "auto", flexShrink: 0 }}>→</span>
             </button>
+          </div>
+        )}
+
+        {/* ── Block User ── */}
+        {profile?.id && (
+          <div style={{ marginTop: 12, padding: "0 2px 16px" }}>
+            {!confirmBlock ? (
+              <button
+                onClick={() => setConfirmBlock(true)}
+                style={{
+                  width: "100%",
+                  padding: "10px 16px",
+                  borderRadius: 12,
+                  background: "rgba(239,68,68,0.06)",
+                  border: "1px solid rgba(239,68,68,0.2)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  color: "rgba(239,68,68,0.7)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                <span style={{ fontSize: 14 }}>🚫</span> Block {profileName.split(" ")[0]}
+              </button>
+            ) : (
+              <div style={{
+                borderRadius: 12,
+                background: "rgba(239,68,68,0.1)",
+                border: "1px solid rgba(239,68,68,0.35)",
+                padding: "12px 14px",
+              }}>
+                <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 12, fontWeight: 600, margin: "0 0 10px", textAlign: "center" }}>
+                  Block {profileName.split(" ")[0]}? They will be permanently removed from your feed and all connections deleted.
+                </p>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => setConfirmBlock(false)}
+                    style={{
+                      flex: 1, padding: "8px 0", borderRadius: 8,
+                      background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.6)", fontSize: 12, fontWeight: 600, cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    disabled={blocking}
+                    onClick={() => blockUser(profile.id, profileName.split(" ")[0], onBlock)}
+                    style={{
+                      flex: 1, padding: "8px 0", borderRadius: 8,
+                      background: "rgba(239,68,68,0.75)", border: "none",
+                      color: "white", fontSize: 12, fontWeight: 700, cursor: blocking ? "not-allowed" : "pointer",
+                      opacity: blocking ? 0.6 : 1,
+                    }}
+                  >
+                    {blocking ? "Blocking…" : "Yes, Block"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

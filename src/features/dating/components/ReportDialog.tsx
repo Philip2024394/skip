@@ -5,6 +5,7 @@ import { Textarea } from "@/shared/components/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useBlockUser } from "@/shared/hooks/useBlockUser";
 
 const REASON_KEYS: { value: string; key: "report.inappropriatePhotos" | "report.harassment" | "report.fakeProfile" | "report.spam" | "report.underage" | "report.other" }[] = [
   { value: "Inappropriate photos", key: "report.inappropriatePhotos" },
@@ -20,13 +21,15 @@ interface ReportDialogProps {
   onOpenChange: (open: boolean) => void;
   reportedUserId: string;
   reportedUserName: string;
+  onBlock?: () => void;
 }
 
-const ReportDialog = ({ open, onOpenChange, reportedUserId, reportedUserName }: ReportDialogProps) => {
+const ReportDialog = ({ open, onOpenChange, reportedUserId, reportedUserName, onBlock }: ReportDialogProps) => {
   const { t } = useLanguage();
   const [reason, setReason] = useState("");
   const [details, setDetails] = useState("");
   const [loading, setLoading] = useState(false);
+  const { blockUser, blocking } = useBlockUser();
 
   const handleSubmit = async () => {
     if (!reason) { toast.error(t("report.selectReason")); return; }
@@ -52,15 +55,11 @@ const ReportDialog = ({ open, onOpenChange, reportedUserId, reportedUserName }: 
     setDetails("");
   };
 
-  const handleBlock = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { toast.error(t("report.signIn")); return; }
-    await supabase.from("blocked_users").insert({
-      blocker_id: user.id,
-      blocked_id: reportedUserId,
+  const handleBlock = () => {
+    blockUser(reportedUserId, reportedUserName, () => {
+      onOpenChange(false);
+      onBlock?.();
     });
-    toast.success(`${reportedUserName} ${t("report.blocked")}`);
-    onOpenChange(false);
   };
 
   return (
@@ -82,8 +81,8 @@ const ReportDialog = ({ open, onOpenChange, reportedUserId, reportedUserName }: 
           <Textarea placeholder={t("report.details")} className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl resize-none" rows={2} value={details} onChange={(e) => setDetails(e.target.value)} />
         )}
         <div className="flex gap-2 mt-2">
-          <Button onClick={handleBlock} variant="outline" className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl">
-            {t("report.blockUser")}
+          <Button onClick={handleBlock} disabled={blocking} variant="outline" className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl">
+            {blocking ? "Blocking…" : t("report.blockUser")}
           </Button>
           <Button onClick={handleSubmit} disabled={loading || !reason} className="flex-1 gradient-love text-white border-0 rounded-xl">
             {loading ? t("report.sending") : t("report.submit")}

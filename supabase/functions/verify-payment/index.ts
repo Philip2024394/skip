@@ -100,6 +100,13 @@ async function activateFeature(session: Stripe.Checkout.Session) {
       }).eq("id", userId);
       break;
 
+    case "global_dating":
+      await supabaseAdmin.from("profiles").update({
+        global_dating_active: true,
+        global_dating_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }).eq("id", userId);
+      break;
+
     case "boost":
       await supabaseAdmin.from("profiles").update({
         is_spotlight: true,
@@ -191,36 +198,58 @@ serve(async (req) => {
       }
     }
 
-    // VIP subscription renewed
+    // Subscription renewed (VIP or Global Dating)
     if (event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object as Stripe.Invoice;
       const subId = invoice.subscription as string;
       if (subId) {
         const sub = await stripe.subscriptions.retrieve(subId);
         const userId = sub.metadata?.user_id;
+        const featureId = sub.metadata?.feature_id;
         if (userId) {
-          const vipUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-          await supabaseAdmin.from("profiles").update({
-            is_spotlight: true,
-            spotlight_until: vipUntil,
-            vip_subscription_id: subId,
-            vip_subscription_status: "active",
-          }).eq("id", userId);
+          const until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          if (featureId === "global_dating") {
+            await supabaseAdmin.from("profiles").update({
+              global_dating_active: true,
+              global_dating_expires_at: until,
+              global_dating_subscription_id: subId,
+              global_dating_subscription_status: "active",
+            }).eq("id", userId);
+          } else {
+            // VIP / Connect Monthly
+            await supabaseAdmin.from("profiles").update({
+              is_spotlight: true,
+              spotlight_until: until,
+              vip_subscription_id: subId,
+              vip_subscription_status: "active",
+            }).eq("id", userId);
+          }
         }
       }
     }
 
-    // VIP subscription cancelled / expired
+    // Subscription cancelled / expired
     if (event.type === "customer.subscription.deleted" || event.type === "customer.subscription.paused") {
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.user_id;
+      const featureId = sub.metadata?.feature_id;
       if (userId) {
-        await supabaseAdmin.from("profiles").update({
-          is_spotlight: false,
-          spotlight_until: null,
-          vip_subscription_id: null,
-          vip_subscription_status: "cancelled",
-        }).eq("id", userId);
+        if (featureId === "global_dating") {
+          await supabaseAdmin.from("profiles").update({
+            global_dating_active: false,
+            global_dating_expires_at: null,
+            global_dating_subscription_id: null,
+            global_dating_subscription_status: "cancelled",
+          }).eq("id", userId);
+        } else {
+          // VIP / Connect Monthly
+          await supabaseAdmin.from("profiles").update({
+            is_spotlight: false,
+            spotlight_until: null,
+            vip_subscription_id: null,
+            vip_subscription_status: "cancelled",
+          }).eq("id", userId);
+        }
       }
     }
 
@@ -276,19 +305,21 @@ serve(async (req) => {
     // Return WhatsApp details for connection payments
     let whatsapp = null;
     let name = null;
+    let contactProvider = "WhatsApp";
     const connectionType = session.metadata?.connection_type || "whatsapp";
     if (targetUserId) {
       const { data: targetProfile } = await supabaseAdmin
         .from("profiles")
-        .select("whatsapp, name")
+        .select("whatsapp, name, contact_provider")
         .eq("id", targetUserId)
         .single();
       whatsapp = targetProfile?.whatsapp;
       name = targetProfile?.name;
+      contactProvider = (targetProfile as any)?.contact_provider || "WhatsApp";
     }
 
     return new Response(
-      JSON.stringify({ success: true, whatsapp, name, connectionType }),
+      JSON.stringify({ success: true, whatsapp, name, connectionType, contactProvider }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

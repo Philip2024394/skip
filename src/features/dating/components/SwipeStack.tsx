@@ -13,6 +13,9 @@ import DistanceBadge from "@/features/dating/components/DistanceBadge";
 import VoicePlayer from "@/features/video/components/VoicePlayer";
 import { isProfileLocked } from "@/features/dating/utils/profileLock";
 
+const TEDDY_CARD_IMAGE = "https://ik.imagekit.io/7grri5v7d/UntitledfsdfsdfsdfsdfDSFSDFSdssdfdasdasdfgsdfgdfssdfs.png";
+const UNLOCK_CARD_IMAGE = "https://ik.imagekit.io/7grri5v7d/UntitledfsdfsdfsdfsdfDSFSDFSdssdfdasdasdfgsdfgdfssdfssasdasd.png";
+
 interface SwipeStackProps {
   profiles: Profile[];
   direction: "up" | "down";
@@ -21,6 +24,8 @@ interface SwipeStackProps {
   onPass: (profile: Profile) => void;
   onRose?: (profile: Profile) => void;
   onOpenMap?: (profile: Profile) => void;
+  onCoinCard?: () => void;
+  onUnlockCard?: () => void;
 }
 
 const SWIPE_THRESHOLD = 80;
@@ -40,6 +45,8 @@ export default function SwipeStack({
   onPass,
   onRose,
   onOpenMap,
+  onCoinCard,
+  onUnlockCard,
 }: SwipeStackProps) {
   // Index as a ref AND state — ref for synchronous reads inside callbacks,
   // state to trigger re-renders.
@@ -256,6 +263,121 @@ export default function SwipeStack({
 
   // ── Render ────────────────────────────────────────────────────
   if (!profile) return null;
+
+  // ── Coin card ─────────────────────────────────────────────────
+  if ((profile as any)._coinCard) {
+    return (
+      <div
+        className="relative w-full h-full overflow-hidden select-none"
+        style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none", touchAction: "none" }}
+      >
+        <motion.div
+          key={displayIndex}
+          drag
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          dragElastic={0.9}
+          dragMomentum={false}
+          onDragEnd={handleDragEnd}
+          onTap={() => onCoinCard?.()}
+          style={{ x, y, rotate, willChange: "transform", touchAction: "none" }}
+          className="absolute inset-0 cursor-pointer touch-none"
+        >
+          <div
+            className="relative w-full h-full rounded-2xl overflow-hidden"
+            style={{ border: "2px solid rgba(250,204,21,0.45)", boxShadow: "0 0 32px rgba(250,204,21,0.18)" }}
+          >
+            <img
+              src={TEDDY_CARD_IMAGE}
+              alt="Daily Gift"
+              className="absolute w-full h-full object-cover"
+              draggable={false}
+            />
+            {/* Dark gradient bottom */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+            {/* Gold shimmer top */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(135deg, rgba(250,204,21,0.10) 0%, transparent 50%)" }}
+            />
+            {/* Center badge */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <motion.div
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                className="rounded-2xl px-6 py-3 text-center"
+                style={{ background: "rgba(0,0,0,0.62)", border: "1.5px solid rgba(250,204,21,0.5)", boxShadow: "0 0 20px rgba(250,204,21,0.2)" }}
+              >
+                <p className="text-yellow-400 font-black text-2xl">🎁 Daily Gift</p>
+                <p className="text-white/80 text-sm font-semibold mt-1">Tap to collect 10 coins</p>
+              </motion.div>
+            </div>
+            {/* Bottom label */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
+              <p className="text-yellow-400 font-black text-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">🪙 Free Reward</p>
+              <p className="text-white/60 text-sm">Tap the card to collect</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ── Unlock card ───────────────────────────────────────────────
+  if ((profile as any)._unlockCard) {
+    return (
+      <div
+        className="relative w-full h-full overflow-hidden select-none"
+        style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none", touchAction: "none" }}
+      >
+        <motion.div
+          key={displayIndex}
+          drag
+          dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+          dragElastic={0.9}
+          dragMomentum={false}
+          onDragEnd={handleDragEnd}
+          onTap={() => onUnlockCard?.()}
+          style={{ x, y, rotate, willChange: "transform", touchAction: "none" }}
+          className="absolute inset-0 cursor-pointer touch-none"
+        >
+          <div
+            className="relative w-full h-full rounded-2xl overflow-hidden"
+            style={{ border: "2px solid rgba(99,102,241,0.5)", boxShadow: "0 0 32px rgba(99,102,241,0.2)" }}
+          >
+            <img
+              src={UNLOCK_CARD_IMAGE}
+              alt="2 Free Unlocks"
+              className="absolute w-full h-full object-cover"
+              draggable={false}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent pointer-events-none" />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, transparent 55%)" }}
+            />
+            {/* Center badge */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <motion.div
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                className="rounded-2xl px-6 py-3 text-center"
+                style={{ background: "rgba(0,0,0,0.65)", border: "1.5px solid rgba(99,102,241,0.55)", boxShadow: "0 0 24px rgba(99,102,241,0.25)" }}
+              >
+                <p className="text-indigo-300 font-black text-2xl">🔓 Welcome Gift</p>
+                <p className="text-white/80 text-sm font-semibold mt-1">Tap to collect 2 free unlocks</p>
+              </motion.div>
+            </div>
+            {/* Bottom label */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
+              <p className="text-indigo-300 font-black text-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">🔓 2 Free Unlocks</p>
+              <p className="text-white/60 text-sm">A welcome gift — tap to collect</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   const isLocked = isProfileLocked(profile.id, (profile as any).is_mock);
 
   return (

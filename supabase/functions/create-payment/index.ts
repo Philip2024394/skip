@@ -101,6 +101,111 @@ serve(async (req) => {
       }
     }
 
+    // ── Check buyer profile for free unlocks + subscription ─────────────────
+    const { data: buyerProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("vip_subscription_status, name, free_unlocks_remaining")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // Free welcome unlock (2 gifted on signup)
+    const freeRemaining = (buyerProfile as any)?.free_unlocks_remaining ?? 0;
+    if (freeRemaining > 0) {
+      const existing = await supabaseAdmin
+        .from("connections")
+        .select("id")
+        .eq("user_a", user.id)
+        .eq("user_b", targetUserId)
+        .maybeSingle();
+
+      if (!existing.data) {
+        const { data: connection } = await supabaseAdmin
+          .from("connections")
+          .insert({ user_a: user.id, user_b: targetUserId, amount_cents: 0 })
+          .select().single();
+
+        await supabaseAdmin.from("contact_unlocks").insert({
+          user1_id: user.id, user2_id: targetUserId,
+          connection_type: connectionType || "whatsapp", amount: 0,
+        });
+        await supabaseAdmin.from("payments").insert({
+          user_id: user.id, amount_cents: 0, currency: "usd",
+          status: "free_welcome", connection_id: connection?.id, target_user_id: targetUserId,
+        });
+        // Decrement free unlocks
+        await supabaseAdmin.from("profiles")
+          .update({ free_unlocks_remaining: freeRemaining - 1 })
+          .eq("id", user.id);
+      }
+
+      const { data: targetProfile } = await supabaseAdmin
+        .from("profiles").select("whatsapp, name, contact_provider").eq("id", targetUserId).maybeSingle();
+
+      return new Response(JSON.stringify({
+        free: true,
+        name: targetProfile?.name ?? null,
+        whatsapp: targetProfile?.whatsapp ?? null,
+        contactProvider: (targetProfile as any)?.contact_provider ?? "WhatsApp",
+        connectionType: connectionType || "whatsapp",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
+    }
+
+    if (buyerProfile?.vip_subscription_status === "active") {
+      // Subscriber gets free unlocks — create connection directly
+      const existing = await supabaseAdmin
+        .from("connections")
+        .select("id")
+        .eq("user_a", user.id)
+        .eq("user_b", targetUserId)
+        .maybeSingle();
+
+      if (!existing.data) {
+        const { data: connection } = await supabaseAdmin
+          .from("connections")
+          .insert({
+            user_a: user.id,
+            user_b: targetUserId,
+            amount_cents: 0,
+          })
+          .select()
+          .single();
+
+        await supabaseAdmin.from("contact_unlocks").insert({
+          user1_id: user.id,
+          user2_id: targetUserId,
+          connection_type: connectionType || "whatsapp",
+          amount: 0,
+        });
+
+        await supabaseAdmin.from("payments").insert({
+          user_id: user.id,
+          amount_cents: 0,
+          currency: "usd",
+          status: "free_vip",
+          connection_id: connection?.id,
+          target_user_id: targetUserId,
+        });
+      }
+
+      // Fetch target contact details
+      const { data: targetProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("whatsapp, name, contact_provider")
+        .eq("id", targetUserId)
+        .maybeSingle();
+
+      return new Response(JSON.stringify({
+        free: true,
+        name: targetProfile?.name ?? null,
+        whatsapp: targetProfile?.whatsapp ?? null,
+        contactProvider: (targetProfile as any)?.contact_provider ?? "WhatsApp",
+        connectionType: connectionType || "whatsapp",
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const priceId = targetHasBadges
       ? (Deno.env.get("STRIPE_PRICE_WHATSAPP_BADGES") || Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ")
       : (Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ");

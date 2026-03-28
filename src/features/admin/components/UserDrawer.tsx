@@ -225,7 +225,7 @@ const UserDrawer = ({
       second_date_idea_image_url: dateIdeaImages[1] || null,
       third_date_idea: dateIdeas[2] || null,
       third_date_idea_image_url: dateIdeaImages[2] || null,
-      selected_date_ideas: dateIdeas.filter(idea => idea) || null,
+      second_date_idea: dateIdeas[1] || null,
       residing_country: residingCountry || null,
       visited_countries: visitedCountries.length > 0 ? visitedCountries : null,
       ...badgeOverrides,
@@ -403,6 +403,40 @@ const UserDrawer = ({
                     <CheckCircle className="w-3 h-3" /> Country override approved
                   </div>
                 )}
+
+                {/* ── Contact Number ── */}
+                <div className="p-3 rounded-2xl space-y-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div className="flex items-center justify-between">
+                    <p className="text-white/50 text-xs font-semibold flex items-center gap-1.5">
+                      📱 Contact Number
+                      {(profile as any).contact_locked && (
+                        <span className="text-[9px] bg-amber-500/15 border border-amber-500/30 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">🔒 Locked</span>
+                      )}
+                      {(profile as any).contact_unlock_requested && (
+                        <span className="text-[9px] bg-blue-500/15 border border-blue-500/30 text-blue-400 px-1.5 py-0.5 rounded-full font-bold">Unlock Requested</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/40 text-xs w-20 flex-shrink-0">{(profile as any).contact_provider || "WhatsApp"}</span>
+                    <span className="text-white text-xs font-mono flex-1 truncate">{profile.whatsapp || "—"}</span>
+                  </div>
+                  {(profile as any).contact_locked ? (
+                    <button
+                      onClick={async () => {
+                        await onEditProfile(profile.id, { contact_locked: false, contact_confirmed: false, contact_unlock_requested: false } as any);
+                      }}
+                      className="w-full h-9 rounded-xl text-xs font-bold flex items-center justify-center gap-2 bg-blue-500/15 border border-blue-500/30 text-blue-400 transition-all active:scale-95"
+                    >
+                      🔓 Unlock Contact for Editing
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-[10px] text-green-400/70">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                      Editable by user
+                    </div>
+                  )}
+                </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <button onClick={() => onBan(profile.id, !profile.is_banned)} disabled={actionLoading === profile.id}

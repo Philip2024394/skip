@@ -35,6 +35,8 @@ interface TopCardProps {
   sessionStatsRef: any;
   setSessionTick: (fn: (v: number) => number) => void;
   persistSessionBehavior: () => void;
+  onCoinCard?: () => void;
+  onUnlockCard?: () => void;
 }
 
 
@@ -232,6 +234,8 @@ export default function TopCard(props: TopCardProps) {
             props.persistSessionBehavior();
             props.advanceQueue(p.id);
           }}
+          onCoinCard={props.onCoinCard}
+          onUnlockCard={props.onUnlockCard}
         />
       )}
     </div>

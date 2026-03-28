@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { setProfileLock, setMyProfileLock } from "@/features/dating/utils/profileLock";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MessageCircle, Loader2, EyeOff, Star, Shield, Heart, ChevronDown, ChevronUp, Video } from "lucide-react";
+import { Loader2, EyeOff, Star, Shield, Heart, ChevronDown, ChevronUp, Video } from "lucide-react";
 import { AppLogo } from "@/shared/components";
 
 // ── Confetti particle ─────────────────────────────────────────────────────────
@@ -143,14 +143,49 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [result, setResult] = useState<{ whatsapp: string; name: string; connectionType?: string } | null>(null);
+  const [result, setResult] = useState<{ whatsapp: string; name: string; connectionType?: string; contactProvider?: string } | null>(null);
   const [featureActivated, setFeatureActivated] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [pendingMatches, setPendingMatches] = useState(0);
+  const [showUpsell, setShowUpsell] = useState(false);
 
   useEffect(() => {
     const verify = async () => {
       const sessionId = searchParams.get("session_id");
       const feature = searchParams.get("feature");
+      const isFree = searchParams.get("free") === "1";
+
+      // ── Free unlock (Connect Monthly subscriber) ─────────────────
+      if (isFree) {
+        try {
+          const raw = sessionStorage.getItem("free_unlock_result");
+          sessionStorage.removeItem("free_unlock_result");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            setResult({
+              whatsapp: parsed.whatsapp,
+              name: parsed.name,
+              connectionType: parsed.connectionType,
+              contactProvider: parsed.contactProvider,
+            });
+            const targetProfileId = searchParams.get("target");
+            if (targetProfileId) setProfileLock(targetProfileId);
+            setMyProfileLock();
+          } else {
+            toast.error("Could not retrieve contact info");
+            navigate("/");
+            return;
+          }
+        } catch {
+          toast.error("Could not retrieve contact info");
+          navigate("/");
+          return;
+        }
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 4500);
+        setLoading(false);
+        return;
+      }
 
       if (!sessionId) {
         toast.error("Invalid payment session");
@@ -189,6 +224,7 @@ const PaymentSuccess = () => {
             whatsapp: data.whatsapp,
             name: data.name,
             connectionType: data.connectionType,
+            contactProvider: data.contactProvider,
           });
           // Lock both profiles for 3 days (activates after 1 hour)
           const targetProfileId = searchParams.get("target");
@@ -207,14 +243,55 @@ const PaymentSuccess = () => {
     verify();
   }, [searchParams, navigate]);
 
-  const openWhatsApp = () => {
+  // Fetch how many mutual matches have no connection yet (for upsell)
+  useEffect(() => {
+    const fetchPending = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      // People I liked
+      const { data: iLiked } = await supabase.from("likes").select("liked_id").eq("liker_id", user.id);
+      if (!iLiked?.length) return;
+      const iLikedIds = iLiked.map((r: any) => r.liked_id);
+      // People who liked me back (mutual)
+      const { data: mutual } = await supabase.from("likes").select("liker_id").eq("liked_id", user.id).in("liker_id", iLikedIds);
+      if (!mutual?.length) return;
+      const mutualIds = mutual.map((r: any) => r.liker_id);
+      // Already connected
+      const { data: connected } = await supabase.from("connections").select("user_b").eq("user_a", user.id);
+      const connectedIds = new Set((connected || []).map((r: any) => r.user_b));
+      const unlockedCount = mutualIds.filter((id: string) => !connectedIds.has(id)).length;
+      // Subtract the one we just unlocked
+      setPendingMatches(Math.max(0, unlockedCount - 1));
+      if (unlockedCount - 1 > 0) setTimeout(() => setShowUpsell(true), 3000);
+    };
+    fetchPending();
+  }, []);
+
+  const PROVIDER_ICONS: Record<string, string> = {
+    WhatsApp: "💬", WeChat: "💚", iMessage: "🍏", Telegram: "✈️",
+    Line: "🟢", Signal: "🔵", Viber: "💜", KakaoTalk: "💛",
+  };
+
+  const openContact = () => {
     if (!result?.whatsapp) return;
+    const provider = result.contactProvider || "WhatsApp";
     const cleaned = result.whatsapp.replace(/\D/g, "");
     const message = encodeURIComponent(
-      `Hi ${result.name}! 👋 I just unlocked your contact on 2DateMe — the dating app where real connections start with a real conversation. I'd love to get to know you! 😊`
+      `Hi ${result.name}! 👋 I just unlocked your contact on 2DateMe — excited to connect!`
     );
-    window.open(`https://wa.me/${cleaned}?text=${message}`, "_blank");
+    if (provider === "WhatsApp") {
+      window.open(`https://wa.me/${cleaned}?text=${message}`, "_blank");
+    } else if (provider === "Telegram") {
+      window.open(`https://t.me/${cleaned}`, "_blank");
+    } else {
+      // For WeChat, iMessage, Line, Signal, Viber, KakaoTalk — just copy the number
+      navigator.clipboard.writeText(result.whatsapp);
+      toast.success(`${provider} number copied — open ${provider} and message them`);
+    }
   };
+
+  // Keep legacy name for existing callers
+  const openWhatsApp = openContact;
 
   // ── Loading ──────────────────────────────────────────────────────
   if (loading) {
@@ -242,9 +319,14 @@ const PaymentSuccess = () => {
       sub: "Your profile is now featured at the top of everyone's stack for 24 hours.",
     },
     vip: {
-      icon: <img src="https://ik.imagekit.io/7grri5v7d/VIP%20heart%20with%20golden%20accents.png" alt="VIP" style={{ width: 48, height: 48, objectFit: "contain" }} />,
-      headline: "VIP Membership Activated!",
-      sub: "You now have 7 WhatsApp unlocks and 5 Super Likes ready to use this month.",
+      icon: <span className="text-4xl">⚡</span>,
+      headline: "Connect Monthly Activated! 👑",
+      sub: "You now have unlimited contact unlocks — no limits, no counting. Go unlock every match!",
+    },
+    global_dating: {
+      icon: <span className="text-4xl">🌍</span>,
+      headline: "Global Dating Activated! 🌍",
+      sub: "You can now like and match with anyone worldwide — not just your country. The world is your dating pool.",
     },
     boost: {
       icon: <span className="text-4xl">🚀</span>,
@@ -356,14 +438,16 @@ const PaymentSuccess = () => {
                   </motion.p>
                 </div>
 
-                {/* WhatsApp number */}
+                {/* Contact number */}
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1 }}
                   className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5"
                 >
-                  <p className="text-white/40 text-[10px] uppercase tracking-wider mb-0.5">WhatsApp</p>
+                  <p className="text-white/40 text-[10px] uppercase tracking-wider mb-0.5">
+                    {PROVIDER_ICONS[result.contactProvider || "WhatsApp"] ?? "📱"} {result.contactProvider || "WhatsApp"}
+                  </p>
                   <p className="text-white font-mono font-semibold text-base">{result.whatsapp}</p>
                 </motion.div>
 
@@ -389,8 +473,8 @@ const PaymentSuccess = () => {
                     onClick={openWhatsApp}
                     className="w-full h-13 py-3.5 rounded-2xl gradient-love text-white font-bold text-base flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(180,80,150,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
                   >
-                    <MessageCircle className="w-5 h-5" fill="white" />
-                    Message {result.name} on WhatsApp
+                    <span className="text-lg leading-none">{PROVIDER_ICONS[result.contactProvider || "WhatsApp"] ?? "📱"}</span>
+                    Message {result.name} on {result.contactProvider || "WhatsApp"}
                   </motion.button>
                 )}
 
@@ -406,6 +490,19 @@ const PaymentSuccess = () => {
                       ? "Video call + WhatsApp both available for this connection"
                       : "A warm intro message has been pre-filled for you ✨"}
                 </motion.p>
+
+                {/* Gentle expectation note */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.3 }}
+                  className="w-full rounded-2xl px-4 py-3 text-center"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <p className="text-white/50 text-[11px] leading-relaxed">
+                    💭 Some people are shy or take a little time — that's perfectly okay. Send a warm hello and give it a day or two. The best connections are worth a little patience. 🌸
+                  </p>
+                </motion.div>
               </>
             ) : fc ? (
               /* Feature activated */
@@ -442,6 +539,94 @@ const PaymentSuccess = () => {
 
         {/* Safety advisory — shown for WhatsApp unlocks */}
         {result && <SafetyAdvisory name={result.name} />}
+
+        {/* ── Upsell: Connect Monthly ──────────────────────────────── */}
+        <AnimatePresence>
+          {showUpsell && result && pendingMatches > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              className="rounded-3xl overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, rgba(168,85,247,0.18), rgba(236,72,153,0.14))",
+                border: "1.5px solid rgba(168,85,247,0.35)",
+              }}
+            >
+              {/* Header */}
+              <div className="px-4 pt-4 pb-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-white font-black text-base leading-tight">
+                      You have <span className="text-purple-300">{pendingMatches} more match{pendingMatches > 1 ? "es" : ""}</span> waiting 👀
+                    </p>
+                    <p className="text-white/50 text-xs mt-1">
+                      Unlock all of them for less than the price of a coffee
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowUpsell(false)}
+                    className="text-white/30 hover:text-white/60 text-lg leading-none flex-shrink-0 mt-0.5"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Plan comparison */}
+              <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+                <div className="rounded-xl p-3 bg-white/5 border border-white/10 text-center">
+                  <p className="text-white/40 text-[9px] font-bold uppercase tracking-wider">Per unlock</p>
+                  <p className="text-white font-black text-xl mt-0.5">$1.99</p>
+                  <p className="text-white/30 text-[9px] mt-0.5">×{pendingMatches} = ${(pendingMatches * 1.99).toFixed(2)}</p>
+                </div>
+                <div className="rounded-xl p-3 bg-purple-500/15 border border-purple-500/35 text-center relative overflow-hidden">
+                  <p className="text-purple-300 text-[9px] font-bold uppercase tracking-wider">Connect Monthly</p>
+                  <p className="text-white font-black text-xl mt-0.5">$4.99</p>
+                  <p className="text-purple-300/70 text-[9px] mt-0.5">Unlimited unlocks</p>
+                  <div className="absolute -top-1 -right-1 bg-pink-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-bl-lg">
+                    BEST
+                  </div>
+                </div>
+              </div>
+
+              {/* Perks */}
+              <div className="px-4 pb-3 space-y-1.5">
+                {[
+                  "💬 Unlock every match — no limits",
+                  "⭐ 3 Super Likes included/month",
+                  "👑 Connect badge on your profile",
+                  "🔝 Priority in New Profiles list",
+                ].map(perk => (
+                  <div key={perk} className="flex items-center gap-2">
+                    <span className="text-xs">{perk}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <div className="px-4 pb-4 space-y-2">
+                <button
+                  onClick={() => navigate("/dashboard?purchase=vip")}
+                  className="w-full py-3.5 rounded-2xl font-black text-white text-sm flex items-center justify-center gap-2 transition-transform active:scale-[0.98]"
+                  style={{
+                    background: "linear-gradient(135deg, #a855f7, #ec4899)",
+                    boxShadow: "0 0 20px rgba(168,85,247,0.35)",
+                  }}
+                >
+                  ⚡ Get Connect — $4.99/month
+                </button>
+                <button
+                  onClick={() => setShowUpsell(false)}
+                  className="w-full py-2 text-white/30 text-xs font-medium hover:text-white/50 transition-colors"
+                >
+                  No thanks, I'll pay $1.99 per unlock
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Back to browsing */}
         <motion.button

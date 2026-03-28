@@ -28,6 +28,9 @@ interface UseSwipeActionsProps {
   superLikesCount: number;
   showGuestPrompt: (trigger: any) => void;
   upsertLocalLikedProfile: (profile: Profile) => void;
+  userCountry: string | null;
+  isGlobalDater: boolean;
+  setGlobalDatingUpsell: (profile: Profile | null) => void;
   toast: any;
   t: (key: string) => string;
   navigate: (path: string) => void;
@@ -40,6 +43,18 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
       return;
     }
     if (props.iLiked.some((p) => p.id === profile.id)) return;
+
+    // Cross-country gate — require Global Dating membership
+    const targetCountry = (profile as any).country;
+    if (
+      targetCountry &&
+      props.userCountry &&
+      targetCountry.toLowerCase() !== props.userCountry.toLowerCase() &&
+      !props.isGlobalDater
+    ) {
+      props.setGlobalDatingUpsell(profile);
+      return;
+    }
     props.sessionStatsRef.current.liked += 1;
     props.setSessionTick((v) => v + 1);
     const likedProfile = { ...profile, expires_at: new Date(Date.now() + LIKE_EXPIRY_MS).toISOString() };
@@ -161,7 +176,19 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
       }
       const { data, error } = result;
       if (error) throw error;
-      if (data?.url) {
+      if (data?.free) {
+        // Connect Monthly subscriber — free unlock, go straight to success
+        try {
+          sessionStorage.setItem("free_unlock_result", JSON.stringify({
+            name: data.name,
+            whatsapp: data.whatsapp,
+            contactProvider: data.contactProvider,
+            connectionType: data.connectionType,
+          }));
+        } catch { /* ignore */ }
+        props.toast.success(`🎉 Contact unlocked! Opening ${data.name}...`);
+        window.location.href = `/payment-success?free=1&target=${props.unlockDialog!.id}`;
+      } else if (data?.url) {
         window.open(data.url, "_blank");
         props.toast.success(props.t("popup.checkoutOpen"));
       } else {

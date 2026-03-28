@@ -118,6 +118,10 @@ interface ProfileData {
   interests: string[];
   orientation: string;
   contact_preference: string;
+  contact_provider: string;
+  contact_confirmed: boolean;
+  contact_locked: boolean;
+  contact_unlock_requested: boolean;
   basic_info: Record<string, unknown>;
   lifestyle_info: Record<string, unknown>;
   relationship_goals: Record<string, unknown>;
@@ -142,6 +146,8 @@ const ProfileEditor = () => {
   const [showBadgesHelp, setShowBadgesHelp] = useState(false);
   const [countryOverrideApproved, setCountryOverrideApproved] = useState(false);
   const [countryOverrideRequested, setCountryOverrideRequested] = useState(false);
+  const [contactLocked, setContactLocked] = useState(false);
+  const [confirmingContact, setConfirmingContact] = useState(false);
 
   // Check if Free Tonight has expired and auto-clear it (runs whenever userId is set)
   useEffect(() => {
@@ -227,6 +233,7 @@ const ProfileEditor = () => {
 
       setCountryOverrideApproved(!!(row.country_override_approved as boolean));
       setCountryOverrideRequested(!!(row.country_override_requested as boolean));
+      setContactLocked(!!(row.contact_locked as boolean));
 
       setProfile({
         name: (row.name as string) || "",
@@ -254,6 +261,10 @@ const ProfileEditor = () => {
         interests: ((row.interests as string[]) || []).slice(0, 8),
         orientation: (row.orientation as string) || "",
         contact_preference: (row.contact_preference as string) || "whatsapp",
+        contact_provider: (row.contact_provider as string) || "WhatsApp",
+        contact_confirmed: !!(row.contact_confirmed as boolean),
+        contact_locked: !!(row.contact_locked as boolean),
+        contact_unlock_requested: !!(row.contact_unlock_requested as boolean),
         residing_country: (row.residing_country as string) || null,
         visited_countries: ((row.visited_countries as string[]) || []),
         basic_info: (row.basic_info as Record<string, unknown>) || {},
@@ -389,6 +400,41 @@ const ProfileEditor = () => {
     !!profile?.country &&
     detectedPhoneCountry !== profile.country &&
     !countryOverrideApproved;
+
+  const handleConfirmContact = async () => {
+    if (!profile || !userId) return;
+    const num = profile.whatsapp.trim();
+    if (!num || num === "+" || num.length < 6) {
+      toast.error("Please enter a valid contact number first.");
+      return;
+    }
+    setConfirmingContact(true);
+    const { error } = await (supabase.from("profiles").update as any)({
+      whatsapp: num,
+      contact_provider: profile.contact_provider,
+      contact_confirmed: true,
+      contact_locked: true,
+    }).eq("id", userId);
+    setConfirmingContact(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setContactLocked(true);
+      setProfile(p => p ? { ...p, contact_confirmed: true, contact_locked: true } : p);
+      toast.success("Contact confirmed and locked ✓");
+    }
+  };
+
+  const handleRequestContactUnlock = async () => {
+    if (!userId) return;
+    const { error } = await (supabase.from("profiles").update as any)({
+      contact_unlock_requested: true,
+    }).eq("id", userId);
+    if (!error) {
+      setProfile(p => p ? { ...p, contact_unlock_requested: true } : p);
+      toast.success("Unlock request sent to admin ✓");
+    }
+  };
 
   const handleSave = async () => {
     if (!profile || !userId) return;
@@ -1038,9 +1084,85 @@ const ProfileEditor = () => {
             </p>
           </div>
 
+          {/* ── Contact Number ──────────────────────────────────────── */}
           <div className="mt-4">
-            <Label className="text-white/50 text-xs mb-1 block">WhatsApp</Label>
-            <Input value={profile.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none" />
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-white/50 text-xs flex items-center gap-1.5">
+                📱 Contact Number
+                {contactLocked && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 border border-amber-500/30 text-amber-400">
+                    🔒 Locked
+                  </span>
+                )}
+              </Label>
+              {contactLocked && !profile.contact_unlock_requested && (
+                <button
+                  onClick={handleRequestContactUnlock}
+                  className="text-[10px] font-semibold text-white/40 hover:text-white/70 underline underline-offset-2 transition-colors"
+                >
+                  Request change
+                </button>
+              )}
+              {contactLocked && profile.contact_unlock_requested && (
+                <span className="text-[10px] text-amber-400/70 font-semibold">Pending admin approval</span>
+              )}
+            </div>
+
+            {contactLocked ? (
+              /* ── Locked view ── */
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/8 border border-amber-500/20">
+                <span className="text-xl leading-none flex-shrink-0">
+                  {({ WhatsApp: "💬", WeChat: "💚", iMessage: "🍏", Telegram: "✈️", Line: "🟢", Signal: "🔵", Viber: "💜", KakaoTalk: "💛" } as Record<string, string>)[profile.contact_provider] ?? "📱"}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-sm font-mono truncate">{profile.whatsapp}</p>
+                  <p className="text-white/40 text-[10px]">{profile.contact_provider}</p>
+                </div>
+                <span className="text-amber-400 text-lg">🔒</span>
+              </div>
+            ) : (
+              /* ── Edit view ── */
+              <div className="space-y-2">
+                {/* Provider dropdown */}
+                <select
+                  value={profile.contact_provider}
+                  onChange={e => update("contact_provider" as any, e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm appearance-none"
+                >
+                  {["WhatsApp","WeChat","iMessage","Telegram","Line","Signal","Viber","KakaoTalk"].map(p => (
+                    <option key={p} value={p} className="bg-[#1a1a1a]">{p}</option>
+                  ))}
+                </select>
+
+                {/* Number input */}
+                <Input
+                  value={profile.whatsapp}
+                  onChange={e => update("whatsapp", e.target.value)}
+                  placeholder="+62 812 3456 7890"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none font-mono"
+                />
+                <p className="text-white/30 text-[10px]">Include country code · e.g. +62 for Indonesia, +1 for US</p>
+
+                {/* Confirm button */}
+                {profile.whatsapp && profile.whatsapp.trim().length > 5 && (
+                  <button
+                    onClick={handleConfirmContact}
+                    disabled={confirmingContact}
+                    className="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(236,72,153,0.25), rgba(168,85,247,0.2))",
+                      border: "1px solid rgba(236,72,153,0.4)",
+                      color: "#f9a8d4",
+                    }}
+                  >
+                    {confirmingContact ? "Confirming…" : "✓ Confirm & Lock Contact"}
+                  </button>
+                )}
+                <p className="text-white/25 text-[10px] text-center leading-snug">
+                  Once confirmed, your contact is locked. Contact admin to make changes.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Voice Intro */}

@@ -165,6 +165,17 @@ export default function AppDialogs(props: AppDialogsProps) {
               <li>🔒 {t("popup.unlockBullet2")}</li>
               <li>⏰ {t("popup.unlockBullet3")}</li>
             </ul>
+
+            {/* Expectation setter — friendly, not a warning */}
+            <div
+              className="mt-4 rounded-2xl px-4 py-3"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <p className="text-white/70 text-[11px] leading-relaxed text-center">
+                <span className="text-pink-400 font-bold">💭 A gentle note —</span> unlocking gives you their real contact details. Some people are shy, busy, or take a little time to warm up. That's perfectly normal. Give it a day or two — great connections are worth the wait. 🌸
+              </p>
+            </div>
+
             <div className="flex gap-3 mt-4">
               <Button variant="outline" onClick={() => props.setShowUnlockDialog(false)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("popup.cancel")}</Button>
               <Button onClick={props.confirmUnlock} disabled={props.paymentLoading} className="flex-1 gradient-love text-primary-foreground border-0 font-bold">

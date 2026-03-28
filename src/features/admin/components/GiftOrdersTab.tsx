@@ -1,6 +1,9 @@
-import { useState } from "react";
-import { Gift, Search, MapPin, Package, CheckCircle, Eye, EyeOff, Plus, MessageCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Gift, Search, MapPin, Package, CheckCircle, Eye, EyeOff, Plus, MessageCircle, RefreshCw } from "lucide-react";
 import { QUESTION_TEMPLATES } from "@/features/dating/data/profileQuestions";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { GiftOrder } from "@/features/real-gifts/RealGiftOrderFlow";
 
 // ── Test profile question blocker ─────────────────────────────────────────────
 function injectTestQuestion(templateId: string) {
@@ -23,29 +26,16 @@ function injectTestQuestion(templateId: string) {
     window.location.reload();
   } catch { /* no-op */ }
 }
-import type { GiftOrder } from "@/features/real-gifts/RealGiftOrderFlow";
+
 import { setGiftNotificationStage } from "@/features/real-gifts/GiftDeliveryNotification";
 
 // ── City activation ────────────────────────────────────────────────────────────
-const CITY_LS_KEY = "gift_service_cities";
 const ALL_CITIES = ["Yogyakarta", "Jakarta", "Bali", "Surabaya", "Bandung", "Medan"];
 
+// Keep localStorage fallback for cities (fast, config-like)
 export function getActiveCities(): string[] {
-  try { return JSON.parse(localStorage.getItem(CITY_LS_KEY) || '["Yogyakarta"]'); }
+  try { return JSON.parse(localStorage.getItem("gift_service_cities") || '["Yogyakarta"]'); }
   catch { return ["Yogyakarta"]; }
-}
-function saveActiveCities(cities: string[]) {
-  localStorage.setItem(CITY_LS_KEY, JSON.stringify(cities));
-}
-
-// ── Storage helpers ────────────────────────────────────────────────────────────
-const LS_KEY = "admin_gift_orders";
-
-function loadOrders(): GiftOrder[] {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || "[]"); } catch { return []; }
-}
-function saveOrders(orders: GiftOrder[]) {
-  localStorage.setItem(LS_KEY, JSON.stringify(orders));
 }
 
 // ── Status display ─────────────────────────────────────────────────────────────
@@ -81,10 +71,30 @@ const GIFT_EMOJIS: Record<string, string> = {
   "Surprise Gift Box": "🎁",
 };
 
+// ── Map DB row → GiftOrder ────────────────────────────────────────────────────
+function rowToOrder(row: any): GiftOrder {
+  return {
+    id: row.id,
+    sender_id: row.sender_id ?? "",
+    sender_name: row.sender_name ?? "",
+    recipient_id: row.recipient_id ?? "",
+    recipient_name: row.recipient_name ?? "",
+    recipient_city: row.recipient_city ?? "",
+    gift_type: row.gift_type ?? "",
+    gift_emoji: row.gift_emoji ?? "🎁",
+    fee_usd: parseFloat(row.fee_usd ?? 9.99),
+    status: row.status,
+    created_at: row.created_at,
+    delivery_eta: row.delivery_eta ?? undefined,
+    notes: row.notes ?? undefined,
+  };
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 export const GiftOrdersTab = () => {
-  const [orders, setOrders] = useState<GiftOrder[]>(loadOrders);
-  const [activeCities, setActiveCities] = useState<string[]>(getActiveCities);
+  const [orders, setOrders] = useState<GiftOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCities, setActiveCities] = useState<string[]>(getActiveCities());
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAddressFor, setShowAddressFor] = useState<string | null>(null);
@@ -93,99 +103,107 @@ export const GiftOrdersTab = () => {
   const [newForm, setNewForm] = useState<Partial<GiftOrder>>(blankForm());
   const [addressLookup, setAddressLookup] = useState<Record<string, string>>({});
 
-  const refresh = () => setOrders(loadOrders());
+  // ── Load orders from Supabase ────────────────────────────────────────────────
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await (supabase as any)
+      .from("real_gift_orders")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Failed to load orders: " + error.message);
+    } else {
+      setOrders((data ?? []).map(rowToOrder));
+    }
+    setLoading(false);
+  }, []);
 
-  const updateOrderStatus = (id: string, status: GiftOrder["status"]) => {
-    const updated = orders.map(o => o.id === id ? { ...o, status } : o);
-    saveOrders(updated);
-    setOrders(updated);
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  // ── Supabase mutations ───────────────────────────────────────────────────────
+  const updateOrderStatus = async (id: string, status: GiftOrder["status"], extra?: Partial<GiftOrder>) => {
+    const { error } = await (supabase as any)
+      .from("real_gift_orders")
+      .update({ status, ...(extra || {}) })
+      .eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status, ...(extra || {}) } : o));
   };
 
-  const lookupAddress = (recipientId: string) => {
-    // In production this would query Supabase profiles.delivery_address
-    // For demo, check localStorage user profile data
-    try {
-      const profiles = JSON.parse(localStorage.getItem("app_profiles") || "[]");
-      const profile = profiles.find((p: any) => p.id === recipientId);
-      if (profile?.delivery_address) {
-        setAddressLookup(prev => ({ ...prev, [recipientId]: profile.delivery_address }));
-        setShowAddressFor(recipientId);
-        return;
-      }
-      // Also check the current user's own profile (for testing)
-      const ownProfile = JSON.parse(localStorage.getItem("user_profile") || "{}");
-      if (ownProfile?.id === recipientId && ownProfile?.delivery_address) {
-        setAddressLookup(prev => ({ ...prev, [recipientId]: ownProfile.delivery_address }));
-        setShowAddressFor(recipientId);
-        return;
-      }
-    } catch { /* ignore */ }
-    setAddressLookup(prev => ({ ...prev, [recipientId]: "⚠️ No address on file — recipient has not opted in or has not saved an address." }));
+  const lookupAddress = async (recipientId: string) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("name, delivery_address")
+      .eq("id", recipientId)
+      .single();
+    if ((data as any)?.delivery_address) {
+      setAddressLookup(prev => ({ ...prev, [recipientId]: (data as any).delivery_address }));
+    } else {
+      setAddressLookup(prev => ({ ...prev, [recipientId]: "⚠️ No address on file — recipient has not opted in." }));
+    }
     setShowAddressFor(recipientId);
   };
 
-  const markAddressReleased = (id: string) => {
-    updateOrderStatus(id, "address_released");
-  };
+  const markAddressReleased = (id: string) => updateOrderStatus(id, "address_released");
 
-  const setPresentsOtw = (order: GiftOrder) => {
+  const setPresentsOtw = async (order: GiftOrder) => {
     const eta = etaInputs[order.id];
     if (!eta?.value) return;
     const ms = eta.unit === "hours"
       ? parseFloat(eta.value) * 60 * 60 * 1000
       : parseFloat(eta.value) * 24 * 60 * 60 * 1000;
     const etaDate = new Date(Date.now() + ms).toISOString();
-    const updated = orders.map(o => o.id === order.id ? { ...o, status: "otw" as const, delivery_eta: etaDate } : o);
-    saveOrders(updated);
-    setOrders(updated);
-    // Trigger recipient notification (stage 1)
-    // In production this writes to Supabase. For demo: localStorage keyed by recipient ID.
+    await updateOrderStatus(order.id, "otw", { delivery_eta: etaDate });
+    // Write notification to Supabase profiles table (gift_notification column) if available
     try {
-      const existing = JSON.parse(localStorage.getItem(`gift_notification_${order.recipient_id}`) || "null");
-      const notif = {
-        order_id: order.id,
-        gift_emoji: order.gift_emoji,
-        gift_type: order.gift_type,
-        sender_name: order.sender_name,
-        reveal_sender: false,
-        dismissed_stages: [],
-        ...(existing || {}),
-        notif_stage: 1,
-        delivery_eta: etaDate,
-      };
-      localStorage.setItem(`gift_notification_${order.recipient_id}`, JSON.stringify(notif));
-    } catch { /* ignore */ }
+      await (supabase as any).from("profiles").update({
+        gift_notification: JSON.stringify({
+          order_id: order.id,
+          gift_emoji: order.gift_emoji,
+          gift_type: order.gift_type,
+          sender_name: order.sender_name,
+          notif_stage: 1,
+          delivery_eta: etaDate,
+        }),
+      }).eq("id", order.recipient_id);
+    } catch { /* column may not exist yet */ }
   };
 
-  const markDelivered = (id: string) => {
+  const markDelivered = async (id: string) => {
     const order = orders.find(o => o.id === id);
-    if (order) {
-      // Advance notification to stage 3 (photo request)
-      setGiftNotificationStage(order.recipient_id, 3);
-    }
-    updateOrderStatus(id, "delivered");
+    if (order) setGiftNotificationStage(order.recipient_id, 3);
+    await updateOrderStatus(id, "delivered");
   };
 
-  const addOrder = () => {
+  const addOrder = async () => {
     if (!newForm.recipient_id || !newForm.gift_type || !newForm.sender_name) return;
-    const order: GiftOrder = {
+    const order = {
       id: newForm.id!,
-      sender_id: newForm.sender_id || "",
+      sender_id: newForm.sender_id || null,
       sender_name: newForm.sender_name!,
       recipient_id: newForm.recipient_id!,
-      recipient_name: newForm.recipient_name || "",
-      recipient_city: newForm.recipient_city || "",
+      recipient_name: newForm.recipient_name || null,
+      recipient_city: newForm.recipient_city || null,
       gift_type: newForm.gift_type!,
       gift_emoji: GIFT_EMOJIS[newForm.gift_type!] || "🎁",
       fee_usd: 9.99,
       status: "pending_payment",
-      created_at: new Date().toISOString(),
     };
-    const updated = [order, ...orders];
-    saveOrders(updated);
-    setOrders(updated);
+    const { error } = await (supabase as any).from("real_gift_orders").insert(order);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Order saved ✓");
     setNewForm(blankForm());
     setShowNewForm(false);
+    await loadOrders();
+  };
+
+  const saveActiveCities = (cities: string[]) => {
+    localStorage.setItem("gift_service_cities", JSON.stringify(cities));
+    setActiveCities(cities);
+    // Also persist to Supabase config if table exists
+    (supabase as any).from("gift_service_config")
+      .upsert({ key: "active_cities", value: cities })
+      .then(() => {});
   };
 
   const filtered = orders.filter(o =>
@@ -215,11 +233,8 @@ export const GiftOrdersTab = () => {
               <button
                 key={city}
                 onClick={() => {
-                  const next = isActive
-                    ? activeCities.filter(c => c !== city)
-                    : [...activeCities, city];
+                  const next = isActive ? activeCities.filter(c => c !== city) : [...activeCities, city];
                   saveActiveCities(next);
-                  setActiveCities(next);
                 }}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all"
                 style={{
@@ -278,15 +293,25 @@ export const GiftOrdersTab = () => {
         ))}
       </div>
 
-      {/* Add order button */}
-      <button
-        onClick={() => setShowNewForm(!showNewForm)}
-        className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
-        style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)", color: "#FDE68A" }}
-      >
-        <Plus className="w-4 h-4" />
-        {showNewForm ? "Cancel" : "Add Order (from WhatsApp)"}
-      </button>
+      {/* Toolbar */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowNewForm(!showNewForm)}
+          className="flex-1 py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+          style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.3)", color: "#FDE68A" }}
+        >
+          <Plus className="w-4 h-4" />
+          {showNewForm ? "Cancel" : "Add Order"}
+        </button>
+        <button
+          onClick={loadOrders}
+          disabled={loading}
+          className="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-1"
+          style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+        </button>
+      </div>
 
       {/* New order form */}
       {showNewForm && (
@@ -324,7 +349,7 @@ export const GiftOrdersTab = () => {
             className="w-full py-3 rounded-xl text-sm font-bold text-black disabled:opacity-40"
             style={{ background: "#F59E0B" }}
           >
-            Save Order
+            Save Order to Database
           </button>
         </div>
       )}
@@ -340,7 +365,14 @@ export const GiftOrdersTab = () => {
         />
       </div>
 
-      {filtered.length === 0 && (
+      {loading && (
+        <div className="text-center py-8">
+          <RefreshCw className="w-6 h-6 text-white/30 animate-spin mx-auto mb-2" />
+          <p className="text-white/30 text-sm">Loading orders...</p>
+        </div>
+      )}
+
+      {!loading && filtered.length === 0 && (
         <div className="text-center py-10">
           <Gift className="w-8 h-8 text-white/20 mx-auto mb-2" />
           <p className="text-white/30 text-sm">No gift orders yet</p>

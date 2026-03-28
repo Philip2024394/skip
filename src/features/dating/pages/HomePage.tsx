@@ -40,7 +40,12 @@ import CoinHub from "@/shared/components/CoinHub";
 import { TokenPurchase, GiftReceiver, MatchPopup, GiftReceivePopup } from "@/features/gifts/components";
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
+import CoinCollectModal, { TEDDY_VIDEO } from "@/features/dating/components/CoinCollectModal";
+import UnlockCollectModal, { UNLOCK_VIDEO } from "@/features/dating/components/UnlockCollectModal";
 import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
+import GlobalDatingUpsell from "@/features/dating/components/GlobalDatingUpsell";
+import { useGlobalDating } from "@/shared/hooks/useGlobalDating";
+import { getUserCountry } from "@/shared/hooks/useUserCurrency";
 import VisitorGuidePage from "@/features/dating/pages/VisitorGuidePage";
 import { RealGiftOrderFlow } from "@/features/real-gifts/RealGiftOrderFlow";
 import { GiftDeliveryNotification } from "@/features/real-gifts/GiftDeliveryNotification";
@@ -250,6 +255,8 @@ const Index = () => {
   });
   const coinBalance = useCoinBalance(user?.id);
   const profileQuestions = useProfileQuestions(user?.id || "guest");
+  const { isGlobalDater } = useGlobalDating(user?.id);
+  const [globalDatingUpsell, setGlobalDatingUpsell] = useState<any>(null);
   const [waLockPopup, setWaLockPopup] = useState<WaLock | null>(null);
   const [showCoinRefuel, setShowCoinRefuel] = useState(false);
   const [userGender, setUserGender] = useState<string | null>(null);
@@ -265,6 +272,19 @@ const Index = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() => defaultFilters);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
+
+  // Load blocked user IDs so they are filtered from the feed
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("blocked_users")
+      .select("blocked_id")
+      .eq("blocker_id", user.id)
+      .then(({ data }) => {
+        if (data) setBlockedIds(new Set(data.map((r: any) => r.blocked_id)));
+      });
+  }, [user]);
 
   // Handle signin/register URL parameters
   useEffect(() => {
@@ -292,6 +312,8 @@ const Index = () => {
   // Apply filters
   const filteredProfiles = useMemo(() => {
     return allProfiles.filter((p) => {
+      // Blocked users
+      if (blockedIds.has(p.id)) return false;
       // Location
       if (filters.country && p.country?.toLowerCase() !== filters.country.toLowerCase()) return false;
       if (filters.city && !p.city?.toLowerCase().includes(filters.city.toLowerCase())) return false;
@@ -348,7 +370,7 @@ const Index = () => {
       if (filters.noDrama && !(p as { no_drama?: boolean }).no_drama) return false;
       return true;
     });
-  }, [allProfiles, filters]);
+  }, [allProfiles, filters, blockedIds]);
 
   // ── Stable randomised queue ──────────────────────────────────────────────
   // Shuffled ONCE per session. Persists across dashboard/map navigation via
@@ -364,6 +386,11 @@ const Index = () => {
   const bottomSeenIdsRef = useRef<Set<string>>(new Set());
   // Increment to force topProfiles/bottomProfiles to recompute after queue changes
   const [queueTick, setQueueTick] = useState(0);
+  const [coinCardCollectedToday, setCoinCardCollectedToday] = useState(() => {
+    try { return sessionStorage.getItem("coin_card_date") === new Date().toDateString(); } catch { return false; }
+  });
+  const [showUnlockCard, setShowUnlockCard] = useState(false);
+  const [unlockCardCollected, setUnlockCardCollected] = useState(false);
 
   const fisherYates = (arr: Profile[]): Profile[] => {
     const a = [...arr];
@@ -515,9 +542,50 @@ const Index = () => {
     const safeTop = topPool.length > 0 ? topPool : (safeBottom.length > 0 ? safeBottom.slice().reverse() : filteredProfiles.slice(0, 1));
     const finalBottom = safeBottom.length > 0 ? safeBottom : (safeTop.length > 1 ? safeTop.slice(1).reverse() : filteredProfiles.slice(1, 2));
 
-    return { topProfiles: safeTop, bottomProfiles: finalBottom };
+    // Inject coin card at position 7 if not collected today
+    const COIN_CARD: any = {
+      id: "__coin_card__",
+      name: "Daily Gift",
+      age: 0,
+      city: "",
+      country: "",
+      bio: "",
+      image: "https://ik.imagekit.io/7grri5v7d/UntitledfsdfsdfsdfsdfDSFSDFSdssdfdasdasdfgsdfgdfssdfs.png",
+      images: [],
+      gender: "",
+      _coinCard: true,
+    };
+    const UNLOCK_CARD: any = {
+      id: "__unlock_card__",
+      name: "Welcome Gift",
+      age: 0, city: "", country: "", bio: "",
+      image: "https://ik.imagekit.io/7grri5v7d/UntitledfsdfsdfsdfsdfDSFSDFSdssdfdasdasdfgsdfgdfssdfssasdasd.png",
+      images: [], gender: "",
+      _unlockCard: true,
+    };
+
+    let topWithCard = safeTop;
+    try {
+      // Inject unlock card at position 4 (welcome bonus — shown early)
+      const unlockCollected = localStorage.getItem(`unlock_welcome_${user?.id || "guest"}`) === "1";
+      if (!unlockCollected && safeTop.length >= 2) {
+        topWithCard = [...safeTop];
+        topWithCard.splice(Math.min(4, topWithCard.length), 0, UNLOCK_CARD);
+      }
+    } catch { /* ignore */ }
+
+    const COIN_CARD_POSITION = 7;
+    try {
+      const collectedToday = sessionStorage.getItem("coin_card_date") === new Date().toDateString();
+      if (!collectedToday && topWithCard.length >= 2) {
+        topWithCard = [...topWithCard];
+        topWithCard.splice(Math.min(COIN_CARD_POSITION + 1, topWithCard.length), 0, COIN_CARD);
+      }
+    } catch { /* ignore */ }
+
+    return { topProfiles: topWithCard, bottomProfiles: finalBottom };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredProfiles, queueTick]);
+  }, [filteredProfiles, queueTick, coinCardCollectedToday]);
 
   // topIndex/bottomIndex removed — managed inside SwipeStack
   const [iLiked, setILiked] = useState<Profile[]>([]);
@@ -533,6 +601,7 @@ const Index = () => {
   const [superLikesCount, setSuperLikesCount] = useState<number>(0);
   const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
+  const [showCoinCard, setShowCoinCard] = useState(false);
 
   const sessionStatsRef = useRef({
     viewed: 0,
@@ -563,6 +632,26 @@ const Index = () => {
 
   const [devFeaturesEnabled, setDevFeaturesEnabled] = useDevFeatures();
   const [devPanelOpen, setDevPanelOpen] = useState(false);
+
+  // Preload reward videos as soon as page mounts so they're ready when cards appear
+  useEffect(() => {
+    [TEDDY_VIDEO, UNLOCK_VIDEO].forEach(src => {
+      try {
+        const vid = document.createElement("video");
+        vid.src = src;
+        vid.preload = "auto";
+        vid.load();
+      } catch { /* ignore */ }
+    });
+  }, []);
+
+  // Check if this user already collected welcome unlocks
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      setUnlockCardCollected(localStorage.getItem(`unlock_welcome_${user.id}`) === "1");
+    } catch { /* ignore */ }
+  }, [user?.id]);
 
   // Video call system
   const videoCall = useVideoCall(user?.id || null);
@@ -941,6 +1030,9 @@ const Index = () => {
     toast,
     t,
     navigate,
+    userCountry: getUserCountry(),
+    isGlobalDater,
+    setGlobalDatingUpsell,
   });
 
 
@@ -1171,6 +1263,13 @@ const Index = () => {
                       .filter(q => q.toProfileId === selectedProfile?.id && q.status === "answered" && q.answer)
                       .map(q => [q.templateId, q.answer!])
                   )}
+                  onBlock={() => {
+                    if (selectedProfile?.id) {
+                      setBlockedIds(prev => new Set([...prev, selectedProfile.id]));
+                    }
+                    setSelectedList([]);
+                    setSelectedIndex(0);
+                  }}
                 />
               )
             ) : (
@@ -1202,6 +1301,8 @@ const Index = () => {
                   sessionStatsRef={sessionStatsRef}
                   setSessionTick={setSessionTick}
                   persistSessionBehavior={persistSessionBehavior}
+                  onCoinCard={() => setShowCoinCard(true)}
+                  onUnlockCard={() => setShowUnlockCard(true)}
                 />
 
                 {/* Center - Likes Library */}
@@ -1741,6 +1842,57 @@ const Index = () => {
           />
         )}
       </AnimatePresence>
+
+      {/* ── Unlock Card Modal ────────────────────────────────────── */}
+      <UnlockCollectModal
+        open={showUnlockCard}
+        onCollect={() => {
+          // Store 2 free unlocks in profile
+          if (user?.id) {
+            (supabase as any)
+              .from("profiles")
+              .update({ free_unlocks_remaining: 2 })
+              .eq("id", user.id)
+              .then(() => {});
+            try { localStorage.setItem(`unlock_welcome_${user.id}`, "1"); } catch { /* ignore */ }
+          }
+          setUnlockCardCollected(true);
+          setShowUnlockCard(false);
+          toast.success("🔓 2 free unlocks added! Go find your match.");
+        }}
+        onDismiss={() => setShowUnlockCard(false)}
+      />
+
+      {/* ── Coin Card Collect Modal ───────────────────────────────── */}
+      <CoinCollectModal
+        open={showCoinCard}
+        amount={10}
+        onCollect={() => {
+          // Add coins to balance
+          coinBalance.addCoins(10);
+          // Persist to Supabase wallet
+          if (user?.id) {
+            (supabase as any)
+              .from("user_wallets")
+              .upsert({ user_id: user.id, current_balance: coinBalance.balance + 10 }, { onConflict: "user_id" })
+              .then(() => {});
+          }
+          // Mark collected today
+          try { sessionStorage.setItem("coin_card_date", new Date().toDateString()); } catch { /* ignore */ }
+          setCoinCardCollectedToday(true);
+          setShowCoinCard(false);
+          toast.success("🪙 10 coins added to your balance!");
+        }}
+        onDismiss={() => setShowCoinCard(false)}
+      />
+
+      {/* ── Global Dating Upsell ─────────────────────────────────── */}
+      <GlobalDatingUpsell
+        open={!!globalDatingUpsell}
+        targetName={globalDatingUpsell?.name}
+        targetCountry={globalDatingUpsell?.country}
+        onClose={() => setGlobalDatingUpsell(null)}
+      />
 
     </div>
   );
