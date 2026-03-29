@@ -31,12 +31,15 @@ const LANGUAGES = [
 ];
 
 const INTENT_OPTIONS = [
-  { id: "longterm",  label: "Long-term relationship" },
-  { id: "chat",      label: "Chat & friendship" },
-  { id: "casual",    label: "Something casual" },
-  { id: "marriage",  label: "Marriage" },
-  { id: "travel",    label: "Travel companion" },
-  { id: "unsure",    label: "Not sure yet" },
+  { id: "tonight",   label: "Meet Tonight",          icon: "🌙", desc: "You're ready to meet someone today. We'll show you people who are free right now and nearby.", vip: true },
+  { id: "weekend",   label: "Weekend Companion",     icon: "☀️", desc: "Someone to share your weekend with — brunch, beach, spontaneous adventures. No strings, just vibes.", vip: false },
+  { id: "events",    label: "Events Companion",      icon: "🎟️", desc: "A plus-one for concerts, dinners, weddings or work events. Build real connections through shared experiences.", vip: false },
+  { id: "longterm",  label: "Long-term",             icon: "💞", desc: "You want something real and lasting. Someone to grow with, build with, and come home to.", vip: false },
+  { id: "marriage",  label: "Marriage",              icon: "💍", desc: "You're serious about finding a life partner. We'll highlight profiles who share the same commitment.", vip: false },
+  { id: "chat",      label: "Chat & Friendship",     icon: "💬", desc: "No pressure, just genuine connections. Great conversations, new friends, maybe something more.", vip: false },
+  { id: "casual",    label: "Something Casual",      icon: "✨", desc: "Fun and light — you know what you want and you're honest about it. Mutual respect always.", vip: false },
+  { id: "travel",    label: "Travel Companion",      icon: "✈️", desc: "Explore new places with someone who loves adventure as much as you do. Near or far.", vip: false },
+  { id: "unsure",    label: "Not Sure Yet",          icon: "🤔", desc: "Still figuring it out — that's perfectly fine. Browse freely and see what feels right.", vip: false },
 ];
 
 const COUNTRIES = [
@@ -121,7 +124,7 @@ export default function WelcomePage() {
   const [country, setCountry] = useState(COUNTRIES[5]); // Indonesia default
   const [language, setLanguage] = useState(LANGUAGES[0]);
   const [language2, setLanguage2] = useState(LANGUAGES[1]);
-  const [intent, setIntent] = useState(INTENT_OPTIONS[0]);
+  const [intent, setIntent] = useState(INTENT_OPTIONS[3]); // default: long-term
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
@@ -737,58 +740,181 @@ function Step2({ language, setLanguage, language2, setLanguage2 }: {
   );
 }
 
-// ── Step 3: Intent pill chips ─────────────────────────────────────────────────
-
-const INTENT_ICONS: Record<string, string> = {
-  longterm: "💞",
-  chat: "💬",
-  casual: "✨",
-  marriage: "💍",
-  travel: "✈️",
-  unsure: "🤔",
-};
+// ── Step 3: Intent chips with inline expand ───────────────────────────────────
 
 function Step3({ intent, setIntent }: {
   intent: typeof INTENT_OPTIONS[0];
   setIntent: (v: typeof INTENT_OPTIONS[0]) => void;
 }) {
+  // expanded = tapped but not yet confirmed; confirmed = intent.id
+  const [expanded, setExpanded] = useState<string | null>(intent.id);
+  const confirmed = intent.id;
+
+  const handleTap = (o: typeof INTENT_OPTIONS[0]) => {
+    if (expanded === o.id) {
+      // second tap on already-expanded = confirm
+      setIntent(o);
+    } else {
+      setExpanded(o.id);
+    }
+  };
+
+  const handleConfirm = (o: typeof INTENT_OPTIONS[0]) => {
+    setIntent(o);
+    // keep expanded so user sees their confirmed choice
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
       transition={{ duration: 0.22 }}
     >
-      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px" }}>
+      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 2px" }}>
         What are you seeking?
       </p>
-      <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
-        Tap to select
+      <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, margin: "0 0 14px", lineHeight: 1.5 }}>
+        Tap to explore · tap again to confirm
       </p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {INTENT_OPTIONS.map(o => {
-          const active = intent.id === o.id;
+          const isExpanded = expanded === o.id;
+          const isConfirmed = confirmed === o.id;
+
           return (
-            <motion.button
+            <motion.div
               key={o.id}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => setIntent(o)}
+              layout
               style={{
-                padding: "13px 12px",
+                gridColumn: isExpanded ? "1 / -1" : undefined,
                 borderRadius: 16,
-                border: active ? "1.5px solid rgba(232,72,199,0.7)" : "1px solid rgba(255,255,255,0.1)",
-                background: active
-                  ? "linear-gradient(135deg, rgba(232,72,199,0.18), rgba(195,60,255,0.14))"
-                  : "rgba(0,0,0,0.35)",
-                boxShadow: active ? "0 0 16px rgba(232,72,199,0.3), inset 0 0 8px rgba(232,72,199,0.08)" : "none",
+                border: isConfirmed
+                  ? "1.5px solid rgba(232,72,199,0.75)"
+                  : isExpanded
+                    ? "1.5px solid rgba(195,60,255,0.5)"
+                    : "1px solid rgba(255,255,255,0.1)",
+                background: isConfirmed
+                  ? "linear-gradient(135deg, rgba(232,72,199,0.2), rgba(195,60,255,0.15))"
+                  : isExpanded
+                    ? "linear-gradient(135deg, rgba(195,60,255,0.12), rgba(232,72,199,0.08))"
+                    : "rgba(0,0,0,0.35)",
+                boxShadow: isConfirmed
+                  ? "0 0 20px rgba(232,72,199,0.35), inset 0 0 10px rgba(232,72,199,0.1)"
+                  : isExpanded
+                    ? "0 0 12px rgba(195,60,255,0.2)"
+                    : "none",
+                overflow: "hidden",
                 cursor: "pointer",
-                display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6,
-                transition: "all 0.2s",
+                transition: "border 0.2s, background 0.2s, box-shadow 0.2s",
               }}
+              onClick={() => handleTap(o)}
             >
-              <span style={{ fontSize: 22, lineHeight: 1 }}>{INTENT_ICONS[o.id]}</span>
-              <span style={{ color: active ? "white" : "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: active ? 800 : 500, lineHeight: 1.2, textAlign: "left" }}>
-                {o.label}
-              </span>
-            </motion.button>
+              {/* ── Collapsed / header row ── */}
+              <div style={{
+                padding: isExpanded ? "12px 14px 8px" : "11px 8px",
+                display: "flex",
+                flexDirection: isExpanded ? "row" : "column",
+                alignItems: isExpanded ? "center" : "flex-start",
+                gap: isExpanded ? 10 : 5,
+              }}>
+                <span style={{ fontSize: isExpanded ? 22 : 20, lineHeight: 1, flexShrink: 0 }}>{o.icon}</span>
+                <span style={{
+                  color: isConfirmed || isExpanded ? "white" : "rgba(255,255,255,0.6)",
+                  fontSize: isExpanded ? 14 : 11,
+                  fontWeight: isConfirmed ? 800 : isExpanded ? 700 : 500,
+                  lineHeight: 1.2,
+                  flex: 1,
+                }}>
+                  {o.label}
+                </span>
+                {isExpanded && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", flexShrink: 0 }}
+                  >
+                    {isConfirmed ? "✓ Selected" : ""}
+                  </motion.span>
+                )}
+                {/* VIP badge */}
+                {o.vip && !isExpanded && (
+                  <span style={{
+                    fontSize: 8, fontWeight: 800, color: "#fbbf24",
+                    background: "rgba(251,191,36,0.15)", borderRadius: 6,
+                    padding: "2px 5px", border: "1px solid rgba(251,191,36,0.3)",
+                    alignSelf: "flex-start",
+                  }}>VIP</span>
+                )}
+              </div>
+
+              {/* ── Expanded body ── */}
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.22 }}
+                    style={{ overflow: "hidden" }}
+                  >
+                    <div style={{ padding: "0 14px 14px" }}>
+                      {/* Description */}
+                      <p style={{
+                        color: "rgba(255,255,255,0.65)", fontSize: 12.5,
+                        lineHeight: 1.6, margin: "0 0 12px",
+                      }}>
+                        {o.desc}
+                      </p>
+
+                      {/* VIP notice */}
+                      {o.vip && (
+                        <div style={{
+                          display: "flex", alignItems: "center", gap: 8,
+                          padding: "8px 12px", borderRadius: 10, marginBottom: 12,
+                          background: "rgba(251,191,36,0.08)",
+                          border: "1px solid rgba(251,191,36,0.25)",
+                        }}>
+                          <span style={{ fontSize: 14 }}>⭐</span>
+                          <p style={{ margin: 0, color: "#fbbf24", fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>
+                            VIP members get priority visibility for this intent
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Action row */}
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <motion.button
+                          whileTap={{ scale: 0.96 }}
+                          onClick={(e) => { e.stopPropagation(); setExpanded(null); }}
+                          style={{
+                            flex: 1, height: 40, borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)",
+                            background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)",
+                            fontSize: 13, fontWeight: 700, cursor: "pointer",
+                          }}
+                        >
+                          ← Back
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.96 }}
+                          onClick={(e) => { e.stopPropagation(); handleConfirm(o); }}
+                          style={{
+                            flex: 2, height: 40, borderRadius: 12, border: "none",
+                            background: isConfirmed
+                              ? "linear-gradient(135deg, rgba(232,72,199,0.6), rgba(195,60,255,0.6))"
+                              : "linear-gradient(135deg, #e848c7, #c33cff)",
+                            color: "white", fontSize: 13, fontWeight: 900,
+                            cursor: "pointer",
+                            boxShadow: "0 3px 14px rgba(195,60,255,0.4)",
+                          }}
+                        >
+                          {isConfirmed ? "✓ Confirmed" : "Confirm →"}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           );
         })}
       </div>
