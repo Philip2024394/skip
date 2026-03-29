@@ -48,6 +48,7 @@ import { useGlobalDating } from "@/shared/hooks/useGlobalDating";
 import { getUserCountry } from "@/shared/hooks/useUserCurrency";
 import VisitorGuidePage from "@/features/dating/pages/VisitorGuidePage";
 import { RealGiftOrderFlow } from "@/features/real-gifts/RealGiftOrderFlow";
+import { ShimmerButton, AnimatedGradientText, MagicCard } from "@/shared/components/magic-ui";
 import { GiftDeliveryNotification } from "@/features/real-gifts/GiftDeliveryNotification";
 import logoHeart from "@/assets/images/logo-heart.png";
 import {
@@ -1988,7 +1989,7 @@ const Index = () => {
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 340, damping: 32 }}
               style={{
-                position: "fixed", top: 0, right: 0, bottom: 0, width: 240,
+                position: "fixed", top: 0, right: 0, bottom: 0, width: 256,
                 backgroundImage: "url('/images/app-background.png')",
                 backgroundSize: "cover", backgroundPosition: "center",
                 zIndex: 91, display: "flex", flexDirection: "column",
@@ -1996,54 +1997,58 @@ const Index = () => {
                 paddingBottom: "max(24px, env(safe-area-inset-bottom, 24px))",
               }}
             >
-              {/* Dark overlay for readability */}
-              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", pointerEvents: "none" }} />
+              {/* Dark overlay */}
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.52)", pointerEvents: "none" }} />
 
-              {/* Close */}
-              <button
+              {/* ── Close button ── */}
+              <motion.button
+                whileTap={{ scale: 0.9 }}
                 onClick={() => setShowDrawer(false)}
                 style={{
-                  position: "absolute", top: "max(12px, env(safe-area-inset-top, 12px))", right: 16,
-                  width: 34, height: 34, borderRadius: "50%", border: "none",
-                  background: "rgba(255,255,255,0.12)", color: "white", fontSize: 18,
+                  position: "absolute", top: "max(14px, env(safe-area-inset-top, 14px))", right: 16,
+                  width: 36, height: 36, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.18)",
+                  background: "rgba(255,255,255,0.08)", color: "white", fontSize: 18,
                   display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 2,
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
                 }}
-              >×</button>
+              >×</motion.button>
 
-              <div style={{ position: "relative", zIndex: 1, padding: "8px 20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, marginTop: 4 }}>Quick Access</p>
+              {/* ── Content ── */}
+              <div style={{ position: "relative", zIndex: 1, padding: "8px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
 
-                {/* Coin balance */}
-                <button
+                {/* Section label */}
+                <div style={{ marginBottom: 2, marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+                  <AnimatedGradientText
+                    style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase" }}
+                  >
+                    Quick Access
+                  </AnimatedGradientText>
+                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+                </div>
+
+                {/* ── Coins button ── */}
+                <ShimmerButton
+                  gradient="linear-gradient(135deg, rgba(234,179,8,0.22), rgba(251,146,60,0.22))"
+                  shimmerColor="rgba(255,220,100,0.18)"
+                  glowColor="rgba(234,179,8,0.4)"
+                  icon="🪙"
+                  label="Coins"
+                  sublabel={coinBalance.loading ? "Loading…" : `${coinBalance.balance} balance`}
                   onClick={() => { setShowDrawer(false); setShowCoinRefuel(true); }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 14,
-                    padding: "14px 16px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(0,0,0,0.4)", cursor: "pointer", width: "100%", textAlign: "left",
-                  }}
-                >
-                  <span style={{ fontSize: 22 }}>🪙</span>
-                  <div>
-                    <p style={{ color: "white", fontWeight: 800, fontSize: 15, margin: 0 }}>Coins</p>
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>{coinBalance.loading ? "…" : `${coinBalance.balance} balance`}</p>
-                  </div>
-                </button>
+                />
 
-                {/* Teddy Room */}
-                <button
+                {/* ── Teddy Room button ── */}
+                <ShimmerButton
+                  gradient="linear-gradient(135deg, rgba(236,72,153,0.22), rgba(168,85,247,0.22))"
+                  shimmerColor="rgba(255,180,220,0.18)"
+                  glowColor="rgba(236,72,153,0.4)"
+                  icon="🧸"
+                  label="My Teddy Room"
+                  sublabel="Private media vault"
                   onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 14,
-                    padding: "14px 16px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)",
-                    background: "rgba(0,0,0,0.4)", cursor: "pointer", width: "100%", textAlign: "left",
-                  }}
-                >
-                  <span style={{ fontSize: 22 }}>🧸</span>
-                  <div>
-                    <p style={{ color: "white", fontWeight: 800, fontSize: 15, margin: 0 }}>My Teddy Room</p>
-                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Private media vault</p>
-                  </div>
-                </button>
+                />
+
               </div>
             </motion.div>
           </>
