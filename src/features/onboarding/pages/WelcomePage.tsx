@@ -273,85 +273,88 @@ export default function WelcomePage() {
       <AnimatePresence>
         {showSlider && step <= 4 && (
           <>
-            {/* Scrim */}
+            {/* Scrim — matches PaymentSheet */}
             <motion.div
               key="scrim"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              style={{ position: "absolute", inset: 0, zIndex: 3, background: "rgba(0,0,0,0.45)" }}
+              style={{
+                position: "absolute", inset: 0, zIndex: 3,
+                background: "rgba(0,0,0,0.72)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+              }}
             />
 
-            {/* Sheet */}
+            {/* Sheet — matches PaymentSheet */}
             <motion.div
               key="sheet"
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              transition={{ type: "spring", stiffness: 340, damping: 34 }}
               drag="y"
               dragControls={dragControls}
               dragListener={false}
               dragConstraints={{ top: 0 }}
-              dragElastic={{ top: 0, bottom: 0.3 }}
-              onDragEnd={(_, info) => { if (info.offset.y > 100) setShowSlider(false); }}
+              dragElastic={{ top: 0, bottom: 0.4 }}
+              onDragEnd={(_, info) => { if (info.offset.y > 120) setShowSlider(false); }}
               style={{
                 position: "absolute", left: 0, right: 0, bottom: 0,
                 zIndex: 4,
-                maxHeight: "78dvh",
+                maxHeight: "82dvh",
                 borderRadius: "28px 28px 0 0",
-                backgroundImage: "url('/images/app-background.png')",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                background: "#0c0c14",
+                border: "1px solid rgba(255,255,255,0.09)",
+                borderBottom: "none",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
               }}
             >
-              {/* ── Top rim: pink→purple gradient stripe ── */}
+              {/* ── Accent bar — exact PaymentSheet */}
               <div style={{
                 height: 3, flexShrink: 0,
-                background: "linear-gradient(90deg, #e848c7, #c33cff, #e848c7)",
+                background: "linear-gradient(90deg,#ec4899,#a855f7,#ec4899)",
                 backgroundSize: "200% 100%",
                 animation: "rim-shift 3s linear infinite",
               }} />
 
-              {/* ── Drag handle: fuchsia pill ── */}
+              {/* ── Drag handle — PaymentSheet style */}
               <div
                 onPointerDown={(e) => dragControls.start(e)}
-                style={{ flexShrink: 0, padding: "10px 0 4px", display: "flex", justifyContent: "center", cursor: "grab" }}
+                style={{ flexShrink: 0, padding: "10px 0 2px", display: "flex", justifyContent: "center", cursor: "grab" }}
               >
-                <div style={{
-                  width: 38, height: 5, borderRadius: 99,
-                  background: "linear-gradient(90deg, rgba(232,72,199,0.7), rgba(195,60,255,0.7))",
-                  boxShadow: "0 0 10px rgba(232,72,199,0.5)",
-                }} />
+                <div style={{ width: 40, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.15)" }} />
               </div>
 
-              {/* ── Progress bar: segmented pill strip ── */}
+              {/* ── Progress bar */}
               <div style={{ display: "flex", gap: 5, padding: "10px 20px 2px", flexShrink: 0 }}>
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} style={{
-                    flex: 1, height: 4, borderRadius: 99,
+                    flex: 1, height: 3, borderRadius: 99,
                     background: i <= step
-                      ? "linear-gradient(90deg, #e848c7, #c33cff)"
-                      : "rgba(255,255,255,0.12)",
-                    boxShadow: i === step ? "0 0 8px rgba(232,72,199,0.6)" : "none",
+                      ? "linear-gradient(90deg,#ec4899,#a855f7)"
+                      : "rgba(255,255,255,0.09)",
+                    boxShadow: i === step ? "0 0 8px rgba(236,72,153,0.55)" : "none",
                     transition: "all 0.35s ease",
                   }} />
                 ))}
               </div>
 
-              {/* ── Step label ── */}
-              <div style={{ padding: "6px 20px 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 3, height: 16, borderRadius: 99, background: "linear-gradient(180deg, #e848c7, #c33cff)" }} />
-                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+              {/* ── Step label — PaymentSheet section label style */}
+              <div style={{ padding: "6px 20px 0", flexShrink: 0 }}>
+                <span style={{
+                  color: "rgba(255,255,255,0.35)", fontSize: 10,
+                  fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase",
+                }}>
                   Step {step} of 4
                 </span>
               </div>
 
               {/* Scrollable content */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "14px 20px 8px" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 8px" }}>
                 <AnimatePresence mode="wait">
                   {step === 1 && <Step1 key="s1" name={name} setName={setName} country={country} setCountry={setCountry} />}
                   {step === 2 && <Step2 key="s2" language={language} setLanguage={setLanguage} language2={language2} setLanguage2={setLanguage2} />}
@@ -360,8 +363,13 @@ export default function WelcomePage() {
                 </AnimatePresence>
               </div>
 
-              {/* ── CTA button ── */}
-              <div style={{ flexShrink: 0, padding: "12px 20px 32px" }}>
+              {/* ── CTA — PaymentSheet sticky footer */}
+              <div style={{
+                flexShrink: 0,
+                padding: "12px 16px 32px",
+                background: "linear-gradient(to top, #0c0c14 60%, transparent)",
+                borderTop: "1px solid rgba(255,255,255,0.06)",
+              }}>
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleNext}
@@ -369,14 +377,13 @@ export default function WelcomePage() {
                   style={{
                     width: "100%", height: 52, borderRadius: 16, border: "none",
                     background: canNext() && !saving
-                      ? "linear-gradient(135deg, #e848c7, #c33cff)"
-                      : "rgba(255,255,255,0.07)",
-                    color: "white",
-                    fontWeight: 900, fontSize: 16,
+                      ? "linear-gradient(135deg,#ec4899,#a855f7)"
+                      : "rgba(255,255,255,0.08)",
+                    color: "white", fontWeight: 900, fontSize: 16,
                     cursor: canNext() && !saving ? "pointer" : "default",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    boxShadow: canNext() && !saving ? "0 4px 24px rgba(195,60,255,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" : "none",
-                    transition: "all 0.25s",
+                    boxShadow: canNext() && !saving ? "0 4px 20px rgba(236,72,153,0.38)" : "none",
+                    transition: "all 0.2s",
                   }}
                 >
                   {saving ? (
@@ -387,6 +394,9 @@ export default function WelcomePage() {
                     avatarUrl ? <span>Continue →</span> : <span>Skip & Continue →</span>
                   )}
                 </motion.button>
+                <p style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.22)", marginTop: 8 }}>
+                  🔒 Your data is private and secure
+                </p>
               </div>
             </motion.div>
           </>
@@ -405,9 +415,7 @@ export default function WelcomePage() {
             style={{
               position: "absolute", inset: 0, zIndex: 10,
               display: "flex", flexDirection: "column",
-              backgroundImage: "url('/images/app-background.png')",
-              backgroundSize: "cover",
-              backgroundPosition: "center",
+              background: "#0c0c14",
             }}
           >
             {/* Header */}
@@ -568,18 +576,18 @@ function WheelPicker({ items, selected, onSelect }: {
   };
 
   return (
-    <div style={{ position: "relative", height: ITEM_H * 3, overflow: "hidden", borderRadius: 14 }}>
+    <div style={{ position: "relative", height: ITEM_H * 3, overflow: "hidden", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
       {/* ── Top fade ── */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)", zIndex: 2, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to bottom, #0c0c14, transparent)", zIndex: 2, pointerEvents: "none" }} />
       {/* ── Bottom fade ── */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)", zIndex: 2, pointerEvents: "none" }} />
-      {/* ── Centre highlight: home-page card style ── */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to top, #0c0c14, transparent)", zIndex: 2, pointerEvents: "none" }} />
+      {/* ── Centre highlight: PaymentSheet selected card style ── */}
       <div style={{
-        position: "absolute", top: ITEM_H, left: 6, right: 6, height: ITEM_H,
-        background: "linear-gradient(135deg, rgba(232,72,199,0.13), rgba(195,60,255,0.1))",
-        border: "1px solid rgba(232,72,199,0.28)",
+        position: "absolute", top: ITEM_H, left: 4, right: 4, height: ITEM_H,
+        background: "rgba(255,255,255,0.07)",
+        outline: "2px solid rgba(236,72,153,0.55)",
+        outlineOffset: 0,
         borderRadius: 12,
-        boxShadow: "0 0 14px rgba(232,72,199,0.15)",
         zIndex: 1, pointerEvents: "none",
       }} />
       {/* Scrollable list */}
@@ -658,12 +666,13 @@ function Step1({ name, setName, country, setCountry }: {
           autoFocus
           style={{
             width: "100%", height: 48, borderRadius: 14, padding: "0 16px",
-            background: "rgba(0,0,0,0.4)", border: "1.5px solid rgba(255,255,255,0.15)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1.5px solid rgba(255,255,255,0.09)",
             color: "white", fontSize: 15, fontWeight: 600, outline: "none",
             boxSizing: "border-box",
           }}
-          onFocus={(e) => { e.target.style.borderColor = "rgba(232,72,199,0.8)"; e.target.style.boxShadow = "0 0 0 3px rgba(232,72,199,0.15)"; }}
-          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.15)"; e.target.style.boxShadow = "none"; }}
+          onFocus={(e) => { e.target.style.borderColor = "rgba(236,72,153,0.55)"; e.target.style.boxShadow = "0 0 0 3px rgba(236,72,153,0.12)"; }}
+          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.09)"; e.target.style.boxShadow = "none"; }}
         />
       </div>
 
@@ -787,25 +796,24 @@ function Step3({ intent, setIntent }: {
               layout
               style={{
                 gridColumn: isExpanded ? "1 / -1" : undefined,
-                borderRadius: 16,
-                border: isConfirmed
-                  ? "1.5px solid rgba(232,72,199,0.75)"
+                borderRadius: 18,
+                outline: isConfirmed
+                  ? "2px solid rgba(236,72,153,0.55)"
                   : isExpanded
-                    ? "1.5px solid rgba(195,60,255,0.5)"
-                    : "1px solid rgba(255,255,255,0.1)",
+                    ? "2px solid rgba(168,85,247,0.45)"
+                    : "2px solid rgba(255,255,255,0.07)",
+                outlineOffset: 0,
                 background: isConfirmed
-                  ? "linear-gradient(135deg, rgba(232,72,199,0.2), rgba(195,60,255,0.15))"
+                  ? "rgba(255,255,255,0.07)"
                   : isExpanded
-                    ? "linear-gradient(135deg, rgba(195,60,255,0.12), rgba(232,72,199,0.08))"
-                    : "rgba(0,0,0,0.35)",
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(255,255,255,0.03)",
                 boxShadow: isConfirmed
-                  ? "0 0 20px rgba(232,72,199,0.35), inset 0 0 10px rgba(232,72,199,0.1)"
-                  : isExpanded
-                    ? "0 0 12px rgba(195,60,255,0.2)"
-                    : "none",
+                  ? "0 2px 14px rgba(236,72,153,0.3)"
+                  : "none",
                 overflow: "hidden",
                 cursor: "pointer",
-                transition: "border 0.2s, background 0.2s, box-shadow 0.2s",
+                transition: "outline 0.18s, background 0.18s, box-shadow 0.18s",
               }}
               onClick={() => handleTap(o)}
             >
@@ -900,8 +908,8 @@ function Step3({ intent, setIntent }: {
                           style={{
                             flex: 2, height: 40, borderRadius: 12, border: "none",
                             background: isConfirmed
-                              ? "linear-gradient(135deg, rgba(232,72,199,0.6), rgba(195,60,255,0.6))"
-                              : "linear-gradient(135deg, #e848c7, #c33cff)",
+                              ? "linear-gradient(135deg,rgba(236,72,153,0.6),rgba(168,85,247,0.6))"
+                              : "linear-gradient(135deg,#ec4899,#a855f7)",
                             color: "white", fontSize: 13, fontWeight: 900,
                             cursor: "pointer",
                             boxShadow: "0 3px 14px rgba(195,60,255,0.4)",
