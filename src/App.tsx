@@ -10,6 +10,7 @@ import { AuthPage } from "@/features/auth/pages";
 import { ProtectedRoute, LoadingFallback } from "@/shared/components";
 
 // Lazy load heavy pages to reduce initial bundle size
+const HomePage = lazy(() => import("@/features/dating/pages/HomePage"));
 const DashboardPage = lazy(() => import("@/features/dating/pages/DashboardPage"));
 const WhatsAppCollection = lazy(() => import("@/features/admin/pages/WhatsAppCollection"));
 const WhatsAppDirectory = lazy(() => import("@/features/admin/components/WhatsAppDirectory"));
@@ -50,10 +51,10 @@ const AppContent = () => {
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/" element={<AuthPage />} />
-        <Route path="/home" element={<AuthPage />} />
+        <Route path="/home" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><HomePage /></Suspense></ProtectedRoute>} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/signup" element={<AuthPage />} />
-        <Route path="/profile/:id" element={<AuthPage />} />
+        <Route path="/profile/:id" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><HomePage /></Suspense></ProtectedRoute>} />
         <Route path="/reset-password" element={<AuthPage />} />
         <Route path="/payment-success" element={<AuthPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><DashboardPage /></Suspense></ProtectedRoute>} />

@@ -31,21 +31,21 @@ const LANGUAGES = [
 ];
 
 const INTENT_OPTIONS = [
-  { id: "longterm",  emoji: "💑", label: "Long-term relationship" },
-  { id: "chat",      emoji: "💬", label: "Chat & friendship" },
-  { id: "casual",    emoji: "🔥", label: "Something casual" },
-  { id: "marriage",  emoji: "💍", label: "Marriage" },
-  { id: "travel",    emoji: "✈️", label: "Travel companion" },
-  { id: "unsure",    emoji: "🎯", label: "Not sure yet" },
+  { id: "longterm",  label: "Long-term relationship" },
+  { id: "chat",      label: "Chat & friendship" },
+  { id: "casual",    label: "Something casual" },
+  { id: "marriage",  label: "Marriage" },
+  { id: "travel",    label: "Travel companion" },
+  { id: "unsure",    label: "Not sure yet" },
 ];
 
 const COUNTRIES = [
-  { code: "ID", name: "Indonesia",       flag: "🇮🇩" },
   { code: "SG", name: "Singapore",       flag: "🇸🇬" },
   { code: "MY", name: "Malaysia",        flag: "🇲🇾" },
   { code: "PH", name: "Philippines",     flag: "🇵🇭" },
   { code: "TH", name: "Thailand",        flag: "🇹🇭" },
   { code: "VN", name: "Vietnam",         flag: "🇻🇳" },
+  { code: "ID", name: "Indonesia",       flag: "🇮🇩" },
   { code: "AU", name: "Australia",       flag: "🇦🇺" },
   { code: "GB", name: "United Kingdom",  flag: "🇬🇧" },
   { code: "US", name: "United States",   flag: "🇺🇸" },
@@ -85,7 +85,7 @@ async function detectCountryCode(): Promise<string> {
 }
 
 function getCountryByCode(code: string) {
-  return COUNTRIES.find(c => c.code === code) ?? COUNTRIES[0];
+  return COUNTRIES.find(c => c.code === code) ?? COUNTRIES[5]; // default Indonesia
 }
 
 // Map country code → default language code
@@ -112,14 +112,15 @@ export default function WelcomePage() {
   const { setLocale } = useLanguage();
   const [userId, setUserId] = useState<string | null>(null);
   const [showSlider, setShowSlider] = useState(false);
-  const [step, setStep] = useState(1); // 1 | 2 | 3
+  const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   // Form state
   const [name, setName] = useState("");
-  const [country, setCountry] = useState(COUNTRIES[0]);
-  const [countryDetected, setCountryDetected] = useState(false);
+  const [country, setCountry] = useState(COUNTRIES[5]); // Indonesia default
   const [language, setLanguage] = useState(LANGUAGES[0]);
+  const [language2, setLanguage2] = useState(LANGUAGES[1]);
   const [intent, setIntent] = useState(INTENT_OPTIONS[0]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -138,12 +139,16 @@ export default function WelcomePage() {
   useEffect(() => {
     detectCountryCode().then(code => {
       setCountry(getCountryByCode(code));
-      setLanguage(getLangByCountryCode(code));
-      setCountryDetected(true);
+      const primary = getLangByCountryCode(code);
+      setLanguage(primary);
+      // Smart secondary: English unless primary is English, then Indonesian
+      setLanguage2(primary.code === "EN"
+        ? LANGUAGES.find(l => l.code === "ID")!
+        : LANGUAGES.find(l => l.code === "EN")!);
     });
   }, []);
 
-  // Fallback: show slider after 15s if video never fires onEnded (e.g. slow load)
+  // Fallback: show slider after 15s if video never fires onEnded
   useEffect(() => {
     const t = setTimeout(() => setShowSlider(true), 15_000);
     return () => clearTimeout(t);
@@ -181,9 +186,9 @@ export default function WelcomePage() {
         name: name.trim(),
         country: country.code,
         preferred_language: language.code.toLowerCase(),
+        languages_spoken: `${language.code.toLowerCase()},${language2.code.toLowerCase()}`,
         looking_for: intent.id,
       } as any).eq("id", userId);
-      // Update app locale — falls back to "en" for languages not fully translated yet
       const appLocale = language.code.toLowerCase() === "id" ? "id" : "en";
       setLocale(appLocale as any);
       navigate("/home", { replace: true });
@@ -198,19 +203,15 @@ export default function WelcomePage() {
     if (step === 1) return name.trim().length >= 2;
     if (step === 2) return true;
     if (step === 3) return true;
-    if (step === 4) return true; // photo optional — can skip
+    if (step === 4) return true;
+    if (step === 5) return agreedToTerms;
     return false;
   };
 
   const handleNext = () => {
-    if (step < 4) setStep(s => s + 1);
+    if (step < 5) setStep(s => s + 1);
     else handleFinish();
   };
-
-  // Sorted countries: detected first, then rest
-  const sortedCountries = countryDetected
-    ? [country, ...COUNTRIES.filter(c => c.code !== country.code)]
-    : COUNTRIES;
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "#050508", overflow: "hidden" }}>
@@ -229,7 +230,6 @@ export default function WelcomePage() {
           zIndex: 0,
         }}
       />
-
 
       {/* ── Welcome text ─────────────────────────────────────────── */}
       <motion.div
@@ -255,12 +255,11 @@ export default function WelcomePage() {
         <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, marginTop: 10, lineHeight: 1.5 }}>
           Indonesia's home for real connections ❤️
         </p>
-
       </motion.div>
 
-      {/* ── Bottom sheet sliders ──────────────────────────────────── */}
+      {/* ── Bottom sheet sliders (steps 1–4) ─────────────────────── */}
       <AnimatePresence>
-        {showSlider && (
+        {showSlider && step <= 4 && (
           <>
             {/* Scrim */}
             <motion.div
@@ -289,21 +288,23 @@ export default function WelcomePage() {
                 zIndex: 4,
                 maxHeight: "78dvh",
                 borderRadius: "28px 28px 0 0",
-                background: "linear-gradient(160deg, #0a0014 0%, #1a0030 50%, #050008 100%)",
+                backgroundImage: "url('/images/app-background.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
               }}
             >
-              {/* Top rim gradient */}
-              <div style={{ height: 3, background: "linear-gradient(90deg, #e848c7, #c33cff, #e848c7)", flexShrink: 0 }} />
+              {/* Top rim */}
+              <div style={{ height: 4, background: "rgba(0,0,0,0.4)", flexShrink: 0 }} />
 
               {/* Drag handle */}
               <div
                 onPointerDown={(e) => dragControls.start(e)}
                 style={{ flexShrink: 0, padding: "10px 0 0", display: "flex", justifyContent: "center", cursor: "grab" }}
               >
-                <div style={{ width: 36, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.18)" }} />
+                <div style={{ width: 36, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.5)" }} />
               </div>
 
               {/* Step dots */}
@@ -311,7 +312,7 @@ export default function WelcomePage() {
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} style={{
                     width: i === step ? 22 : 6, height: 6, borderRadius: 3,
-                    background: i <= step ? "linear-gradient(90deg, #e848c7, #c33cff)" : "rgba(255,255,255,0.12)",
+                    background: i === step ? "rgba(0,0,0,0.4)" : i < step ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.3)",
                     transition: "all 0.3s",
                   }} />
                 ))}
@@ -320,8 +321,8 @@ export default function WelcomePage() {
               {/* Scrollable content */}
               <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 8px" }}>
                 <AnimatePresence mode="wait">
-                  {step === 1 && <Step1 key="s1" name={name} setName={setName} country={country} setCountry={setCountry} countries={sortedCountries} />}
-                  {step === 2 && <Step2 key="s2" language={language} setLanguage={setLanguage} />}
+                  {step === 1 && <Step1 key="s1" name={name} setName={setName} country={country} setCountry={setCountry} />}
+                  {step === 2 && <Step2 key="s2" language={language} setLanguage={setLanguage} language2={language2} setLanguage2={setLanguage2} />}
                   {step === 3 && <Step3 key="s3" intent={intent} setIntent={setIntent} />}
                   {step === 4 && <Step4 key="s4" avatarUrl={avatarUrl} uploading={uploadingPhoto} onUpload={handlePhotoUpload} />}
                 </AnimatePresence>
@@ -335,27 +336,20 @@ export default function WelcomePage() {
                   style={{
                     width: "100%", height: 52, borderRadius: 16, border: "none",
                     background: canNext() && !saving
-                      ? "linear-gradient(135deg, #e848c7, #c33cff)"
-                      : "rgba(255,255,255,0.08)",
-                    color: "white", fontWeight: 900, fontSize: 16,
+                      ? "rgba(0,0,0,0.4)"
+                      : "rgba(0,0,0,0.2)",
+                    color: "white",
+                    fontWeight: 900, fontSize: 16,
                     cursor: canNext() && !saving ? "pointer" : "default",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    boxShadow: canNext() ? "0 4px 24px rgba(195,60,255,0.45)" : "none",
+                    boxShadow: canNext() ? "0 4px 20px rgba(0,0,0,0.5)" : "none",
                     transition: "all 0.2s",
                   }}
                 >
-                  {saving ? (
-                    <span style={{
-                      width: 20, height: 20, borderRadius: "50%",
-                      border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white",
-                      animation: "spin 0.7s linear infinite", display: "inline-block",
-                    }} />
-                  ) : step < 4 ? (
+                  {step < 4 ? (
                     <span>Continue</span>
-                  ) : avatarUrl ? (
-                    <><span>Let's Go 🚀</span></>
                   ) : (
-                    <><span>Skip & Continue →</span></>
+                    avatarUrl ? <span>Continue →</span> : <span>Skip & Continue →</span>
                   )}
                 </button>
               </div>
@@ -364,37 +358,250 @@ export default function WelcomePage() {
         )}
       </AnimatePresence>
 
+      {/* ── Terms & Conditions full-screen overlay (step 5) ──────── */}
+      <AnimatePresence>
+        {step === 5 && (
+          <motion.div
+            key="terms"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            style={{
+              position: "absolute", inset: 0, zIndex: 10,
+              display: "flex", flexDirection: "column",
+              backgroundImage: "url('/images/app-background.png')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              flexShrink: 0,
+              background: "linear-gradient(135deg, #e848c7, #c33cff)",
+              padding: "max(44px, env(safe-area-inset-top, 44px)) 20px 18px",
+              display: "flex", alignItems: "center", gap: 12,
+            }}>
+              <button
+                onClick={() => setStep(4)}
+                style={{
+                  width: 36, height: 36, borderRadius: "50%", border: "none",
+                  background: "rgba(255,255,255,0.2)", color: "white",
+                  fontSize: 18, cursor: "pointer", display: "flex",
+                  alignItems: "center", justifyContent: "center", flexShrink: 0,
+                }}
+              >
+                ←
+              </button>
+              <div>
+                <p style={{ color: "white", fontWeight: 900, fontSize: 18, margin: 0 }}>Terms & Conditions</p>
+                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: 0, marginTop: 2 }}>Please read before joining</p>
+              </div>
+            </div>
+
+            {/* Scrollable T&C body */}
+            <div style={{
+              flex: 1, overflowY: "auto",
+              padding: "24px 20px",
+              fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.75,
+            }}>
+              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 20px" }}>
+                Last updated: March 2026
+              </p>
+
+              {[
+                ["1. Eligibility", "You must be 18 years of age or older to use 2DateMe. By creating an account you confirm you meet this requirement. We reserve the right to terminate accounts that violate this rule."],
+                ["2. Respectful Conduct", "You agree to treat all members with respect. Harassment, hate speech, threats, unsolicited explicit content, or abusive behaviour toward any user will result in immediate and permanent account removal."],
+                ["3. Authentic Profiles", "You agree to represent yourself honestly. Fake profiles, impersonation of real people, catfishing, and any scam or fraudulent activity are strictly prohibited."],
+                ["4. Privacy & Data", "We collect and store only the information necessary to operate the service. We do not sell your personal data to third parties. Your location is used only to show you nearby members and is never shared without consent."],
+                ["5. Payments & Refunds", "Premium features are billed through Stripe. Monthly subscriptions auto-renew unless cancelled at least 24 hours before the renewal date. One-time purchases are final. Refunds are handled in accordance with local consumer law."],
+                ["6. User Content", "You retain ownership of photos and content you upload. By uploading you grant 2DateMe a non-exclusive licence to display your content within the platform. You must not upload illegal, explicit, violent, or copyright-infringing content."],
+                ["7. Safety", "2DateMe is not responsible for the actions of other users. Always meet in public places for first dates. Report suspicious behaviour using the in-app report feature and our support team will review within 24 hours."],
+                ["8. Limitation of Liability", "The platform is provided 'as is'. We do not guarantee you will find a match. We are not liable for any loss or damage arising from your use of the service beyond the maximum permitted by law."],
+                ["9. Changes to Terms", "We may update these terms at any time. We will notify you of significant changes via the app or email. Continued use after notice constitutes acceptance of the updated terms."],
+                ["10. Contact", "For questions or support: support@date2me.com"],
+              ].map(([title, body]) => (
+                <div key={title as string} style={{ marginBottom: 22 }}>
+                  <p style={{ color: "white", fontWeight: 700, fontSize: 14, margin: "0 0 6px" }}>{title}</p>
+                  <p style={{ margin: 0 }}>{body}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              flexShrink: 0,
+              padding: "16px 20px max(28px, env(safe-area-inset-bottom, 28px))",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              background: "rgba(0,0,0,0.3)",
+            }}>
+              {/* Agree checkbox */}
+              <button
+                onClick={() => setAgreedToTerms(!agreedToTerms)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "12px 16px", borderRadius: 14, border: "none", width: "100%",
+                  background: agreedToTerms ? "rgba(232,72,199,0.12)" : "rgba(255,255,255,0.05)",
+                  outline: agreedToTerms ? "2px solid rgba(232,72,199,0.5)" : "2px solid rgba(255,255,255,0.1)",
+                  cursor: "pointer", textAlign: "left", marginBottom: 12,
+                  transition: "all 0.2s",
+                }}
+              >
+                <div style={{
+                  width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                  background: agreedToTerms ? "linear-gradient(135deg, #e848c7, #c33cff)" : "rgba(255,255,255,0.08)",
+                  border: agreedToTerms ? "none" : "1.5px solid rgba(255,255,255,0.25)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.2s",
+                }}>
+                  {agreedToTerms && <span style={{ color: "white", fontSize: 13, fontWeight: 900 }}>✓</span>}
+                </div>
+                <p style={{ margin: 0, color: agreedToTerms ? "white" : "rgba(255,255,255,0.55)", fontSize: 13, fontWeight: 600 }}>
+                  I have read and agree to the Terms & Conditions
+                </p>
+              </button>
+
+              {/* Agree button */}
+              <button
+                onClick={handleFinish}
+                disabled={!agreedToTerms || saving}
+                style={{
+                  width: "100%", height: 52, borderRadius: 16, border: "none",
+                  background: agreedToTerms && !saving
+                    ? "linear-gradient(135deg, #e848c7, #c33cff)"
+                    : "rgba(255,255,255,0.08)",
+                  color: "white", fontWeight: 900, fontSize: 16,
+                  cursor: agreedToTerms && !saving ? "pointer" : "default",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  boxShadow: agreedToTerms ? "0 4px 24px rgba(195,60,255,0.45)" : "none",
+                  transition: "all 0.2s",
+                }}
+              >
+                {saving ? (
+                  <span style={{
+                    width: 20, height: 20, borderRadius: "50%",
+                    border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white",
+                    animation: "spin 0.7s linear infinite", display: "inline-block",
+                  }} />
+                ) : (
+                  <span>I Agree & Enter the App 🚀</span>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+// ── Wheel Picker ──────────────────────────────────────────────────────────────
+
+const ITEM_H = 58;
+
+function WheelPicker({ items, selected, onSelect }: {
+  items: { key: string; label: string }[];
+  selected: string;
+  onSelect: (key: string) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(() => Math.max(0, items.findIndex(i => i.key === selected)));
+  const snapTimer = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollTop = activeIdx * ITEM_H;
+  }, []);
+
+  const handleScroll = () => {
+    const el = ref.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollTop / ITEM_H);
+    const clamped = Math.max(0, Math.min(idx, items.length - 1));
+    setActiveIdx(clamped);
+    clearTimeout(snapTimer.current);
+    snapTimer.current = setTimeout(() => {
+      el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
+      onSelect(items[clamped].key);
+    }, 120);
+  };
+
+  return (
+    <div style={{ position: "relative", height: ITEM_H * 3, overflow: "hidden" }}>
+      {/* Centre highlight */}
+      <div style={{ position: "absolute", top: ITEM_H, left: 0, right: 0, height: ITEM_H, background: "rgba(255,255,255,0.28)", zIndex: 1, pointerEvents: "none" }} />
+      {/* Left indicator line */}
+      <div style={{ position: "absolute", top: ITEM_H, left: 0, width: 3, height: ITEM_H, background: "rgba(0,0,0,0.4)", zIndex: 4, pointerEvents: "none" }} />
+      {/* Scrollable list */}
+      <div
+        ref={ref}
+        onScroll={handleScroll}
+        className="wheel-hide-scroll"
+        style={{ height: "100%", overflowY: "scroll", scrollSnapType: "y mandatory", paddingTop: ITEM_H, paddingBottom: ITEM_H, scrollbarWidth: "none", position: "relative", zIndex: 0 }}
+      >
+        {items.map((item, i) => {
+          const dist = Math.abs(i - activeIdx);
+          const isCenter = i === activeIdx;
+          return (
+            <div
+              key={item.key}
+              onClick={() => {
+                setActiveIdx(i);
+                ref.current?.scrollTo({ top: i * ITEM_H, behavior: "smooth" });
+                onSelect(item.key);
+              }}
+              style={{
+                height: ITEM_H, scrollSnapAlign: "center",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              <span style={{
+                color: isCenter ? "#ffffff" : dist === 1 ? "#ffffffaa" : "#ffffff55",
+                fontSize: isCenter ? 15 : dist === 1 ? 13 : 11,
+                fontWeight: isCenter ? 800 : dist === 1 ? 500 : 400,
+                letterSpacing: isCenter ? "0.02em" : 0,
+                transition: "all 0.18s",
+                textAlign: "center",
+                userSelect: "none",
+                paddingLeft: 8,
+                paddingRight: 4,
+              }}>
+                {item.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <style>{`.wheel-hide-scroll::-webkit-scrollbar{display:none}`}</style>
     </div>
   );
 }
 
 // ── Step 1: Name + Country ────────────────────────────────────────────────────
 
-function Step1({ name, setName, country, setCountry, countries }: {
+function Step1({ name, setName, country, setCountry }: {
   name: string;
   setName: (v: string) => void;
   country: { code: string; name: string; flag: string };
   setCountry: (v: { code: string; name: string; flag: string }) => void;
-  countries: typeof COUNTRIES;
 }) {
+  const countryItems = COUNTRIES.map(c => ({ key: c.code, label: `${c.flag}  ${c.name}` }));
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
       transition={{ duration: 0.22 }}
     >
-      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px" }}>
-        What shall we call you? 👋
-      </p>
-      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 22px", lineHeight: 1.5 }}>
-        An alias is fine — your privacy is yours to keep
+      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 18px" }}>
+        What shall we call you?
       </p>
 
       {/* Name input */}
-      <div style={{ marginBottom: 14 }}>
-        <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
-          Your name or alias
-        </label>
+      <div style={{ marginBottom: 18 }}>
         <input
           type="text"
           value={name}
@@ -404,116 +611,95 @@ function Step1({ name, setName, country, setCountry, countries }: {
           autoFocus
           style={{
             width: "100%", height: 48, borderRadius: 14, padding: "0 16px",
-            background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(255,255,255,0.13)",
+            background: "rgba(0,0,0,0.4)", border: "1.5px solid rgba(255,255,255,0.15)",
             color: "white", fontSize: 15, fontWeight: 600, outline: "none",
             boxSizing: "border-box",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "rgba(236,72,153,0.55)")}
-          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.13)")}
+          onFocus={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.65)")}
+          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.25)")}
         />
       </div>
 
-      {/* Country select */}
-      <div>
-        <label style={{ color: "rgba(255,255,255,0.45)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
-          Your country
-        </label>
-        <div style={{ position: "relative" }}>
-          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 20, pointerEvents: "none" }}>
-            {country.flag}
-          </span>
-          <select
-            value={country.code}
-            onChange={(e) => {
-              const found = countries.find(c => c.code === e.target.value);
-              if (found) setCountry(found);
+      {/* Country wheel */}
+      <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+        Your country
+      </label>
+      <WheelPicker
+        items={countryItems}
+        selected={country.code}
+        onSelect={(key) => {
+          const found = COUNTRIES.find(c => c.code === key);
+          if (found) setCountry(found);
+        }}
+      />
+    </motion.div>
+  );
+}
+
+// ── Step 2: Language — two side-by-side wheel carousels ───────────────────────
+
+function Step2({ language, setLanguage, language2, setLanguage2 }: {
+  language: typeof LANGUAGES[0];
+  setLanguage: (v: typeof LANGUAGES[0]) => void;
+  language2: typeof LANGUAGES[0];
+  setLanguage2: (v: typeof LANGUAGES[0]) => void;
+}) {
+  const langItems = LANGUAGES.map(l => ({ key: l.code, label: `${l.flag}  ${l.name}` }));
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
+      transition={{ duration: 0.22 }}
+    >
+      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px" }}>
+        Which language do you speak?
+      </p>
+      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
+        Select up to 2 languages
+      </p>
+
+      <div style={{ display: "flex", gap: 10 }}>
+        {/* Primary */}
+        <div style={{ flex: 1 }}>
+          <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+            Primary
+          </label>
+          <WheelPicker
+            items={langItems}
+            selected={language.code}
+            onSelect={(key) => {
+              const found = LANGUAGES.find(l => l.code === key);
+              if (found) setLanguage(found);
             }}
-            style={{
-              width: "100%", height: 48, borderRadius: 14, padding: "0 16px 0 46px",
-              background: "rgba(255,255,255,0.07)", border: "1.5px solid rgba(255,255,255,0.13)",
-              color: "white", fontSize: 14, fontWeight: 600, outline: "none",
-              appearance: "none", WebkitAppearance: "none",
-              cursor: "pointer",
+          />
+        </div>
+
+        {/* Also speaks */}
+        <div style={{ flex: 1 }}>
+          <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>
+            Also speaks
+          </label>
+          <WheelPicker
+            items={langItems}
+            selected={language2.code}
+            onSelect={(key) => {
+              const found = LANGUAGES.find(l => l.code === key);
+              if (found) setLanguage2(found);
             }}
-          >
-            {countries.map(c => (
-              <option key={c.code} value={c.code} style={{ background: "#1a1a2e", color: "white" }}>
-                {c.flag} {c.name}
-              </option>
-            ))}
-          </select>
-          <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.4)", pointerEvents: "none", fontSize: 12 }}>▾</span>
+          />
         </div>
       </div>
     </motion.div>
   );
 }
 
-// ── Step 2: Language ──────────────────────────────────────────────────────────
-
-function Step2({ language, setLanguage }: {
-  language: typeof LANGUAGES[0];
-  setLanguage: (v: typeof LANGUAGES[0]) => void;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-      transition={{ duration: 0.22 }}
-    >
-      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px" }}>
-        Which language do you speak? 🌐
-      </p>
-      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
-        Scroll and tap to select your primary language
-      </p>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        {LANGUAGES.map((lang) => {
-          const selected = lang.code === language.code;
-          return (
-            <motion.button
-              key={lang.code}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => setLanguage(lang)}
-              style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "11px 14px", borderRadius: 14, border: "none",
-                background: selected ? "rgba(236,72,153,0.12)" : "rgba(255,255,255,0.04)",
-                outline: selected ? "2px solid rgba(236,72,153,0.5)" : "2px solid transparent",
-                cursor: "pointer", width: "100%", textAlign: "left",
-                transition: "all 0.15s",
-              }}
-            >
-              <span style={{ fontSize: 24, flexShrink: 0 }}>{lang.flag}</span>
-              <div style={{ flex: 1 }}>
-                <p style={{ color: "white", fontWeight: 700, fontSize: 14, margin: 0 }}>{lang.name}</p>
-                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, margin: 0, fontWeight: 600 }}>{lang.code}</p>
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Step 3: Intent carousel (What are you seeking?) ──────────────────────────
+// ── Step 3: Intent wheel ──────────────────────────────────────────────────────
 
 function Step3({ intent, setIntent }: {
   intent: typeof INTENT_OPTIONS[0];
   setIntent: (v: typeof INTENT_OPTIONS[0]) => void;
 }) {
-  const listRef = useRef<HTMLDivElement>(null);
-
-  // Scroll selected item into center
-  useEffect(() => {
-    const idx = INTENT_OPTIONS.findIndex(o => o.id === intent.id);
-    const container = listRef.current;
-    if (!container) return;
-    const item = container.children[idx] as HTMLElement;
-    if (!item) return;
-    item.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [intent]);
+  const intentItems = INTENT_OPTIONS.map(o => ({ key: o.id, label: o.label }));
 
   return (
     <motion.div
@@ -521,54 +707,19 @@ function Step3({ intent, setIntent }: {
       transition={{ duration: 0.22 }}
     >
       <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px" }}>
-        What are you seeking? 💫
+        What are you seeking?
       </p>
-      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
-        Scroll and tap to select one
+      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: "0 0 18px", lineHeight: 1.5 }}>
+        Scroll the wheel to select
       </p>
-
-      <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {INTENT_OPTIONS.map((opt, idx) => {
-          const selected = opt.id === intent.id;
-          const distFromCenter = Math.abs(INTENT_OPTIONS.findIndex(o => o.id === intent.id) - idx);
-          const scale = selected ? 1 : distFromCenter === 1 ? 0.96 : 0.92;
-          const opacity = selected ? 1 : distFromCenter === 1 ? 0.7 : 0.45;
-
-          return (
-            <motion.button
-              key={opt.id}
-              animate={{ scale, opacity }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setIntent(opt)}
-              style={{
-                display: "flex", alignItems: "center", gap: 14,
-                padding: selected ? "16px 18px" : "13px 18px",
-                borderRadius: 18, border: "none",
-                background: selected
-                  ? "linear-gradient(135deg, rgba(236,72,153,0.18), rgba(168,85,247,0.14))"
-                  : "rgba(255,255,255,0.04)",
-                outline: selected ? "2px solid rgba(236,72,153,0.55)" : "2px solid transparent",
-                cursor: "pointer", width: "100%", textAlign: "left",
-                transition: "padding 0.2s, background 0.2s",
-                transformOrigin: "center",
-              }}
-            >
-              <span style={{ fontSize: selected ? 30 : 24, transition: "font-size 0.2s", flexShrink: 0 }}>
-                {opt.emoji}
-              </span>
-              <p style={{
-                color: selected ? "white" : "rgba(255,255,255,0.65)",
-                fontWeight: selected ? 800 : 600,
-                fontSize: selected ? 16 : 14,
-                margin: 0,
-                transition: "all 0.2s",
-              }}>
-                {opt.label}
-              </p>
-            </motion.button>
-          );
-        })}
-      </div>
+      <WheelPicker
+        items={intentItems}
+        selected={intent.id}
+        onSelect={(key) => {
+          const found = INTENT_OPTIONS.find(o => o.id === key);
+          if (found) setIntent(found);
+        }}
+      />
     </motion.div>
   );
 }
@@ -591,7 +742,7 @@ function Step4({ avatarUrl, uploading, onUpload }: {
       <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px", alignSelf: "flex-start" }}>
         Add your photo 📸
       </p>
-      <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 28px", lineHeight: 1.5, alignSelf: "flex-start" }}>
+      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: "0 0 28px", lineHeight: 1.5, alignSelf: "flex-start" }}>
         Profiles with a photo get 5× more matches — you can skip for now
       </p>
 
@@ -601,8 +752,8 @@ function Step4({ avatarUrl, uploading, onUpload }: {
         disabled={uploading}
         style={{
           width: 140, height: 140, borderRadius: "50%", border: "none",
-          background: avatarUrl ? "transparent" : "rgba(255,255,255,0.06)",
-          outline: avatarUrl ? "3px solid rgba(236,72,153,0.55)" : "2px dashed rgba(255,255,255,0.2)",
+          background: avatarUrl ? "transparent" : "rgba(0,0,0,0.2)",
+          outline: avatarUrl ? "3px solid rgba(255,255,255,0.9)" : "2px dashed rgba(255,255,255,0.4)",
           outlineOffset: 3,
           cursor: uploading ? "default" : "pointer",
           overflow: "hidden",
@@ -619,7 +770,7 @@ function Step4({ avatarUrl, uploading, onUpload }: {
             animation: "spin 0.7s linear infinite",
           }} />
         ) : (
-          <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 700 }}>Tap to upload</span>
+          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 700 }}>Tap to upload</span>
         )}
       </motion.button>
 

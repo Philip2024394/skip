@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence, PanInfo, useMotionValue, animate } from "framer-motion";
 import { Heart, MapPin, Zap, LogIn, MessageCircle, SlidersHorizontal, Fingerprint, User, ChevronLeft, ChevronRight, Star, ShieldCheck } from "lucide-react";
@@ -284,6 +284,8 @@ const Index = () => {
     } catch { return []; }
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
+  const [showBrowse, setShowBrowse] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() => defaultFilters);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
@@ -1200,16 +1202,27 @@ const Index = () => {
             <>
               {user ? (
                 <>
-                  <CoinHub
-                    balance={coinBalance.balance}
-                    loading={coinBalance.loading}
-                    onClick={() => setShowCoinRefuel(true)}
-                  />
+                  {/* Browse all members */}
+                  <button
+                    onClick={() => setShowBrowse(true)}
+                    aria-label="Browse members"
+                    className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                    title="Browse all members"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="1" y="1" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="6" y="1" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="11" y="1" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="1" y="6" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="6" y="6" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="11" y="6" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="1" y="11" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="6" y="11" width="4" height="4" rx="1" fill="currentColor"/>
+                      <rect x="11" y="11" width="4" height="4" rx="1" fill="currentColor"/>
+                    </svg>
+                  </button>
                   <button onClick={() => { if (!user) { showGuestPrompt("filter"); return; } setShowFilters(true); }} aria-label={t("nav.filters")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.filters")}>
                     <SlidersHorizontal className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => navigate("/teddy")} aria-label="My Teddy Room" className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title="My Teddy Room">
-                    <span className="text-base leading-none">🧸</span>
                   </button>
                   <button
                     onClick={() => {
@@ -1222,6 +1235,17 @@ const Index = () => {
                     title={t("nav.powerups")}
                   >
                     <Zap className="w-4 h-4" />
+                  </button>
+                  {/* Side drawer toggle */}
+                  <button
+                    onClick={() => setShowDrawer(true)}
+                    aria-label="Menu"
+                    className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex flex-col items-center justify-center gap-1 text-white/70 hover:text-white transition-colors"
+                    title="Menu"
+                  >
+                    <span className="block w-4 h-0.5 bg-current rounded-full" />
+                    <span className="block w-4 h-0.5 bg-current rounded-full" />
+                    <span className="block w-4 h-0.5 bg-current rounded-full" />
                   </button>
                 </>
               ) : (
@@ -1247,7 +1271,7 @@ const Index = () => {
         const showFullPanel = showDateIdeaPanel || showProfilePanel || showVideoPanel;
 
         return (
-          <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? (showFullPanel ? "1fr" : "1fr auto") : "1fr 12rem 1fr" }}>
+          <div className="flex-1 grid gap-2 p-2 min-h-0 pb-safe" style={{ paddingBottom: `max(0.5rem, env(safe-area-inset-bottom, 0px))`, gridTemplateRows: isProfileRoute ? (showFullPanel ? "minmax(0,1fr)" : "minmax(0,1fr) auto") : "minmax(0,1fr) 12rem minmax(0,1fr)" }}>
             {showDateIdeaPanel ? (
               <DateIdeaDetailPanel
                 dateIdea={dateIdeaPlace.idea}
@@ -1943,6 +1967,103 @@ const Index = () => {
         onClose={() => setGlobalDatingUpsell(null)}
       />
 
+      {/* ── Side Drawer ───────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showDrawer && (
+          <>
+            {/* Scrim */}
+            <motion.div
+              key="drawer-scrim"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowDrawer(false)}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 90, backdropFilter: "blur(4px)" }}
+            />
+            {/* Drawer panel */}
+            <motion.div
+              key="drawer-panel"
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", stiffness: 340, damping: 32 }}
+              style={{
+                position: "fixed", top: 0, right: 0, bottom: 0, width: 240,
+                backgroundImage: "url('/images/app-background.png')",
+                backgroundSize: "cover", backgroundPosition: "center",
+                zIndex: 91, display: "flex", flexDirection: "column",
+                paddingTop: "max(48px, env(safe-area-inset-top, 48px))",
+                paddingBottom: "max(24px, env(safe-area-inset-bottom, 24px))",
+              }}
+            >
+              {/* Dark overlay for readability */}
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", pointerEvents: "none" }} />
+
+              {/* Close */}
+              <button
+                onClick={() => setShowDrawer(false)}
+                style={{
+                  position: "absolute", top: "max(12px, env(safe-area-inset-top, 12px))", right: 16,
+                  width: 34, height: 34, borderRadius: "50%", border: "none",
+                  background: "rgba(255,255,255,0.12)", color: "white", fontSize: 18,
+                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 2,
+                }}
+              >×</button>
+
+              <div style={{ position: "relative", zIndex: 1, padding: "8px 20px", flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8, marginTop: 4 }}>Quick Access</p>
+
+                {/* Coin balance */}
+                <button
+                  onClick={() => { setShowDrawer(false); setShowCoinRefuel(true); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 14,
+                    padding: "14px 16px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(0,0,0,0.4)", cursor: "pointer", width: "100%", textAlign: "left",
+                  }}
+                >
+                  <span style={{ fontSize: 22 }}>🪙</span>
+                  <div>
+                    <p style={{ color: "white", fontWeight: 800, fontSize: 15, margin: 0 }}>Coins</p>
+                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>{coinBalance.loading ? "…" : `${coinBalance.balance} balance`}</p>
+                  </div>
+                </button>
+
+                {/* Teddy Room */}
+                <button
+                  onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 14,
+                    padding: "14px 16px", borderRadius: 16, border: "1px solid rgba(255,255,255,0.12)",
+                    background: "rgba(0,0,0,0.4)", cursor: "pointer", width: "100%", textAlign: "left",
+                  }}
+                >
+                  <span style={{ fontSize: 22 }}>🧸</span>
+                  <div>
+                    <p style={{ color: "white", fontWeight: 800, fontSize: 15, margin: 0 }}>My Teddy Room</p>
+                    <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, margin: 0 }}>Private media vault</p>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Browse All Members ────────────────────────────────────── */}
+      <AnimatePresence>
+        {showBrowse && (
+          <MemberBrowser
+            profiles={allProfiles}
+            onClose={() => setShowBrowse(false)}
+            onSelect={(p) => {
+              setShowBrowse(false);
+              navigate(`/profile/${p.id}`);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* ── In-App Chat ───────────────────────────────────────────── */}
       <AnimatePresence>
         {chatProfile && user?.id && (
@@ -1969,3 +2090,195 @@ const Index = () => {
 };
 
 export default Index;
+
+// ── Member Browser ─────────────────────────────────────────────────────────────
+
+// Individual profile card — own timer so images cycle independently of scroll
+const BrowseCard = React.memo(function BrowseCard({ profile, onSelect }: { profile: any; onSelect: (p: any) => void }) {
+  const extras = (Array.isArray((profile as any).images) ? (profile as any).images : []) as string[];
+  const imgList = [profile.image, ...extras, profile.avatar_url]
+    .filter((u): u is string => typeof u === "string" && u.length > 0)
+    .filter((u, i, arr) => arr.indexOf(u) === i);
+  if (imgList.length === 0) imgList.push("/placeholder.svg");
+
+  const [imgIdx, setImgIdx] = useState(0);
+  useEffect(() => {
+    if (imgList.length <= 1) return;
+    const id = setInterval(() => setImgIdx(i => (i + 1) % imgList.length), 2500);
+    return () => clearInterval(id);
+  }, [imgList.length]);
+
+  const src = imgList[imgIdx] || "/placeholder.svg";
+
+  const nowMs = Date.now();
+  const lastMs = profile.last_seen_at ? new Date(profile.last_seen_at).getTime() : 0;
+  const diffMin = lastMs ? (nowMs - lastMs) / 60000 : Infinity;
+  const status: "online" | "busy" | "offline" =
+    diffMin < 5 ? "online" : diffMin < 30 ? "busy" : "offline";
+
+  return (
+    <motion.div
+      whileTap={{ scale: 0.94 }}
+      onClick={() => onSelect(profile)}
+      style={{
+        position: "relative",
+        width: "100%",
+        paddingBottom: "133%",
+        borderRadius: 12,
+        overflow: "hidden",
+        border: "1.5px solid rgba(255,255,255,0.12)",
+        background: "#111",
+        cursor: "pointer",
+        flexShrink: 0,
+      }}
+    >
+      <div style={{ position: "absolute", inset: 0 }}>
+        <motion.img
+          key={src}
+          src={src}
+          alt={profile.name}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 0%", display: "block" }}
+          onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            if (!img.src.endsWith("/placeholder.svg")) img.src = "/placeholder.svg";
+          }}
+        />
+
+        {/* Bottom gradient */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          background: "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.25) 60%, transparent 100%)",
+          padding: "22px 6px 6px",
+        }}>
+          <p style={{ color: "white", fontWeight: 800, fontSize: 11, margin: 0, lineHeight: 1.25, textShadow: "0 1px 3px rgba(0,0,0,0.9)", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+            {profile.name}{profile.age ? `, ${profile.age}` : ""}
+          </p>
+          {profile.city && (
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, margin: 0, lineHeight: 1.2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+              {profile.city}
+            </p>
+          )}
+        </div>
+
+        {/* Status dot — green online / orange busy */}
+        {status !== "offline" && (
+          <span style={{
+            position: "absolute", top: 6, right: 6,
+            width: 9, height: 9, borderRadius: "50%",
+            background: status === "online" ? "#4ade80" : "#fb923c",
+            border: "1.5px solid rgba(0,0,0,0.55)",
+            display: "block",
+            animation: "browse-pulse 1.6s ease-in-out infinite",
+            boxShadow: status === "online"
+              ? "0 0 0 0 rgba(74,222,128,0.7)"
+              : "0 0 0 0 rgba(251,146,60,0.7)",
+          }} />
+        )}
+
+        {/* Image progress dots */}
+        {imgList.length > 1 && (
+          <div style={{ position: "absolute", top: 5, left: 5, display: "flex", gap: 3 }}>
+            {imgList.slice(0, 4).map((_, di) => (
+              <span key={di} style={{
+                width: 4, height: 4, borderRadius: "50%",
+                background: di === imgIdx % Math.min(imgList.length, 4) ? "white" : "rgba(255,255,255,0.3)",
+                display: "block", transition: "background 0.3s",
+              }} />
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+});
+
+function MemberBrowser({ profiles, onClose, onSelect }: {
+  profiles: any[];
+  onClose: () => void;
+  onSelect: (p: any) => void;
+}) {
+  return (
+    <motion.div
+      key="member-browser"
+      initial={{ opacity: 0, x: "100%" }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: "100%" }}
+      transition={{ type: "spring", stiffness: 320, damping: 32 }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 80,
+        display: "flex", flexDirection: "column",
+        backgroundImage: "url('/images/app-background.png')",
+        backgroundSize: "cover", backgroundPosition: "center",
+      }}
+    >
+      {/* Header — transparent so wrapper's app-background.png shows through */}
+      <header style={{
+        position: "relative", zIndex: 2, flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        paddingTop: "max(44px, env(safe-area-inset-top, 44px))",
+        paddingLeft: 16, paddingRight: 16, paddingBottom: 12,
+        background: "transparent",
+        borderBottom: "1px solid rgba(255,255,255,0.12)",
+      }}>
+        {/* Left: logo + app name */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <AppLogo
+            alt={APP_NAME}
+            className="w-10 h-10 object-contain"
+            style={{ filter: "drop-shadow(0 0 6px rgba(255,255,255,0.4))" }}
+          />
+          <div>
+            <span style={{ color: "white", fontWeight: 900, fontSize: 18, letterSpacing: "-0.01em", lineHeight: 1, display: "block" }}>{APP_NAME}</span>
+            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 600 }}>
+              {profiles.length} members
+            </span>
+          </div>
+        </div>
+
+        {/* Right: back */}
+        <button
+          onClick={onClose}
+          style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "8px 16px", borderRadius: 20,
+            border: "1.5px solid rgba(255,255,255,0.4)",
+            background: "rgba(255,255,255,0.15)",
+            color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer",
+          }}
+        >
+          ← Back
+        </button>
+      </header>
+
+      {/* Scrollable grid */}
+      <div
+        style={{
+          position: "relative", zIndex: 1,
+          flex: 1, overflowY: "auto", overflowX: "hidden",
+          padding: "10px",
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "6px",
+          alignContent: "start",
+          paddingBottom: "max(10px, env(safe-area-inset-bottom, 10px))",
+          background: "transparent",
+        }}
+      >
+        {profiles.map((profile) => (
+          <BrowseCard key={profile.id} profile={profile} onSelect={onSelect} />
+        ))}
+      </div>
+
+      <style>{`
+        @keyframes browse-pulse {
+          0%   { box-shadow: 0 0 0 0 var(--pulse-color, rgba(74,222,128,0.7)); }
+          60%  { box-shadow: 0 0 0 5px transparent; }
+          100% { box-shadow: 0 0 0 0 transparent; }
+        }
+      `}</style>
+    </motion.div>
+  );
+}
