@@ -354,9 +354,48 @@ const AuthPage = () => {
 
 
           {/* ── Top bar ─────────────────────────────────────────── */}
-          <div className="relative z-20 flex items-center px-4 pt-safe"
+          <div className="relative z-20 flex items-center justify-between px-4 pt-safe"
             style={{ paddingTop: `max(1rem, env(safe-area-inset-top, 1rem))` }}>
             <AppLogo className="w-28 h-28 object-contain flex-shrink-0" />
+
+            {/* ── DEV ONLY: quick entry buttons — stripped in prod build ── */}
+            {import.meta.env.DEV && (
+              <div style={{ display: "flex", flexDirection: "column", gap: 5, alignItems: "flex-end" }}>
+                <button
+                  onClick={() => navigate("/home")}
+                  style={{
+                    padding: "5px 10px", borderRadius: 8, fontSize: 10, fontWeight: 800,
+                    background: "rgba(232,72,199,0.85)", color: "white", border: "none",
+                    cursor: "pointer", letterSpacing: "0.04em", backdropFilter: "blur(8px)",
+                    boxShadow: "0 2px 10px rgba(232,72,199,0.5)",
+                  }}
+                >
+                  DEV → Home
+                </button>
+                <button
+                  onClick={() => navigate("/welcome")}
+                  style={{
+                    padding: "5px 10px", borderRadius: 8, fontSize: 10, fontWeight: 800,
+                    background: "rgba(168,85,247,0.85)", color: "white", border: "none",
+                    cursor: "pointer", letterSpacing: "0.04em", backdropFilter: "blur(8px)",
+                    boxShadow: "0 2px 10px rgba(168,85,247,0.5)",
+                  }}
+                >
+                  DEV → Welcome
+                </button>
+                <button
+                  onClick={() => navigate("/dashboard")}
+                  style={{
+                    padding: "5px 10px", borderRadius: 8, fontSize: 10, fontWeight: 800,
+                    background: "rgba(245,158,11,0.85)", color: "white", border: "none",
+                    cursor: "pointer", letterSpacing: "0.04em", backdropFilter: "blur(8px)",
+                    boxShadow: "0 2px 10px rgba(245,158,11,0.5)",
+                  }}
+                >
+                  DEV → Dashboard
+                </button>
+              </div>
+            )}
           </div>
 
           {/* ── Tagline under logo ──────────────────────────────── */}
