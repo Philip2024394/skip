@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Zap, User, LogOut, Check, HelpCircle, Star, Copy, UserPlus, Eye, EyeOff, RefreshCw } from "lucide-react";
+import DailyPromptPicker from "@/features/prompts/components/DailyPromptPicker";
+import PhotoVerifyPage from "@/features/verification/pages/PhotoVerifyPage";
 import { VerificationSubmitDialog } from "@/features/dating/components";
 import { Button } from "@/shared/components/button";
 import { PREMIUM_FEATURES, PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
@@ -47,13 +49,18 @@ const DashboardPage = () => {
   const [isProfileActive, setIsProfileActive] = useState(true);
   const [hiddenUntil, setHiddenUntil] = useState<string | null>(null);
   const [togglingActivity, setTogglingActivity] = useState(false);
+  const [showPromptPicker, setShowPromptPicker] = useState(false);
+  const [showPhotoVerify, setShowPhotoVerify] = useState(false);
+  const [promptId, setPromptId] = useState<number | null>(null);
+  const [promptAnswer, setPromptAnswer] = useState<string | null>(null);
+  const [photoVerified, setPhotoVerified] = useState(false);
 
   // Load current user's age, ID, referral code, and visibility status
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session) return;
       setUserId(session.user.id);
-      const { data } = await supabase.from("profiles").select("age, referral_code, is_active, hidden_until").eq("id", session.user.id).single();
+      const { data } = await supabase.from("profiles").select("age, referral_code, is_active, hidden_until, prompt_id, prompt_answer, photo_verified").eq("id", session.user.id).single();
       if (data) {
         setUserAge((data as any).age ?? null);
         setReferralCode((data as any).referral_code ?? null);
@@ -61,6 +68,9 @@ const DashboardPage = () => {
         const active = (data as any).is_active !== false && (!hu || new Date(hu) <= new Date());
         setIsProfileActive(active);
         setHiddenUntil(hu ?? null);
+        setPromptId((data as any).prompt_id ?? null);
+        setPromptAnswer((data as any).prompt_answer ?? null);
+        setPhotoVerified(!!(data as any).photo_verified);
       }
       const { count } = await supabase.from("referrals" as any).select("id", { count: "exact", head: true }).eq("referrer_id", session.user.id);
       setReferralCount(count ?? 0);
@@ -255,6 +265,61 @@ const DashboardPage = () => {
                   <p className="text-white/40 text-[11px]">Your private photo & video vault — PIN protected</p>
                 </div>
                 <svg className="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+
+            {/* ── Daily Prompt ─────────────────────────────────────── */}
+            <div className="mx-4 mb-4">
+              <button
+                onClick={() => setShowPromptPicker(true)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-all active:scale-[0.98]"
+                style={{
+                  background: promptAnswer
+                    ? "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(168,85,247,0.1))"
+                    : "rgba(255,255,255,0.03)",
+                  border: promptAnswer ? "1.5px solid rgba(236,72,153,0.3)" : "1.5px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(236,72,153,0.15)" }}>
+                  <span className="text-lg">💬</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-black text-sm">Daily Prompt</p>
+                  <p className="text-white/40 text-[11px] truncate">
+                    {promptAnswer ? `"${promptAnswer}"` : "Add a prompt — shows on your profile card"}
+                  </p>
+                </div>
+                <svg className="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+
+            {/* ── Photo Verification ───────────────────────────────── */}
+            <div className="mx-4 mb-4">
+              <button
+                onClick={() => !photoVerified && setShowPhotoVerify(true)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-all active:scale-[0.98]"
+                style={{
+                  background: photoVerified
+                    ? "linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08))"
+                    : "rgba(255,255,255,0.03)",
+                  border: photoVerified ? "1.5px solid rgba(34,197,94,0.3)" : "1.5px solid rgba(255,255,255,0.08)",
+                  cursor: photoVerified ? "default" : "pointer",
+                }}
+              >
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: photoVerified ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.06)" }}>
+                  <span className="text-lg">{photoVerified ? "✅" : "📸"}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-black text-sm">
+                    {photoVerified ? "Photo Verified" : "Get Photo Verified"}
+                  </p>
+                  <p className="text-white/40 text-[11px]">
+                    {photoVerified ? "Your profile shows a ✅ verified badge" : "Take a selfie — builds trust with matches"}
+                  </p>
+                </div>
+                {!photoVerified && <svg className="w-4 h-4 text-white/30 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>}
               </button>
             </div>
 
@@ -665,6 +730,34 @@ const DashboardPage = () => {
 
       {/* Gift Receiver for handling incoming gifts */}
       <GiftReceiver currentUserId={userId ?? undefined} />
+
+      {/* Daily Prompt Picker overlay */}
+      <AnimatePresence>
+        {showPromptPicker && userId && (
+          <motion.div className="fixed inset-0 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <DailyPromptPicker
+              userId={userId}
+              currentPromptId={promptId}
+              currentAnswer={promptAnswer}
+              onSaved={(id, ans) => { setPromptId(id); setPromptAnswer(ans); }}
+              onClose={() => setShowPromptPicker(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Photo Verify overlay */}
+      <AnimatePresence>
+        {showPhotoVerify && userId && (
+          <motion.div className="fixed inset-0 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <PhotoVerifyPage
+              userId={userId}
+              onVerified={() => { setPhotoVerified(true); setShowPhotoVerify(false); }}
+              onClose={() => setShowPhotoVerify(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

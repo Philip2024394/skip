@@ -64,8 +64,9 @@ serve(async (req) => {
       customerId = customer.id;
     }
 
-    // VIP uses subscription mode — all others use one-time payment
-    const mode = featureId === "vip" ? "subscription" : "payment";
+    // Subscription features use recurring billing
+    const SUBSCRIPTION_FEATURES = ["vip", "global_dating", "teddy_room"];
+    const mode = SUBSCRIPTION_FEATURES.includes(featureId ?? "") ? "subscription" : "payment";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

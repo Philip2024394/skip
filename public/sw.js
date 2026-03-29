@@ -1,8 +1,8 @@
-// 2Ghost Service Worker
-// Enables PWA install prompt, offline capability, and auto-update.
+// 2DateMe Service Worker
+// Enables PWA install prompt, push notifications, offline capability, and auto-update.
 // Bump CACHE_VERSION on each deploy so returning users get the new app.
 
-const CACHE_VERSION = "ghost-v1";
+const CACHE_VERSION = "2dm-v2";
 const CACHE_NAME = `2ghost-${CACHE_VERSION}`;
 
 // Assets to cache on install for offline use
@@ -75,4 +75,37 @@ self.addEventListener("fetch", (event) => {
   }
 
   // All other requests — network only (Supabase API calls etc.)
+});
+
+// ── Push Notifications ────────────────────────────────────────────────────────
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  let payload = { title: "2DateMe", body: "You have a new notification", icon: "/icon-192.png", url: "/" };
+  try { payload = { ...payload, ...event.data.json() }; } catch {}
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: payload.icon || "/icon-192.png",
+      badge: "/icon-192.png",
+      data: { url: payload.url || "/" },
+      vibrate: [200, 100, 200],
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "/";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes(self.location.origin) && "focus" in client) {
+          client.navigate(url);
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
 });

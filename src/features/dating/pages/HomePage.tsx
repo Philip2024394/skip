@@ -74,6 +74,7 @@ import {
   canShowReferral, canShowTravelNotice,
 } from "@/shared/hooks/usePopupQueue";
 import ChatPanel from "@/features/messaging/components/ChatPanel";
+import { usePushNotifications } from "@/shared/hooks/usePushNotifications";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -262,6 +263,7 @@ const Index = () => {
   const coinBalance = useCoinBalance(user?.id);
   const profileQuestions = useProfileQuestions(user?.id || "guest");
   const { isGlobalDater } = useGlobalDating(user?.id);
+  usePushNotifications(user?.id ?? null);
   const [globalDatingUpsell, setGlobalDatingUpsell] = useState<any>(null);
   const [waLockPopup, setWaLockPopup] = useState<WaLock | null>(null);
   const [showCoinRefuel, setShowCoinRefuel] = useState(false);
@@ -1209,7 +1211,16 @@ const Index = () => {
                   <button onClick={() => navigate("/teddy")} aria-label="My Teddy Room" className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title="My Teddy Room">
                     <span className="text-base leading-none">🧸</span>
                   </button>
-                  <button onClick={() => navigate("/dashboard")} aria-label={t("nav.powerups")} className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors" title={t("nav.powerups")}>
+                  <button
+                    onClick={() => {
+                      if (!user) { showGuestPrompt("premium"); return; }
+                      const vip = PREMIUM_FEATURES.find(f => f.id === "vip");
+                      if (vip) setFeatureDialog(vip);
+                    }}
+                    aria-label={t("nav.powerups")}
+                    className="w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                    title={t("nav.powerups")}
+                  >
                     <Zap className="w-4 h-4" />
                   </button>
                 </>

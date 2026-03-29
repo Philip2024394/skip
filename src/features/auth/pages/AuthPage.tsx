@@ -124,13 +124,18 @@ const AuthPage = () => {
       // Existing user signed in
       toast.success(t("auth.welcomeBack"));
       await processPendingReferral();
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", data.session.user.id);
+      const [{ data: roles }, { data: profile }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", data.session.user.id),
+        supabase.from("profiles").select("name").eq("id", data.session.user.id).maybeSingle(),
+      ]);
       setLoading(false);
       if (roles?.some((r: any) => r.role === "admin")) {
         navigate("/admin");
+        return;
+      }
+      // No name yet → send through onboarding
+      if (!profile?.name) {
+        navigate("/welcome", { replace: true });
         return;
       }
       navigate("/home");
@@ -158,7 +163,7 @@ const AuthPage = () => {
       if (signUpData.session) {
         toast.success("Welcome to 2DateMe! 🎉");
         await processPendingReferral();
-        navigate("/dashboard");
+        navigate("/welcome", { replace: true });
         return;
       }
       // Email confirmation required
@@ -228,22 +233,45 @@ const AuthPage = () => {
   // Landing screen
   return (
       <>
-        <div
-          className="h-screen-safe flex flex-col overflow-hidden"
-          style={{
-            backgroundImage: `url('${buildLandingBgSrc(
-              LANDING_BG_URL,
-              LANDING_BG_URL_VERSION,
-              LANDING_BG_URL.includes("imagekit.io") ? { tr: "q-100,fo-auto,w-1080" } : undefined
-            )}')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center top",
-            backgroundRepeat: "no-repeat",
-          }}
-        >
+        <div className="flex flex-col" style={{
+          position: "fixed", inset: 0,
+          minHeight: "100dvh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          background: "#000",
+        }}>
 
-          {/* Gradient overlay — darkens bottom for card readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/70 pointer-events-none" />
+          {/* ── Background video — no black bars, watermark hidden ── */}
+          {/* Wrapper clips the bottom ~60px where the watermark lives */}
+          <div style={{
+            position: "fixed",
+            top: 0, left: 0, right: 0,
+            bottom: -60, /* extend 60px below viewport to hide watermark */
+            zIndex: 0,
+            overflow: "hidden",
+          }}>
+            <video
+              autoPlay
+              muted
+              playsInline
+              style={{
+                position: "absolute", inset: 0,
+                width: "100%",
+                height: "calc(100% + 60px)",
+                objectFit: "cover",
+                objectPosition: "calc(50% - 230px) top",
+              }}
+            >
+              <source src="https://ik.imagekit.io/dateme/video%20landing%20page%20date%202%20me%20com.mp4?tr=q-100" type="video/mp4" />
+            </video>
+          </div>
+
+          {/* Gradient overlay */}
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 1,
+            background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, transparent 40%, rgba(0,0,0,0.7) 100%)",
+            pointerEvents: "none",
+          }} />
 
           {/* ── Top bar ─────────────────────────────────────────── */}
           <div className="relative z-20 flex items-center justify-between px-4 pt-safe"

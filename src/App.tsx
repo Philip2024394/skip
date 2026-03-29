@@ -24,6 +24,7 @@ const GhostGatewayPage = lazy(() => import("@/features/ghost/pages/GhostGatewayP
 const GhostBlockPage = lazy(() => import("@/features/ghost/pages/GhostBlockPage"));
 const GhostRoomPage = lazy(() => import("@/features/ghost/pages/GhostRoomPage"));
 const TeddyRoomPage = lazy(() => import("@/features/teddy/pages/TeddyRoomPage"));
+const WelcomePage = lazy(() => import("@/features/onboarding/pages/WelcomePage"));
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const AppContent = () => {
         <Route path="/ghost/block" element={<Suspense fallback={<LoadingFallback />}><GhostBlockPage /></Suspense>} />
         <Route path="/ghost/room" element={<Suspense fallback={<LoadingFallback />}><GhostRoomPage /></Suspense>} />
         <Route path="/teddy" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><TeddyRoomPage /></Suspense></ProtectedRoute>} />
+        <Route path="/welcome" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WelcomePage /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes >
     </BrowserRouter >

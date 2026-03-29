@@ -182,6 +182,11 @@ export default function TopCard(props: TopCardProps) {
               {props.selectedProfile.is_verified && (
                 <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
               )}
+              {(props.selectedProfile as any).photo_verified && (
+                <span className="flex items-center gap-0.5 text-[10px] bg-green-500/25 border border-green-500/40 text-green-300 rounded-full px-1.5 py-0.5 font-bold leading-none flex-shrink-0">
+                  ✅ Verified
+                </span>
+              )}
               {(props.selectedProfile as any).video_verified && (
                 <span className="flex items-center gap-0.5 text-[10px] bg-sky-500/25 border border-sky-500/40 text-sky-300 rounded-full px-1.5 py-0.5 font-bold leading-none flex-shrink-0">
                   🎥 Verified
@@ -215,6 +220,13 @@ export default function TopCard(props: TopCardProps) {
               </span>
             )}
             <SentGiftsDisplay profileId={props.selectedProfile.id} />
+            {(props.selectedProfile as any).prompt_answer && (
+              <div className="mt-2 rounded-xl px-3 py-2.5 border border-white/10"
+                style={{ background: "rgba(255,255,255,0.04)" }}>
+                <p className="text-white/40 text-[10px] font-semibold mb-0.5">💬 Prompt</p>
+                <p className="text-white/80 text-xs leading-relaxed italic">"{(props.selectedProfile as any).prompt_answer}"</p>
+              </div>
+            )}
             {props.selectedProfile.contact_preference && (
               <div className="mt-1.5">
                 <ContactPreferenceBadge preference={props.selectedProfile.contact_preference} />

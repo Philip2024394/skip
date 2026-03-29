@@ -151,6 +151,13 @@ async function activateFeature(session: Stripe.Checkout.Session) {
         spotlight_until: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       }).eq("id", userId);
       break;
+
+    case "teddy_room":
+      await supabaseAdmin.from("profiles").update({
+        teddy_room_active: true,
+        teddy_room_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }).eq("id", userId);
+      break;
   }
 
   // Record payment for all feature purchases
@@ -215,6 +222,11 @@ serve(async (req) => {
               global_dating_subscription_id: subId,
               global_dating_subscription_status: "active",
             }).eq("id", userId);
+          } else if (featureId === "teddy_room") {
+            await supabaseAdmin.from("profiles").update({
+              teddy_room_active: true,
+              teddy_room_expires_at: until,
+            }).eq("id", userId);
           } else {
             // VIP / Connect Monthly
             await supabaseAdmin.from("profiles").update({
@@ -240,6 +252,11 @@ serve(async (req) => {
             global_dating_expires_at: null,
             global_dating_subscription_id: null,
             global_dating_subscription_status: "cancelled",
+          }).eq("id", userId);
+        } else if (featureId === "teddy_room") {
+          await supabaseAdmin.from("profiles").update({
+            teddy_room_active: false,
+            teddy_room_expires_at: null,
           }).eq("id", userId);
         } else {
           // VIP / Connect Monthly

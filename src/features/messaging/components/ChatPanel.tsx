@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, ShieldCheck, Lock } from "lucide-react";
+import { ArrowLeft, Send, ShieldCheck, Lock, Video } from "lucide-react";
 import { useMessages, validateChatMessage } from "@/shared/hooks/useMessages";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
+import VideoCallPanel from "@/features/video/components/VideoCallPanel";
 
 interface ChatPanelProps {
   currentUserId: string;
@@ -30,6 +31,7 @@ function shouldShowTimestamp(messages: any[], idx: number) {
 export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [showVideoCall, setShowVideoCall] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { messages, loading, sending, sendMessage } = useMessages(currentUserId, otherUser.id);
@@ -61,6 +63,7 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   };
 
   return (
+    <>
     <motion.div
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
@@ -122,6 +125,19 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
             {online ? "Online now" : "Chat · unlock WhatsApp when ready"}
           </p>
         </div>
+
+        {/* Video call button */}
+        <button
+          onClick={() => setShowVideoCall(true)}
+          style={{
+            width: 36, height: 36, borderRadius: "50%", border: "1px solid rgba(56,189,248,0.35)",
+            background: "rgba(56,189,248,0.12)", display: "flex", alignItems: "center",
+            justifyContent: "center", cursor: "pointer", flexShrink: 0,
+          }}
+          title="Start video call"
+        >
+          <Video style={{ width: 16, height: 16, color: "#38bdf8" }} />
+        </button>
 
         {/* Unlock shortcut */}
         {onUnlock && (
@@ -323,5 +339,17 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </motion.div>
+
+    {/* Video call overlay */}
+    <AnimatePresence>
+      {showVideoCall && (
+        <VideoCallPanel
+          currentUserId={currentUserId}
+          otherProfile={{ id: otherUser.id, name: otherUser.name, avatar_url: otherUser.avatar_url ?? null }}
+          onClose={() => setShowVideoCall(false)}
+        />
+      )}
+    </AnimatePresence>
+    </>
   );
 }

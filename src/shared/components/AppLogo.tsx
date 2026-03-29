@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-const LOGO_URL = "https://ik.imagekit.io/7grri5v7d/sdasdgdsfgsdfg-removebg-preview.png";
+const LOGO_URL = "https://ik.imagekit.io/7grri5v7d/Untitleddsdsd-removebg-preview.png";
 
 const FLOATING_HEARTS_COUNT = 8;
 const FLOAT_DURATION_MS = 2800;

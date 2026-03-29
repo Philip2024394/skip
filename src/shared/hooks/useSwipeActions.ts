@@ -75,8 +75,22 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
     const isMatch = props.likedMe.some((p) => p.id === profile.id);
     if (isMatch) {
       props.setMatchDialog(profile);
+      // Push: notify the other person of the match
+      supabase.functions.invoke("send-push", { body: {
+        recipientId: profile.id,
+        title: "🎉 New Match!",
+        body: `You matched with ${props.user.user_metadata?.name ?? "someone"}!`,
+        url: "/",
+      }}).catch(() => {});
     } else {
       props.toast("💗 " + props.t("swipe.liked"), { description: `${props.t("swipe.youLiked")} ${profile.name}` });
+      // Push: notify the other person of a new like
+      supabase.functions.invoke("send-push", { body: {
+        recipientId: profile.id,
+        title: "❤️ Someone liked you!",
+        body: "Open 2DateMe to see who it is.",
+        url: "/",
+      }}).catch(() => {});
     }
   }, [props.user, props.iLiked, props.likedMe, props.setILiked, props.setMatchDialog, props.upsertLocalLikedProfile, props.toast, props.t]);
 

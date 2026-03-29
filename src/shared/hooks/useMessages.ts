@@ -141,6 +141,13 @@ export function useMessages(currentUserId: string | null, otherUserId: string | 
 
       if (error) throw error;
       setMessages((prev) => [...prev, data as Message]);
+      // Push notification to recipient
+      supabase.functions.invoke("send-push", { body: {
+        recipientId: otherUserId,
+        title: "💬 New message",
+        body: content.trim().slice(0, 80),
+        url: "/",
+      }}).catch(() => {});
       return null;
     } catch (e: any) {
       return e.message || "Failed to send";

@@ -50,6 +50,8 @@ export interface AdminProfile {
   voice_intro_url: string | null;
   video_verified: boolean;
   video_verified_at: string | null;
+  photo_verified: boolean;
+  photo_verified_at: string | null;
 }
 
 export interface Payment {

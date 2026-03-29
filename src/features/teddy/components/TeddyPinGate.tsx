@@ -139,7 +139,7 @@ export default function TeddyPinGate({ userId, storedHash, onUnlocked }: TeddyPi
   const currentRefs = step === "confirm" ? confirmRefs : inputRefs;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0a0a]"
+    <div className="flex-1 flex flex-col items-center justify-center bg-[#0a0a0a]"
       style={{ background: "radial-gradient(ellipse at center, rgba(180,80,150,0.08) 0%, #0a0a0a 70%)" }}>
 
       {/* Bear + title */}
@@ -176,13 +176,13 @@ export default function TeddyPinGate({ userId, storedHash, onUnlocked }: TeddyPi
           <input
             key={`${step}-${i}`}
             ref={(el) => { currentRefs.current[i] = el; }}
-            type="tel"
+            type="password"
             inputMode="numeric"
             maxLength={1}
             value={d}
             onChange={(e) => handleInput(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
-            className="w-11 h-14 rounded-xl text-center text-white text-xl font-black border-2 outline-none transition-all"
+            className="w-11 h-14 rounded-xl text-center text-white text-2xl font-black border-2 outline-none transition-all"
             style={{
               background: d ? "rgba(236,72,153,0.12)" : "rgba(255,255,255,0.04)",
               borderColor: d ? "rgba(236,72,153,0.6)" : "rgba(255,255,255,0.12)",

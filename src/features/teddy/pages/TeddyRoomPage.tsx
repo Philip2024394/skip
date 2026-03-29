@@ -222,15 +222,18 @@ export default function TeddyRoomPage() {
   // Loading state
   if (pinHash === undefined || !userId) {
     return (
-      <div className="fixed inset-0 bg-[#0a0a0a] flex flex-col items-center justify-center gap-4">
-        <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
-          className="text-6xl select-none"
-        >
-          🧸
-        </motion.div>
-        <p className="text-white/30 text-sm">Loading your Teddy Room…</p>
+      <div className="fixed inset-0 bg-[#0a0a0a] flex flex-col">
+        <div className="px-4 py-4" style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 0px))" }}>
+          <button onClick={() => navigate("/")}
+            className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center text-white/50">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
+            className="text-6xl select-none">🧸</motion.div>
+          <p className="text-white/30 text-sm">Loading your Teddy Room…</p>
+        </div>
       </div>
     );
   }
@@ -238,11 +241,51 @@ export default function TeddyRoomPage() {
   // PIN gate
   if (!unlocked) {
     return (
-      <TeddyPinGate
-        userId={userId}
-        storedHash={pinHash}
-        onUnlocked={() => setUnlocked(true)}
-      />
+      <div className="fixed inset-0 bg-[#0a0a0a] flex flex-col" style={{ overflow: "hidden" }}>
+        {/* Background video — plays once then stays on last frame */}
+        <video
+          key="teddy-bg"
+          src="https://ik.imagekit.io/7grri5v7d/teddy%20chest.mp4"
+          autoPlay
+          muted
+          playsInline
+          onEnded={(e) => {
+            // Freeze on last frame by pausing
+            (e.target as HTMLVideoElement).pause();
+          }}
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            objectFit: "cover",
+            opacity: 0.22,
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        />
+        {/* Dark overlay so PIN UI stays readable */}
+        <div style={{
+          position: "absolute", inset: 0, zIndex: 1,
+          background: "linear-gradient(to bottom, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.72) 60%, rgba(10,10,10,0.92) 100%)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Back button */}
+        <div className="px-4 py-4 flex-shrink-0" style={{ paddingTop: "max(1rem, env(safe-area-inset-top, 0px))", position: "relative", zIndex: 2 }}>
+          <button onClick={() => navigate("/")}
+            className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center text-white/50 hover:text-white transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* PIN gate — sits above video */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 2 }}>
+          <TeddyPinGate
+            userId={userId}
+            storedHash={pinHash}
+            onUnlocked={() => setUnlocked(true)}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -473,6 +516,18 @@ export default function TeddyRoomPage() {
             )}
           </>
         )}
+      </div>
+
+      {/* Bottom nav bar */}
+      <div className="flex-shrink-0 px-4 py-3 border-t border-white/8"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))", background: "rgba(10,10,10,0.95)" }}>
+        <button
+          onClick={() => navigate("/")}
+          className="w-full py-3 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+          style={{ background: "linear-gradient(135deg, rgba(236,72,153,0.2), rgba(168,85,247,0.15))", border: "1px solid rgba(236,72,153,0.3)" }}
+        >
+          🔍 Profile Search
+        </button>
       </div>
 
       {/* Media preview overlay */}

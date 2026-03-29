@@ -28,6 +28,56 @@ const Gift = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// ── Photo Verification Review ─────────────────────────────────────────────────
+function PhotoVerificationReview({ profileId, isVerified, onApproved }: { profileId: string; isVerified: boolean; onApproved: () => void }) {
+  const [selfies, setSelfies] = React.useState<{ id: string; selfie_url: string; status: string; created_at: string }[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [approving, setApproving] = React.useState(false);
+
+  React.useEffect(() => {
+    supabase.from("verification_selfies" as any).select("id, selfie_url, status, created_at")
+      .eq("user_id", profileId).order("created_at", { ascending: false }).limit(3)
+      .then(({ data }) => { setSelfies((data as any) ?? []); setLoading(false); });
+  }, [profileId]);
+
+  const handleApprove = async () => {
+    setApproving(true);
+    try {
+      await supabase.from("profiles").update({ photo_verified: true, photo_verified_at: new Date().toISOString() } as any).eq("id", profileId);
+      if (selfies[0]) {
+        await (supabase.from("verification_selfies" as any).update as any)({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", selfies[0].id);
+      }
+      onApproved();
+      toast.success("Photo verified ✅");
+    } catch { toast.error("Failed to approve"); }
+    finally { setApproving(false); }
+  };
+
+  if (loading) return null;
+  if (selfies.length === 0 && !isVerified) return (
+    <div className="mt-3 rounded-xl bg-white/5 border border-white/8 px-3 py-2.5 text-white/30 text-xs text-center">No selfies submitted</div>
+  );
+
+  return (
+    <div className="mt-3 rounded-2xl bg-white/5 border border-white/8 p-3 space-y-2">
+      <p className="text-white/50 text-[10px] font-bold uppercase tracking-wide">Photo Verification</p>
+      {isVerified && <p className="text-green-400 text-xs font-bold">✅ Already approved</p>}
+      <div className="flex gap-2 flex-wrap">
+        {selfies.map(s => (
+          <img key={s.id} src={s.selfie_url} alt="selfie"
+            className="w-16 h-16 rounded-xl object-cover border border-white/10" />
+        ))}
+      </div>
+      {!isVerified && selfies.some(s => s.status === "pending") && (
+        <button onClick={handleApprove} disabled={approving}
+          className="w-full h-9 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 text-xs font-bold flex items-center justify-center gap-1.5 disabled:opacity-50">
+          <CheckCircle className="w-3.5 h-3.5" />{approving ? "Approving…" : "Approve — Mark Photo Verified"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ── User detail drawer ────────────────────────────────────────────────────────
 const UserDrawer = ({
   profile,
@@ -225,7 +275,6 @@ const UserDrawer = ({
       second_date_idea_image_url: dateIdeaImages[1] || null,
       third_date_idea: dateIdeas[2] || null,
       third_date_idea_image_url: dateIdeaImages[2] || null,
-      second_date_idea: dateIdeas[1] || null,
       residing_country: residingCountry || null,
       visited_countries: visitedCountries.length > 0 ? visitedCountries : null,
       ...badgeOverrides,
@@ -1021,6 +1070,11 @@ const UserDrawer = ({
                     {profile.video_verified ? "Already Video Verified" : saving ? "Saving…" : "Mark as Video Verified"}
                   </button>
                 </div>
+
+                {/* ── Photo Verification Review ── */}
+                <PhotoVerificationReview profileId={profile.id} isVerified={!!profile.photo_verified} onApproved={() => {
+                  setProfile((p: any) => p ? { ...p, photo_verified: true } : p);
+                }} />
 
                 <button onClick={saveImages} disabled={saving}
                   className="h-12 w-full rounded-2xl text-sm font-bold flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md transition-all active:scale-95 disabled:opacity-60">

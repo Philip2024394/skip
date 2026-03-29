@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/dialog";
-import FeaturePurchaseDialog from "@/features/payments/components/FeaturePurchaseDialog";
+import PaymentSheet from "@/features/payments/components/PaymentSheet";
 import FilterPanel from "@/features/dating/components/FilterPanel";
 import TermsAcceptanceDialog from "@/features/auth/components/TermsAcceptanceDialog";
 import GuestAuthPrompt from "@/features/auth/components/GuestAuthPrompt";
@@ -192,11 +192,12 @@ export default function AppDialogs(props: AppDialogsProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Feature Purchase Dialog */}
-      <FeaturePurchaseDialog
-        feature={props.featurePurchaseItem}
+      {/* Feature Purchase Sheet */}
+      <PaymentSheet
+        open={!!props.featurePurchaseItem}
         onClose={() => props.setFeaturePurchaseItem(null)}
-        onContinue={props.handleConfirmPurchase}
+        selectedFeature={props.featurePurchaseItem}
+        onPurchase={props.handleConfirmPurchase}
         loading={props.featureLoading}
       />
 
