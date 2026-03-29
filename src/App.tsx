@@ -12,6 +12,11 @@ import { ProtectedRoute, LoadingFallback } from "@/shared/components";
 // Lazy load heavy pages to reduce initial bundle size
 const HomePage = lazy(() => import("@/features/dating/pages/HomePage"));
 const DashboardPage = lazy(() => import("@/features/dating/pages/DashboardPage"));
+const FaqPage = lazy(() => import("@/features/dating/pages/FaqPage"));
+const TermsPage = lazy(() => import("@/features/dating/pages/TermsPage"));
+const PrivacyPage = lazy(() => import("@/features/dating/pages/PrivacyPage"));
+const MapPage = lazy(() => import("@/features/dating/pages/MapPage"));
+const AdminPage = lazy(() => import("@/features/admin/pages/AdminPage"));
 const WhatsAppCollection = lazy(() => import("@/features/admin/pages/WhatsAppCollection"));
 const WhatsAppDirectory = lazy(() => import("@/features/admin/components/WhatsAppDirectory"));
 const SecurityDashboard = lazy(() => import("@/features/admin/components/SecurityDashboard"));
@@ -58,7 +63,12 @@ const AppContent = () => {
         <Route path="/reset-password" element={<AuthPage />} />
         <Route path="/payment-success" element={<AuthPage />} />
         <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><DashboardPage /></Suspense></ProtectedRoute>} />
-        <Route path="/admin" element={<AuthPage />} />
+        <Route path="/faq" element={<Suspense fallback={<LoadingFallback />}><FaqPage /></Suspense>} />
+        <Route path="/terms" element={<Suspense fallback={<LoadingFallback />}><TermsPage /></Suspense>} />
+        <Route path="/privacy" element={<Suspense fallback={<LoadingFallback />}><PrivacyPage /></Suspense>} />
+        <Route path="/map" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><MapPage /></Suspense></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><AdminPage /></Suspense></ProtectedRoute>} />
+        <Route path="/admin/whatsapp-leads" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppCollection /></Suspense></ProtectedRoute>} />
         <Route path="/admin/whatsapp-collection" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppCollection /></Suspense></ProtectedRoute>} />
         <Route path="/admin/whatsapp-directory" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhatsAppDirectory /></Suspense></ProtectedRoute>} />
         <Route path="/admin/security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SecurityDashboard /></Suspense></ProtectedRoute>} />
