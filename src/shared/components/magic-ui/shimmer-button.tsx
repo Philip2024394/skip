@@ -8,7 +8,6 @@ interface ShimmerButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   glowColor?: string;
   icon?: ReactNode;
   label: string;
-  sublabel?: string;
 }
 
 /**
@@ -22,7 +21,6 @@ export function ShimmerButton({
   glowColor = "rgba(233,30,140,0.35)",
   icon,
   label,
-  sublabel,
   className,
   onClick,
   ...props
@@ -36,12 +34,13 @@ export function ShimmerButton({
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 14,
-        padding: "15px 17px",
-        borderRadius: 20,
-        border: "1px solid rgba(255,255,255,0.16)",
+        gap: 12,
+        padding: "11px 14px",
+        height: 46,
+        borderRadius: 14,
+        border: "1px solid rgba(255,255,255,0.1)",
         background: gradient,
-        boxShadow: `0 4px 28px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.07)`,
+        boxShadow: `0 2px 12px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.05)`,
       }}
       {...(props as any)}
     >
@@ -73,7 +72,7 @@ export function ShimmerButton({
             ],
           }}
           transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-          style={{ fontSize: 26, flexShrink: 0, lineHeight: 1, position: "relative", zIndex: 1 }}
+          style={{ fontSize: 20, flexShrink: 0, lineHeight: 1, position: "relative", zIndex: 1 }}
         >
           {icon}
         </motion.span>
@@ -81,14 +80,9 @@ export function ShimmerButton({
 
       {/* ── Labels ── */}
       <div style={{ position: "relative", zIndex: 1, flex: 1 }}>
-        <p style={{ color: "#fff", fontWeight: 800, fontSize: 15, margin: 0, lineHeight: 1.3 }}>
+        <p style={{ color: "#fff", fontWeight: 700, fontSize: 14, margin: 0, lineHeight: 1 }}>
           {label}
         </p>
-        {sublabel && (
-          <p style={{ color: "rgba(255,255,255,0.52)", fontSize: 12, margin: "2px 0 0", lineHeight: 1 }}>
-            {sublabel}
-          </p>
-        )}
       </div>
 
       {/* ── Chevron arrow ── */}

@@ -2014,38 +2014,35 @@ const Index = () => {
               >×</motion.button>
 
               {/* ── Content ── */}
-              <div style={{ position: "relative", zIndex: 1, padding: "8px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ position: "relative", zIndex: 1, padding: "8px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
 
-                {/* Section label */}
-                <div style={{ marginBottom: 2, marginTop: 6, display: "flex", alignItems: "center", gap: 8 }}>
-                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+                {/* Header: Control Center */}
+                <div style={{ marginBottom: 4, marginTop: 4 }}>
                   <AnimatedGradientText
-                    style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase" }}
+                    style={{ fontSize: 16, letterSpacing: "0.04em", fontWeight: 800 }}
                   >
-                    Quick Access
+                    Control Center
                   </AnimatedGradientText>
-                  <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.1)" }} />
+                  <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginTop: 8 }} />
                 </div>
 
                 {/* ── Coins button ── */}
                 <ShimmerButton
-                  gradient="linear-gradient(135deg, rgba(234,179,8,0.22), rgba(251,146,60,0.22))"
-                  shimmerColor="rgba(255,220,100,0.18)"
-                  glowColor="rgba(234,179,8,0.4)"
+                  gradient="rgba(0,0,0,0.4)"
+                  shimmerColor="rgba(255,255,255,0.08)"
+                  glowColor="rgba(255,255,255,0.04)"
                   icon="🪙"
-                  label="Coins"
-                  sublabel={coinBalance.loading ? "Loading…" : `${coinBalance.balance} balance`}
+                  label={`Coins · ${coinBalance.loading ? "…" : coinBalance.balance}`}
                   onClick={() => { setShowDrawer(false); setShowCoinRefuel(true); }}
                 />
 
                 {/* ── Teddy Room button ── */}
                 <ShimmerButton
-                  gradient="linear-gradient(135deg, rgba(236,72,153,0.22), rgba(168,85,247,0.22))"
-                  shimmerColor="rgba(255,180,220,0.18)"
-                  glowColor="rgba(236,72,153,0.4)"
+                  gradient="rgba(0,0,0,0.4)"
+                  shimmerColor="rgba(255,255,255,0.08)"
+                  glowColor="rgba(255,255,255,0.04)"
                   icon="🧸"
                   label="My Teddy Room"
-                  sublabel="Private media vault"
                   onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
                 />
 
