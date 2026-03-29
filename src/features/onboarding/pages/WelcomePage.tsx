@@ -126,6 +126,15 @@ export default function WelcomePage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const dragControls = useDragControls();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Wait 3 seconds on page before starting video
+  useEffect(() => {
+    const t = setTimeout(() => {
+      videoRef.current?.play().catch(() => {});
+    }, 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   // Get session
   useEffect(() => {
@@ -217,8 +226,8 @@ export default function WelcomePage() {
     <div style={{ position: "fixed", inset: 0, background: "#050508", overflow: "hidden" }}>
       {/* ── Background video ─────────────────────────────────────── */}
       <video
+        ref={videoRef}
         src="https://ik.imagekit.io/dateme/ted%20running%20office.mp4"
-        autoPlay
         muted
         playsInline
         preload="auto"
