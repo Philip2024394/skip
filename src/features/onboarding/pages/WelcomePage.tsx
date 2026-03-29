@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, Check, Camera, ImagePlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
 
 // ── Data ────────────────────────────────────────────────────────────────────
@@ -88,10 +88,28 @@ function getCountryByCode(code: string) {
   return COUNTRIES.find(c => c.code === code) ?? COUNTRIES[0];
 }
 
+// Map country code → default language code
+const COUNTRY_LANG_MAP: Record<string, string> = {
+  ID:"ID", MY:"MS", SG:"EN", PH:"EN", TH:"TH", VN:"VI",
+  CN:"ZH", TW:"ZH", HK:"ZH", JP:"JA", KR:"KO",
+  IN:"HI", PK:"AR", BD:"EN", EG:"AR", SA:"AR", AE:"AR",
+  DE:"DE", AT:"DE", CH:"DE", FR:"FR", BE:"FR", ES:"ES",
+  MX:"ES", AR:"ES", CO:"ES", BR:"PT", PT:"PT",
+  RU:"RU", PL:"PL", TR:"TR", NL:"NL", IT:"IT",
+  SE:"SV", NO:"SV", DK:"SV",
+  GB:"EN", US:"EN", AU:"EN", CA:"EN", NZ:"EN",
+};
+
+function getLangByCountryCode(countryCode: string) {
+  const langCode = COUNTRY_LANG_MAP[countryCode] ?? "EN";
+  return LANGUAGES.find(l => l.code === langCode) ?? LANGUAGES[0];
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function WelcomePage() {
   const navigate = useNavigate();
+  const { setLocale } = useLanguage();
   const [userId, setUserId] = useState<string | null>(null);
   const [showSlider, setShowSlider] = useState(false);
   const [step, setStep] = useState(1); // 1 | 2 | 3
@@ -116,19 +134,18 @@ export default function WelcomePage() {
     });
   }, []);
 
-  // Detect country via IP
+  // Detect country + default language via IP
   useEffect(() => {
     detectCountryCode().then(code => {
-      const found = getCountryByCode(code);
-      setCountry(found);
+      setCountry(getCountryByCode(code));
+      setLanguage(getLangByCountryCode(code));
       setCountryDetected(true);
-      // Put detected country first in sorted list (handled in render)
     });
   }, []);
 
-  // Show slider after 10 seconds
+  // Fallback: show slider after 15s if video never fires onEnded (e.g. slow load)
   useEffect(() => {
-    const t = setTimeout(() => setShowSlider(true), 10_000);
+    const t = setTimeout(() => setShowSlider(true), 15_000);
     return () => clearTimeout(t);
   }, []);
 
@@ -166,6 +183,9 @@ export default function WelcomePage() {
         preferred_language: language.code.toLowerCase(),
         looking_for: intent.id,
       } as any).eq("id", userId);
+      // Update app locale — falls back to "en" for languages not fully translated yet
+      const appLocale = language.code.toLowerCase() === "id" ? "id" : "en";
+      setLocale(appLocale as any);
       navigate("/home", { replace: true });
     } catch {
       toast.error("Couldn't save. Try again.");
@@ -196,11 +216,12 @@ export default function WelcomePage() {
     <div style={{ position: "fixed", inset: 0, background: "#050508", overflow: "hidden" }}>
       {/* ── Background video ─────────────────────────────────────── */}
       <video
-        src="https://ik.imagekit.io/7grri5v7d/teddy%20chest.mp4"
+        src="https://ik.imagekit.io/dateme/ted%20running%20office.mp4"
         autoPlay
         muted
         playsInline
-        onEnded={(e) => (e.target as HTMLVideoElement).pause()}
+        preload="auto"
+        onEnded={() => setShowSlider(true)}
         style={{
           position: "absolute", inset: 0,
           width: "100%", height: "100%",
@@ -209,11 +230,6 @@ export default function WelcomePage() {
         }}
       />
 
-      {/* Dark overlay */}
-      <div style={{
-        position: "absolute", inset: 0, zIndex: 1,
-        background: "linear-gradient(to bottom, rgba(5,5,8,0.45) 0%, rgba(5,5,8,0.6) 50%, rgba(5,5,8,0.88) 100%)",
-      }} />
 
       {/* ── Welcome text ─────────────────────────────────────────── */}
       <motion.div
@@ -240,23 +256,6 @@ export default function WelcomePage() {
           Indonesia's home for real connections ❤️
         </p>
 
-        {/* Skip early button */}
-        {!showSlider && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 3 }}
-            onClick={() => setShowSlider(true)}
-            style={{
-              marginTop: 28, padding: "10px 28px", borderRadius: 24,
-              background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)",
-              color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            Get Started →
-          </motion.button>
-        )}
       </motion.div>
 
       {/* ── Bottom sheet sliders ──────────────────────────────────── */}
@@ -290,14 +289,14 @@ export default function WelcomePage() {
                 zIndex: 4,
                 maxHeight: "78dvh",
                 borderRadius: "28px 28px 0 0",
-                background: "#0e0e18",
+                background: "linear-gradient(160deg, #0a0014 0%, #1a0030 50%, #050008 100%)",
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
               }}
             >
               {/* Top rim gradient */}
-              <div style={{ height: 3, background: "linear-gradient(90deg,#ec4899,#a855f7,#38bdf8,#ec4899)", flexShrink: 0 }} />
+              <div style={{ height: 3, background: "linear-gradient(90deg, #e848c7, #c33cff, #e848c7)", flexShrink: 0 }} />
 
               {/* Drag handle */}
               <div
@@ -312,7 +311,7 @@ export default function WelcomePage() {
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} style={{
                     width: i === step ? 22 : 6, height: 6, borderRadius: 3,
-                    background: i <= step ? "linear-gradient(90deg,#ec4899,#a855f7)" : "rgba(255,255,255,0.15)",
+                    background: i <= step ? "linear-gradient(90deg, #e848c7, #c33cff)" : "rgba(255,255,255,0.12)",
                     transition: "all 0.3s",
                   }} />
                 ))}
@@ -336,12 +335,12 @@ export default function WelcomePage() {
                   style={{
                     width: "100%", height: 52, borderRadius: 16, border: "none",
                     background: canNext() && !saving
-                      ? "linear-gradient(135deg,#ec4899,#a855f7)"
+                      ? "linear-gradient(135deg, #e848c7, #c33cff)"
                       : "rgba(255,255,255,0.08)",
                     color: "white", fontWeight: 900, fontSize: 16,
                     cursor: canNext() && !saving ? "pointer" : "default",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    boxShadow: canNext() ? "0 4px 20px rgba(236,72,153,0.35)" : "none",
+                    boxShadow: canNext() ? "0 4px 24px rgba(195,60,255,0.45)" : "none",
                     transition: "all 0.2s",
                   }}
                 >
@@ -352,7 +351,7 @@ export default function WelcomePage() {
                       animation: "spin 0.7s linear infinite", display: "inline-block",
                     }} />
                   ) : step < 4 ? (
-                    <><span>Continue</span><ChevronRight style={{ width: 18, height: 18 }} /></>
+                    <span>Continue</span>
                   ) : avatarUrl ? (
                     <><span>Let's Go 🚀</span></>
                   ) : (
@@ -490,15 +489,6 @@ function Step2({ language, setLanguage }: {
                 <p style={{ color: "white", fontWeight: 700, fontSize: 14, margin: 0 }}>{lang.name}</p>
                 <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10, margin: 0, fontWeight: 600 }}>{lang.code}</p>
               </div>
-              {selected && (
-                <div style={{
-                  width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
-                  background: "linear-gradient(135deg,#ec4899,#a855f7)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <Check style={{ width: 12, height: 12, color: "white" }} />
-                </div>
-              )}
             </motion.button>
           );
         })}
@@ -575,17 +565,6 @@ function Step3({ intent, setIntent }: {
               }}>
                 {opt.label}
               </p>
-              {selected && (
-                <div style={{ marginLeft: "auto", flexShrink: 0 }}>
-                  <div style={{
-                    width: 22, height: 22, borderRadius: "50%",
-                    background: "linear-gradient(135deg,#ec4899,#a855f7)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }}>
-                    <Check style={{ width: 12, height: 12, color: "white" }} />
-                  </div>
-                </div>
-              )}
             </motion.button>
           );
         })}
@@ -640,10 +619,7 @@ function Step4({ avatarUrl, uploading, onUpload }: {
             animation: "spin 0.7s linear infinite",
           }} />
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <Camera style={{ width: 32, height: 32, color: "rgba(255,255,255,0.35)" }} />
-            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 700 }}>Tap to upload</span>
-          </div>
+          <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 700 }}>Tap to upload</span>
         )}
       </motion.button>
 
@@ -658,7 +634,6 @@ function Step4({ avatarUrl, uploading, onUpload }: {
             cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
           }}
         >
-          <ImagePlus style={{ width: 14, height: 14 }} />
           Change photo
         </motion.button>
       )}
