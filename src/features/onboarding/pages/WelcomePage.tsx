@@ -305,30 +305,50 @@ export default function WelcomePage() {
                 overflow: "hidden",
               }}
             >
-              {/* Top rim */}
-              <div style={{ height: 4, background: "rgba(0,0,0,0.4)", flexShrink: 0 }} />
+              {/* ── Top rim: pink→purple gradient stripe ── */}
+              <div style={{
+                height: 3, flexShrink: 0,
+                background: "linear-gradient(90deg, #e848c7, #c33cff, #e848c7)",
+                backgroundSize: "200% 100%",
+                animation: "rim-shift 3s linear infinite",
+              }} />
 
-              {/* Drag handle */}
+              {/* ── Drag handle: fuchsia pill ── */}
               <div
                 onPointerDown={(e) => dragControls.start(e)}
-                style={{ flexShrink: 0, padding: "10px 0 0", display: "flex", justifyContent: "center", cursor: "grab" }}
+                style={{ flexShrink: 0, padding: "10px 0 4px", display: "flex", justifyContent: "center", cursor: "grab" }}
               >
-                <div style={{ width: 36, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.5)" }} />
+                <div style={{
+                  width: 38, height: 5, borderRadius: 99,
+                  background: "linear-gradient(90deg, rgba(232,72,199,0.7), rgba(195,60,255,0.7))",
+                  boxShadow: "0 0 10px rgba(232,72,199,0.5)",
+                }} />
               </div>
 
-              {/* Step dots */}
-              <div style={{ display: "flex", justifyContent: "center", gap: 6, padding: "10px 0 0", flexShrink: 0 }}>
+              {/* ── Progress bar: segmented pill strip ── */}
+              <div style={{ display: "flex", gap: 5, padding: "10px 20px 2px", flexShrink: 0 }}>
                 {[1, 2, 3, 4].map(i => (
                   <div key={i} style={{
-                    width: i === step ? 22 : 6, height: 6, borderRadius: 3,
-                    background: i === step ? "rgba(0,0,0,0.4)" : i < step ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.3)",
-                    transition: "all 0.3s",
+                    flex: 1, height: 4, borderRadius: 99,
+                    background: i <= step
+                      ? "linear-gradient(90deg, #e848c7, #c33cff)"
+                      : "rgba(255,255,255,0.12)",
+                    boxShadow: i === step ? "0 0 8px rgba(232,72,199,0.6)" : "none",
+                    transition: "all 0.35s ease",
                   }} />
                 ))}
               </div>
 
+              {/* ── Step label ── */}
+              <div style={{ padding: "6px 20px 0", flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 3, height: 16, borderRadius: 99, background: "linear-gradient(180deg, #e848c7, #c33cff)" }} />
+                <span style={{ color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  Step {step} of 4
+                </span>
+              </div>
+
               {/* Scrollable content */}
-              <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 8px" }}>
+              <div style={{ flex: 1, overflowY: "auto", padding: "14px 20px 8px" }}>
                 <AnimatePresence mode="wait">
                   {step === 1 && <Step1 key="s1" name={name} setName={setName} country={country} setCountry={setCountry} />}
                   {step === 2 && <Step2 key="s2" language={language} setLanguage={setLanguage} language2={language2} setLanguage2={setLanguage2} />}
@@ -337,30 +357,33 @@ export default function WelcomePage() {
                 </AnimatePresence>
               </div>
 
-              {/* CTA */}
+              {/* ── CTA button ── */}
               <div style={{ flexShrink: 0, padding: "12px 20px 32px" }}>
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
                   onClick={handleNext}
                   disabled={!canNext() || saving}
                   style={{
                     width: "100%", height: 52, borderRadius: 16, border: "none",
                     background: canNext() && !saving
-                      ? "rgba(0,0,0,0.4)"
-                      : "rgba(0,0,0,0.2)",
+                      ? "linear-gradient(135deg, #e848c7, #c33cff)"
+                      : "rgba(255,255,255,0.07)",
                     color: "white",
                     fontWeight: 900, fontSize: 16,
                     cursor: canNext() && !saving ? "pointer" : "default",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    boxShadow: canNext() ? "0 4px 20px rgba(0,0,0,0.5)" : "none",
-                    transition: "all 0.2s",
+                    boxShadow: canNext() && !saving ? "0 4px 24px rgba(195,60,255,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" : "none",
+                    transition: "all 0.25s",
                   }}
                 >
-                  {step < 4 ? (
-                    <span>Continue</span>
+                  {saving ? (
+                    <span style={{ width: 20, height: 20, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white", animation: "spin 0.7s linear infinite", display: "inline-block" }} />
+                  ) : step < 4 ? (
+                    <span>Continue →</span>
                   ) : (
                     avatarUrl ? <span>Continue →</span> : <span>Skip & Continue →</span>
                   )}
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           </>
@@ -501,7 +524,10 @@ export default function WelcomePage() {
         )}
       </AnimatePresence>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes rim-shift { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+      `}</style>
     </div>
   );
 }
@@ -539,11 +565,20 @@ function WheelPicker({ items, selected, onSelect }: {
   };
 
   return (
-    <div style={{ position: "relative", height: ITEM_H * 3, overflow: "hidden" }}>
-      {/* Centre highlight */}
-      <div style={{ position: "absolute", top: ITEM_H, left: 0, right: 0, height: ITEM_H, background: "rgba(255,255,255,0.28)", zIndex: 1, pointerEvents: "none" }} />
-      {/* Left indicator line */}
-      <div style={{ position: "absolute", top: ITEM_H, left: 0, width: 3, height: ITEM_H, background: "rgba(0,0,0,0.4)", zIndex: 4, pointerEvents: "none" }} />
+    <div style={{ position: "relative", height: ITEM_H * 3, overflow: "hidden", borderRadius: 14 }}>
+      {/* ── Top fade ── */}
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)", zIndex: 2, pointerEvents: "none" }} />
+      {/* ── Bottom fade ── */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)", zIndex: 2, pointerEvents: "none" }} />
+      {/* ── Centre highlight: home-page card style ── */}
+      <div style={{
+        position: "absolute", top: ITEM_H, left: 6, right: 6, height: ITEM_H,
+        background: "linear-gradient(135deg, rgba(232,72,199,0.13), rgba(195,60,255,0.1))",
+        border: "1px solid rgba(232,72,199,0.28)",
+        borderRadius: 12,
+        boxShadow: "0 0 14px rgba(232,72,199,0.15)",
+        zIndex: 1, pointerEvents: "none",
+      }} />
       {/* Scrollable list */}
       <div
         ref={ref}
@@ -624,8 +659,8 @@ function Step1({ name, setName, country, setCountry }: {
             color: "white", fontSize: 15, fontWeight: 600, outline: "none",
             boxSizing: "border-box",
           }}
-          onFocus={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.65)")}
-          onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.25)")}
+          onFocus={(e) => { e.target.style.borderColor = "rgba(232,72,199,0.8)"; e.target.style.boxShadow = "0 0 0 3px rgba(232,72,199,0.15)"; }}
+          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.15)"; e.target.style.boxShadow = "none"; }}
         />
       </div>
 
@@ -702,14 +737,21 @@ function Step2({ language, setLanguage, language2, setLanguage2 }: {
   );
 }
 
-// ── Step 3: Intent wheel ──────────────────────────────────────────────────────
+// ── Step 3: Intent pill chips ─────────────────────────────────────────────────
+
+const INTENT_ICONS: Record<string, string> = {
+  longterm: "💞",
+  chat: "💬",
+  casual: "✨",
+  marriage: "💍",
+  travel: "✈️",
+  unsure: "🤔",
+};
 
 function Step3({ intent, setIntent }: {
   intent: typeof INTENT_OPTIONS[0];
   setIntent: (v: typeof INTENT_OPTIONS[0]) => void;
 }) {
-  const intentItems = INTENT_OPTIONS.map(o => ({ key: o.id, label: o.label }));
-
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
@@ -718,17 +760,38 @@ function Step3({ intent, setIntent }: {
       <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px" }}>
         What are you seeking?
       </p>
-      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: "0 0 18px", lineHeight: 1.5 }}>
-        Scroll the wheel to select
+      <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
+        Tap to select
       </p>
-      <WheelPicker
-        items={intentItems}
-        selected={intent.id}
-        onSelect={(key) => {
-          const found = INTENT_OPTIONS.find(o => o.id === key);
-          if (found) setIntent(found);
-        }}
-      />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {INTENT_OPTIONS.map(o => {
+          const active = intent.id === o.id;
+          return (
+            <motion.button
+              key={o.id}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setIntent(o)}
+              style={{
+                padding: "13px 12px",
+                borderRadius: 16,
+                border: active ? "1.5px solid rgba(232,72,199,0.7)" : "1px solid rgba(255,255,255,0.1)",
+                background: active
+                  ? "linear-gradient(135deg, rgba(232,72,199,0.18), rgba(195,60,255,0.14))"
+                  : "rgba(0,0,0,0.35)",
+                boxShadow: active ? "0 0 16px rgba(232,72,199,0.3), inset 0 0 8px rgba(232,72,199,0.08)" : "none",
+                cursor: "pointer",
+                display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6,
+                transition: "all 0.2s",
+              }}
+            >
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{INTENT_ICONS[o.id]}</span>
+              <span style={{ color: active ? "white" : "rgba(255,255,255,0.65)", fontSize: 13, fontWeight: active ? 800 : 500, lineHeight: 1.2, textAlign: "left" }}>
+                {o.label}
+              </span>
+            </motion.button>
+          );
+        })}
+      </div>
     </motion.div>
   );
 }
