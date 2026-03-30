@@ -214,34 +214,44 @@ export default function CoinWalletSheet({ userId, onClose }: Props) {
           maxWidth: 480, margin: "0 auto",
           height: "90dvh",
           display: "flex", flexDirection: "column",
-          background: "#08060a",
+          backgroundImage: "url('/images/app-background.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           borderRadius: "26px 26px 0 0",
-          border: "1.5px solid rgba(245,158,11,0.2)",
+          border: "1.5px solid #c2185b",
           borderBottom: "none",
-          boxShadow: "0 -32px 80px rgba(0,0,0,0.75), 0 0 100px rgba(245,158,11,0.05)",
+          boxShadow: "0 -32px 80px rgba(0,0,0,0.75), 0 0 60px rgba(194,24,91,0.18)",
           overflow: "hidden",
           paddingBottom: "max(0px,env(safe-area-inset-bottom,0px))",
         }}
       >
-        {/* Gold shimmer line at top of sheet */}
+        {/* Dark overlay so content stays readable over the PNG */}
         <div style={{
-          height: 2,
-          background: "linear-gradient(90deg, transparent, rgba(245,158,11,0.6), transparent)",
+          position: "absolute", inset: 0, zIndex: 0,
+          background: "rgba(6,4,10,0.82)",
+          pointerEvents: "none",
+        }} />
+
+        {/* Pink shimmer line at top of sheet — matches onboarding name input #c2185b */}
+        <div style={{
+          height: 2, position: "relative", zIndex: 1,
+          background: "linear-gradient(90deg, transparent, #c2185b, rgba(236,72,153,0.8), #c2185b, transparent)",
           flexShrink: 0,
         }} />
 
         {/* Handle bar */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0", flexShrink: 0 }}>
+        <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 0", flexShrink: 0, position: "relative", zIndex: 1 }}>
           <div style={{ width: 36, height: 4, borderRadius: 99, background: "rgba(255,255,255,0.14)" }} />
         </div>
 
         {/* ── Header: big balance ─────────────────────────────────────────────── */}
         <div style={{
           padding: "14px 20px 16px",
-          background: "linear-gradient(180deg,rgba(245,158,11,0.08) 0%,transparent 100%)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          background: "linear-gradient(180deg,rgba(194,24,91,0.07) 0%,transparent 100%)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
           flexShrink: 0,
           position: "relative",
+          zIndex: 1,
         }}>
           {/* Close */}
           <button
@@ -282,7 +292,8 @@ export default function CoinWalletSheet({ userId, onClose }: Props) {
           {/* Section tabs */}
           <div style={{
             display: "flex", gap: 6, marginTop: 16,
-            background: "rgba(255,255,255,0.05)", borderRadius: 14, padding: "3px 4px",
+            background: "rgba(0,0,0,0.35)", borderRadius: 14, padding: "3px 4px",
+            border: "1px solid rgba(255,255,255,0.07)",
           }}>
             {([
               { id: "wallet", label: "💼  Wallet"    },
@@ -305,7 +316,7 @@ export default function CoinWalletSheet({ userId, onClose }: Props) {
         </div>
 
         {/* ── Scrollable body ────────────────────────────────────────────────── */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 40px", WebkitOverflowScrolling: "touch" } as React.CSSProperties}>
+        <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px 40px", WebkitOverflowScrolling: "touch", position: "relative", zIndex: 1 } as React.CSSProperties}>
 
           {/* ════ WALLET SECTION ═══════════════════════════════════════════════ */}
           {section === "wallet" && (
