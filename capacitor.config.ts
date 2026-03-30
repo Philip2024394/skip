@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.2dateme.app',
+  appId: 'com.dateme.app',
   /** Shown under the app icon on home screen (mobile). Use 2DateMe for branding. */
   appName: '2DateMe',
   webDir: 'dist',
@@ -11,8 +11,6 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: false,
     backgroundColor: '#000000',
-    // Allow back button to navigate within the app
-    handleApplicationNotifications: false,
   },
   plugins: {
     SplashScreen: {

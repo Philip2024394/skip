@@ -2,8 +2,8 @@
 // Enables PWA install prompt, push notifications, offline capability, and auto-update.
 // Bump CACHE_VERSION on each deploy so returning users get the new app.
 
-const CACHE_VERSION = "2dm-v2";
-const CACHE_NAME = `2ghost-${CACHE_VERSION}`;
+const CACHE_VERSION = "2dm-v3";
+const CACHE_NAME = `2dateme-${CACHE_VERSION}`;
 
 // Assets to cache on install for offline use
 const PRECACHE_ASSETS = [
