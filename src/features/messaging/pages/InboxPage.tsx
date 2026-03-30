@@ -453,11 +453,11 @@ export default function InboxPage() {
   const newGifts       = gifts.filter(g => g.status === "pending").length;
   const totalBadge     = unreadChats + unansweredQs + newLikes + newGifts;
 
-  const tabs: { key: Tab; label: string; emoji: string; count?: number }[] = [
-    { key: "all",   label: "All",        emoji: "✨", count: totalBadge || undefined },
-    { key: "chats", label: "Chats",      emoji: "💬", count: unreadChats || undefined },
-    { key: "blind", label: "Blind Date", emoji: "💘", count: unansweredQs || undefined },
-    { key: "likes", label: "Likes",      emoji: "♥",  count: newLikes || undefined },
+  const tabs: { key: Tab; label: string; emoji: string }[] = [
+    { key: "all",   label: "All",        emoji: "✨" },
+    { key: "chats", label: "Chats",      emoji: "💬" },
+    { key: "blind", label: "Blind Date", emoji: "💘" },
+    { key: "likes", label: "Likes",      emoji: "♥"  },
   ];
 
   const showChats  = tab === "all" || tab === "chats";
@@ -480,8 +480,6 @@ export default function InboxPage() {
         <div style={{
           padding: `max(18px,env(safe-area-inset-top,18px)) 18px 12px`,
           flexShrink: 0,
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          background: "rgba(0,0,0,0.45)", backdropFilter: "blur(20px)",
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
             {/* Title + back */}
