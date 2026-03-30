@@ -49,130 +49,229 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-// ── Mystery bio generator ─────────────────────────────────────────────────────
-// Produces a clue-filled narrative paragraph + 3 questions the reader can
-// actually answer by reading carefully. No raw data is ever shown directly.
+// ── Mystery card generator ────────────────────────────────────────────────────
+// Each of the 3 questions gets its OWN story clue — richer cultural/personal
+// detail per country. No raw data (name, age number, city) ever shown directly.
 
-interface MysteryCard {
-  bio: string;         // clue-filled narrative
-  questions: Question[];
+interface MysteryQuestion extends Question {
+  clue: string; // story shown above this specific question
 }
 
-function ageRange(age: number): { label: string; clue: string } {
+interface MysteryCard {
+  questions: MysteryQuestion[];
+}
+
+// ── Age clues ─────────────────────────────────────────────────────────────────
+function ageClue(age: number): { label: string; clue: string } {
   if (age <= 22) return {
     label: "18 – 22",
-    clue: "I was still in school when everyone started obsessing over short-form videos — that whole era basically defined my teenage years.",
+    clue: "\"Growing up my whole childhood was shaped by short-form videos — TikTok trends were basically our yearbook. My older cousins still make fun of me for it.\"",
   };
   if (age <= 26) return {
     label: "23 – 26",
-    clue: "I graduated just as the world went into lockdown. My first 'real job' was fully remote — I've never actually met half my old colleagues in person.",
+    clue: "\"I graduated right as the whole world locked down. My first job was remote from day one — I've never actually been to my company's office in person.\"",
   };
   if (age <= 30) return {
     label: "27 – 30",
-    clue: "I remember my parents stressing about the 2008 financial crisis when I was in middle school. Didn't understand it then — understand it too well now.",
+    clue: "\"I remember being in middle school when the 2008 financial crisis hit. My parents suddenly went very quiet about money. I didn't fully understand it then.\"",
   };
   if (age <= 35) return {
     label: "31 – 35",
-    clue: "I was a teenager when Facebook launched and thought it was the coolest thing alive. These days I barely open it.",
+    clue: "\"I was a teenager when Facebook launched and genuinely thought it was the most revolutionary thing I'd ever seen. I check it maybe once a year now.\"",
   };
   if (age <= 40) return {
     label: "36 – 40",
-    clue: "I grew up with dial-up internet and cassette tapes. My first phone had an antenna you had to pull out.",
+    clue: "\"My first phone had a pull-out antenna and a screen the size of a postage stamp. I thought it was incredible. We burned CDs for road trips.\"",
   };
   return {
     label: "40+",
-    clue: "I remember when mobile phones were a luxury. We wrote letters and actually waited for replies — patience wasn't optional.",
+    clue: "\"We passed notes in class, not texts. The internet came to our house when I was a teenager and we had one shared computer in the hallway.\"",
   };
 }
 
-function locationClue(city: string | null, country: string): { hint: string; regionLabel: string; regionOptions: string[] } {
+// ── Location clues ────────────────────────────────────────────────────────────
+function locationClue(city: string | null, country: string): { clue: string; label: string; options: string[] } {
   const c = (city || country).toLowerCase();
 
-  if (c.includes("bali"))       return { hint: "The smell of incense and rice offerings at sunrise is just part of daily life here. Temple bells on ceremony days.", regionLabel: "Bali, Indonesia", regionOptions: shuffle(["Bali, Indonesia", "Thailand", "Philippines", "Sri Lanka"]) };
-  if (c.includes("jakarta"))    return { hint: "Two-hour commutes through gridlock, street food on every corner, and a skyline that never stops growing.", regionLabel: "Jakarta, Indonesia", regionOptions: shuffle(["Jakarta, Indonesia", "Kuala Lumpur", "Ho Chi Minh City", "Manila"]) };
-  if (c.includes("indonesia") || c.includes("surabaya") || c.includes("bandung") || c.includes("medan")) return { hint: "Monsoon season here is no joke — streets flood and the air smells electric before the rain hits. Lebaran is the biggest event of the year.", regionLabel: "Indonesia", regionOptions: shuffle(["Indonesia", "Malaysia", "Philippines", "Vietnam"]) };
-  if (c.includes("malaysia") || c.includes("kuala lumpur")) return { hint: "Mamak stalls open past midnight, the skyline is iconic, and you can eat four different cuisines in one street.", regionLabel: "Malaysia", regionOptions: shuffle(["Malaysia", "Indonesia", "Singapore", "Thailand"]) };
-  if (c.includes("singapore"))  return { hint: "Everything is close, everything is clean, and you can get food at 3am without thinking twice.", regionLabel: "Singapore", regionOptions: shuffle(["Singapore", "Malaysia", "Hong Kong", "Taiwan"]) };
-  if (c.includes("philippines") || c.includes("manila")) return { hint: "Island hopping is a real weekend plan here, not a dream. The ocean is never far.", regionLabel: "Philippines", regionOptions: shuffle(["Philippines", "Indonesia", "Thailand", "Vietnam"]) };
-  if (c.includes("thailand") || c.includes("bangkok")) return { hint: "Songkran water festival, street markets, and temples that glow orange at dusk.", regionLabel: "Thailand", regionOptions: shuffle(["Thailand", "Vietnam", "Cambodia", "Myanmar"]) };
-  if (c.includes("australia") || c.includes("sydney") || c.includes("melbourne")) return { hint: "Summer here means UV warnings before 10am. Beaches on Christmas Day are completely normal.", regionLabel: "Australia", regionOptions: shuffle(["Australia", "New Zealand", "South Africa", "Canada"]) };
-  if (c.includes("london") || c.includes("uk") || c.includes("england")) return { hint: "We complain about the weather constantly but still somehow look surprised when it rains in July.", regionLabel: "United Kingdom", regionOptions: shuffle(["United Kingdom", "Australia", "Canada", "Ireland"]) };
-  if (c.includes("dubai") || c.includes("uae")) return { hint: "40°C in summer is just Tuesday here. The desert sunsets though — nothing compares.", regionLabel: "UAE / Middle East", regionOptions: shuffle(["UAE / Middle East", "Saudi Arabia", "Qatar", "Bahrain"]) };
+  if (c.includes("bali")) return {
+    clue: "\"Every morning before sunrise there are canang sari offerings at every doorstep — flowers, rice, incense. Temple ceremonies happen every few weeks and the whole village shows up. It's completely ordinary here, which is the extraordinary part.\"",
+    label: "Bali, Indonesia",
+    options: shuffle(["Bali, Indonesia", "Sri Lanka", "Thailand", "Philippines"]),
+  };
+  if (c.includes("jakarta")) return {
+    clue: "\"My commute is two hours each way and nobody thinks that's unusual. During Lebaran the whole city empties out and for three days you can drive anywhere in ten minutes — it's the only time the streets make sense.\"",
+    label: "Jakarta, Indonesia",
+    options: shuffle(["Jakarta, Indonesia", "Manila", "Ho Chi Minh City", "Bangkok"]),
+  };
+  if (c.includes("indonesia") || c.includes("surabaya") || c.includes("bandung") || c.includes("medan") || c.includes("yogyakarta")) return {
+    clue: "\"Lebaran brings the whole country home — streets go quiet, family tables go loud. When the rains come in November the smell of petrichor on warm pavement is one of those things that never gets old.\"",
+    label: "Indonesia",
+    options: shuffle(["Indonesia", "Malaysia", "Philippines", "Vietnam"]),
+  };
+  if (c.includes("malaysia") || c.includes("kuala lumpur") || c.includes("penang")) return {
+    clue: "\"We celebrate Raya, Chinese New Year, Deepavali and Christmas within the same year and somehow each one feels equally real. Mamak stalls are open at 2am and I've had some of my best conversations over roti canai at midnight.\"",
+    label: "Malaysia",
+    options: shuffle(["Malaysia", "Indonesia", "Singapore", "Brunei"]),
+  };
+  if (c.includes("singapore")) return {
+    clue: "\"National Day fireworks, hawker centers that food critics fly in for, and the fact that you can get almost anywhere in 30 minutes. Small country but nothing feels small about living here.\"",
+    label: "Singapore",
+    options: shuffle(["Singapore", "Malaysia", "Hong Kong", "Taiwan"]),
+  };
+  if (c.includes("philippines") || c.includes("manila") || c.includes("cebu")) return {
+    clue: "\"Fiesta season means the whole barangay is outside, the streets smell like lechon, and the procession runs past midnight. Christmas season starts in September and nobody apologizes for it.\"",
+    label: "Philippines",
+    options: shuffle(["Philippines", "Indonesia", "Thailand", "Vietnam"]),
+  };
+  if (c.includes("thailand") || c.includes("bangkok") || c.includes("chiang mai")) return {
+    clue: "\"Songkran isn't just a water festival — it's three days of the entire country deciding nothing matters except being outside and getting soaked. Loy Krathong on the river at night is something you can't describe, only feel.\"",
+    label: "Thailand",
+    options: shuffle(["Thailand", "Vietnam", "Cambodia", "Laos"]),
+  };
+  if (c.includes("vietnam") || c.includes("ho chi minh") || c.includes("hanoi")) return {
+    clue: "\"Tết Nguyên Đán — the whole country transforms. Red and gold everywhere, families gather from across the country, and every meal for a week is a ceremony in itself.\"",
+    label: "Vietnam",
+    options: shuffle(["Vietnam", "Thailand", "Cambodia", "Myanmar"]),
+  };
+  if (c.includes("japan") || c.includes("tokyo") || c.includes("osaka")) return {
+    clue: "\"Cherry blossom season is two weeks and everyone treats it like a countdown. Obon in August when the lanterns go out on the water — that stillness is something you carry with you.\"",
+    label: "Japan",
+    options: shuffle(["Japan", "South Korea", "China", "Taiwan"]),
+  };
+  if (c.includes("korea") || c.includes("seoul")) return {
+    clue: "\"Chuseok means going home no matter how far — traffic for twelve hours, worth it every time. The seasons here are four distinct personalities: cherry blossoms, monsoon heat, golden maple, and snowfall.\"",
+    label: "South Korea",
+    options: shuffle(["South Korea", "Japan", "China", "Taiwan"]),
+  };
+  if (c.includes("india") || c.includes("mumbai") || c.includes("delhi") || c.includes("bangalore")) return {
+    clue: "\"Diwali means every rooftop in the neighbourhood lit up at once — the smell of fireworks and mithai everywhere for a week. Holi is the one day strangers are expected to cover each other in colour and nobody objects.\"",
+    label: "India",
+    options: shuffle(["India", "Sri Lanka", "Pakistan", "Bangladesh"]),
+  };
+  if (c.includes("australia") || c.includes("sydney") || c.includes("melbourne") || c.includes("brisbane")) return {
+    clue: "\"Christmas BBQ at 38°C, New Year's fireworks over the harbour, and a long weekend that somehow always coincides with perfect surf. Summer here starts just when the rest of the world goes dark.\"",
+    label: "Australia",
+    options: shuffle(["Australia", "New Zealand", "South Africa", "Canada"]),
+  };
+  if (c.includes("london") || c.includes("uk") || c.includes("england") || c.includes("manchester")) return {
+    clue: "\"Bank holiday Monday and everyone migrates to the nearest pub garden the second the sun appears. 18°C counts as a heatwave. Guy Fawkes Night, the smell of sparklers and bonfires — some things never change.\"",
+    label: "United Kingdom",
+    options: shuffle(["United Kingdom", "Ireland", "Australia", "Canada"]),
+  };
+  if (c.includes("dubai") || c.includes("uae") || c.includes("abu dhabi")) return {
+    clue: "\"Iftar at sunset during Ramadan — the whole city synchronises in that one quiet moment before it all starts again. Desert camping at night with no light pollution and a sky that doesn't look real.\"",
+    label: "UAE / Gulf",
+    options: shuffle(["UAE / Gulf", "Saudi Arabia", "Qatar", "Bahrain"]),
+  };
+  if (c.includes("nigeria") || c.includes("lagos") || c.includes("abuja")) return {
+    clue: "\"Owambe parties where everyone is dressed to compete and the jollof is always a topic of debate. Lagos energy is something visitors talk about for years — relentless, loud, magnetic.\"",
+    label: "Nigeria",
+    options: shuffle(["Nigeria", "Ghana", "Kenya", "South Africa"]),
+  };
+  if (c.includes("south africa") || c.includes("cape town") || c.includes("johannesburg")) return {
+    clue: "\"Braai culture is basically a religion here — weekend, weekday, celebration or Tuesday, someone is firing up the grill. Heritage Day in September is just the official excuse.\"",
+    label: "South Africa",
+    options: shuffle(["South Africa", "Nigeria", "Kenya", "Zimbabwe"]),
+  };
+  if (c.includes("brazil") || c.includes("rio") || c.includes("são paulo")) return {
+    clue: "\"Carnaval is five days where the whole country drops everything. The smell of street food, samba from every speaker, strangers dancing with strangers at 4am — nothing prepares you for it.\"",
+    label: "Brazil",
+    options: shuffle(["Brazil", "Argentina", "Colombia", "Mexico"]),
+  };
+  if (c.includes("mexico") || c.includes("cdmx")) return {
+    clue: "\"Día de los Muertos is one of the most beautiful things you'll ever see — altars covered in marigolds, photos of people who are gone, candlelight in every cemetery. It's grief turned into something luminous.\"",
+    label: "Mexico",
+    options: shuffle(["Mexico", "Colombia", "Brazil", "Argentina"]),
+  };
+  if (c.includes("usa") || c.includes("new york") || c.includes("los angeles") || c.includes("chicago")) return {
+    clue: "\"Fourth of July means every neighbourhood competing on fireworks intensity. Thanksgiving is the one holiday where the whole country is somehow doing the exact same thing at the same time.\"",
+    label: "United States",
+    options: shuffle(["United States", "Canada", "Australia", "United Kingdom"]),
+  };
+  if (c.includes("canada") || c.includes("toronto") || c.includes("vancouver")) return {
+    clue: "\"Hockey playoff season turns quiet people into shouting strangers in bars who feel like old friends. Maple syrup season in spring, the northern lights if you're far enough north — this country has moods.\"",
+    label: "Canada",
+    options: shuffle(["Canada", "United States", "Australia", "New Zealand"]),
+  };
 
-  // Generic tropical fallback
-  return { hint: "The rainy season here is relentless — but mango season makes up for everything.", regionLabel: country, regionOptions: shuffle([country, "Australia", "Europe", "North America"]) };
+  // Tropical generic fallback
+  return {
+    clue: "\"Rainy season here is its own personality — the kind of downpour that stops traffic and smells like earth and electricity. Mango season though. Worth every flooded street.\"",
+    label: country,
+    options: shuffle([country, "Australia", "Europe", "North America"]),
+  };
 }
 
-function intentClue(lookingFor: string | null): { hint: string; label: string; options: string[] } {
+// ── Intent clues ──────────────────────────────────────────────────────────────
+function intentClue(lookingFor: string | null): { clue: string; label: string; options: string[] } {
   const lf = (lookingFor || "").toLowerCase();
   if (lf.includes("marriage") || lf.includes("marry")) return {
-    hint: "I'm at the point in life where I want to build something real — not just collect memories, but share them with one person long-term.",
+    clue: "\"I'm past the stage of collecting interesting experiences with people I'll never see again. I want someone to build something with — the kind of thing that's still standing in thirty years.\"",
     label: "Marriage / Long-term",
     options: shuffle(["Marriage / Long-term", "Casual dating", "Just friends", "Still figuring it out"]),
   };
   if (lf.includes("serious") || lf.includes("relationship")) return {
-    hint: "I've done the casual thing. What I actually want now is someone I can still be talking to in ten years.",
+    clue: "\"I've done casual. What I actually want is someone I'll still be calling when something good happens — or something bad. Someone who becomes a habit you're glad you formed.\"",
     label: "Serious relationship",
-    options: shuffle(["Serious relationship", "Casual fun", "Friendship only", "Travel companion"]),
+    options: shuffle(["Serious relationship", "Casual & free", "Friendship only", "Travel partner"]),
   };
   if (lf.includes("casual") || lf.includes("fun") || lf.includes("something fun")) return {
-    hint: "No pressure, no heavy expectations — I just want to meet interesting people and see what happens naturally.",
+    clue: "\"No heavy expectations, no pressure — I just want to meet real people and see what happens. Life is too short for manufactured urgency.\"",
     label: "Casual / No pressure",
     options: shuffle(["Casual / No pressure", "Serious relationship", "Marriage", "Friendship"]),
   };
   if (lf.includes("friend")) return {
-    hint: "Honestly, the best relationships I've seen started as close friendships first. I'm not rushing anything.",
+    clue: "\"Every great relationship I've witnessed started as genuine friends first. I'm not in a rush. The right thing built slowly beats the fast thing built on nothing.\"",
     label: "Friendship first",
     options: shuffle(["Friendship first", "Serious relationship", "Marriage", "Casual dating"]),
   };
   if (lf.includes("travel")) return {
-    hint: "I want someone to explore with — not a tourist, a travel partner. Someone who reads the side streets, not just the guidebook.",
+    clue: "\"I want someone to explore with — not a tourist, a real travel companion. Someone who chooses the unmarked path, eats street food at midnight, and isn't checking a list.\"",
     label: "Travel partner / Adventure",
-    options: shuffle(["Travel partner / Adventure", "Marriage", "Casual fun", "Stay-home connection"]),
+    options: shuffle(["Travel partner / Adventure", "Marriage", "Casual fun", "Stay-home comfort"]),
   };
   return {
-    hint: "I'm open to where things go. Connection first — labels can come later.",
+    clue: "\"I'm not here with a rigid checklist. I want connection that feels real — where it goes from there is a conversation, not a decision I've already made.\"",
     label: "Open / Exploring",
     options: shuffle(["Open / Exploring", "Serious relationship", "Marriage", "Casual only"]),
   };
 }
 
+// ── Build the 3-question mystery card ────────────────────────────────────────
 function generateMysteryCard(p: BlindProfile): MysteryCard {
-  const age   = ageRange(p.age);
-  const loc   = locationClue(p.city, p.country);
+  const age    = ageClue(p.age);
+  const loc    = locationClue(p.city, p.country);
   const intent = intentClue(p.looking_for);
 
-  // Stitch the three clues into a flowing bio paragraph
-  const bio = `${age.clue} ${loc.hint} ${intent.hint}`;
+  // Ensure the correct label is always in the shuffled options
+  const ageOpts = (() => {
+    const all = ["18 – 22", "23 – 26", "27 – 30", "31 – 35", "36 – 40", "40+"];
+    const others = shuffle(all.filter(x => x !== age.label)).slice(0, 3);
+    return shuffle([age.label, ...others]);
+  })();
 
-  const questions: Question[] = [
+  const questions: MysteryQuestion[] = [
     {
-      text: "Based on the story above — how old do you think this person roughly is?",
-      options: shuffle(["18 – 22", "23 – 26", "27 – 30", "31 – 35", "36 – 40", "40+"]).slice(0, 4),
-      get correct() {
-        const idx = this.options.indexOf(age.label);
-        return idx === -1 ? 0 : idx;
-      },
+      clue: age.clue,
+      text: "From their story — roughly how old do you think this person is?",
+      options: ageOpts,
+      correct: ageOpts.indexOf(age.label) === -1 ? 0 : ageOpts.indexOf(age.label),
     },
     {
-      text: "From the clues in their story — where do you think they're from?",
-      options: loc.regionOptions.slice(0, 4),
-      get correct() {
-        const idx = this.options.indexOf(loc.regionLabel);
-        return idx === -1 ? 0 : idx;
-      },
+      clue: loc.clue,
+      text: "Based on what they described — where do you think they live?",
+      options: loc.options.slice(0, 4),
+      correct: loc.options.indexOf(loc.label) === -1 ? 0 : loc.options.indexOf(loc.label),
     },
     {
-      text: "Reading between the lines — what is this person really looking for?",
+      clue: intent.clue,
+      text: "Reading between the lines — what are they actually looking for?",
       options: intent.options.slice(0, 4),
-      get correct() {
-        const idx = this.options.indexOf(intent.label);
-        return idx === -1 ? 0 : idx;
-      },
+      correct: intent.options.indexOf(intent.label) === -1 ? 0 : intent.options.indexOf(intent.label),
     },
   ];
 
-  return { bio, questions };
+  return { questions };
 }
 
 // ── QA Modal ──────────────────────────────────────────────────────────────────
@@ -188,7 +287,7 @@ function BlindDateQAModal({
   onClose: () => void;
   onPassed: () => void;
 }) {
-  const { bio: mysteryBio, questions } = generateMysteryCard(profile);
+  const { questions } = generateMysteryCard(profile);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<boolean[]>([]);
@@ -320,55 +419,40 @@ function BlindDateQAModal({
               </div>
             </div>
 
-            {/* Mystery bio */}
-            {step === 0 && (
-              <div style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(194,24,91,0.25)",
-                borderRadius: 12, padding: "14px 16px",
-                fontSize: 13, color: "rgba(255,255,255,0.8)",
-                lineHeight: 1.65, fontStyle: "italic",
-              }}>
-                "{mysteryBio}"
-              </div>
-            )}
-
-            {/* Question */}
-            <div style={{ fontSize: 15, fontWeight: 700, color: "white", lineHeight: 1.4 }}>
-              Q{step + 1}. {current.text}
+            {/* Per-question clue story */}
+            <div style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1px solid rgba(194,24,91,0.25)",
+              borderRadius: 12, padding: "12px 14px",
+              fontSize: 12.5, color: "rgba(255,255,255,0.82)",
+              lineHeight: 1.6, fontStyle: "italic",
+            }}>
+              {(current as MysteryQuestion).clue}
             </div>
 
-            {/* Options */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {/* Question */}
+            <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.9)", lineHeight: 1.4 }}>
+              {current.text}
+            </div>
+
+            {/* Options — 2×2 compact round grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {current.options.map((opt: string, idx: number) => {
                 const isSelected = selected === idx;
-                const isCorrect = selected !== null && idx === current.correct;
-                const isWrong = isSelected && idx !== current.correct;
-
+                const isCorrect  = selected !== null && idx === current.correct;
+                const isWrong    = isSelected && idx !== current.correct;
                 return (
                   <motion.button
                     key={idx}
-                    whileTap={{ scale: 0.97 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => handleSelect(idx)}
                     style={{
-                      padding: "12px 16px", borderRadius: 12,
-                      background: isCorrect
-                        ? "rgba(34,197,94,0.2)"
-                        : isWrong
-                          ? "rgba(239,68,68,0.2)"
-                          : isSelected
-                            ? "rgba(194,24,91,0.25)"
-                            : "rgba(255,255,255,0.06)",
-                      border: isCorrect
-                        ? "1.5px solid rgba(34,197,94,0.6)"
-                        : isWrong
-                          ? "1.5px solid rgba(239,68,68,0.6)"
-                          : isSelected
-                            ? "1.5px solid #c2185b"
-                            : "1.5px solid rgba(255,255,255,0.12)",
-                      color: "white", fontSize: 14, fontWeight: 500,
-                      textAlign: "left", cursor: selected !== null ? "default" : "pointer",
-                      transition: "all 0.2s",
+                      padding: "9px 10px", borderRadius: 50,
+                      background: isCorrect ? "rgba(34,197,94,0.22)" : isWrong ? "rgba(239,68,68,0.22)" : isSelected ? "rgba(194,24,91,0.28)" : "rgba(255,255,255,0.07)",
+                      border: isCorrect ? "1.5px solid rgba(34,197,94,0.7)" : isWrong ? "1.5px solid rgba(239,68,68,0.7)" : isSelected ? "1.5px solid #c2185b" : "1.5px solid rgba(255,255,255,0.14)",
+                      color: "white", fontSize: 12, fontWeight: 600,
+                      textAlign: "center", cursor: selected !== null ? "default" : "pointer",
+                      transition: "all 0.18s", lineHeight: 1.3,
                     }}
                   >
                     {opt}
