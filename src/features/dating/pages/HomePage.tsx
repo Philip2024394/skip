@@ -37,6 +37,7 @@ import { TopCard } from "@/features/dating/components";
 import { useVideoCall } from "@/shared/hooks/useVideoCall";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
 import CoinHub from "@/shared/components/CoinHub";
+import CoinShop from "@/shared/components/CoinShop";
 import { TokenPurchase, GiftReceiver, MatchPopup, GiftReceivePopup } from "@/features/gifts/components";
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
@@ -1031,7 +1032,14 @@ const Index = () => {
     const idx = list.findIndex((p) => p.id === profile.id);
     setSelectedList(list);
     setSelectedIndex(idx >= 0 ? idx : 0);
-  }, []);
+    // Record profile view (6-hour window deduplication in RPC)
+    if (user?.id && profile.id && !(profile as any).is_mock) {
+      supabase.rpc("record_profile_view" as any, {
+        p_viewer_id: user.id,
+        p_viewed_id: profile.id,
+      }).then(() => {});
+    }
+  }, [user?.id]);
 
 
   const {
@@ -1308,6 +1316,22 @@ const Index = () => {
                     💘
                   </motion.button>
 
+                  {/* Inbox shortcut */}
+                  <button
+                    onClick={() => navigate("/inbox")}
+                    aria-label="Inbox"
+                    style={{
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", position: "relative",
+                      color: "white", fontSize: 15,
+                    }}
+                  >
+                    💎
+                  </button>
+
                   {/* Side drawer toggle */}
                   <button
                     onClick={() => setShowDrawer(true)}
@@ -1331,49 +1355,10 @@ const Index = () => {
         </div>
       </header>
 
-      {/* ── Blind Date Grid overlay ───────────────────────────────────────── */}
+      {/* ── Blind Date swipe view ─────────────────────────────────────────── */}
       <AnimatePresence>
         {showBlindDate && user && (
-          <motion.div
-            key="blind-date-grid"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.25 }}
-            style={{
-              position: "absolute", inset: 0,
-              zIndex: 30,
-              backgroundImage: "url('/images/app-background.png')",
-              backgroundSize: "cover", backgroundPosition: "center",
-              display: "flex", flexDirection: "column",
-              paddingTop: "max(64px, env(safe-area-inset-top, 64px))",
-              paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))",
-              paddingLeft: 10, paddingRight: 10,
-            }}
-          >
-
-            {/* Section header */}
-            <div style={{ position: "relative", zIndex: 1, marginBottom: 12, paddingLeft: 4, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>
-                  💘 Blind Date
-                </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
-                  Answer 2 of 3 questions to unlock the chat
-                </div>
-              </div>
-              <img
-                src="https://ik.imagekit.io/dateme/Untitleddasdasdasd-removebg-preview.png"
-                alt="Blind Date"
-                style={{ height: 104, width: "auto", objectFit: "contain", filter: "drop-shadow(0 0 8px rgba(194,24,91,0.5))", marginRight: 12 }}
-              />
-            </div>
-            <div style={{ position: "relative", zIndex: 1, height: 1, background: "rgba(194,24,91,0.3)", marginBottom: 10 }} />
-
-            <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto" }}>
-              <BlindDateGrid userId={user.id} />
-            </div>
-          </motion.div>
+          <BlindDateGrid key="blind-date" userId={user.id} onClose={() => setShowBlindDate(false)} onStartChat={(p) => { setShowBlindDate(false); setChatProfile(p); }} />
         )}
       </AnimatePresence>
 
@@ -1932,14 +1917,8 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {showCoinRefuel && (
-        <TokenPurchase
-          onClose={() => setShowCoinRefuel(false)}
-          onPurchaseSuccess={() => {
-            setShowCoinRefuel(false);
-            coinBalance.addCoins(50);
-          }}
-        />
+      {showCoinRefuel && user && (
+        <CoinShop userId={user.id} onClose={() => setShowCoinRefuel(false)} />
       )}
 
       {/* Dev: test gift receive popup */}
@@ -2204,18 +2183,18 @@ const Index = () => {
                         label="Who Viewed Me"
                         onClick={() => {
                           setShowDrawer(false);
-                          if (vip) setFeatureDialog(KEY_TO_FEATURE["unlock:vip"]);
+                          navigate("/who-viewed-me");
                         }}
                       />
 
                       {/* Divider */}
                       <div style={{ height: 1, background: "rgba(194,24,91,0.2)", margin: "2px 0" }} />
 
-                      {/* My Matches */}
+                      {/* Inbox */}
                       <DrawerBtn
-                        icon="💬"
-                        label="My Matches"
-                        onClick={() => { setShowDrawer(false); navigate("/home"); }}
+                        icon="💎"
+                        label="Inbox &amp; Messages"
+                        onClick={() => { setShowDrawer(false); navigate("/inbox"); }}
                       />
 
                       {/* Nearby Map */}

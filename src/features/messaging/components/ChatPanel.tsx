@@ -6,22 +6,34 @@ import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import VideoCallPanel from "@/features/video/components/VideoCallPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
 
-// Patterns that indicate scam / suspicious content
-const SCAM_PATTERNS = [
-  /\b(\+?62|0811|0812|0813|0821|0822|0851|0852|0853|0878|0881|0882)\d{5,10}\b/,   // Indonesian phone
-  /\b\+?[1-9]\d{6,14}\b/,          // generic international phone
-  /\bwhatsapp\b/i,
-  /\btelegram\b/i,
-  /\bbtc|bitcoin|ethereum|usdt|crypto|binance|wallet\b/i,
-  /\bsend.{0,20}(money|cash|fund|usd|\$|dollar)\b/i,
-  /\b(western union|moneygram|transfer)\b/i,
-  /\bgift card\b/i,
-];
+// ── Contact card helpers ───────────────────────────────────────────────────────
 
-function containsScamContent(text: string): boolean {
-  return SCAM_PATTERNS.some(p => p.test(text));
+const CONTACT_CARD_PREFIX = "__CONTACT_CARD__";
+const COINS_CONTACT_SHARE = 20;
+
+const PLATFORMS = [
+  { id: "whatsapp",  label: "WhatsApp",  emoji: "💬", color: "#25d366", placeholder: "+1 234 567 8900" },
+  { id: "telegram",  label: "Telegram",  emoji: "✈️",  color: "#2AABEE", placeholder: "@username" },
+  { id: "instagram", label: "Instagram", emoji: "📸", color: "#e1306c", placeholder: "@username" },
+  { id: "phone",     label: "Phone",     emoji: "📞", color: "#a78bfa", placeholder: "+1 234 567 8900" },
+] as const;
+
+type PlatformId = typeof PLATFORMS[number]["id"];
+
+interface ContactCard { platform: PlatformId; value: string; name: string; }
+
+function encodeContactCard(card: ContactCard): string {
+  return CONTACT_CARD_PREFIX + JSON.stringify(card);
 }
+
+function decodeContactCard(content: string): ContactCard | null {
+  if (!content.startsWith(CONTACT_CARD_PREFIX)) return null;
+  try { return JSON.parse(content.slice(CONTACT_CARD_PREFIX.length)); }
+  catch { return null; }
+}
+
 
 interface ChatPanelProps {
   currentUserId: string;
@@ -52,6 +64,12 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [reportSent, setReportSent] = useState(false);
+  const [showContactShare, setShowContactShare] = useState(false);
+  const [contactPlatform, setContactPlatform] = useState<PlatformId>("whatsapp");
+  const [contactValue, setContactValue] = useState("");
+  const [sendingContact, setSendingContact] = useState(false);
+
+  const { balance, deductCoins } = useCoinBalance(currentUserId);
 
   const handleReport = async (reason: string) => {
     try {
@@ -77,6 +95,27 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleSendContactCard = async () => {
+    if (!contactValue.trim() || sendingContact) return;
+    if (balance < COINS_CONTACT_SHARE) {
+      toast.error(`You need ${COINS_CONTACT_SHARE} coins to share your contact`);
+      return;
+    }
+    setSendingContact(true);
+    const ok = await deductCoins(COINS_CONTACT_SHARE, "contact_share");
+    if (!ok) {
+      toast.error("Not enough coins");
+      setSendingContact(false);
+      return;
+    }
+    const card = encodeContactCard({ platform: contactPlatform, value: contactValue.trim(), name: otherUser.name.split(" ")[0] });
+    await sendMessage(card);
+    setShowContactShare(false);
+    setContactValue("");
+    setSendingContact(false);
+    toast.success("Contact shared! 💬");
+  };
 
   const handleSend = async () => {
     const trimmed = draft.trim();
@@ -338,22 +377,78 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
                     transition={{ type: "spring", stiffness: 400, damping: 28 }}
                     style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start" }}
                   >
-                    <div style={{
-                      maxWidth: "76%",
-                      padding: "10px 14px",
-                      borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                      background: isMine
-                        ? "linear-gradient(135deg, #f472b6, #ec4899)"
-                        : "rgba(255,255,255,0.08)",
-                      border: isMine ? "none" : "1px solid rgba(255,255,255,0.1)",
-                      color: "white",
-                      fontSize: 14,
-                      lineHeight: 1.45,
-                      wordBreak: "break-word",
-                      boxShadow: isMine ? "0 2px 14px rgba(236,72,153,0.28)" : "none",
-                    }}>
-                      {msg.content}
-                    </div>
+                    {(() => {
+                      const card = decodeContactCard(msg.content);
+                      if (card) {
+                        const plat = PLATFORMS.find(p => p.id === card.platform) ?? PLATFORMS[0];
+                        return (
+                          <div style={{
+                            maxWidth: "82%",
+                            background: `linear-gradient(135deg,${plat.color}22,${plat.color}11)`,
+                            border: `1.5px solid ${plat.color}55`,
+                            borderRadius: 18, padding: "14px 16px",
+                            boxShadow: `0 4px 20px ${plat.color}22`,
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                              <span style={{ fontSize: 20 }}>{plat.emoji}</span>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: plat.color, letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                                  {plat.label}
+                                </div>
+                                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
+                                  Contact shared
+                                </div>
+                              </div>
+                              <div style={{
+                                marginLeft: "auto", fontSize: 9, fontWeight: 700,
+                                background: "rgba(245,158,11,0.2)", color: "#f59e0b",
+                                borderRadius: 20, padding: "2px 7px", border: "1px solid rgba(245,158,11,0.3)",
+                              }}>
+                                🪙 {COINS_CONTACT_SHARE}
+                              </div>
+                            </div>
+                            <div style={{
+                              background: "rgba(255,255,255,0.07)",
+                              borderRadius: 10, padding: "9px 12px",
+                              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                            }}>
+                              <span style={{ fontSize: 14, fontWeight: 700, color: "white", wordBreak: "break-all" }}>
+                                {card.value}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard?.writeText(card.value);
+                                  toast.success("Copied!");
+                                }}
+                                style={{
+                                  flexShrink: 0, padding: "5px 10px", borderRadius: 20,
+                                  background: plat.color, border: "none",
+                                  color: "white", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                                }}
+                              >
+                                Copy
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div style={{
+                          maxWidth: "76%",
+                          padding: "10px 14px",
+                          borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                          background: isMine
+                            ? "linear-gradient(135deg, #f472b6, #ec4899)"
+                            : "rgba(255,255,255,0.08)",
+                          border: isMine ? "none" : "1px solid rgba(255,255,255,0.1)",
+                          color: "white", fontSize: 14, lineHeight: 1.45,
+                          wordBreak: "break-word",
+                          boxShadow: isMine ? "0 2px 14px rgba(236,72,153,0.28)" : "none",
+                        }}>
+                          {msg.content}
+                        </div>
+                      );
+                    })()}
                   </motion.div>
                 </React.Fragment>
               );
@@ -440,19 +535,168 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
           </button>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5, padding: "0 4px" }}>
-          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.14)", display: "flex", alignItems: "center", gap: 3 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, padding: "0 2px", gap: 8 }}>
+          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.14)", display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
             <Lock style={{ width: 7, height: 7 }} />
             No numbers · No contact info
           </span>
-          <span style={{ fontSize: 9, color: draft.length > 450 ? "#fbbf24" : "rgba(255,255,255,0.14)" }}>
-            {draft.length}/500
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontSize: 9, color: draft.length > 450 ? "#fbbf24" : "rgba(255,255,255,0.14)" }}>
+              {draft.length}/500
+            </span>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowContactShare(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: "linear-gradient(135deg,rgba(245,158,11,0.18),rgba(249,115,22,0.14))",
+                border: "1px solid rgba(245,158,11,0.35)",
+                borderRadius: 20, padding: "5px 11px",
+                cursor: "pointer", flexShrink: 0,
+              }}
+            >
+              <span style={{ fontSize: 11 }}>🔓</span>
+              <span style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", whiteSpace: "nowrap" }}>
+                Share Contact · {COINS_CONTACT_SHARE} 🪙
+              </span>
+            </motion.button>
+          </div>
         </div>
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </motion.div>
+
+    {/* ── Contact share modal ─────────────────────────────────────────────── */}
+    <AnimatePresence>
+      {showContactShare && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          style={{
+            position: "fixed", inset: 0, zIndex: 9600,
+            background: "rgba(0,0,0,0.82)", backdropFilter: "blur(10px)",
+            display: "flex", alignItems: "flex-end", justifyContent: "center",
+            padding: "0 0 max(24px,env(safe-area-inset-bottom,24px))",
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowContactShare(false); }}
+        >
+          <motion.div
+            initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 360, damping: 30 }}
+            style={{
+              width: "100%", maxWidth: 480,
+              background: "rgba(10,10,18,0.98)",
+              border: "1.5px solid rgba(245,158,11,0.3)",
+              borderRadius: "24px 24px 16px 16px",
+              padding: "24px 20px 20px",
+              display: "flex", flexDirection: "column", gap: 16,
+              boxShadow: "0 0 48px rgba(245,158,11,0.12), 0 24px 48px rgba(0,0,0,0.7)",
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "white" }}>🔓 Share Your Contact</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>
+                  {firstName} will receive your details — costs <span style={{ color: "#f59e0b", fontWeight: 700 }}>{COINS_CONTACT_SHARE} coins</span>
+                </div>
+              </div>
+              <button onClick={() => setShowContactShare(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.35)", fontSize: 22, lineHeight: 1 }}>
+                ×
+              </button>
+            </div>
+
+            {/* Coin balance */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              background: balance >= COINS_CONTACT_SHARE ? "rgba(245,158,11,0.08)" : "rgba(239,68,68,0.08)",
+              border: `1px solid ${balance >= COINS_CONTACT_SHARE ? "rgba(245,158,11,0.25)" : "rgba(239,68,68,0.25)"}`,
+              borderRadius: 12, padding: "10px 14px",
+            }}>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>Your balance</span>
+              <span style={{ fontSize: 14, fontWeight: 800, color: balance >= COINS_CONTACT_SHARE ? "#f59e0b" : "#f87171" }}>
+                🪙 {balance} coins
+              </span>
+            </div>
+
+            {/* Platform selector */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>
+                Platform
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                {PLATFORMS.map(p => (
+                  <motion.button
+                    key={p.id}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => setContactPlatform(p.id)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 8,
+                      padding: "10px 12px", borderRadius: 14, cursor: "pointer",
+                      background: contactPlatform === p.id ? `${p.color}22` : "rgba(255,255,255,0.04)",
+                      border: contactPlatform === p.id ? `1.5px solid ${p.color}66` : "1px solid rgba(255,255,255,0.08)",
+                      transition: "all 0.18s",
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>{p.emoji}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: contactPlatform === p.id ? p.color : "rgba(255,255,255,0.6)" }}>
+                      {p.label}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Contact input */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>
+                Your {PLATFORMS.find(p => p.id === contactPlatform)?.label} details
+              </div>
+              <input
+                type="text"
+                value={contactValue}
+                onChange={e => setContactValue(e.target.value)}
+                placeholder={PLATFORMS.find(p => p.id === contactPlatform)?.placeholder}
+                style={{
+                  width: "100%", background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14,
+                  padding: "12px 14px", color: "white", fontSize: 15,
+                  outline: "none", boxSizing: "border-box", fontFamily: "inherit",
+                }}
+              />
+            </div>
+
+            {/* Send button */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleSendContactCard}
+              disabled={!contactValue.trim() || sendingContact || balance < COINS_CONTACT_SHARE}
+              style={{
+                width: "100%", padding: "14px", borderRadius: 50, border: "none",
+                background: contactValue.trim() && balance >= COINS_CONTACT_SHARE
+                  ? "linear-gradient(135deg,#f59e0b,#f97316)"
+                  : "rgba(245,158,11,0.15)",
+                color: "white", fontSize: 15, fontWeight: 800,
+                cursor: contactValue.trim() && balance >= COINS_CONTACT_SHARE ? "pointer" : "not-allowed",
+                boxShadow: contactValue.trim() && balance >= COINS_CONTACT_SHARE
+                  ? "0 4px 24px rgba(245,158,11,0.4)" : "none",
+                transition: "all 0.2s",
+              }}
+            >
+              {sendingContact ? "Sending…" : balance < COINS_CONTACT_SHARE
+                ? `Need ${COINS_CONTACT_SHARE - balance} more coins`
+                : `🔓 Send for ${COINS_CONTACT_SHARE} coins`}
+            </motion.button>
+
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center", margin: 0, lineHeight: 1.5 }}>
+              Only {firstName} will see this. You control what you share.
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
     {/* Video call overlay */}
     <AnimatePresence>

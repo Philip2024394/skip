@@ -27,6 +27,8 @@ const EventsPage = lazy(() => import("@/features/events/pages/EventsPage"));
 const WelcomePage = lazy(() => import("@/features/onboarding/pages/WelcomePage"));
 const PhotoGatePage = lazy(() => import("@/features/auth/pages/PhotoGatePage"));
 const DateFeedPage = lazy(() => import("@/features/dating/pages/DateFeedPage"));
+const InboxPage        = lazy(() => import("@/features/messaging/pages/InboxPage"));
+const WhoViewedMePage  = lazy(() => import("@/features/dating/pages/WhoViewedMePage"));
 
 const queryClient = new QueryClient();
 
@@ -75,6 +77,8 @@ const AppContent = () => {
         <Route path="/welcome" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WelcomePage /></Suspense></ProtectedRoute>} />
         <Route path="/photo-gate" element={<Suspense fallback={<LoadingFallback />}><PhotoGatePage /></Suspense>} />
         <Route path="/dates" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><DateFeedPage /></Suspense></ProtectedRoute>} />
+        <Route path="/inbox" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><InboxPage /></Suspense></ProtectedRoute>} />
+        <Route path="/who-viewed-me" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhoViewedMePage /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes >
     </BrowserRouter >

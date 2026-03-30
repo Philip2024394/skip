@@ -1,9 +1,21 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
+import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
+import CoinShop from "@/shared/components/CoinShop";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const BLUR_START       = 22;   // px — fully blurred
+const BLUR_CORRECT     = 7;    // px removed on correct answer
+const BLUR_WRONG       = 2;    // px removed on wrong answer
+const BLUR_FLOOR       = 5;    // px — minimum without paying; final reveal needs coins
+const COINS_INSTANT    = 30;   // bypass quiz entirely (swipe up)
+const COINS_FAIL       = 50;   // unlock after failing quiz
+const COINS_PASS_FULL  = 15;   // remove last blur after passing quiz
+
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 interface BlindProfile {
   id: string;
@@ -16,13 +28,26 @@ interface BlindProfile {
   bio: string | null;
   avatar_url: string | null;
   created_at: string;
-  // AI-generated stories — null until first blind-date view
   blind_date_story_age:      string | null;
   blind_date_story_location: string | null;
   blind_date_story_intent:   string | null;
+  is_boosted?:               boolean;
+  latitude?:                 number | null;
+  longitude?:                number | null;
 }
 
-// DEV-only mock blind profiles — mapped from the existing mock profile generator
+interface Question {
+  text: string;
+  options: string[];
+  correct: number;
+}
+
+interface MysteryQuestion extends Question {
+  clue: string;
+}
+
+// ── DEV mock data ──────────────────────────────────────────────────────────────
+
 const DEV_BLIND_PROFILES: BlindProfile[] = generateIndonesianProfiles(20).map(p => ({
   id: p.id,
   name: p.name,
@@ -37,15 +62,12 @@ const DEV_BLIND_PROFILES: BlindProfile[] = generateIndonesianProfiles(20).map(p 
   blind_date_story_age: null,
   blind_date_story_location: null,
   blind_date_story_intent: null,
+  // Jakarta area spread ~50km
+  latitude:  -6.2 + (Math.random() - 0.5) * 0.9,
+  longitude: 106.8 + (Math.random() - 0.5) * 0.9,
 }));
 
-interface Question {
-  text: string;
-  options: string[];
-  correct: number; // index into options
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -56,19 +78,23 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-// ── Mystery card generator ────────────────────────────────────────────────────
-// Each of the 3 questions gets its OWN story clue — richer cultural/personal
-// detail per country. No raw data (name, age number, city) ever shown directly.
-
-interface MysteryQuestion extends Question {
-  clue: string; // story shown above this specific question
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-interface MysteryCard {
-  questions: MysteryQuestion[];
+function formatDistance(km: number): string {
+  if (km < 1) return "< 1 km";
+  if (km < 10) return `${km.toFixed(1)} km`;
+  return `${Math.round(km)} km`;
 }
 
-// ── Age stories ───────────────────────────────────────────────────────────────
+// ── Age story clues ────────────────────────────────────────────────────────────
+
 function ageClue(age: number): { label: string; clue: string } {
   if (age <= 22) return {
     label: "18 – 22",
@@ -96,264 +122,270 @@ function ageClue(age: number): { label: string; clue: string } {
   };
 }
 
-// ── Location stories ──────────────────────────────────────────────────────────
-function locationClue(city: string | null, country: string): { clue: string; label: string; options: string[] } {
-  const c = (city || country).toLowerCase();
+// ── Location story clues ───────────────────────────────────────────────────────
 
-  if (c.includes("bali")) return {
-    clue: "There's a temple at the end of my road that holds ceremonies every few weeks. The night before, the women leave small woven offerings — flowers, rice, incense — at every doorstep before sunrise. I've lived here long enough that I smell the incense before I see it. It's completely ordinary. Which is the extraordinary part.",
-    label: "Bali, Indonesia",
-    options: shuffle(["Bali, Indonesia", "Sri Lanka", "Thailand", "Philippines"]),
-  };
-  if (c.includes("jakarta")) return {
-    clue: "My commute used to be two hours each way and nobody on the bus ever thought that was strange. Last Lebaran the roads went completely empty and I drove across the city in eighteen minutes. I pulled over and just sat there with the engine running. It felt like a different planet. The same streets, completely unrecognisable.",
-    label: "Jakarta, Indonesia",
-    options: shuffle(["Jakarta, Indonesia", "Manila", "Ho Chi Minh City", "Bangkok"]),
-  };
-  if (c.includes("indonesia") || c.includes("surabaya") || c.includes("bandung") || c.includes("medan") || c.includes("yogyakarta")) return {
-    clue: "Every November the first big rain arrives and the whole city smells like warm earth and electricity at the same time. I've tried describing it to people who didn't grow up here and I can never quite get it right. You have to be standing on that pavement at that exact moment. Nothing else smells like home the same way.",
-    label: "Indonesia",
-    options: shuffle(["Indonesia", "Malaysia", "Philippines", "Vietnam"]),
-  };
-  if (c.includes("malaysia") || c.includes("kuala lumpur") || c.includes("penang")) return {
-    clue: "Growing up we celebrated everything — Raya, Chinese New Year, Deepavali, Christmas. Different houses, different food, different songs. My grandmother made rendang, my best friend's grandmother made tang yuan, my neighbour made murukku. We ate at all three tables in the same week. Nobody thought that was unusual. I think about that a lot now.",
-    label: "Malaysia",
-    options: shuffle(["Malaysia", "Indonesia", "Singapore", "Brunei"]),
-  };
-  if (c.includes("singapore")) return {
-    clue: "National Day rehearsal happens every July and you can hear the jets from anywhere on the island. I used to climb onto my uncle's shophouse roof to watch. Last year I watched from a condo balcony on the 28th floor and I still craned my neck the exact same way I did at nine years old.",
-    label: "Singapore",
-    options: shuffle(["Singapore", "Malaysia", "Hong Kong", "Taiwan"]),
-  };
-  if (c.includes("philippines") || c.includes("manila") || c.includes("cebu")) return {
-    clue: "Christmas lights go up in September and nobody apologises. Noche Buena means the whole family is still awake at midnight eating and arguing about nothing that matters. The year we had it in a different house because of the typhoon, my grandmother brought her own parols and hung them before she'd even unpacked her bag.",
-    label: "Philippines",
-    options: shuffle(["Philippines", "Indonesia", "Thailand", "Vietnam"]),
-  };
-  if (c.includes("thailand") || c.includes("bangkok") || c.includes("chiang mai")) return {
-    clue: "Songkran — I got completely soaked walking to the 7-Eleven twenty metres from my front door. I was carrying groceries. A child on a motorbike hit me with a water gun from three metres away and looked very pleased with himself. I couldn't even be angry. For three days that's just the rule. Everyone gets wet.",
-    label: "Thailand",
-    options: shuffle(["Thailand", "Vietnam", "Cambodia", "Laos"]),
-  };
-  if (c.includes("vietnam") || c.includes("ho chi minh") || c.includes("hanoi")) return {
-    clue: "The morning of Tết my grandmother was already up at 4am arranging the altar. Red and gold everywhere, fruit stacked into towers, incense lit before sunrise. She said the ancestors arrive first thing and you have to be ready for them. I've lived abroad for four years now and I still wake up at 4am on Tết morning without an alarm.",
-    label: "Vietnam",
-    options: shuffle(["Vietnam", "Thailand", "Cambodia", "Myanmar"]),
-  };
-  if (c.includes("japan") || c.includes("tokyo") || c.includes("osaka")) return {
-    clue: "Cherry blossom season lasts maybe ten days. My whole neighbourhood treats those days like a countdown — people reserve hanami spots weeks in advance. One year it rained for seven of the ten days. We went anyway. Sat under wet trees, passed a flask of sake around, and nobody once suggested leaving early.",
-    label: "Japan",
-    options: shuffle(["Japan", "South Korea", "China", "Taiwan"]),
-  };
-  if (c.includes("korea") || c.includes("seoul")) return {
-    clue: "Chuseok means going home no matter where you are. I drove twelve hours once because the flights were full. The traffic was so bad we stopped at a motorway rest stop for two hours and ate ramyeon standing up. When I finally got there my grandmother pretended she hadn't been waiting by the window. She had been.",
-    label: "South Korea",
-    options: shuffle(["South Korea", "Japan", "China", "Taiwan"]),
-  };
-  if (c.includes("india") || c.includes("mumbai") || c.includes("delhi") || c.includes("bangalore")) return {
-    clue: "Diwali night from our rooftop — every rooftop in the neighbourhood lit up at once, fireworks going in every direction, the air thick with gunpowder and the smell of mithai from someone's kitchen. My father burned the same sparklers he'd bought since I was small. I have no idea where he finds them every year. I've never asked.",
-    label: "India",
-    options: shuffle(["India", "Sri Lanka", "Pakistan", "Bangladesh"]),
-  };
-  if (c.includes("australia") || c.includes("sydney") || c.includes("melbourne") || c.includes("brisbane")) return {
-    clue: "Christmas lunch at 40 degrees on my aunt's back patio, ceiling fan at full speed, someone always burning their hand on the BBQ. My cousin fell asleep in a deck chair by 2pm with sunscreen on his nose. We did the same thing every year and complained about the heat every year and then planned it again in December.",
-    label: "Australia",
-    options: shuffle(["Australia", "New Zealand", "South Africa", "Canada"]),
-  };
-  if (c.includes("london") || c.includes("uk") || c.includes("england") || c.includes("manchester")) return {
-    clue: "Bank holiday Monday and the entire country migrates to the nearest beer garden the second the temperature hits 17 degrees. My friend texted me 'gorgeous out' at 9am. It was overcast with a light drizzle. We went anyway and sat there in jackets, sunglasses on, calling it summer. Some things are just tradition.",
-    label: "United Kingdom",
-    options: shuffle(["United Kingdom", "Ireland", "Australia", "Canada"]),
-  };
-  if (c.includes("dubai") || c.includes("uae") || c.includes("abu dhabi")) return {
-    clue: "Iftar during Ramadan — the whole office goes quiet in that last hour before sunset. Everyone waiting. Then at the exact moment the call to prayer starts, something releases. Food appears from everywhere at once. A colleague shared dates with me on my very first day and explained this is how you begin. I've never forgotten the taste of that first one.",
-    label: "UAE / Gulf",
-    options: shuffle(["UAE / Gulf", "Saudi Arabia", "Qatar", "Bahrain"]),
-  };
-  if (c.includes("nigeria") || c.includes("lagos") || c.includes("abuja")) return {
-    clue: "I went to an owambe last month where I counted fourteen different ankara prints on fourteen different people and none of them clashed. The jollof debate started before the food even arrived. Someone's auntie won an argument she had no business winning. I ate three plates and still left feeling like I should have had one more.",
-    label: "Nigeria",
-    options: shuffle(["Nigeria", "Ghana", "Kenya", "South Africa"]),
-  };
-  if (c.includes("south africa") || c.includes("cape town") || c.includes("johannesburg")) return {
-    clue: "My uncle lights the braai before he even says hello. It doesn't matter if it's a Tuesday, a heatwave, or someone's birthday — if people are coming over, the fire is going. Heritage Day is just the one day the whole country admits what we already do every weekend.",
-    label: "South Africa",
-    options: shuffle(["South Africa", "Nigeria", "Kenya", "Zimbabwe"]),
-  };
-  if (c.includes("brazil") || c.includes("rio") || c.includes("são paulo")) return {
-    clue: "I watched Carnaval from a window above the street the year I was too sick to go down. The sound, the colour, strangers dancing with strangers at 4am like they'd known each other for years. I was devastated to miss it. I've made sure I've never missed it since.",
-    label: "Brazil",
-    options: shuffle(["Brazil", "Argentina", "Colombia", "Mexico"]),
-  };
-  if (c.includes("mexico") || c.includes("cdmx")) return {
-    clue: "The Día de los Muertos altar my grandmother builds every year has photos going back four generations. Marigolds, candles, favourite foods of people long gone. I used to think it was sad. Now I think it's the most honest thing I've ever seen — grief that doesn't pretend, just lights a candle and sets a place at the table.",
-    label: "Mexico",
-    options: shuffle(["Mexico", "Colombia", "Brazil", "Argentina"]),
-  };
-  if (c.includes("usa") || c.includes("new york") || c.includes("los angeles") || c.includes("chicago")) return {
-    clue: "Fourth of July at my neighbour's house — their fireworks budget is genuinely alarming and they treat it like a personal competition with the rest of the street. Thanksgiving my whole family does the exact same meal in the exact same order and any deviation is treated like a constitutional crisis. I love both of those things more than I can explain.",
-    label: "United States",
-    options: shuffle(["United States", "Canada", "Australia", "United Kingdom"]),
-  };
-  if (c.includes("canada") || c.includes("toronto") || c.includes("vancouver")) return {
-    clue: "Hockey playoffs turn quiet people into strangers who are shouting at each other in bars and somehow feel like old friends by the third period. I drove four hours north once just to see the northern lights properly. Pulled over on a completely dark road, engine off, and stood there in minus fifteen for forty minutes. Worth every second.",
-    label: "Canada",
-    options: shuffle(["Canada", "United States", "Australia", "New Zealand"]),
+function locationClue(_city: string | null, country: string): { clue: string; label: string; options: string[] } {
+  const countryMap: Record<string, { clue: string; label: string; options: string[] }> = {
+    Indonesia: {
+      label: "Indonesia",
+      clue: "Every year during Lebaran our whole street fills with the smell of ketupat and the sound of takbiran echoing from the mosque until dawn. The day after, we go door-to-door visiting every elder in the neighbourhood — it takes most of the morning. I always end up eating the same rendang at six different houses.",
+      options: ["Indonesia","Malaysia","Philippines","Thailand"],
+    },
+    Malaysia: {
+      label: "Malaysia",
+      clue: "We have a saying here: eat first, talk later. During Hari Raya the table never empties — someone is always refilling the kuih and the lemang. My aunts still argue about whose rendang is better every single year, and the argument is never resolved because everyone secretly agrees it is my grandmother's.",
+      options: ["Malaysia","Indonesia","Singapore","Brunei"],
+    },
+    Philippines: {
+      label: "Philippines",
+      clue: "Fiestas here run for days. Our town patron saint's feast means lechon, brass bands, and every distant relative you haven't seen since childhood suddenly appearing at your door. I spent one whole Sinulog dancing in the street in a costume my lola made by hand. My ears rang for three days.",
+      options: ["Philippines","Indonesia","Vietnam","Thailand"],
+    },
+    Thailand: {
+      label: "Thailand",
+      clue: "The first day of our new year everyone is outside with water. It starts as a gentle sprinkle on elders' hands and ends as an all-out war — motorbikes, buckets, strangers. I once got completely soaked at 7 in the morning on the way to buy breakfast. The seller just handed me a plastic bag for my phone.",
+      options: ["Thailand","Cambodia","Laos","Myanmar"],
+    },
+    Vietnam: {
+      label: "Vietnam",
+      clue: "Tet means the whole city turns red and gold overnight. My family makes bánh chưng together — wrapping the sticky rice takes hours and my grandmother has the technique so precise she can do it blindfolded. The first morning of the new year nobody sweeps the floor because you'd sweep the luck out with the dust.",
+      options: ["Vietnam","Thailand","Cambodia","Philippines"],
+    },
+    Singapore: {
+      label: "Singapore",
+      clue: "I grew up a ten-minute walk from a hawker centre that has been in the same spot for forty years. The uncle at the char kway teow stall knows my order. Sometimes a queue forms before dawn for laksa because the aunty who makes it is 74 and only cooks until the pot is empty — never more.",
+      options: ["Singapore","Malaysia","Indonesia","Brunei"],
+    },
+    India: {
+      label: "India",
+      clue: "During Diwali our building becomes a competition without anyone agreeing to compete. Each floor tries to out-decorate the one above. My mother starts buying diyas in September. The smell of mithai and gunpowder and marigold is the smell of the best week of the year without question.",
+      options: ["India","Pakistan","Sri Lanka","Bangladesh"],
+    },
+    Pakistan: {
+      label: "Pakistan",
+      clue: "Chand Raat is chaos in the best way. Every girl in the neighbourhood is out with her mother getting mehndi done until two in the morning, bangles clicking in the streets. My cousin and I stayed up the whole night once — we were too excited to sleep, too full of sewaiyan, too happy to sit still.",
+      options: ["Pakistan","India","Bangladesh","Afghanistan"],
+    },
+    "United Kingdom": {
+      label: "United Kingdom",
+      clue: "There is a specific kind of British optimism that says twenty degrees is a heatwave and justifies a barbecue. We drag a disposable grill to the park, sit on coats because the grass is damp, and pretend it is summer. It rains by four o'clock. Everyone agrees it was a brilliant day out.",
+      options: ["United Kingdom","Ireland","Australia","Canada"],
+    },
+    Australia: {
+      label: "Australia",
+      clue: "Christmas dinner here is prawns and cold ham in forty degree heat, everyone slightly sunburned, the ceiling fans on full blast. We eat outside under a fly net. My nana still makes brandy custard even though nobody wants a hot pudding in December. She says tradition doesn't care about weather.",
+      options: ["Australia","New Zealand","United Kingdom","Canada"],
+    },
+    "United States": {
+      label: "United States",
+      clue: "Thanksgiving in our house means my dad starts the turkey argument at 6am and dinner isn't ready until 4pm. We watch the parade on a TV that's too loud, someone falls asleep on the couch before dessert, and we eat leftover pie for breakfast the next day. It is the same every year and I would change nothing.",
+      options: ["United States","Canada","Australia","United Kingdom"],
+    },
+    Canada: {
+      label: "Canada",
+      clue: "Winter here means starting your car ten minutes before you need it and still scraping ice off the windshield with a credit card because you can't find the proper scraper. The first real snow of the year still makes everyone go outside and look at it. We know what's coming but we always look.",
+      options: ["Canada","United States","United Kingdom","Australia"],
+    },
+    Brazil: {
+      label: "Brazil",
+      clue: "Carnival in my city means four days where nobody sleeps. The blocos start at dawn and go until the streets empty out near midnight, then start again. My grandmother used to say the city only has two real seasons: Carnival and waiting for Carnival. I didn't understand until I moved away and missed it.",
+      options: ["Brazil","Argentina","Colombia","Peru"],
+    },
+    Nigeria: {
+      label: "Nigeria",
+      clue: "Every celebration in my family ends the same way: Afrobeats turned up too loud, someone's aunty dancing in the middle of the room, jollof rice being disputed over which family made it better. My cousin flew from London for our grandmother's 70th birthday specifically to argue about the rice. She had a point.",
+      options: ["Nigeria","Ghana","Kenya","South Africa"],
+    },
+    "South Africa": {
+      label: "South Africa",
+      clue: "Braai is not a barbecue — if you call it a barbecue someone will correct you. It's a whole afternoon: the fire lit early, someone always convinced theirs is the superior method of stacking the wood, boerewors splitting over the coals, conversations that drift from sport to politics and back to food.",
+      options: ["South Africa","Nigeria","Kenya","Zimbabwe"],
+    },
+    Japan: {
+      label: "Japan",
+      clue: "Hanami only lasts about a week if the weather cooperates. My coworkers book spots under the cherry trees days in advance with a tarpaulin and a cooler. By the time everyone arrives the blossoms are at their absolute peak and we all sit under a pink ceiling eating convenience store snacks like it is the finest restaurant in the world.",
+      options: ["Japan","South Korea","China","Taiwan"],
+    },
+    "South Korea": {
+      label: "South Korea",
+      clue: "Chuseok means the entire country is on the road at the same time. What is normally a two hour drive becomes six. But arriving means my grandmother's jeon and tteok already on the table and relatives I only see twice a year all talking over each other at once. The traffic is worth it every time.",
+      options: ["South Korea","Japan","China","Taiwan"],
+    },
+    Turkey: {
+      label: "Turkey",
+      clue: "In my neighbourhood the tea house has been open since before my father was born. Men who have known each other forty years sit at the same table every morning drinking çay from tulip glasses. My grandfather took me when I was small. I had a glass of water and felt very important. That table is still there.",
+      options: ["Turkey","Iran","Egypt","Greece"],
+    },
+    Egypt: {
+      label: "Egypt",
+      clue: "Ramadan nights here are social. The street outside our building fills after iftar — families sitting on chairs outside their doors, kids playing until midnight, the smell of atar and tea from the cafe on the corner. During the day the city quiets. After dark it comes fully alive.",
+      options: ["Egypt","Turkey","Jordan","Lebanon"],
+    },
+    Mexico: {
+      label: "Mexico",
+      clue: "Día de Muertos in my family means marigolds from the market piled on the ofrenda the night before, my grandmother's photo surrounded by her favourite tamales. We light candles and tell stories about her all evening. It doesn't feel sad. It feels like she is still at the table and we are just updating her on what she missed.",
+      options: ["Mexico","Colombia","Argentina","Brazil"],
+    },
   };
 
+  const entry = countryMap[country];
+  if (entry) return entry;
+
+  // Fallback for unlisted countries
   return {
-    clue: "The first big rain of the season here stops everything. Traffic, conversations, plans. Everyone just stands and watches it come down. The smell afterwards — warm pavement and wet earth — is something I've tried to explain to people who didn't grow up with it. I never quite manage it.",
     label: country,
-    options: shuffle([country, "Australia", "Europe", "North America"]),
+    clue: `There's a food here that visitors always underestimate. They see it on the menu, order it because it's cheap, and then spend the rest of the trip ordering it again. My grandmother made the version I still compare everything else to. I've never found one that matches. I've stopped telling people that because they don't believe me until they try hers.`,
+    options: shuffle(["Asia","Europe","South America","Africa","Oceania","North America"]).slice(0, 3).concat([country]),
   };
 }
 
-// ── Intent stories ────────────────────────────────────────────────────────────
+// ── Intent story clues ─────────────────────────────────────────────────────────
+
 function intentClue(lookingFor: string | null): { clue: string; label: string; options: string[] } {
   const lf = (lookingFor || "").toLowerCase();
-  if (lf.includes("marriage") || lf.includes("marry")) return {
-    clue: "My parents have been married 34 years and still argue about how to load the dishwasher. Last year I watched my father quietly refold a blanket my mother had just folded badly. She pretended not to notice. He pretended not to do it. I want the 34-year version of that. That's the whole thing.",
-    label: "Marriage / Long-term",
-    options: shuffle(["Marriage / Long-term", "Casual dating", "Just friends", "Still figuring it out"]),
+
+  if (lf.includes("marr") || lf.includes("serious") || lf.includes("long")) return {
+    label: lookingFor!,
+    clue: "I've stopped going on dates where I already know within ten minutes it won't go anywhere. Not because I am impatient — I just know what I want now. I want someone I'll still be learning things about in year five. I want someone whose name I want in my phone as an emergency contact. That's the version of this I'm here for.",
+    options: shuffle(["Long-term partner","Casual dating","New friends","Not sure yet"]) as string[],
   };
-  if (lf.includes("serious") || lf.includes("relationship")) return {
-    clue: "I kept a note on my phone of every first date I went on for two years. 26 entries. At some point I realised I was collecting experiences rather than building anything. I deleted the note, deleted the apps, and took six months off. I'm back now and what I want is completely different. I know exactly what it is.",
-    label: "Serious relationship",
-    options: shuffle(["Serious relationship", "Casual & free", "Friendship only", "Travel partner"]),
+
+  if (lf.includes("casual") || lf.includes("fun") || lf.includes("date")) return {
+    label: lookingFor!,
+    clue: "I had a really good Saturday last month. Walked to a market I'd never been to, tried three things I couldn't name, talked to a stranger for twenty minutes about something I still think about. I want more Saturdays like that. I'm not planning far ahead right now and I think that's fine.",
+    options: shuffle(["Something casual","Long-term","Not sure","Friendship"]) as string[],
   };
-  if (lf.includes("casual") || lf.includes("fun") || lf.includes("something fun")) return {
-    clue: "A stranger at a coffee shop started talking to me about a book I was reading last year. We talked for two hours. I never saw him again. That conversation stayed with me for weeks — the ease of it, no agenda, no follow-up needed. That's what I'm actually looking for. Not the drama. Just that ease.",
-    label: "Casual / No pressure",
-    options: shuffle(["Casual / No pressure", "Serious relationship", "Marriage", "Friendship"]),
-  };
+
   if (lf.includes("friend")) return {
-    clue: "The closest friends I have were strangers I ended up next to by accident — a queue, a shared table, a delayed flight. My favourite relationship I've ever witnessed started as a three-year friendship where both people pretended not to have feelings. I'm not in a rush. I'd rather get it right than get it fast.",
-    label: "Friendship first",
-    options: shuffle(["Friendship first", "Serious relationship", "Marriage", "Casual dating"]),
+    label: lookingFor!,
+    clue: "My best friend and I met because we both showed up twenty minutes early to the same event and had nothing to do but talk. We've been close for six years. I think the best people you'll know come from situations like that — unplanned, slightly awkward, completely genuine. I'm here for more of that.",
+    options: shuffle(["New friends","Dating","Long-term","Just looking"]) as string[],
   };
-  if (lf.includes("travel")) return {
-    clue: "I once spent three days in a city I hadn't planned to visit because my connection got cancelled and the next flight wasn't until Thursday. I had nothing arranged. I ate at places with no English menus, got lost twice, and it was the best three days of the entire trip. I want the kind of person who hears that story and says: I would have done the same thing.",
-    label: "Travel partner / Adventure",
-    options: shuffle(["Travel partner / Adventure", "Marriage", "Casual fun", "Stay-home comfort"]),
-  };
+
+  // Default
   return {
-    clue: "Someone asked me recently what I was looking for and I gave them the honest answer: I don't fully know yet. I know how I want to feel. I know what I don't want. The rest I'd rather figure out with someone than decide alone in advance. That feels more true than any checklist I've ever written.",
-    label: "Open / Exploring",
-    options: shuffle(["Open / Exploring", "Serious relationship", "Marriage", "Casual only"]),
+    label: lookingFor || "Undecided",
+    clue: "I deleted every dating app I had last year. Then I reinstalled one because a friend dared me to and I was curious. I'm still working out what I'm looking for but I know what a real conversation feels like versus a performance, and I'm only interested in the real kind.",
+    options: shuffle(["Still figuring it out","Serious relationship","Casual dates","New friends"]) as string[],
   };
 }
 
-// ── Build the 3-question mystery card ────────────────────────────────────────
-function generateMysteryCard(p: BlindProfile): MysteryCard {
-  const age    = ageClue(p.age);
-  const loc    = locationClue(p.city, p.country);
-  const intent = intentClue(p.looking_for);
+// ── Mystery card builder ───────────────────────────────────────────────────────
 
-  // Ensure the correct label is always in the shuffled options
-  const ageOpts = (() => {
-    const all = ["18 – 22", "23 – 26", "27 – 30", "31 – 35", "36 – 40", "40+"];
-    const others = shuffle(all.filter(x => x !== age.label)).slice(0, 3);
-    return shuffle([age.label, ...others]);
-  })();
+function buildQuestions(p: BlindProfile): MysteryQuestion[] {
+  const age = ageClue(p.age);
+  const loc = locationClue(p.city, p.country);
+  const int = intentClue(p.looking_for);
 
-  const questions: MysteryQuestion[] = [
-    {
-      clue: age.clue,
-      text: "From their story — roughly how old do you think this person is?",
-      options: ageOpts,
-      correct: ageOpts.indexOf(age.label) === -1 ? 0 : ageOpts.indexOf(age.label),
-    },
-    {
-      clue: loc.clue,
-      text: "Based on what they described — where do you think they live?",
-      options: loc.options.slice(0, 4),
-      correct: loc.options.indexOf(loc.label) === -1 ? 0 : loc.options.indexOf(loc.label),
-    },
-    {
-      clue: intent.clue,
-      text: "Reading between the lines — what are they actually looking for?",
-      options: intent.options.slice(0, 4),
-      correct: intent.options.indexOf(intent.label) === -1 ? 0 : intent.options.indexOf(intent.label),
-    },
+  const makeQ = (
+    text: string,
+    label: string,
+    allOptions: string[],
+    clue: string,
+  ): MysteryQuestion => {
+    const correct = label;
+    const pool = allOptions.includes(label)
+      ? allOptions
+      : shuffle([...allOptions.slice(0, 3), label]);
+    const shuffled = shuffle(pool.slice(0, 4));
+    return {
+      text,
+      clue,
+      options: shuffled,
+      correct: shuffled.indexOf(correct),
+    };
+  };
+
+  return [
+    makeQ("How old do you think they are?",          age.label, ["18 – 22","23 – 26","27 – 30","31 – 35","36 – 40","40+"], p.blind_date_story_age || age.clue),
+    makeQ("Where do you think they're from?",        loc.label, loc.options,          p.blind_date_story_location || loc.clue),
+    makeQ("What are they looking for?",              int.label, int.options,          p.blind_date_story_intent    || int.clue),
   ];
-
-  return { questions };
 }
 
-// ── QA Modal ──────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// BlindDateQAModal — photo + progressive blur + quiz
+// ══════════════════════════════════════════════════════════════════════════════
 
-function BlindDateQAModal({
-  profile,
-  userId,
-  onClose,
-  onPassed,
-  onStoriesReady,
-}: {
+interface QAModalProps {
   profile: BlindProfile;
   userId: string;
   onClose: () => void;
-  onPassed: () => void;
-  onStoriesReady: (id: string, stories: { age: string; location: string; intent: string }) => void;
-}) {
-  // Use AI stories if already generated, otherwise fall back to hardcoded
-  const hasAiStories = !!(profile.blind_date_story_age && profile.blind_date_story_location && profile.blind_date_story_intent);
-  const [generatingStories, setGeneratingStories] = useState(!hasAiStories && !import.meta.env.DEV);
-  const [aiProfile, setAiProfile] = useState<BlindProfile>(profile);
+  onPassedAndReady: (id: string, finalBlur: number) => void;
+  onUnlockedWithCoins: (id: string) => void;
+  onStartChat: () => void;
+}
 
-  // Generate stories on first open if missing (production only)
+function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlockedWithCoins, onStartChat }: QAModalProps) {
+  const { balance, deductCoins } = useCoinBalance(userId);
+
+  const hasAiStories = !!(
+    profile.blind_date_story_age &&
+    profile.blind_date_story_location &&
+    profile.blind_date_story_intent
+  );
+
+  const [generatingStories, setGeneratingStories] = useState(!hasAiStories && !import.meta.env.DEV);
+  const [aiProfile, setAiProfile]                 = useState<BlindProfile>(profile);
+  const [blurLevel, setBlurLevel]                 = useState(BLUR_START);
+  const [step, setStep]                           = useState(0);
+  const [selected, setSelected]                   = useState<number | null>(null);
+  const [answers, setAnswers]                     = useState<boolean[]>([]);
+  const [phase, setPhase]                         = useState<"quiz" | "passed" | "ask" | "asked" | "failed" | "unlocked">("quiz");
+  const [unlocking, setUnlocking]                 = useState(false);
+  const [submitting, setSubmitting]               = useState(false);
+  const [revealFlash, setRevealFlash]             = useState(false);
+  const [question, setQuestion]                   = useState("");
+  const [sendingQ, setSendingQ]                   = useState(false);
+
+  // Generate AI stories on first open (production only)
   useEffect(() => {
     if (hasAiStories || import.meta.env.DEV) return;
     let cancelled = false;
     (async () => {
       try {
         const { data, error } = await supabase.functions.invoke("generate-blind-date-stories", {
-          body: {
-            profile_id: profile.id,
-            age: profile.age,
-            city: profile.city,
-            country: profile.country,
-            looking_for: profile.looking_for,
-          },
+          body: { profile_id: profile.id, age: profile.age, city: profile.city, country: profile.country, looking_for: profile.looking_for },
         });
         if (!cancelled && !error && data?.story_age) {
-          const updated = {
-            ...profile,
+          setAiProfile(prev => ({
+            ...prev,
             blind_date_story_age:      data.story_age,
             blind_date_story_location: data.story_location,
             blind_date_story_intent:   data.story_intent,
-          };
-          setAiProfile(updated);
-          onStoriesReady(profile.id, { age: data.story_age, location: data.story_location, intent: data.story_intent });
+          }));
         }
-      } catch { /* fall back to hardcoded silently */ }
+      } catch { /* fallback to hardcoded silently */ }
       finally { if (!cancelled) setGeneratingStories(false); }
     })();
     return () => { cancelled = true; };
   }, []);
 
-  // Memoize so shuffle never re-runs on re-render — fixes button index drift on selection
-  const { questions } = useMemo(
-    () => generateMysteryCard(aiProfile),
+  // Stable questions — never shuffle after first render
+  const questions = useMemo(
+    () => buildQuestions(aiProfile),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [aiProfile.id, aiProfile.blind_date_story_age, aiProfile.blind_date_story_location, aiProfile.blind_date_story_intent]
+    [aiProfile.id, aiProfile.blind_date_story_age, aiProfile.blind_date_story_location, aiProfile.blind_date_story_intent],
   );
-  const [step, setStep] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<boolean[]>([]);
-  const [result, setResult] = useState<"passed" | "failed" | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   const current = questions[step];
 
   const handleSelect = (idx: number) => {
-    if (selected !== null) return;
+    if (selected !== null || phase !== "quiz") return;
+    const isCorrect = idx === current.correct;
     setSelected(idx);
+    // Blur reveal: immediate visual feedback on selection
+    const delta = isCorrect ? BLUR_CORRECT : BLUR_WRONG;
+    setBlurLevel(prev => Math.max(BLUR_FLOOR, prev - delta));
+    // Brief white flash to reward the reveal
+    setRevealFlash(true);
+    setTimeout(() => setRevealFlash(false), 350);
   };
 
   const handleNext = async () => {
-    if (selected === null) return;
-    const correct = selected === current.correct;
-    const newAnswers = [...answers, correct];
+    if (selected === null || submitting) return;
+    const isCorrect = selected === current.correct;
+    const newAnswers = [...answers, isCorrect];
 
     if (step < questions.length - 1) {
       setAnswers(newAnswers);
@@ -362,17 +394,88 @@ function BlindDateQAModal({
       return;
     }
 
-    // Final — submit
+    // Final question — submit and determine pass/fail
     setSubmitting(true);
     const score = newAnswers.filter(Boolean).length;
-    const { data } = await supabase.rpc("submit_blind_date_attempt" as any, {
-      p_guesser_id: userId,
-      p_target_id: profile.id,
-      p_score: score,
-    });
+
+    if (!import.meta.env.DEV) {
+      await supabase.rpc("submit_blind_date_attempt" as any, {
+        p_guesser_id: userId,
+        p_target_id:  profile.id,
+        p_score:      score,
+      });
+    }
+
     setSubmitting(false);
-    setResult(data ? "passed" : "failed");
-    if (data) setTimeout(onPassed, 2200);
+    if (score >= 2) {
+      // Perfect score → full reveal; 2/3 → partial reveal (still blurred to floor)
+      const finalBlur = score === questions.length ? 0 : blurLevel;
+      setBlurLevel(finalBlur);
+      setPhase("passed");
+      onPassedAndReady(profile.id, finalBlur);
+    } else {
+      setPhase("failed");
+    }
+  };
+
+  const handleCoinUnlock = async (cost: number) => {
+    if (unlocking || balance < cost) return;
+    setUnlocking(true);
+    const ok = await deductCoins(cost, "blind_date_unlock");
+    if (ok) {
+      // Mark as passed in DB
+      if (!import.meta.env.DEV) {
+        await supabase.rpc("submit_blind_date_attempt" as any, {
+          p_guesser_id: userId,
+          p_target_id:  profile.id,
+          p_score:      3,
+        });
+      }
+      setBlurLevel(0);
+      setPhase("unlocked");
+      onUnlockedWithCoins(profile.id);
+    }
+    setUnlocking(false);
+  };
+
+  const handleSendQuestion = async () => {
+    if (!question.trim() || sendingQ) return;
+    setSendingQ(true);
+    try {
+      const { data: pushToken } = await supabase.rpc("send_blind_date_question" as any, {
+        p_asker_id:  userId,
+        p_target_id: profile.id,
+        p_question:  question.trim(),
+      });
+      // Fire push notification to the target if they have a token
+      if (pushToken) {
+        const askerRow = await supabase.from("profiles").select("name").eq("id", userId).single();
+        const askerName = (askerRow.data as any)?.name?.split(" ")[0] ?? "Someone";
+        await supabase.functions.invoke("send-push-notification", {
+          body: {
+            push_token: pushToken,
+            title: "💘 Blind Date — you've got a question!",
+            body:  `${askerName} passed your quiz and wants to ask you something…`,
+          },
+        }).catch(() => { /* push is enhancement only */ });
+      }
+    } catch { /* silent */ }
+    setSendingQ(false);
+    setPhase("asked");
+  };
+
+  // Button colour helper
+  const btnColor = (idx: number): string => {
+    if (selected === null) return "rgba(255,255,255,0.08)";
+    if (idx === current.correct) return "rgba(34,197,94,0.35)";
+    if (idx === selected && selected !== current.correct) return "rgba(239,68,68,0.35)";
+    return "rgba(255,255,255,0.05)";
+  };
+  const btnBorder = (idx: number): string => {
+    if (selected === null) return "1px solid rgba(255,255,255,0.12)";
+    if (idx === current.correct) return "1px solid rgba(34,197,94,0.6)";
+    if (idx === selected && selected !== current.correct) return "1px solid rgba(239,68,68,0.5)";
+    return "1px solid rgba(255,255,255,0.06)";
   };
 
   return (
@@ -381,354 +484,1274 @@ function BlindDateQAModal({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       style={{
-        position: "fixed", inset: 0, zIndex: 200,
-        background: "rgba(0,0,0,0.82)", backdropFilter: "blur(8px)",
+        position: "fixed", inset: 0, zIndex: 300,
+        background: "rgba(0,0,0,0.88)", backdropFilter: "blur(10px)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "0 16px",
+        padding: "16px",
       }}
     >
       <motion.div
-        initial={{ scale: 0.9, y: 30 }}
+        initial={{ scale: 0.92, y: 24 }}
         animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.9, y: 30 }}
+        exit={{ scale: 0.92, y: 24 }}
+        transition={{ type: "spring", stiffness: 380, damping: 32 }}
         style={{
           width: "100%", maxWidth: 400,
-          backgroundImage: "url('/images/app-background.png')",
-          backgroundSize: "cover", backgroundPosition: "center",
-          border: "1.5px solid rgba(194,24,91,0.55)",
-          borderRadius: 22,
-          boxShadow: "0 0 48px rgba(194,24,91,0.35), 0 8px 32px rgba(0,0,0,0.6)",
+          background: "rgba(10,10,18,0.97)",
+          border: "1.5px solid rgba(194,24,91,0.4)",
+          borderRadius: 24,
+          boxShadow: "0 0 60px rgba(194,24,91,0.25), 0 24px 48px rgba(0,0,0,0.7)",
           overflow: "hidden",
-          position: "relative",
+          display: "flex", flexDirection: "column",
+          maxHeight: "92vh",
         }}
       >
-        {/* Dark overlay over background image */}
-        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.72)", pointerEvents: "none", borderRadius: 22 }} />
-        {/* Modal content sits above overlay */}
-        <div style={{ position: "relative", zIndex: 1, padding: "24px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* ── Photo section ──────────────────────────────────────────────── */}
+        <div style={{ position: "relative", width: "100%", height: 200, flexShrink: 0, overflow: "hidden" }}>
+          {profile.avatar_url ? (
+            <div
+              style={{
+                position: "absolute", inset: 0,
+                backgroundImage: `url(${profile.avatar_url})`,
+                backgroundSize: "cover", backgroundPosition: "center",
+                filter: `blur(${blurLevel}px)`,
+                transform: "scale(1.12)", // prevents blur edge artefacts
+                transition: "filter 0.7s cubic-bezier(0.4,0,0.2,1)",
+              }}
+            />
+          ) : (
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,#1a0a1e,#2d0a1e)" }} />
+          )}
 
-        {/* Story generating spinner — shown while Claude writes stories */}
+          {/* Reveal flash overlay */}
+          <AnimatePresence>
+            {revealFlash && (
+              <motion.div
+                key="flash"
+                initial={{ opacity: 0.35 }}
+                animate={{ opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35 }}
+                style={{ position: "absolute", inset: 0, background: "white", pointerEvents: "none" }}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Bottom gradient */}
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "linear-gradient(to top, rgba(10,10,18,1) 0%, rgba(10,10,18,0.3) 50%, rgba(0,0,0,0.15) 100%)",
+          }} />
+
+          {/* Blur level pill */}
+          <div style={{
+            position: "absolute", top: 12, left: 12,
+            background: "rgba(0,0,0,0.6)", backdropFilter: "blur(8px)",
+            borderRadius: 20, padding: "4px 10px",
+            fontSize: 11, color: "rgba(255,255,255,0.7)",
+            border: "1px solid rgba(255,255,255,0.1)",
+          }}>
+            {blurLevel <= BLUR_FLOOR
+              ? `🔒 ${COINS_PASS_FULL} coins to fully reveal`
+              : `🌫️ Answer correctly to clear the blur`}
+          </div>
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            style={{
+              position: "absolute", top: 12, right: 12,
+              width: 30, height: 30, borderRadius: "50%",
+              background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.15)",
+              color: "rgba(255,255,255,0.7)", fontSize: 16,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >×</button>
+
+          {/* Name + intent */}
+          <div style={{ position: "absolute", bottom: 12, left: 14 }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: "white", lineHeight: 1 }}>
+              {profile.name.split(" ")[0]}
+            </div>
+            {profile.looking_for && (
+              <div style={{
+                marginTop: 5, display: "inline-block",
+                background: "rgba(194,24,91,0.75)", borderRadius: 20,
+                padding: "3px 10px", fontSize: 11, color: "white", fontWeight: 600,
+              }}>
+                {profile.looking_for}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Spinner while stories generate ─────────────────────────────── */}
         {generatingStories && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 0", gap: 14 }}>
+          <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
             <motion.div
               animate={{ rotate: 360 }}
-              transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-              style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid rgba(194,24,91,0.2)", borderTopColor: "#c2185b" }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+              style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid rgba(194,24,91,0.2)", borderTopColor: "#c2185b" }}
             />
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
-              Writing their story…
-            </div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Writing their story…</div>
           </div>
         )}
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "white" }}>
-              Blind Date Quiz
-            </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>
-              Answer 2 of 3 correctly to unlock chat
-            </div>
-          </div>
-          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.4)", fontSize: 22, background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>×</button>
-        </div>
-
-        {/* Progress dots — hidden while story is generating */}
-        {!generatingStories && <div style={{ display: "flex", gap: 6 }}>
-          {questions.map((_: Question, i: number) => (
-            <div key={i} style={{
-              flex: 1, height: 4, borderRadius: 4,
-              background: i < step ? "#c2185b" : i === step ? "rgba(194,24,91,0.5)" : "rgba(255,255,255,0.12)",
-              transition: "background 0.3s",
-            }} />
-          ))}
-        </div>}
-
-        {/* Quiz — hidden while story is generating */}
-        {!generatingStories && result ? (
-          <div style={{ textAlign: "center", padding: "20px 0" }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>{result === "passed" ? "💘" : "💔"}</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: result === "passed" ? "#c2185b" : "rgba(255,255,255,0.7)", marginBottom: 8 }}>
-              {result === "passed" ? "You unlocked the chat!" : "Not quite — try again soon"}
-            </div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>
-              {result === "passed"
-                ? `${profile.name} will be notified you passed their quiz.`
-                : "You need 2 correct answers. Retry in 24h or spend 10 coins."}
-            </div>
-            {result === "failed" && (
-              <button
-                onClick={onClose}
-                style={{
-                  marginTop: 20, padding: "10px 28px",
-                  background: "rgba(194,24,91,0.2)", border: "1.5px solid rgba(194,24,91,0.5)",
-                  borderRadius: 12, color: "white", fontSize: 14, fontWeight: 600, cursor: "pointer",
-                }}
-              >
-                Close
-              </button>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Blurred avatar + mystery name */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
-                backgroundImage: profile.avatar_url ? `url(${profile.avatar_url})` : undefined,
-                backgroundSize: "cover", backgroundPosition: "center",
-                filter: "blur(10px)",
-                border: "2px solid rgba(194,24,91,0.4)",
-                background: profile.avatar_url ? undefined : "#c2185b33",
-              }} />
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>Mystery Person</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>Read the story — then answer</div>
-              </div>
+        {/* ── Quiz ───────────────────────────────────────────────────────── */}
+        {!generatingStories && phase === "quiz" && (
+          <div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
+            {/* Progress dots */}
+            <div style={{ display: "flex", gap: 5 }}>
+              {questions.map((_, i) => (
+                <div key={i} style={{
+                  flex: 1, height: 3, borderRadius: 3,
+                  background: i < step ? "#c2185b" : i === step ? "rgba(194,24,91,0.55)" : "rgba(255,255,255,0.1)",
+                  transition: "background 0.3s",
+                }} />
+              ))}
             </div>
 
-            {/* Per-question clue story */}
+            {/* Question label */}
+            <div style={{ fontSize: 11, color: "rgba(194,24,91,0.9)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              Question {step + 1} of {questions.length}
+            </div>
+
+            {/* Story clue */}
             <div style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(194,24,91,0.25)",
-              borderRadius: 12, padding: "12px 14px",
-              fontSize: 12.5, color: "rgba(255,255,255,0.82)",
-              lineHeight: 1.6, fontStyle: "italic",
+              fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.65,
+              padding: "12px 14px",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 14,
+              fontStyle: "italic",
             }}>
-              {(current as MysteryQuestion).clue}
+              "{current.clue}"
             </div>
 
             {/* Question */}
-            <div style={{ fontSize: 13, fontWeight: 700, color: "rgba(255,255,255,0.9)", lineHeight: 1.4 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>
               {current.text}
             </div>
 
-            {/* Options — 2×2 compact round grid */}
+            {/* 2×2 answer buttons */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-              {current.options.map((opt: string, idx: number) => {
-                const isSelected = selected === idx;
-                const isCorrect  = selected !== null && idx === current.correct;
-                const isWrong    = isSelected && idx !== current.correct;
-                return (
-                  <motion.button
-                    key={idx}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handleSelect(idx)}
-                    style={{
-                      padding: "9px 10px", borderRadius: 50,
-                      background: isCorrect ? "rgba(34,197,94,0.22)" : isWrong ? "rgba(239,68,68,0.22)" : isSelected ? "rgba(194,24,91,0.28)" : "rgba(255,255,255,0.07)",
-                      border: isCorrect ? "1.5px solid rgba(34,197,94,0.7)" : isWrong ? "1.5px solid rgba(239,68,68,0.7)" : isSelected ? "1.5px solid #c2185b" : "1.5px solid rgba(255,255,255,0.14)",
-                      color: "white", fontSize: 12, fontWeight: 600,
-                      textAlign: "center", cursor: selected !== null ? "default" : "pointer",
-                      transition: "all 0.18s", lineHeight: 1.3,
-                    }}
-                  >
-                    {opt}
-                  </motion.button>
-                );
-              })}
+              {current.options.map((opt, i) => (
+                <motion.button
+                  key={i}
+                  whileTap={selected === null ? { scale: 0.96 } : {}}
+                  onClick={() => handleSelect(i)}
+                  style={{
+                    padding: "10px 8px",
+                    borderRadius: 50,
+                    background: btnColor(i),
+                    border: btnBorder(i),
+                    color: selected !== null && i === current.correct
+                      ? "rgba(134,239,172,1)"
+                      : selected === i && selected !== current.correct
+                        ? "rgba(252,165,165,1)"
+                        : "rgba(255,255,255,0.85)",
+                    fontSize: 12, fontWeight: 600,
+                    cursor: selected === null ? "pointer" : "default",
+                    transition: "background 0.25s, border-color 0.25s, color 0.25s",
+                    textAlign: "center",
+                  }}
+                >
+                  {opt}
+                </motion.button>
+              ))}
             </div>
 
             {/* Next / Submit */}
             <motion.button
-              whileTap={{ scale: 0.97 }}
+              whileTap={selected !== null ? { scale: 0.97 } : {}}
               onClick={handleNext}
               disabled={selected === null || submitting}
               style={{
-                padding: "13px", borderRadius: 14,
-                background: selected !== null ? "#c2185b" : "rgba(194,24,91,0.2)",
-                border: "none", color: "white", fontSize: 15, fontWeight: 700,
+                width: "100%", padding: "13px",
+                borderRadius: 50,
+                background: selected !== null ? "linear-gradient(135deg,#c2185b,#e91e8c)" : "rgba(194,24,91,0.15)",
+                border: "none", color: "white",
+                fontSize: 14, fontWeight: 700,
                 cursor: selected !== null ? "pointer" : "not-allowed",
-                transition: "background 0.2s",
+                transition: "background 0.25s",
                 opacity: submitting ? 0.7 : 1,
+                boxShadow: selected !== null ? "0 4px 20px rgba(194,24,91,0.4)" : "none",
               }}
             >
-              {submitting ? "Submitting…" : step < questions.length - 1 ? "Next" : "Submit"}
+              {submitting ? "Submitting…" : step < questions.length - 1 ? "Next →" : "Submit"}
             </motion.button>
-          </>
+          </div>
         )}
-        </div>
+
+        {/* ── Passed ─────────────────────────────────────────────────────── */}
+        {!generatingStories && phase === "passed" && (
+          <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
+            <div style={{ fontSize: 36 }}>{blurLevel === 0 ? "🎉" : "🥳"}</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>
+              {blurLevel === 0 ? "Perfect score!" : "You passed!"}
+            </div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.5 }}>
+              {blurLevel === 0
+                ? `You fully revealed ${profile.name.split(" ")[0]}'s photo. Now make a move — ask them something.`
+                : `You unlocked the chat. Ask ${profile.name.split(" ")[0]} one question and they'll get notified you passed.`
+              }
+            </div>
+
+            {/* ── Ask a question CTA ── */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setPhase("ask")}
+              style={{
+                width: "100%", padding: "14px", borderRadius: 50,
+                background: "linear-gradient(135deg,#c2185b,#e91e8c)",
+                border: "none", color: "white", fontSize: 15, fontWeight: 800,
+                cursor: "pointer", boxShadow: "0 4px 20px rgba(194,24,91,0.4)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              <span>💬</span> Ask {profile.name.split(" ")[0]} a question
+            </motion.button>
+
+            {blurLevel > 0 && (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleCoinUnlock(COINS_PASS_FULL)}
+                disabled={balance < COINS_PASS_FULL || unlocking}
+                style={{
+                  width: "100%", padding: "12px", borderRadius: 50,
+                  background: balance >= COINS_PASS_FULL ? "linear-gradient(135deg,#f59e0b,#f97316)" : "rgba(245,158,11,0.2)",
+                  border: "none", color: "white", fontSize: 13, fontWeight: 700,
+                  cursor: balance >= COINS_PASS_FULL ? "pointer" : "not-allowed",
+                  boxShadow: balance >= COINS_PASS_FULL ? "0 4px 16px rgba(245,158,11,0.4)" : "none",
+                }}
+              >
+                {unlocking ? "Unlocking…" : `🔓 Full reveal instead — ${COINS_PASS_FULL} coins`}
+              </motion.button>
+            )}
+
+            <button
+              onClick={onStartChat}
+              style={{
+                background: "none", border: "none",
+                color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer", marginTop: -4,
+              }}
+            >
+              Skip — go straight to chat →
+            </button>
+          </div>
+        )}
+
+        {/* ── Ask a question ──────────────────────────────────────────────── */}
+        {!generatingStories && phase === "ask" && (() => {
+          const firstName = profile.name.split(" ")[0];
+          const prompts = [
+            "What's your go-to weekend plan?",
+            "Coffee or tea person?",
+            "Best place you've ever travelled?",
+            "What makes you laugh most?",
+            "What are you most proud of?",
+          ];
+          return (
+            <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>💌</div>
+                <div style={{ fontSize: 17, fontWeight: 800, color: "white" }}>
+                  Ask {firstName} one question
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4, lineHeight: 1.5 }}>
+                  They'll be notified you passed their quiz and want to connect. Make it count.
+                </div>
+              </div>
+
+              {/* Quick prompt chips */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+                {prompts.map(p => (
+                  <button
+                    key={p}
+                    onClick={() => setQuestion(p)}
+                    style={{
+                      padding: "6px 12px", borderRadius: 50, cursor: "pointer",
+                      background: question === p ? "rgba(194,24,91,0.3)" : "rgba(255,255,255,0.06)",
+                      border: `1px solid ${question === p ? "rgba(194,24,91,0.7)" : "rgba(255,255,255,0.1)"}`,
+                      color: question === p ? "rgba(255,180,200,1)" : "rgba(255,255,255,0.55)",
+                      fontSize: 11, fontWeight: 600, transition: "all 0.18s",
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
+              {/* Text input */}
+              <textarea
+                value={question}
+                onChange={e => setQuestion(e.target.value.slice(0, 120))}
+                placeholder={`Write your question for ${firstName}…`}
+                rows={3}
+                style={{
+                  width: "100%", padding: "12px 14px",
+                  background: "rgba(255,255,255,0.05)",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                  borderRadius: 14, color: "white", fontSize: 13,
+                  resize: "none", outline: "none",
+                  fontFamily: "inherit", lineHeight: 1.5,
+                  boxSizing: "border-box",
+                }}
+              />
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "right", marginTop: -8 }}>
+                {question.length}/120
+              </div>
+
+              {/* Send button */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleSendQuestion}
+                disabled={!question.trim() || sendingQ}
+                style={{
+                  width: "100%", padding: "14px", borderRadius: 50,
+                  background: question.trim()
+                    ? "linear-gradient(135deg,#c2185b,#e91e8c)"
+                    : "rgba(194,24,91,0.15)",
+                  border: "none", color: "white", fontSize: 14, fontWeight: 800,
+                  cursor: question.trim() ? "pointer" : "not-allowed",
+                  boxShadow: question.trim() ? "0 4px 20px rgba(194,24,91,0.4)" : "none",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  opacity: sendingQ ? 0.7 : 1,
+                }}
+              >
+                {sendingQ ? "Sending…" : `💌 Send question to ${firstName}`}
+              </motion.button>
+
+              <button
+                onClick={() => setPhase("passed")}
+                style={{
+                  background: "none", border: "none",
+                  color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer",
+                }}
+              >
+                ← Back
+              </button>
+            </div>
+          );
+        })()}
+
+        {/* ── Question sent confirmation ──────────────────────────────────── */}
+        {!generatingStories && phase === "asked" && (
+          <div style={{ padding: "24px 18px 28px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              style={{ fontSize: 48 }}
+            >
+              💌
+            </motion.div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>
+              Question sent!
+            </div>
+            <div style={{
+              background: "rgba(194,24,91,0.1)",
+              border: "1px solid rgba(194,24,91,0.25)",
+              borderRadius: 16, padding: "14px 16px",
+              fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, textAlign: "center",
+            }}>
+              <strong style={{ color: "white" }}>{profile.name.split(" ")[0]}</strong> will be notified that you joined their Blind Date, passed their questions, and want to ask them something. If they reply, you'll both connect.
+            </div>
+            <div style={{
+              fontSize: 12, color: "rgba(255,255,255,0.35)",
+              fontStyle: "italic", textAlign: "center",
+              background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "10px 14px",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}>
+              "{question}"
+            </div>
+            <button
+              onClick={onClose}
+              style={{
+                width: "100%", padding: "13px", borderRadius: 50, marginTop: 4,
+                background: "linear-gradient(135deg,#c2185b,#e91e8c)",
+                border: "none", color: "white", fontSize: 14, fontWeight: 700,
+                cursor: "pointer", boxShadow: "0 4px 20px rgba(194,24,91,0.4)",
+              }}
+            >
+              Done — keep swiping
+            </button>
+          </div>
+        )}
+
+        {/* ── Failed ─────────────────────────────────────────────────────── */}
+        {!generatingStories && phase === "failed" && (
+          <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
+            <div style={{ fontSize: 36 }}>😔</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>Not quite…</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.5 }}>
+              You didn't unlock the chat this time.<br />
+              But you can still see who this is for <strong style={{ color: "#f59e0b" }}>{COINS_FAIL} coins</strong>.
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => handleCoinUnlock(COINS_FAIL)}
+              disabled={balance < COINS_FAIL || unlocking}
+              style={{
+                width: "100%", padding: "13px", borderRadius: 50,
+                background: balance >= COINS_FAIL
+                  ? "linear-gradient(135deg,#f59e0b,#f97316)"
+                  : "rgba(245,158,11,0.2)",
+                border: "none", color: "white", fontSize: 14, fontWeight: 700,
+                cursor: balance >= COINS_FAIL ? "pointer" : "not-allowed",
+                boxShadow: balance >= COINS_FAIL ? "0 4px 20px rgba(245,158,11,0.4)" : "none",
+              }}
+            >
+              {unlocking ? "Unlocking…" : `🪙 Unlock anyway — ${COINS_FAIL} coins`}
+            </motion.button>
+            <button
+              onClick={onClose}
+              style={{
+                width: "100%", padding: "12px", borderRadius: 50,
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer",
+              }}
+            >
+              Next profile →
+            </button>
+            {balance < COINS_FAIL && (
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center" }}>
+                You need {COINS_FAIL - balance} more coins
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Fully unlocked ─────────────────────────────────────────────── */}
+        {!generatingStories && phase === "unlocked" && (
+          <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
+            <div style={{ fontSize: 36 }}>✨</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>Unlocked!</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>
+              {profile.name.split(" ")[0]}'s photo is fully revealed. Start the conversation!
+            </div>
+            <button
+              onClick={onStartChat}
+              style={{
+                width: "100%", padding: "13px", borderRadius: 50,
+                background: "linear-gradient(135deg,#c2185b,#e91e8c)",
+                border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer",
+                boxShadow: "0 4px 20px rgba(194,24,91,0.4)",
+              }}
+            >
+              💬 Start Chat
+            </button>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   );
 }
 
-// ── Main BlindDateGrid ────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// BlindDateCard — single swipeable card in the stack
+// ══════════════════════════════════════════════════════════════════════════════
 
-export default function BlindDateGrid({ userId }: { userId: string }) {
-  const [profiles, setProfiles] = useState<BlindProfile[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState<BlindProfile | null>(null);
-  const [passed, setPassed] = useState<Set<string>>(new Set());
+interface CardProps {
+  profile: BlindProfile;
+  stackIndex: number; // 0 = top, 1 = second, 2 = third
+  revealedBlur: number | null;
+  unlocked: boolean;
+  isFeatured?: boolean; // Blind Date of the Day
+  distanceKm: number | null;
+  onTap: () => void;
+  onSkip: () => void;
+  onSwipeUp: () => void;
+}
+
+function BlindDateCard({ profile, stackIndex, revealedBlur, unlocked, isFeatured, distanceKm, onTap, onSkip, onSwipeUp }: CardProps) {
+  const isTop = stackIndex === 0;
+  const cardX = useMotionValue(0);
+  const cardY = useMotionValue(0);
+  const rotate = useTransform(cardX, [-280, 0, 280], [-18, 0, 18]);
+
+  // Stack depth visuals
+  const scaleVal  = [1, 0.95, 0.91][stackIndex] ?? 0.88;
+  const yOffsetVal = [0, 14, 26][stackIndex] ?? 36;
+
+  const displayBlur = unlocked ? 0 : revealedBlur !== null ? revealedBlur : BLUR_START;
+
+  const handleDragEnd = (_: PointerEvent, info: PanInfo) => {
+    const totalMove = Math.hypot(info.offset.x, info.offset.y);
+
+    // Tap
+    if (totalMove < 8) {
+      animate(cardX, 0, { type: "spring", stiffness: 500, damping: 40 });
+      animate(cardY, 0, { type: "spring", stiffness: 500, damping: 40 });
+      onTap();
+      return;
+    }
+
+    // Swipe up (strong vertical component, little horizontal)
+    if (info.offset.y < -110 && Math.abs(info.offset.x) < Math.abs(info.offset.y) * 0.7) {
+      animate(cardY, -window.innerHeight * 1.2, { duration: 0.38, ease: "easeIn" });
+      onSwipeUp();
+      return;
+    }
+
+    // Swipe left or right → skip
+    const swipeX = Math.abs(info.offset.x) > 90 || Math.abs(info.velocity.x) > 450;
+    if (swipeX) {
+      const dir = info.offset.x > 0 || info.velocity.x > 0 ? 1 : -1;
+      animate(cardX, dir * window.innerWidth * 1.6, { duration: 0.38, ease: "easeIn" });
+      animate(cardY, 50, { duration: 0.38 });
+      setTimeout(onSkip, 340);
+      return;
+    }
+
+    // Snap back
+    animate(cardX, 0, { type: "spring", stiffness: 380, damping: 28 });
+    animate(cardY, 0, { type: "spring", stiffness: 380, damping: 28 });
+  };
+
+  // Directional labels opacity
+  const skipOpacity  = useTransform(cardX, [-120, -40, 0, 40, 120], [1, 0.4, 0, 0.4, 1]);
+  const unlockOpacity = useTransform(cardY, [-140, -60, 0], [1, 0.3, 0]);
+
+  return (
+    <motion.div
+      drag={isTop ? true : false}
+      dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+      dragElastic={0.65}
+      onDragEnd={handleDragEnd}
+      style={{
+        x: isTop ? cardX : 0,
+        y: isTop ? cardY : yOffsetVal,
+        rotate: isTop ? rotate : 0,
+        scale: scaleVal,
+        position: "absolute",
+        inset: 0,
+        zIndex: 10 - stackIndex,
+        borderRadius: 24,
+        overflow: "hidden",
+        cursor: isTop ? "grab" : "default",
+        touchAction: "none",
+        willChange: "transform",
+        border: unlocked
+          ? "2px solid rgba(34,197,94,0.7)"
+          : "1.5px solid rgba(194,24,91,0.3)",
+        boxShadow: `0 ${8 + stackIndex * 4}px ${24 + stackIndex * 8}px rgba(0,0,0,${0.5 - stackIndex * 0.1})`,
+      }}
+    >
+      {/* Background photo */}
+      {profile.avatar_url ? (
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: `url(${profile.avatar_url})`,
+          backgroundSize: "cover", backgroundPosition: "center",
+          filter: `blur(${displayBlur}px)`,
+          transform: "scale(1.1)",
+          transition: "filter 0.7s cubic-bezier(0.4,0,0.2,1)",
+        }} />
+      ) : (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(135deg,#1a0a1e 0%,#2d0a1e 50%,#1a0818 100%)",
+        }} />
+      )}
+
+      {/* Dark gradient overlay */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.1) 100%)",
+      }} />
+
+      {/* Top hint: swipe up */}
+      {isTop && (
+        <motion.div
+          style={{ opacity: unlockOpacity, position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center" }}
+        >
+          <div style={{
+            background: "rgba(245,158,11,0.85)", backdropFilter: "blur(8px)",
+            borderRadius: 20, padding: "5px 14px",
+            fontSize: 11, fontWeight: 700, color: "white", letterSpacing: "0.05em",
+          }}>
+            ↑ UNLOCK — {COINS_INSTANT} COINS
+          </div>
+        </motion.div>
+      )}
+
+      {/* Skip label (left/right drag) */}
+      {isTop && (
+        <motion.div style={{ opacity: skipOpacity, position: "absolute", top: "42%", left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+          <div style={{
+            background: "rgba(100,100,120,0.65)", backdropFilter: "blur(6px)",
+            borderRadius: 20, padding: "5px 16px",
+            fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "0.05em",
+          }}>
+            SKIP
+          </div>
+        </motion.div>
+      )}
+
+      {/* Distance badge — top right */}
+      {distanceKm !== null && (
+        <div style={{
+          position: "absolute", top: 12, right: 12,
+          background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          color: "rgba(255,255,255,0.85)",
+          fontSize: 10, fontWeight: 700, padding: "3px 9px", borderRadius: 20,
+          display: "flex", alignItems: "center", gap: 4,
+        }}>
+          <span style={{ fontSize: 9 }}>📍</span>
+          {formatDistance(distanceKm)}
+        </div>
+      )}
+
+      {/* Unlocked badge */}
+      {unlocked && (
+        <div style={{
+          position: "absolute", top: distanceKm !== null ? 40 : 12, right: 12,
+          background: "rgba(34,197,94,0.85)", color: "white",
+          fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, letterSpacing: "0.05em",
+        }}>
+          UNLOCKED ✓
+        </div>
+      )}
+
+      {/* BDOTD / boost / NEW badges */}
+      {isFeatured ? (
+        <div style={{
+          position: "absolute", top: 12, left: 12,
+          background: "linear-gradient(135deg,#f59e0b,#f97316)",
+          color: "white", fontSize: 10, fontWeight: 800,
+          padding: "4px 10px", borderRadius: 20, letterSpacing: "0.05em",
+          display: "flex", alignItems: "center", gap: 4,
+          boxShadow: "0 0 14px rgba(245,158,11,0.5)",
+        }}>
+          ⭐ TODAY
+        </div>
+      ) : profile.is_boosted ? (
+        <div style={{
+          position: "absolute", top: 12, left: 12,
+          background: "rgba(245,158,11,0.85)", color: "white",
+          fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, letterSpacing: "0.05em",
+          display: "flex", alignItems: "center", gap: 3,
+        }}>
+          🚀 BOOSTED
+        </div>
+      ) : (() => {
+        const days = (Date.now() - new Date(profile.created_at).getTime()) / 86400000;
+        return days <= 3 && !unlocked ? (
+          <div style={{
+            position: "absolute", top: 12, left: 12,
+            background: "#f59e0b", color: "white",
+            fontSize: 10, fontWeight: 800, padding: "3px 9px", borderRadius: 20, letterSpacing: "0.05em",
+          }}>
+            NEW
+          </div>
+        ) : null;
+      })()}
+
+      {/* Bottom info */}
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "20px 18px" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {/* Name + age */}
+            <div style={{ fontSize: 24, fontWeight: 800, color: "white", lineHeight: 1.1 }}>
+              {profile.name.split(" ")[0]}<span style={{ fontWeight: 400, fontSize: 20, color: "rgba(255,255,255,0.75)" }}>, {profile.age}</span>
+            </div>
+            {/* City */}
+            {profile.city && (
+              <div style={{ marginTop: 4, fontSize: 12, color: "rgba(255,255,255,0.55)", display: "flex", alignItems: "center", gap: 3 }}>
+                <span style={{ fontSize: 10 }}>📍</span>
+                {profile.city}
+              </div>
+            )}
+            {/* Interest pill */}
+            {profile.looking_for && (
+              <div style={{
+                marginTop: 7, display: "inline-flex", alignItems: "center", gap: 5,
+                background: "rgba(194,24,91,0.8)", borderRadius: 20,
+                padding: "3px 12px", fontSize: 12, color: "white", fontWeight: 600,
+              }}>
+                <span style={{ fontSize: 11 }}>
+                  {profile.looking_for === "Marriage" ? "💍" :
+                   profile.looking_for === "Relationship" ? "💑" :
+                   profile.looking_for === "Friendship" ? "🤝" :
+                   profile.looking_for === "Casual" ? "☀️" : "💘"}
+                </span>
+                {profile.looking_for}
+              </div>
+            )}
+            {isTop && unlocked && (
+              <div style={{ marginTop: 8, fontSize: 12, color: "rgba(134,239,172,0.8)", display: "flex", alignItems: "center", gap: 5 }}>
+                <span>✓</span>
+                <span>Tap to start chatting</span>
+              </div>
+            )}
+          </div>
+
+          {/* Fingerprint Q&A button — bottom right */}
+          {isTop && !unlocked && (
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={(e) => { e.stopPropagation(); onTap(); }}
+              style={{
+                flexShrink: 0, marginLeft: 12,
+                width: 56, height: 56, borderRadius: "50%",
+                background: "linear-gradient(135deg,rgba(194,24,91,0.85),rgba(236,72,153,0.75))",
+                border: "2px solid rgba(255,255,255,0.25)",
+                backdropFilter: "blur(10px)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+                boxShadow: "0 4px 20px rgba(194,24,91,0.5), 0 0 0 6px rgba(194,24,91,0.12)",
+              }}
+            >
+              <span style={{ fontSize: 26, lineHeight: 1 }}>👆</span>
+            </motion.button>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// BlindDateGrid — main export (swipe view)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const COINS_BOOST = 40;
+
+export default function BlindDateGrid({ userId, onClose, onStartChat }: { userId: string; onClose: () => void; onStartChat?: (profile: BlindProfile) => void }) {
+  const { balance } = useCoinBalance(userId);
+  const [profiles, setProfiles]   = useState<BlindProfile[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [index, setIndex]         = useState(0);
+  const [qaProfile, setQaProfile] = useState<BlindProfile | null>(null);
+  const [swipeUpProfile, setSwipeUpProfile] = useState<BlindProfile | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
+  const { deductCoins }           = useCoinBalance(userId);
+  const [showCoinShop, setShowCoinShop] = useState(false);
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boosting, setBoosting]     = useState(false);
+  const [boostActive, setBoostActive]   = useState(false);
+  const [boostExpiresAt, setBoostExpiresAt] = useState<Date | null>(null);
+
+  // Track per-profile state
+  const [revealedBlurs, setRevealedBlurs] = useState<Record<string, number>>({});
+  const [unlockedIds, setUnlockedIds]     = useState<Set<string>>(new Set());
+
+  // Viewer's own coordinates for distance calculation
+  const [viewerLat, setViewerLat] = useState<number | null>(null);
+  const [viewerLon, setViewerLon] = useState<number | null>(null);
+
+  // Load user's own boost status + coordinates
+  // Priority: browser geolocation → profile-stored → DEV fallback (Jakarta)
+  useEffect(() => {
+    supabase.from("profiles").select("blind_date_boosted_until, latitude, longitude").eq("id", userId).single()
+      .then(({ data }) => {
+        if ((data as any)?.blind_date_boosted_until) {
+          const exp = new Date((data as any).blind_date_boosted_until);
+          if (exp > new Date()) { setBoostActive(true); setBoostExpiresAt(exp); }
+        }
+        // Try live browser location first
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              setViewerLat(pos.coords.latitude);
+              setViewerLon(pos.coords.longitude);
+            },
+            () => {
+              // Denied/unavailable — use profile-stored coords or DEV fallback
+              const lat = (data as any)?.latitude;
+              const lon = (data as any)?.longitude;
+              if (lat != null && lon != null) {
+                setViewerLat(lat);
+                setViewerLon(lon);
+              } else if (import.meta.env.DEV) {
+                setViewerLat(-6.2088);   // Jakarta centre
+                setViewerLon(106.8456);
+              }
+            },
+            { timeout: 5000, maximumAge: 60_000 },
+          );
+        } else {
+          const lat = (data as any)?.latitude;
+          const lon = (data as any)?.longitude;
+          if (lat != null && lon != null) {
+            setViewerLat(lat);
+            setViewerLon(lon);
+          } else if (import.meta.env.DEV) {
+            setViewerLat(-6.2088);
+            setViewerLon(106.8456);
+          }
+        }
+      });
+  }, [userId]);
 
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase.rpc("get_blind_date_profiles" as any, { p_user_id: userId });
     const live = (data as BlindProfile[]) || [];
-    // Fall back to mock profiles in DEV when DB has no blind date records yet
     setProfiles(live.length > 0 ? live : import.meta.env.DEV ? DEV_BLIND_PROFILES : []);
     setLoading(false);
   }, [userId]);
 
   useEffect(() => { load(); }, [load]);
 
-  const handlePassed = (id: string) => {
-    setPassed(prev => new Set([...prev, id]));
-    setSelected(null);
-  };
+  const visibleProfiles = profiles.slice(index, index + 3);
 
-  // Cache AI-generated stories back into the profiles list so re-opens are instant
-  const handleStoriesReady = (id: string, stories: { age: string; location: string; intent: string }) => {
-    setProfiles(prev => prev.map(p => p.id !== id ? p : {
-      ...p,
-      blind_date_story_age:      stories.age,
-      blind_date_story_location: stories.location,
-      blind_date_story_intent:   stories.intent,
-    }));
-    if (selected?.id === id) {
-      setSelected(prev => prev ? {
-        ...prev,
-        blind_date_story_age:      stories.age,
-        blind_date_story_location: stories.location,
-        blind_date_story_intent:   stories.intent,
-      } : prev);
+  const skip = useCallback(() => {
+    setIndex(i => Math.min(i + 1, profiles.length));
+  }, [profiles.length]);
+
+  const handleSwipeUp = useCallback((p: BlindProfile) => {
+    setSwipeUpProfile(p);
+  }, []);
+
+  const handleInstantUnlock = async () => {
+    if (!swipeUpProfile || unlocking || balance < COINS_INSTANT) return;
+    setUnlocking(true);
+    const ok = await deductCoins(COINS_INSTANT, "blind_date_instant_unlock");
+    if (ok) {
+      if (!import.meta.env.DEV) {
+        await supabase.rpc("submit_blind_date_attempt" as any, {
+          p_guesser_id: userId,
+          p_target_id:  swipeUpProfile.id,
+          p_score:      3,
+        });
+      }
+      setUnlockedIds(prev => new Set([...prev, swipeUpProfile.id]));
     }
+    setUnlocking(false);
+    setSwipeUpProfile(null);
+    setIndex(i => i + 1);
   };
 
-  const isNew = (p: BlindProfile) => {
-    const days = (Date.now() - new Date(p.created_at).getTime()) / 86400000;
-    return days <= 3;
+  const handleBoost = async () => {
+    if (boosting || balance < COINS_BOOST) return;
+    setBoosting(true);
+    const { data } = await supabase.rpc("boost_blind_date" as any, { p_user_id: userId });
+    if (data) {
+      const exp = new Date(Date.now() + 24 * 60 * 60 * 1000);
+      setBoostActive(true);
+      setBoostExpiresAt(exp);
+    }
+    setBoosting(false);
+    setShowBoostModal(false);
   };
+
+  const boostHoursLeft = boostExpiresAt
+    ? Math.max(0, Math.ceil((boostExpiresAt.getTime() - Date.now()) / 3600000))
+    : 0;
+
+  const handleQAPassed = (id: string, finalBlur: number) => {
+    setRevealedBlurs(prev => ({ ...prev, [id]: finalBlur }));
+  };
+
+  const handleQAUnlockedWithCoins = (id: string) => {
+    setUnlockedIds(prev => new Set([...prev, id]));
+  };
+
+  const isEmpty = !loading && profiles.length === 0;
+  const exhausted = !loading && profiles.length > 0 && index >= profiles.length;
 
   return (
-    <>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 20 }}
+      transition={{ duration: 0.28 }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 50,
+        backgroundImage: "url('/images/app-background.png')",
+        backgroundSize: "cover", backgroundPosition: "center",
+        display: "flex", flexDirection: "column",
+      }}
+    >
+      {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{
-        display: "flex", flexDirection: "column", gap: 12,
-        height: "100%", overflowY: "auto",
-        padding: "8px 4px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: `max(14px, env(safe-area-inset-top, 14px)) 14px 10px`,
+        flexShrink: 0, zIndex: 2,
       }}>
-        {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} style={{
-                aspectRatio: "3/4", borderRadius: 16,
-                background: "rgba(255,255,255,0.06)",
-                animation: "pulse 1.5s infinite",
-              }} />
-            ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 17, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>💘 Blind Date</div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>Swipe ← → to skip · Tap to answer · ↑ to unlock</div>
           </div>
-        ) : profiles.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>👁️</div>
-            No blind dates available right now.<br />Check back soon!
-          </div>
-        ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 10 }}>
-            {profiles.map(p => {
-              const hasPassed = passed.has(p.id);
-              return (
-                <motion.div
-                  key={p.id}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => !hasPassed && setSelected(p)}
-                  style={{
-                    aspectRatio: "3/4", borderRadius: 16, overflow: "hidden",
-                    position: "relative", cursor: hasPassed ? "default" : "pointer",
-                    border: hasPassed
-                      ? "2px solid rgba(34,197,94,0.6)"
-                      : "1.5px solid rgba(194,24,91,0.3)",
-                    boxShadow: hasPassed
-                      ? "0 0 16px rgba(34,197,94,0.2)"
-                      : "0 4px 20px rgba(0,0,0,0.4)",
-                  }}
-                >
-                  {/* Blurred background photo */}
-                  {p.avatar_url && (
-                    <div style={{
-                      position: "absolute", inset: 0,
-                      backgroundImage: `url(${p.avatar_url})`,
-                      backgroundSize: "cover", backgroundPosition: "center",
-                      filter: hasPassed ? "blur(0px)" : "blur(18px)",
-                      transform: "scale(1.12)",
-                      transition: "filter 0.6s ease",
-                    }} />
-                  )}
+        </div>
 
-                  {/* Dark overlay */}
-                  <div style={{
-                    position: "absolute", inset: 0,
-                    background: hasPassed
-                      ? "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%)"
-                      : "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 100%)",
-                  }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          {/* Coin balance — tap to open shop */}
+          <motion.button
+            whileTap={{ scale: 0.94 }}
+            onClick={() => setShowCoinShop(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 5,
+              background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)",
+              borderRadius: 20, padding: "6px 12px",
+              border: "1px solid rgba(245,158,11,0.3)",
+              cursor: "pointer",
+            }}
+          >
+            <span style={{ fontSize: 14 }}>🪙</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b" }}>{balance}</span>
+          </motion.button>
 
-                  {/* Lock icon */}
-                  {!hasPassed && (
-                    <div style={{
-                      position: "absolute", top: "50%", left: "50%",
-                      transform: "translate(-50%, -60%)",
-                      fontSize: 32, opacity: 0.9,
-                    }}>
-                      💘
-                    </div>
-                  )}
-
-                  {/* NEW badge */}
-                  {isNew(p) && !hasPassed && (
-                    <div style={{
-                      position: "absolute", top: 10, left: 10,
-                      background: "#c2185b", color: "white",
-                      fontSize: 10, fontWeight: 800, letterSpacing: "0.05em",
-                      padding: "3px 8px", borderRadius: 20,
-                    }}>
-                      NEW
-                    </div>
-                  )}
-
-                  {/* Passed badge */}
-                  {hasPassed && (
-                    <div style={{
-                      position: "absolute", top: 10, right: 10,
-                      background: "rgba(34,197,94,0.9)", color: "white",
-                      fontSize: 10, fontWeight: 800,
-                      padding: "3px 8px", borderRadius: 20,
-                    }}>
-                      UNLOCKED
-                    </div>
-                  )}
-
-                  {/* Name + info */}
-                  <div style={{
-                    position: "absolute", bottom: 0, left: 0, right: 0,
-                    padding: "10px 12px",
-                  }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: "white" }}>
-                      {p.name}{p.age ? `, ${p.age}` : ""}
-                    </div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.6)", marginTop: 2 }}>
-                      {hasPassed ? (p.city || p.country) : "??? · Tap to guess"}
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
+          <img
+            src="https://ik.imagekit.io/dateme/Untitleddasdasdasd-removebg-preview.png"
+            alt="Blind Date"
+            style={{ height: 52, width: "auto", filter: "drop-shadow(0 0 8px rgba(194,24,91,0.5))" }}
+          />
+        </div>
       </div>
 
-      {/* QA Modal */}
+      {/* Divider */}
+      <div style={{ height: 1, background: "rgba(194,24,91,0.25)", flexShrink: 0, marginBottom: 8 }} />
+
+      {/* ── Card area ──────────────────────────────────────────────────── */}
+      <div style={{
+        flex: 1, position: "relative",
+        margin: "0 14px",
+        minHeight: 0,
+      }}>
+        {loading ? (
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
+              style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid rgba(194,24,91,0.2)", borderTopColor: "#c2185b" }}
+            />
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }}>Finding blind dates…</div>
+          </div>
+        ) : isEmpty ? (
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 24 }}>
+            <div style={{ fontSize: 48 }}>👁️</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "white", textAlign: "center" }}>No blind dates right now</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center" }}>New profiles join every day — check back soon.</div>
+          </div>
+        ) : exhausted ? (
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, padding: 24 }}>
+            <div style={{ fontSize: 48 }}>✨</div>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "white", textAlign: "center" }}>You've seen everyone</div>
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", textAlign: "center" }}>New profiles appear daily.</div>
+            <button
+              onClick={() => setIndex(0)}
+              style={{
+                marginTop: 8, padding: "11px 24px", borderRadius: 50,
+                background: "linear-gradient(135deg,#c2185b,#e91e8c)",
+                border: "none", color: "white", fontSize: 14, fontWeight: 700, cursor: "pointer",
+                boxShadow: "0 4px 20px rgba(194,24,91,0.4)",
+              }}
+            >
+              Start over
+            </button>
+          </div>
+        ) : (
+          <AnimatePresence>
+            {[...visibleProfiles].reverse().map((p, ri) => {
+              const si = visibleProfiles.length - 1 - ri; // 0=top
+              return (
+                <BlindDateCard
+                  key={p.id}
+                  profile={p}
+                  stackIndex={si}
+                  revealedBlur={revealedBlurs[p.id] ?? null}
+                  unlocked={unlockedIds.has(p.id)}
+                  isFeatured={si === 0 && index === 0}
+                  distanceKm={
+                    viewerLat != null && viewerLon != null &&
+                    p.latitude != null && p.longitude != null
+                      ? haversineKm(viewerLat, viewerLon, p.latitude, p.longitude)
+                      : null
+                  }
+                  onTap={() => si === 0 && setQaProfile(p)}
+                  onSkip={() => si === 0 && skip()}
+                  onSwipeUp={() => si === 0 && handleSwipeUp(p)}
+                />
+              );
+            })}
+          </AnimatePresence>
+        )}
+
+      </div>
+
+      {/* ── Boost bar — flex sibling, never covered by cards ───────────── */}
+      <div style={{
+        flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+        padding: `10px 20px max(18px, env(safe-area-inset-bottom, 18px))`,
+      }}>
+        {/* X close button */}
+        <motion.button
+          whileTap={{ scale: 0.92 }}
+          onClick={onClose}
+          style={{
+            width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(14px)",
+            border: "1.5px solid rgba(255,255,255,0.13)",
+            color: "rgba(255,255,255,0.65)", fontSize: 18,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+          }}
+        >✕</motion.button>
+
+        {/* Boost button */}
+        <motion.button
+          whileTap={{ scale: 0.94 }}
+          onClick={() => setShowBoostModal(true)}
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            background: boostActive
+              ? "linear-gradient(135deg,rgba(245,158,11,0.28),rgba(249,115,22,0.22))"
+              : "rgba(0,0,0,0.55)",
+            backdropFilter: "blur(14px)",
+            borderRadius: 50, padding: "11px 28px",
+            border: boostActive
+              ? "1.5px solid rgba(245,158,11,0.65)"
+              : "1.5px solid rgba(255,255,255,0.13)",
+            cursor: "pointer",
+            boxShadow: boostActive
+              ? "0 0 18px rgba(245,158,11,0.35), 0 4px 16px rgba(0,0,0,0.4)"
+              : "0 4px 16px rgba(0,0,0,0.4)",
+          }}
+        >
+          <span style={{ fontSize: 18 }}>🚀</span>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: boostActive ? "#f59e0b" : "rgba(255,255,255,0.85)", lineHeight: 1.1 }}>
+              {boostActive ? `Boosted · ${boostHoursLeft}h left` : "Boost my profile"}
+            </span>
+            {!boostActive && (
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>
+                Jump to top of everyone's stack · 40 🪙
+              </span>
+            )}
+          </div>
+        </motion.button>
+      </div>
+
+      {/* ── Q&A Modal ──────────────────────────────────────────────────── */}
       <AnimatePresence>
-        {selected && (
+        {qaProfile && (
           <BlindDateQAModal
-            profile={selected}
+            key={qaProfile.id}
+            profile={qaProfile}
             userId={userId}
-            onClose={() => setSelected(null)}
-            onPassed={() => handlePassed(selected.id)}
-            onStoriesReady={handleStoriesReady}
+            onClose={() => { setQaProfile(null); skip(); }}
+            onPassedAndReady={handleQAPassed}
+            onUnlockedWithCoins={handleQAUnlockedWithCoins}
+            onStartChat={() => {
+              const p = qaProfile;
+              setQaProfile(null);
+              onClose();
+              onStartChat?.(p);
+            }}
           />
         )}
       </AnimatePresence>
-    </>
+
+      {/* ── Swipe-up instant unlock confirmation ───────────────────────── */}
+      <AnimatePresence>
+        {swipeUpProfile && (
+          <motion.div
+            key="swipe-up-unlock"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 200,
+              background: "rgba(0,0,0,0.8)", backdropFilter: "blur(10px)",
+              display: "flex", alignItems: "flex-end", justifyContent: "center",
+              padding: `0 16px max(24px, env(safe-area-inset-bottom, 24px))`,
+            }}
+            onClick={(e) => { if (e.target === e.currentTarget) { setSwipeUpProfile(null); skip(); } }}
+          >
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 360, damping: 30 }}
+              style={{
+                width: "100%", maxWidth: 400,
+                background: "rgba(10,10,18,0.97)",
+                border: "1.5px solid rgba(245,158,11,0.4)",
+                borderRadius: 24,
+                padding: "24px 20px",
+                display: "flex", flexDirection: "column", gap: 14, alignItems: "center",
+                boxShadow: "0 0 40px rgba(245,158,11,0.2)",
+              }}
+            >
+              <div style={{ fontSize: 32 }}>🔓</div>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>
+                Instant Unlock
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.5 }}>
+                Skip the quiz and instantly see <strong style={{ color: "white" }}>{swipeUpProfile.name.split(" ")[0]}</strong>'s full profile and photo for{" "}
+                <strong style={{ color: "#f59e0b" }}>{COINS_INSTANT} coins</strong>.
+              </div>
+              <div style={{ fontSize: 13, color: "#f59e0b", fontWeight: 700 }}>
+                Your balance: 🪙 {balance}
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleInstantUnlock}
+                disabled={balance < COINS_INSTANT || unlocking}
+                style={{
+                  width: "100%", padding: "13px", borderRadius: 50,
+                  background: balance >= COINS_INSTANT
+                    ? "linear-gradient(135deg,#f59e0b,#f97316)"
+                    : "rgba(245,158,11,0.2)",
+                  border: "none", color: "white", fontSize: 14, fontWeight: 700,
+                  cursor: balance >= COINS_INSTANT ? "pointer" : "not-allowed",
+                  boxShadow: balance >= COINS_INSTANT ? "0 4px 20px rgba(245,158,11,0.4)" : "none",
+                }}
+              >
+                {unlocking ? "Unlocking…" : `🪙 Unlock for ${COINS_INSTANT} coins`}
+              </motion.button>
+              <button
+                onClick={() => { setSwipeUpProfile(null); skip(); }}
+                style={{
+                  width: "100%", padding: "11px", borderRadius: 50,
+                  background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer",
+                }}
+              >
+                Skip this profile
+              </button>
+              {balance < COINS_INSTANT && (
+                <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
+                  You need {COINS_INSTANT - balance} more coins
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Boost modal ────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showBoostModal && (
+          <motion.div
+            key="boost-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: "fixed", inset: 0, zIndex: 200,
+              background: "rgba(0,0,0,0.8)", backdropFilter: "blur(10px)",
+              display: "flex", alignItems: "flex-end", justifyContent: "center",
+              padding: `0 16px max(24px, env(safe-area-inset-bottom, 24px))`,
+            }}
+            onClick={(e) => { if (e.target === e.currentTarget) setShowBoostModal(false); }}
+          >
+            <motion.div
+              initial={{ y: 80, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 80, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 360, damping: 30 }}
+              style={{
+                width: "100%", maxWidth: 400,
+                background: "rgba(10,10,18,0.98)",
+                border: "1.5px solid rgba(245,158,11,0.4)",
+                borderRadius: 24, padding: "24px 20px",
+                display: "flex", flexDirection: "column", gap: 14, alignItems: "center",
+                boxShadow: "0 0 40px rgba(245,158,11,0.2)",
+              }}
+            >
+              {boostActive ? (
+                <>
+                  <div style={{ fontSize: 36 }}>🚀</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "#f59e0b", textAlign: "center" }}>
+                    Boost Active — {boostHoursLeft}h left
+                  </div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.5 }}>
+                    Your profile is shown first to everyone browsing Blind Date. You're at the top of the stack right now.
+                  </div>
+                  <button
+                    onClick={() => setShowBoostModal(false)}
+                    style={{
+                      width: "100%", padding: "13px", borderRadius: 50,
+                      background: "rgba(255,255,255,0.07)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      color: "rgba(255,255,255,0.6)", fontSize: 14, cursor: "pointer",
+                    }}
+                  >
+                    Got it
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: 36 }}>🚀</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>
+                    Boost Your Profile
+                  </div>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.5 }}>
+                    Jump to the top of everyone's Blind Date stack for <strong style={{ color: "#f59e0b" }}>24 hours</strong>. Get seen first — more taps, more matches.
+                  </div>
+                  <div style={{
+                    background: "rgba(245,158,11,0.1)",
+                    border: "1px solid rgba(245,158,11,0.25)",
+                    borderRadius: 14, padding: "12px 18px",
+                    fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "center", lineHeight: 1.5,
+                    width: "100%",
+                  }}>
+                    Cost: <strong style={{ color: "#f59e0b" }}>🪙 {COINS_BOOST} coins</strong>
+                    <br />
+                    <span style={{ fontSize: 11 }}>Your balance: {balance} coins</span>
+                  </div>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleBoost}
+                    disabled={balance < COINS_BOOST || boosting}
+                    style={{
+                      width: "100%", padding: "13px", borderRadius: 50,
+                      background: balance >= COINS_BOOST
+                        ? "linear-gradient(135deg,#f59e0b,#f97316)"
+                        : "rgba(245,158,11,0.2)",
+                      border: "none", color: "white", fontSize: 14, fontWeight: 700,
+                      cursor: balance >= COINS_BOOST ? "pointer" : "not-allowed",
+                      boxShadow: balance >= COINS_BOOST ? "0 4px 20px rgba(245,158,11,0.4)" : "none",
+                    }}
+                  >
+                    {boosting ? "Activating…" : `🚀 Boost for ${COINS_BOOST} coins`}
+                  </motion.button>
+                  {balance < COINS_BOOST && (
+                    <button
+                      onClick={() => { setShowBoostModal(false); setShowCoinShop(true); }}
+                      style={{
+                        width: "100%", padding: "11px", borderRadius: 50,
+                        background: "rgba(245,158,11,0.12)",
+                        border: "1px solid rgba(245,158,11,0.3)",
+                        color: "#f59e0b", fontSize: 13, fontWeight: 700, cursor: "pointer",
+                      }}
+                    >
+                      🪙 Top up coins
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowBoostModal(false)}
+                    style={{
+                      background: "none", border: "none",
+                      color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer",
+                    }}
+                  >
+                    Maybe later
+                  </button>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Coin shop ──────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showCoinShop && (
+          <CoinShop userId={userId} onClose={() => setShowCoinShop(false)} />
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

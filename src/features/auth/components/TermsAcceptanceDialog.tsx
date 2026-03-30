@@ -1,174 +1,262 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { ScrollArea } from "@/shared/components/scroll-area";
-import { Button } from "@/shared/components/button";
-import { Checkbox } from "@/shared/components/checkbox";
-import { Shield } from "lucide-react";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { AppLogo } from "@/shared/components";
 import { useLanguage } from "@/i18n/LanguageContext";
+
+// ── Colour token — matches the name input on the welcome slider ───────────────
+const INPUT_BG  = "#c2185b";
+const INPUT_BDR = "rgba(255,255,255,0.25)";
+
+// ── Section block — same visual as the name input ─────────────────────────────
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{
+      marginBottom: 12,
+      background: INPUT_BG,
+      border: `1.5px solid ${INPUT_BDR}`,
+      borderRadius: 14,
+      overflow: "hidden",
+    }}>
+      <div style={{
+        padding: "10px 16px 8px",
+        borderBottom: "1px solid rgba(255,255,255,0.15)",
+        fontSize: 11, fontWeight: 800,
+        color: "rgba(255,255,255,0.9)",
+        letterSpacing: "0.07em", textTransform: "uppercase",
+      }}>
+        {title}
+      </div>
+      <div style={{
+        padding: "10px 16px 13px",
+        fontSize: 12, color: "rgba(255,255,255,0.78)",
+        lineHeight: 1.65,
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── TermsAcceptanceDialog ──────────────────────────────────────────────────────
 
 interface TermsAcceptanceDialogProps {
   onAccept: () => void;
 }
 
 const TermsAcceptanceDialog = ({ onAccept }: TermsAcceptanceDialogProps) => {
-  const { t } = useLanguage();
+  useLanguage();
   const [agreed, setAgreed] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.88)", backdropFilter: "blur(14px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "16px",
+      }}
     >
       <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        initial={{ scale: 0.92, opacity: 0, y: 24 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-card border border-border rounded-3xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+        transition={{ type: "spring", damping: 26, stiffness: 300 }}
+        style={{
+          width: "100%", maxWidth: 480,
+          maxHeight: "92vh",
+          background: "rgba(12,6,20,0.98)",
+          border: `1.5px solid rgba(194,24,91,0.4)`,
+          borderRadius: 28,
+          display: "flex", flexDirection: "column",
+          overflow: "hidden",
+          boxShadow: "0 0 60px rgba(194,24,91,0.2), 0 24px 48px rgba(0,0,0,0.7)",
+        }}
       >
-        {/* Header */}
-        <div className="flex items-center gap-3 px-6 pt-6 pb-4 border-b border-border">
-          <AppLogo className="w-10 h-10 object-contain" />
-          <div>
-            <h2 className="font-display font-bold text-lg text-foreground">{t("terms.popupTitle")}</h2>
-            <p className="text-muted-foreground text-xs">{t("terms.popupDesc")}</p>
+
+        {/* ── Header ──────────────────────────────────────────────────── */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "20px 22px 16px",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          flexShrink: 0,
+        }}>
+          <AppLogo style={{ width: 36, height: 36, objectFit: "contain" }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "white", letterSpacing: "-0.01em" }}>
+              Terms & Conditions
+            </div>
+            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
+              Please read before joining 2DateMe
+            </div>
           </div>
-          <Shield className="w-5 h-5 text-primary ml-auto" />
+          <div style={{
+            background: "rgba(194,24,91,0.18)",
+            border: "1px solid rgba(194,24,91,0.35)",
+            borderRadius: 20, padding: "4px 10px",
+            fontSize: 10, fontWeight: 700, color: "rgba(236,72,153,0.9)",
+          }}>
+            🔒 Secure
+          </div>
         </div>
 
-        {/* Scrollable Terms Content */}
-        <ScrollArea className="flex-1 min-h-0" style={{ maxHeight: 'calc(90vh - 180px)' }}>
-          <div className="px-6 py-4 text-muted-foreground text-xs leading-relaxed space-y-4">
-            <p className="text-foreground font-semibold text-sm">2DateMe — TERMS AND CONDITIONS OF USE</p>
-            <p><strong>Effective Date:</strong> March 2026</p>
-            <p>Welcome to 2DateMe ("the Platform", "we", "us", "our"). By creating an account and using 2DateMe, you ("User", "you", "your") agree to be bound by these Terms and Conditions. If you do not agree to any part of these terms, do not use the Platform.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">1. NATURE OF THE PLATFORM</p>
-            <p>1.1. 2DateMe is a social meeting platform that facilitates introductions between users. The Platform serves solely as a venue for users to discover and connect with one another.</p>
-            <p>1.2. 2DateMe is <strong>NOT</strong> a dating agency, matchmaking service, or relationship consultancy. We do not guarantee compatibility, safety, or the outcome of any interaction between users.</p>
-            <p>1.3. The Platform does not verify, endorse, or guarantee the accuracy, completeness, or truthfulness of any user profile, photograph, personal information, or any content submitted by users.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">2. LIMITATION OF LIABILITY</p>
-            <p>2.1. 2DateMe shall not be held responsible, liable, or accountable for:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>The accuracy, quality, or legitimacy of any user profile or the information contained therein.</li>
-              <li>Any interactions, communications, meetings, or relationships that occur between users, whether online or offline.</li>
-              <li>Any damages, losses, injuries, emotional distress, financial losses, or any other harm arising from the use of the Platform or interactions with other users.</li>
-              <li>Any misrepresentation, fraud, deception, or criminal activity committed by any user.</li>
-              <li>The conduct, behaviour, or actions of any user on or off the Platform.</li>
-            </ul>
-            <p>2.2. You acknowledge and agree that you use the Platform and interact with other users <strong>entirely at your own risk</strong>. 2DateMe provides no warranties, express or implied, regarding the safety, reliability, or quality of any user or interaction.</p>
-            <p>2.3. To the maximum extent permitted by applicable law, 2DateMe's total aggregate liability for any claim arising from or related to the Platform shall not exceed the amount you paid to 2DateMe in the twelve (12) months preceding the claim.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">3. USER PROFILES AND CONTENT</p>
-            <p>3.1. Users are solely responsible for the content they upload, including but not limited to photographs, biographical information, and any other personal data.</p>
-            <p>3.2. 2DateMe does not verify user identities, ages, backgrounds, or any claims made in user profiles. Users should exercise their own judgment and caution when interacting with others.</p>
-            <p>3.3. You warrant that all information you provide is accurate and that you will not impersonate any person or create a false or misleading profile.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">4. WHATSAPP AS PRIMARY CONTACT</p>
-            <p>4.1. 2DateMe uses WhatsApp as the primary point of contact for matched users. By providing your WhatsApp number, you consent to its disclosure to mutual matches upon payment completion.</p>
-            <p>4.2. You acknowledge that WhatsApp is a third-party service and 2DateMe has no control over, and accepts no responsibility for, any communications that occur on WhatsApp or any other external platform.</p>
-            <p>4.3. You have the absolute right to <strong>block and delete</strong> any contact on WhatsApp who you feel has offended you, used improper or abusive language, harassed you, or made you feel uncomfortable in any way.</p>
-            <p>4.4. You are encouraged to <strong>report any such user to 2DateMe</strong> immediately so that we may investigate and take appropriate action, including permanent account termination.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">5. PROHIBITED CONDUCT AND ENFORCEMENT</p>
-            <p>5.1. The following conduct is strictly prohibited and will result in immediate account suspension or permanent ban:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Harassment, bullying, intimidation, or threatening behaviour of any kind.</li>
-              <li>Hate speech, discrimination, or any content that violates human rights or human dignity.</li>
-              <li>Abusive, offensive, vulgar, or sexually explicit language or content directed at other users.</li>
-              <li>Stalking, unsolicited contact, or any behaviour that causes another user to feel unsafe.</li>
-              <li>Scamming, phishing, fraud, or any attempt to deceive or financially exploit other users.</li>
-              <li>Creating fake profiles, impersonating others, or using stolen photographs.</li>
-              <li>Solicitation of illegal activities or services.</li>
-              <li>Any violation of applicable local, national, or international laws.</li>
-            </ul>
-            <p>5.2. 2DateMe reserves the absolute right to <strong>monitor, investigate, suspend, and permanently delete</strong> any account that we, in our sole discretion, determine has violated these Terms, community standards, or applicable law.</p>
-            <p>5.3. Decisions regarding account suspension or termination are final and are not subject to appeal.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">6. REPORTING AND SAFETY</p>
-            <p>6.1. Users are encouraged to report any profile or behaviour that violates these Terms using the in-app reporting feature.</p>
-            <p>6.2. 2DateMe will review all reports and take action as deemed appropriate. However, we do not guarantee a specific outcome or timeline for any report investigation.</p>
-            <p>6.3. In cases of immediate danger or criminal activity, users should contact local law enforcement directly. 2DateMe will cooperate with law enforcement agencies as required by law.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">7. PAYMENTS AND REFUNDS</p>
-            <p>7.1. Certain features of 2DateMe require payment. All payments are processed through secure third-party payment processors (Stripe).</p>
-            <p>7.2. All payments are <strong>non-refundable</strong> unless otherwise required by applicable consumer protection laws.</p>
-            <p>7.3. 2DateMe reserves the right to modify pricing at any time. Existing purchases will not be retroactively affected.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">8. PRIVACY AND DATA PROTECTION</p>
-            <p>8.1. Your use of the Platform is also governed by our Privacy Policy, which is incorporated into these Terms by reference.</p>
-            <p>8.2. By using the Platform, you consent to the collection, use, and processing of your personal data as described in our Privacy Policy.</p>
-            <p>8.3. 2DateMe will not sell your personal data to third parties. Data may be shared with law enforcement if required by law or to protect the safety of users.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">9. AGE REQUIREMENT</p>
-            <p>9.1. You must be at least <strong>18 years of age</strong> to create an account and use 2DateMe. By creating an account, you confirm that you are at least 18 years old.</p>
-            <p>9.2. 2DateMe reserves the right to terminate any account that we believe belongs to a person under 18 years of age.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">10. INDEMNIFICATION</p>
-            <p>10.1. You agree to indemnify, defend, and hold harmless 2DateMe, its officers, directors, employees, agents, and affiliates from and against any and all claims, liabilities, damages, losses, costs, and expenses (including reasonable legal fees) arising from:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li>Your use of the Platform.</li>
-              <li>Your violation of these Terms.</li>
-              <li>Your violation of any rights of a third party.</li>
-              <li>Any content you submit to the Platform.</li>
-              <li>Any interaction with another user, whether on or off the Platform.</li>
-            </ul>
-
-            <p className="text-foreground font-semibold text-sm mt-4">11. INTELLECTUAL PROPERTY</p>
-            <p>11.1. All content, trademarks, logos, and intellectual property on the Platform belong to 2DateMe or its licensors.</p>
-            <p>11.2. You may not copy, modify, distribute, or create derivative works from any part of the Platform without prior written consent.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">12. ACCOUNT TERMINATION</p>
-            <p>12.1. You may delete your account at any time through the Platform settings.</p>
-            <p>12.2. 2DateMe may suspend or terminate your account at any time, for any reason, without prior notice.</p>
-            <p>12.3. Upon termination, your right to use the Platform ceases immediately. Certain provisions of these Terms shall survive termination.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">13. DISCLAIMER OF WARRANTIES</p>
-            <p>13.1. The Platform is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis without warranties of any kind, whether express or implied.</p>
-            <p>13.2. 2DateMe does not warrant that the Platform will be uninterrupted, error-free, secure, or free from viruses or other harmful components.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">14. GOVERNING LAW AND DISPUTE RESOLUTION</p>
-            <p>14.1. These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which 2DateMe operates.</p>
-            <p>14.2. Any disputes arising from these Terms or the use of the Platform shall first be attempted to be resolved through good faith negotiation. If unresolved, disputes shall be submitted to binding arbitration.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">15. MODIFICATIONS TO TERMS</p>
-            <p>15.1. 2DateMe reserves the right to modify these Terms at any time. Updated Terms will be posted on the Platform with a revised effective date.</p>
-            <p>15.2. Your continued use of the Platform after changes constitutes acceptance of the modified Terms.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">16. SEVERABILITY</p>
-            <p>16.1. If any provision of these Terms is found to be unenforceable or invalid, the remaining provisions shall continue in full force and effect.</p>
-
-            <p className="text-foreground font-semibold text-sm mt-4">17. ENTIRE AGREEMENT</p>
-            <p>17.1. These Terms, together with the Privacy Policy, constitute the entire agreement between you and 2DateMe regarding the use of the Platform and supersede all prior agreements.</p>
-
-            <p className="mt-4 text-foreground text-xs font-medium">By checking the box below and clicking "I Accept", you confirm that you have read, understood, and agree to be bound by these Terms and Conditions in their entirety.</p>
+        {/* ── Scrollable terms ────────────────────────────────────────── */}
+        <div
+          ref={scrollRef}
+          style={{
+            flex: 1, overflowY: "auto", padding: "16px 16px 8px",
+            minHeight: 0,
+          }}
+        >
+          {/* Intro */}
+          <div style={{
+            background: INPUT_BG,
+            border: `1.5px solid ${INPUT_BDR}`,
+            borderRadius: 14, padding: "12px 16px",
+            fontSize: 13, color: "white", lineHeight: 1.6,
+            marginBottom: 12, fontWeight: 500,
+          }}>
+            Welcome to <strong>2DateMe</strong>. By creating an account you agree to be bound by these Terms. If you do not agree, do not use the Platform.
+            <div style={{ marginTop: 6, fontSize: 11, color: "rgba(255,255,255,0.55)" }}>Effective Date: March 2026</div>
           </div>
-        </ScrollArea>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-border space-y-3">
-          <div className="flex items-start gap-3">
-            <Checkbox
-              id="terms-agree"
-              checked={agreed}
-              onCheckedChange={(checked) => setAgreed(checked === true)}
-              className="mt-0.5"
-            />
-            <label htmlFor="terms-agree" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-              {t("terms.readAndAgree")}
-            </label>
+          <Section title="1. Nature of the Platform">
+            2DateMe is a social meeting platform — <strong>not</strong> a dating agency or matchmaking service. We do not guarantee compatibility, safety, or the outcome of any interaction. We do not verify user profiles, photographs, or personal information.
+          </Section>
+
+          <Section title="2. Limitation of Liability">
+            2DateMe is not responsible for the accuracy of profiles, interactions between users online or offline, any damages or harm arising from use of the Platform, or the conduct of any user. You use the Platform <strong>entirely at your own risk</strong>. Our total liability shall not exceed amounts you paid in the preceding 12 months.
+          </Section>
+
+          <Section title="3. User Profiles & Content">
+            You are solely responsible for content you upload. You warrant that all information is accurate and that you will not impersonate any person or create a misleading profile. 2DateMe does not verify identities, ages, or backgrounds.
+          </Section>
+
+          <Section title="4. Contact & WhatsApp">
+            By providing your WhatsApp number, you consent to its disclosure to mutual matches. WhatsApp is a third-party service — 2DateMe has no control over communications there. You have the right to block any contact who offends or harasses you. Please report such users to us immediately.
+          </Section>
+
+          <Section title="5. Prohibited Conduct">
+            Strictly prohibited: harassment, hate speech, abusive content, stalking, scamming, fraud, fake profiles, impersonation, solicitation of illegal activities, or any violation of law. Violations result in immediate suspension or permanent ban. These decisions are final.
+          </Section>
+
+          <Section title="6. Reporting & Safety">
+            Report violations using the in-app feature. In cases of immediate danger, contact local law enforcement directly. 2DateMe will cooperate with law enforcement as required by law.
+          </Section>
+
+          <Section title="7. Payments & Refunds">
+            Certain features require payment processed via Stripe. All payments are <strong>non-refundable</strong> unless required by consumer protection law. 2DateMe may modify pricing at any time.
+          </Section>
+
+          <Section title="8. Privacy & Data">
+            Your use is governed by our Privacy Policy. By using the Platform you consent to collection and processing of your personal data. We will not sell your data. Data may be shared with law enforcement if required.
+          </Section>
+
+          <Section title="9. Age Requirement">
+            You must be at least <strong>18 years of age</strong>. By creating an account you confirm you are 18+. We may terminate any account we believe belongs to a person under 18.
+          </Section>
+
+          <Section title="10 – 17. Additional Terms">
+            You agree to indemnify 2DateMe against claims arising from your use. All intellectual property belongs to 2DateMe. Either party may terminate your account at any time. The Platform is provided "AS IS". Disputes are governed by binding arbitration. These Terms may be modified with notice. Invalidity of one provision does not affect the rest.
+          </Section>
+
+          {/* Scroll-to-bottom prompt */}
+          <div style={{
+            textAlign: "center", padding: "16px 0 8px",
+            fontSize: 11, color: "rgba(255,255,255,0.3)",
+          }}>
+            ↓ Scroll to review all terms, then accept below
           </div>
-          <Button
-            onClick={onAccept}
-            disabled={!agreed}
-            className="w-full gradient-love text-primary-foreground border-0 rounded-xl h-11 font-semibold"
+        </div>
+
+        {/* ── Footer — always visible ──────────────────────────────────── */}
+        <div style={{
+          flexShrink: 0,
+          padding: "14px 18px max(20px,env(safe-area-inset-bottom,20px))",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          background: "rgba(8,4,16,0.97)",
+        }}>
+          {/* Accept row */}
+          <button
+            onClick={() => setAgreed(a => !a)}
+            style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 14,
+              background: agreed ? "rgba(194,24,91,0.12)" : INPUT_BG,
+              border: `1.5px solid ${agreed ? "rgba(194,24,91,0.6)" : INPUT_BDR}`,
+              borderRadius: 14, padding: "13px 16px",
+              cursor: "pointer", marginBottom: 10,
+              transition: "all 0.22s",
+              boxShadow: agreed ? "0 0 16px rgba(194,24,91,0.2)" : "none",
+            }}
           >
-            {t("terms.acceptContinue")}
-          </Button>
+            {/* Tick circle */}
+            <div style={{
+              width: 26, height: 26, borderRadius: "50%", flexShrink: 0,
+              border: `2.5px solid ${agreed ? "#e91e8c" : "rgba(255,255,255,0.45)"}`,
+              background: agreed ? "linear-gradient(135deg,#c2185b,#e91e8c)" : "transparent",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.22s",
+              boxShadow: agreed ? "0 0 10px rgba(233,30,140,0.5)" : "none",
+            }}>
+              <AnimatePresence>
+                {agreed && (
+                  <motion.svg
+                    key="tick"
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    width="14" height="14" viewBox="0 0 14 14" fill="none"
+                  >
+                    <path d="M2.5 7L5.5 10L11.5 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </motion.svg>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Label */}
+            <div style={{ flex: 1, textAlign: "left" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "white", lineHeight: 1.2 }}>
+                Accept terms & conditions
+              </div>
+              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                I have read and agree to all terms above
+              </div>
+            </div>
+          </button>
+
+          {/* Grant access button */}
+          <motion.button
+            whileTap={agreed ? { scale: 0.97 } : {}}
+            onClick={() => agreed && onAccept()}
+            style={{
+              width: "100%", height: 52, borderRadius: 50,
+              background: agreed
+                ? "linear-gradient(135deg,#c2185b,#e91e8c)"
+                : "rgba(255,255,255,0.06)",
+              border: agreed ? "none" : "1.5px solid rgba(255,255,255,0.1)",
+              color: agreed ? "white" : "rgba(255,255,255,0.3)",
+              fontSize: 15, fontWeight: 800,
+              cursor: agreed ? "pointer" : "not-allowed",
+              letterSpacing: "-0.01em",
+              boxShadow: agreed ? "0 6px 28px rgba(194,24,91,0.45)" : "none",
+              transition: "all 0.25s",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            }}
+          >
+            {agreed ? (
+              <>
+                <span>✓</span>
+                <span>Grant me access</span>
+              </>
+            ) : (
+              <span>Accept terms to continue</span>
+            )}
+          </motion.button>
         </div>
+
       </motion.div>
     </motion.div>
   );

@@ -249,7 +249,7 @@ export default function WelcomePage() {
         gender: gender ?? undefined,
         looking_for: intent.id,
         ...(dobDay && dobMonth && dobYear ? { date_of_birth: `${dobYear}-${dobMonth.padStart(2,"0")}-${dobDay.padStart(2,"0")}` } : {}),
-        coins_balance: totalCoins,
+        coins_balance: 50 + totalCoins,
         ...(socialPlatform ? { social_platform: socialPlatform, social_followers: isNaN(followers) ? null : followers } : {}),
       } as any).eq("id", userId);
       const appLocale = language.code.toLowerCase() === "id" ? "id" : "en";
