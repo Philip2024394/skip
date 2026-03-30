@@ -46,6 +46,16 @@ function timeAgo(iso: string): string {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
+// ── Heartbeat pulse keyframes (injected once) ─────────────────────────────────
+const PULSE_STYLE = `
+@keyframes dotPulse {
+  0%,100% { transform: scale(1);   opacity: 1; }
+  40%      { transform: scale(1.6); opacity: 0.55; }
+  60%      { transform: scale(1.3); opacity: 0.8; }
+}
+.dot-pulse { animation: dotPulse 1.4s ease-in-out infinite; }
+`;
+
 // ── Avatar with online dot ────────────────────────────────────────────────────
 function Avatar({ src, status, blur }: { src: string; status: "online" | "recent" | "offline"; blur?: boolean }) {
   const dotColor = status === "online" ? "#4ade80" : status === "recent" ? "#fb923c" : "#666";
@@ -65,7 +75,7 @@ function Avatar({ src, status, blur }: { src: string; status: "online" | "recent
         }}
       />
       {status !== "offline" && (
-        <span style={{
+        <span className="dot-pulse" style={{
           position: "absolute", bottom: 1, right: 1,
           width: 10, height: 10, borderRadius: "50%",
           background: dotColor,
@@ -191,7 +201,7 @@ function ViewerCard({
 
         {/* Online dot — top right */}
         {status !== "offline" && (
-          <span style={{
+          <span className="dot-pulse" style={{
             position: "absolute", top: 8, right: 8,
             width: 9, height: 9, borderRadius: "50%",
             background: status === "online" ? "#4ade80" : "#fb923c",
@@ -700,6 +710,7 @@ export default function WhoViewedMePage() {
       backgroundSize: "cover", backgroundPosition: "center",
       display: "flex", flexDirection: "column",
     }}>
+      <style>{PULSE_STYLE}</style>
       {/* Content */}
       <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100dvh", display: "flex", flexDirection: "column", width: "100%" }}>
 
