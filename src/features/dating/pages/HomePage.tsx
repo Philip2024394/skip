@@ -1353,15 +1353,22 @@ const Index = () => {
           >
 
             {/* Section header */}
-            <div style={{ position: "relative", zIndex: 1, marginBottom: 12, paddingLeft: 4 }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>
-                💘 Blind Date
+            <div style={{ position: "relative", zIndex: 1, marginBottom: 12, paddingLeft: 4, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>
+                  💘 Blind Date
+                </div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                  Answer 2 of 3 questions to unlock the chat
+                </div>
               </div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
-                Answer 2 of 3 questions to unlock the chat
-              </div>
-              <div style={{ height: 1, background: "rgba(194,24,91,0.3)", marginTop: 10 }} />
+              <img
+                src="https://ik.imagekit.io/dateme/Untitleddasdasdasd-removebg-preview.png"
+                alt="Blind Date"
+                style={{ height: 52, width: "auto", objectFit: "contain", filter: "drop-shadow(0 0 8px rgba(194,24,91,0.5))" }}
+              />
             </div>
+            <div style={{ position: "relative", zIndex: 1, height: 1, background: "rgba(194,24,91,0.3)", marginBottom: 10 }} />
 
             <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto" }}>
               <BlindDateGrid userId={user.id} />
