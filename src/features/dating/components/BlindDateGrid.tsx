@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
@@ -331,7 +331,12 @@ function BlindDateQAModal({
     return () => { cancelled = true; };
   }, []);
 
-  const { questions } = generateMysteryCard(aiProfile);
+  // Memoize so shuffle never re-runs on re-render — fixes button index drift on selection
+  const { questions } = useMemo(
+    () => generateMysteryCard(aiProfile),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [aiProfile.id, aiProfile.blind_date_story_age, aiProfile.blind_date_story_location, aiProfile.blind_date_story_intent]
+  );
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<boolean[]>([]);
