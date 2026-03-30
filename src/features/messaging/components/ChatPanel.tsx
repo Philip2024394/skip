@@ -4,6 +4,7 @@ import { ArrowLeft, Send, ShieldCheck, Lock, Video, Flag, X } from "lucide-react
 import { useMessages, validateChatMessage } from "@/shared/hooks/useMessages";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import VideoCallPanel from "@/features/video/components/VideoCallPanel";
+import ContactRevealModal, { PLATFORMS_ALL, PlatformId } from "./ContactRevealModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
@@ -11,16 +12,21 @@ import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
 // ── Contact card helpers ───────────────────────────────────────────────────────
 
 const CONTACT_CARD_PREFIX = "__CONTACT_CARD__";
-const COINS_CONTACT_SHARE = 20;
+const COINS_CONTACT_REVEAL = 20;
 
-const PLATFORMS = [
-  { id: "whatsapp",  label: "WhatsApp",  emoji: "💬", color: "#25d366", placeholder: "+1 234 567 8900" },
-  { id: "telegram",  label: "Telegram",  emoji: "✈️",  color: "#2AABEE", placeholder: "@username" },
-  { id: "instagram", label: "Instagram", emoji: "📸", color: "#e1306c", placeholder: "@username" },
-  { id: "phone",     label: "Phone",     emoji: "📞", color: "#a78bfa", placeholder: "+1 234 567 8900" },
-] as const;
-
-type PlatformId = typeof PLATFORMS[number]["id"];
+// Placeholders per platform
+const PLATFORM_PLACEHOLDER: Record<string, string> = {
+  whatsapp:  "+62 812 3456 7890",
+  telegram:  "@username",
+  instagram: "@your_handle",
+  tiktok:    "@your_handle",
+  snapchat:  "@username",
+  phone:     "+62 812 3456 7890",
+  line:      "line_id",
+  wechat:    "wechat_id",
+  signal:    "+1 234 567 8900",
+  facebook:  "profile.name",
+};
 
 interface ContactCard { platform: PlatformId; value: string; name: string; }
 
@@ -33,6 +39,9 @@ function decodeContactCard(content: string): ContactCard | null {
   try { return JSON.parse(content.slice(CONTACT_CARD_PREFIX.length)); }
   catch { return null; }
 }
+
+// DEV flag
+const IS_DEV = import.meta.env.DEV;
 
 
 interface ChatPanelProps {
@@ -83,6 +92,18 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   const [contactPlatform, setContactPlatform] = useState<PlatformId>("whatsapp");
   const [contactValue, setContactValue] = useState("");
   const [sendingContact, setSendingContact] = useState(false);
+
+  // Reveal state
+  const [revealCard, setRevealCard] = useState<{ msgId: string; card: ContactCard } | null>(null);
+  const [revealedCards, setRevealedCards] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(`rc_${currentUserId}_${otherUser.id}`);
+      return new Set(raw ? JSON.parse(raw) : []);
+    } catch { return new Set(); }
+  });
+
+  // DEV: platform picker for the test banner
+  const [devPlatform, setDevPlatform] = useState<PlatformId>("whatsapp");
 
   // ── Translation state ────────────────────────────────────────────────────────
   // translationCache: msgId → { translated, original, loading }
@@ -147,25 +168,42 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const markRevealed = (msgId: string) => {
+    setRevealedCards(prev => {
+      const next = new Set(prev);
+      next.add(msgId);
+      try {
+        localStorage.setItem(`rc_${currentUserId}_${otherUser.id}`, JSON.stringify([...next]));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleRevealContact = async (msgId: string, card: ContactCard) => {
+    if (balance < COINS_CONTACT_REVEAL) {
+      toast.error(`You need ${COINS_CONTACT_REVEAL} coins to reveal this contact`);
+      return;
+    }
+    const ok = await deductCoins(COINS_CONTACT_REVEAL, "contact_reveal");
+    if (!ok) { toast.error("Not enough coins"); return; }
+    markRevealed(msgId);
+    setRevealCard({ msgId, card });
+  };
+
   const handleSendContactCard = async () => {
     if (!contactValue.trim() || sendingContact) return;
-    if (balance < COINS_CONTACT_SHARE) {
-      toast.error(`You need ${COINS_CONTACT_SHARE} coins to share your contact`);
-      return;
-    }
     setSendingContact(true);
-    const ok = await deductCoins(COINS_CONTACT_SHARE, "contact_share");
-    if (!ok) {
-      toast.error("Not enough coins");
-      setSendingContact(false);
-      return;
-    }
-    const card = encodeContactCard({ platform: contactPlatform, value: contactValue.trim(), name: otherUser.name.split(" ")[0] });
+    // Sender shares for free — receiver pays to reveal
+    const card = encodeContactCard({
+      platform: contactPlatform,
+      value: contactValue.trim(),
+      name: otherUser.name.split(" ")[0],
+    });
     await sendMessage(card);
     setShowContactShare(false);
     setContactValue("");
     setSendingContact(false);
-    toast.success("Contact shared! 💬");
+    toast.success("Contact shared! They'll need coins to reveal it. 💬");
   };
 
   const handleSend = async () => {
@@ -432,7 +470,8 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
                     {(() => {
                       const card = decodeContactCard(msg.content);
                       if (card) {
-                        const plat = PLATFORMS.find(p => p.id === card.platform) ?? PLATFORMS[0];
+                        const plat = PLATFORMS_ALL.find(p => p.id === card.platform) ?? PLATFORMS_ALL[0];
+                        const isRevealed = isMine || revealedCards.has(msg.id);
                         return (
                           <div style={{
                             maxWidth: "82%",
@@ -441,6 +480,7 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
                             borderRadius: 18, padding: "14px 16px",
                             boxShadow: `0 4px 20px ${plat.color}22`,
                           }}>
+                            {/* Header row */}
                             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                               <span style={{ fontSize: 20 }}>{plat.emoji}</span>
                               <div>
@@ -448,39 +488,67 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
                                   {plat.label}
                                 </div>
                                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
-                                  Contact shared
+                                  {isMine ? "You shared your contact" : `${card.name} shared their contact`}
                                 </div>
                               </div>
-                              <div style={{
-                                marginLeft: "auto", fontSize: 9, fontWeight: 700,
-                                background: "rgba(245,158,11,0.2)", color: "#f59e0b",
-                                borderRadius: 20, padding: "2px 7px", border: "1px solid rgba(245,158,11,0.3)",
-                              }}>
-                                🪙 {COINS_CONTACT_SHARE}
-                              </div>
+                              {!isMine && !isRevealed && (
+                                <div style={{
+                                  marginLeft: "auto", fontSize: 9, fontWeight: 700,
+                                  background: "rgba(245,158,11,0.2)", color: "#f59e0b",
+                                  borderRadius: 20, padding: "2px 7px", border: "1px solid rgba(245,158,11,0.3)",
+                                }}>
+                                  🪙 {COINS_CONTACT_REVEAL}
+                                </div>
+                              )}
                             </div>
-                            <div style={{
-                              background: "rgba(255,255,255,0.07)",
-                              borderRadius: 10, padding: "9px 12px",
-                              display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
-                            }}>
-                              <span style={{ fontSize: 14, fontWeight: 700, color: "white", wordBreak: "break-all" }}>
-                                {card.value}
-                              </span>
+
+                            {/* Value row — locked or revealed */}
+                            {isRevealed ? (
+                              <div style={{
+                                background: "rgba(255,255,255,0.07)", borderRadius: 10, padding: "9px 12px",
+                                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+                              }}>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: "white", wordBreak: "break-all" }}>
+                                  {card.value}
+                                </span>
+                                <button
+                                  onClick={() => { navigator.clipboard?.writeText(card.value); toast.success("Copied!"); }}
+                                  style={{
+                                    flexShrink: 0, padding: "5px 10px", borderRadius: 20,
+                                    background: plat.color, border: "none",
+                                    color: "white", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                                  }}
+                                >
+                                  Copy
+                                </button>
+                              </div>
+                            ) : (
+                              /* Locked — receiver must pay to reveal */
                               <button
-                                onClick={() => {
-                                  navigator.clipboard?.writeText(card.value);
-                                  toast.success("Copied!");
-                                }}
+                                onClick={() => handleRevealContact(msg.id, card)}
                                 style={{
-                                  flexShrink: 0, padding: "5px 10px", borderRadius: 20,
-                                  background: plat.color, border: "none",
-                                  color: "white", fontSize: 11, fontWeight: 700, cursor: "pointer",
+                                  width: "100%", borderRadius: 10, padding: "11px 14px", border: "none",
+                                  background: `linear-gradient(135deg,${plat.color}33,${plat.color}18)`,
+                                  cursor: "pointer",
+                                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10,
                                 }}
                               >
-                                Copy
+                                {/* Blurred placeholder */}
+                                <span style={{
+                                  flex: 1, fontSize: 14, fontWeight: 700, color: "white",
+                                  filter: "blur(5px)", userSelect: "none", textAlign: "left",
+                                }}>
+                                  +62 812 •••• ••••
+                                </span>
+                                <span style={{
+                                  flexShrink: 0, fontSize: 11, fontWeight: 800, color: "#f59e0b",
+                                  background: "rgba(245,158,11,0.18)", border: "1px solid rgba(245,158,11,0.4)",
+                                  borderRadius: 20, padding: "4px 10px", whiteSpace: "nowrap",
+                                }}>
+                                  👁 Reveal · {COINS_CONTACT_REVEAL} 🪙
+                                </span>
                               </button>
-                            </div>
+                            )}
                           </div>
                         );
                       }
@@ -644,7 +712,7 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
             >
               <span style={{ fontSize: 11 }}>🔓</span>
               <span style={{ fontSize: 10, fontWeight: 700, color: "#f59e0b", whiteSpace: "nowrap" }}>
-                Share Contact · {COINS_CONTACT_SHARE} 🪙
+                Share Contact 🔓
               </span>
             </motion.button>
           </div>
@@ -679,6 +747,7 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
               padding: "24px 20px 20px",
               display: "flex", flexDirection: "column", gap: 16,
               boxShadow: "0 0 48px rgba(245,158,11,0.12), 0 24px 48px rgba(0,0,0,0.7)",
+              maxHeight: "88dvh", overflowY: "auto",
             }}
           >
             {/* Header */}
@@ -686,7 +755,7 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
               <div>
                 <div style={{ fontSize: 17, fontWeight: 800, color: "white" }}>🔓 Share Your Contact</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>
-                  {firstName} will receive your details — costs <span style={{ color: "#f59e0b", fontWeight: 700 }}>{COINS_CONTACT_SHARE} coins</span>
+                  {firstName} pays coins to reveal — you share for free
                 </div>
               </div>
               <button onClick={() => setShowContactShare(false)}
@@ -695,26 +764,13 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
               </button>
             </div>
 
-            {/* Coin balance */}
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              background: balance >= COINS_CONTACT_SHARE ? "rgba(245,158,11,0.08)" : "rgba(239,68,68,0.08)",
-              border: `1px solid ${balance >= COINS_CONTACT_SHARE ? "rgba(245,158,11,0.25)" : "rgba(239,68,68,0.25)"}`,
-              borderRadius: 12, padding: "10px 14px",
-            }}>
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.55)" }}>Your balance</span>
-              <span style={{ fontSize: 14, fontWeight: 800, color: balance >= COINS_CONTACT_SHARE ? "#f59e0b" : "#f87171" }}>
-                🪙 {balance} coins
-              </span>
-            </div>
-
-            {/* Platform selector */}
+            {/* Platform selector — full grid */}
             <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>
-                Platform
+              <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 10 }}>
+                Choose platform
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {PLATFORMS.map(p => (
+                {PLATFORMS_ALL.map(p => (
                   <motion.button
                     key={p.id}
                     whileTap={{ scale: 0.96 }}
@@ -739,13 +795,13 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
             {/* Contact input */}
             <div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.4)", letterSpacing: "0.07em", textTransform: "uppercase", marginBottom: 8 }}>
-                Your {PLATFORMS.find(p => p.id === contactPlatform)?.label} details
+                Your {PLATFORMS_ALL.find(p => p.id === contactPlatform)?.label} details
               </div>
               <input
                 type="text"
                 value={contactValue}
                 onChange={e => setContactValue(e.target.value)}
-                placeholder={PLATFORMS.find(p => p.id === contactPlatform)?.placeholder}
+                placeholder={PLATFORM_PLACEHOLDER[contactPlatform] ?? "Enter your details"}
                 style={{
                   width: "100%", background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(255,255,255,0.12)", borderRadius: 14,
@@ -755,35 +811,98 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
               />
             </div>
 
-            {/* Send button */}
+            {/* Send button — free for sender */}
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handleSendContactCard}
-              disabled={!contactValue.trim() || sendingContact || balance < COINS_CONTACT_SHARE}
+              disabled={!contactValue.trim() || sendingContact}
               style={{
                 width: "100%", padding: "14px", borderRadius: 50, border: "none",
-                background: contactValue.trim() && balance >= COINS_CONTACT_SHARE
+                background: contactValue.trim()
                   ? "linear-gradient(135deg,#f59e0b,#f97316)"
                   : "rgba(245,158,11,0.15)",
                 color: "white", fontSize: 15, fontWeight: 800,
-                cursor: contactValue.trim() && balance >= COINS_CONTACT_SHARE ? "pointer" : "not-allowed",
-                boxShadow: contactValue.trim() && balance >= COINS_CONTACT_SHARE
-                  ? "0 4px 24px rgba(245,158,11,0.4)" : "none",
+                cursor: contactValue.trim() ? "pointer" : "not-allowed",
+                boxShadow: contactValue.trim() ? "0 4px 24px rgba(245,158,11,0.4)" : "none",
                 transition: "all 0.2s",
               }}
             >
-              {sendingContact ? "Sending…" : balance < COINS_CONTACT_SHARE
-                ? `Need ${COINS_CONTACT_SHARE - balance} more coins`
-                : `🔓 Send for ${COINS_CONTACT_SHARE} coins`}
+              {sendingContact ? "Sending…" : "🔓 Share My Contact"}
             </motion.button>
 
             <p style={{ fontSize: 11, color: "rgba(255,255,255,0.25)", textAlign: "center", margin: 0, lineHeight: 1.5 }}>
-              Only {firstName} will see this. You control what you share.
+              You share for free — {firstName} spends {COINS_CONTACT_REVEAL} coins to reveal it. You control what you share.
             </p>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
+
+    {/* ── Contact Reveal Modal ─────────────────────────────────────────────── */}
+    <AnimatePresence>
+      {revealCard && (
+        <ContactRevealModal
+          platform={revealCard.card.platform}
+          value={revealCard.card.value}
+          senderName={revealCard.card.name}
+          onClose={() => setRevealCard(null)}
+        />
+      )}
+    </AnimatePresence>
+
+    {/* ── DEV: inject a fake received card to test the full reveal flow ─── */}
+    {IS_DEV && (
+      <div style={{
+        position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
+        zIndex: 9800, display: "flex", alignItems: "center", gap: 6,
+        background: "rgba(220,38,38,0.92)", border: "1.5px solid rgba(255,80,80,0.7)",
+        borderRadius: 24, padding: "6px 10px 6px 14px",
+        boxShadow: "0 4px 20px rgba(220,38,38,0.45)",
+      }}>
+        <span style={{ fontSize: 10, fontWeight: 800, color: "white", letterSpacing: "0.06em" }}>🧪 DEV</span>
+        <select
+          value={devPlatform}
+          onChange={e => setDevPlatform(e.target.value as PlatformId)}
+          style={{
+            background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: 8, color: "white", fontSize: 11, padding: "3px 6px", cursor: "pointer",
+          }}
+        >
+          {PLATFORMS_ALL.map(p => (
+            <option key={p.id} value={p.id}>{p.emoji} {p.label}</option>
+          ))}
+        </select>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            const plat = PLATFORMS_ALL.find(p => p.id === devPlatform) ?? PLATFORMS_ALL[0];
+            const fakeCard: ContactCard = { platform: devPlatform, value: plat.id === "instagram" ? "@testuser" : "+62 812 3456 7890", name: firstName };
+            setRevealCard({ msgId: "dev-test", card: fakeCard });
+          }}
+          style={{
+            background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8,
+            color: "white", fontSize: 11, fontWeight: 700, padding: "4px 10px", cursor: "pointer",
+          }}
+        >
+          Test Reveal
+        </motion.button>
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            const plat = PLATFORMS_ALL.find(p => p.id === devPlatform) ?? PLATFORMS_ALL[0];
+            const fakeCard: ContactCard = { platform: devPlatform, value: plat.id === "instagram" ? "@testuser" : "+62 812 3456 7890", name: firstName };
+            const encoded = encodeContactCard(fakeCard);
+            sendMessage(encoded);
+          }}
+          style={{
+            background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8,
+            color: "white", fontSize: 11, fontWeight: 700, padding: "4px 10px", cursor: "pointer",
+          }}
+        >
+          Inject Card
+        </motion.button>
+      </div>
+    )}
 
     {/* Video call overlay */}
     <AnimatePresence>
