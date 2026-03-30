@@ -709,22 +709,19 @@ export default function WhoViewedMePage() {
     <div style={{
       minHeight: "100dvh",
       backgroundImage: "url('/images/app-background.png')",
-      backgroundSize: "cover", backgroundPosition: "center", backgroundAttachment: "fixed",
-      position: "relative",
+      backgroundSize: "cover", backgroundPosition: "center",
+      display: "flex", flexDirection: "column",
     }}>
-      {/* Dark overlay */}
-      <div style={{ position: "fixed", inset: 0, background: "rgba(4,2,10,0.78)", zIndex: 0 }} />
-
       {/* Content */}
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+      <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100dvh", display: "flex", flexDirection: "column", width: "100%" }}>
 
         {/* ── Header ────────────────────────────────────────────────── */}
         <div style={{
           display: "flex", alignItems: "center", gap: 12,
-          padding: "max(14px,env(safe-area-inset-top,14px)) 16px 12px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          background: "rgba(4,2,10,0.85)",
-          backdropFilter: "blur(16px)",
+          paddingTop: "max(44px,env(safe-area-inset-top,44px))",
+          paddingLeft: 16, paddingRight: 16, paddingBottom: 12,
+          borderBottom: "1px solid rgba(255,255,255,0.12)",
+          background: "transparent",
           flexShrink: 0,
         }}>
           <button
