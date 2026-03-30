@@ -2139,19 +2139,27 @@ const Index = () => {
                     </motion.button>
                   );
 
+                  const SectionLabel = ({ label }: { label: string }) => (
+                    <div style={{
+                      fontSize: 9, fontWeight: 800, letterSpacing: "0.1em",
+                      textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
+                      paddingLeft: 4, paddingTop: 6, paddingBottom: 2,
+                    }}>
+                      {label}
+                    </div>
+                  );
+
                   const boost = HOME_UNLOCK_PACKAGES.find(p => p.key === "unlock:boost");
-                  const vip = HOME_UNLOCK_PACKAGES.find(p => p.key === "unlock:vip");
 
                   return (
                     <>
-                      {/* Coins */}
+                      {/* ── My Profile ─────────────────────────── */}
+                      <SectionLabel label="My Profile" />
                       <DrawerBtn
                         icon="🪙"
                         label={`Coins · ${coinBalance.loading ? "…" : coinBalance.balance}`}
                         onClick={() => { setShowDrawer(false); setShowCoinRefuel(true); }}
                       />
-
-                      {/* Boost Profile */}
                       <DrawerBtn
                         icon="🔥"
                         label="Boost My Profile"
@@ -2160,66 +2168,46 @@ const Index = () => {
                           if (boost) setFeatureDialog(KEY_TO_FEATURE["unlock:boost"]);
                         }}
                       />
-
-                      {/* Who Viewed Me */}
                       <DrawerBtn
                         icon="👁️"
                         label="Who Viewed Me"
-                        onClick={() => {
-                          setShowDrawer(false);
-                          navigate("/who-viewed-me");
-                        }}
+                        onClick={() => { setShowDrawer(false); navigate("/who-viewed-me"); }}
+                      />
+                      <DrawerBtn
+                        icon="👑"
+                        label="Upgrade to VIP"
+                        onClick={() => { setShowDrawer(false); setFeatureDialog(KEY_TO_FEATURE["unlock:vip"]); }}
                       />
 
-                      {/* Divider */}
-                      <div style={{ height: 1, background: "rgba(194,24,91,0.2)", margin: "2px 0" }} />
-
-                      {/* Inbox */}
+                      {/* ── Inbox ──────────────────────────────── */}
+                      <SectionLabel label="Inbox" />
                       <DrawerBtn
                         icon="💎"
-                        label="Inbox &amp; Messages"
+                        label="Inbox & Messages"
                         onClick={() => { setShowDrawer(false); navigate("/inbox"); }}
                       />
 
-                      {/* Nearby Map */}
+                      {/* ── Discover ───────────────────────────── */}
+                      <SectionLabel label="Discover" />
                       <DrawerBtn
                         icon="🗺️"
                         label="Nearby Map"
                         onClick={() => { setShowDrawer(false); navigate("/map"); }}
                       />
-
-                      {/* Teddy Room */}
-                      <DrawerBtn
-                        icon="🧸"
-                        label="My Teddy Room"
-                        onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
-                      />
-
-                      {/* Date Spots */}
                       <DrawerBtn
                         icon="📍"
                         label="Date Spots"
                         onClick={() => { setShowDrawer(false); navigate("/dates"); }}
                       />
-
-                      {/* Events */}
                       <DrawerBtn
                         icon="🎟️"
                         label="Events Near Me"
                         onClick={() => { setShowDrawer(false); navigate("/events"); }}
                       />
-
-                      {/* Divider */}
-                      <div style={{ height: 1, background: "rgba(194,24,91,0.2)", margin: "2px 0" }} />
-
-                      {/* Upgrade VIP */}
                       <DrawerBtn
-                        icon="👑"
-                        label="Upgrade to VIP"
-                        onClick={() => {
-                          setShowDrawer(false);
-                          setFeatureDialog(KEY_TO_FEATURE["unlock:vip"]);
-                        }}
+                        icon="🧸"
+                        label="My Teddy Room"
+                        onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
                       />
                     </>
                   );
