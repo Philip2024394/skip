@@ -1316,22 +1316,6 @@ const Index = () => {
                     💘
                   </motion.button>
 
-                  {/* Inbox shortcut */}
-                  <button
-                    onClick={() => navigate("/inbox")}
-                    aria-label="Inbox"
-                    style={{
-                      width: 32, height: 32, borderRadius: "50%",
-                      background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", position: "relative",
-                      color: "white", fontSize: 15,
-                    }}
-                  >
-                    💎
-                  </button>
-
                   {/* Side drawer toggle */}
                   <button
                     onClick={() => setShowDrawer(true)}
