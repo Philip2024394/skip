@@ -720,7 +720,6 @@ export default function WhoViewedMePage() {
           display: "flex", alignItems: "center", gap: 12,
           paddingTop: "max(44px,env(safe-area-inset-top,44px))",
           paddingLeft: 16, paddingRight: 16, paddingBottom: 12,
-          borderBottom: "1px solid rgba(255,255,255,0.12)",
           background: "transparent",
           flexShrink: 0,
         }}>
@@ -732,7 +731,7 @@ export default function WhoViewedMePage() {
           />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 17, fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>
-              👁 Who Viewed Me
+              Who Viewed Me
             </div>
             <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>
               {viewers.length} {viewers.length === 1 ? "person" : "people"} checked your profile
