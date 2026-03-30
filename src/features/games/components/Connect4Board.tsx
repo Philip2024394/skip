@@ -15,13 +15,16 @@ const GOLD   = YELLOW;
 const RED_GLOW  = "rgba(238,28,36,0.65)";
 const GOLD_GLOW = "rgba(255,215,0,0.65)";
 
-const BET_OPTIONS = [0, 5, 10, 15, 20];
+const BET_OPTIONS       = [0, 5, 10, 15, 20];
+const TOP5_BET_OPTIONS  = [20, 30, 40, 50];
 type BetPhase = "p1-select" | "p2-respond" | "p1-counter" | "active";
 
 // ── Props ──────────────────────────────────────────────────────────────────────
 interface Props {
   mode: "vs-guest" | "vs-bot";
   opponentName?: string;
+  opponentAvatar?: string;
+  isTop5Opponent?: boolean;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -132,7 +135,7 @@ function PlayerCard({ label, score, isActive, color, glow, initial, imageUrl, sh
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function Connect4Board({ mode, opponentName }: Props) {
+export default function Connect4Board({ mode, opponentName, opponentAvatar, isTop5Opponent = false }: Props) {
   const navigate = useNavigate();
   const [board, setBoard] = useState<number[][]>(
     () => Array(ROWS).fill(null).map(() => Array(COLS).fill(EMPTY))
@@ -343,7 +346,10 @@ export default function Connect4Board({ mode, opponentName }: Props) {
   const p1Label = "You";
   const p2Label = mode === "vs-bot" ? "Ted" : (opponentName || "Guest");
   const p2Initial = mode === "vs-bot" ? "T" : (opponentName?.[0]?.toUpperCase() || "G");
-  const p2Image = mode === "vs-bot" ? "https://ik.imagekit.io/dateme/Teddy%20bear%20in%20a%20cozy%20office.png?updatedAt=1774818471382" : undefined;
+  const p2Image = mode === "vs-bot"
+    ? "https://ik.imagekit.io/dateme/Teddy%20bear%20in%20a%20cozy%20office.png?updatedAt=1774818471382"
+    : opponentAvatar ?? undefined;
+  const activeBetOptions = isTop5Opponent ? TOP5_BET_OPTIONS : BET_OPTIONS;
 
   // ── Drop disc ────────────────────────────────────────────────────────────────
   const dropDisc = useCallback((col: number) => {
@@ -724,10 +730,12 @@ export default function Connect4Board({ mode, opponentName }: Props) {
             <span style={{ fontSize: 32 }}>🪙</span>
             <div style={{ color: "white", fontWeight: 900, fontSize: 15, textAlign: "center" }}>Set your coin bet</div>
             <div style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, textAlign: "center" }}>
-              Challenge {p2Label} for coins, or play free
+              {isTop5Opponent
+                ? `🏆 Top 5 player — minimum bet 20 🪙`
+                : `Challenge ${p2Label} for coins, or play free`}
             </div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 4 }}>
-              {BET_OPTIONS.map(amount => (
+              {activeBetOptions.map(amount => (
                 <motion.button key={amount} whileTap={{ scale: 0.9 }}
                   onClick={() => p1SelectBet(amount)}
                   style={{
@@ -759,7 +767,7 @@ export default function Connect4Board({ mode, opponentName }: Props) {
                     background: "rgba(0,200,100,0.14)", border: "1px solid rgba(0,200,100,0.35)",
                     color: "#00e676", fontWeight: 900, fontSize: 14, cursor: "pointer",
                   }}>✓ Accept</motion.button>
-                {BET_OPTIONS.filter(a => a > pendingBet).map(amount => (
+                {activeBetOptions.filter(a => a > pendingBet).map(amount => (
                   <motion.button key={amount} whileTap={{ scale: 0.9 }} onClick={() => p2CounterBet(amount)}
                     style={{
                       padding: "10px 18px", borderRadius: 12,

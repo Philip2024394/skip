@@ -1,60 +1,24 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Connect4Board from "../components/Connect4Board";
 import Connect4HowToPlay from "../components/Connect4HowToPlay";
+import SelectPlayerScreen from "../components/SelectPlayerScreen";
 
-type GameMode = "menu" | "vs-guest" | "vs-bot";
+type GameMode = "menu" | "select-player" | "vs-guest" | "vs-bot";
 
-// Mini decorative empty board preview
-function MiniBoard() {
-  const ROWS = 6, COLS = 7, SIZE = 26, GAP = 4;
-  return (
-    <div style={{
-      background: "rgba(10,6,20,0.9)", borderRadius: 14, padding: 8,
-      border: "1px solid rgba(212,175,55,0.15)",
-      boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
-      display: "inline-block",
-    }}>
-      {Array(ROWS).fill(0).map((_, r) => (
-        <div key={r} style={{ display: "flex", gap: GAP, marginBottom: r < ROWS - 1 ? GAP : 0 }}>
-          {Array(COLS).fill(0).map((_, c) => {
-            // Sprinkle a few sample discs for decoration
-            const filled =
-              (r === 5 && c === 3) ? "#e01010" :
-              (r === 5 && c === 4) ? "#d4af37" :
-              (r === 4 && c === 3) ? "#d4af37" :
-              (r === 5 && c === 2) ? "#e01010" :
-              null;
-            return (
-              <div key={c} style={{
-                width: SIZE, height: SIZE, borderRadius: "50%",
-                background: filled
-                  ? filled === "#e01010"
-                    ? "radial-gradient(circle at 35% 32%, #ff5a5a, #e01010 55%, #8b0000)"
-                    : "radial-gradient(circle at 35% 32%, #f5e070, #d4af37 55%, #7a5c00)"
-                  : "rgba(255,255,255,0.07)",
-                boxShadow: filled ? `0 0 10px ${filled === "#e01010" ? "rgba(224,16,16,0.5)" : "rgba(212,175,55,0.5)"}` : "inset 0 1px 3px rgba(0,0,0,0.5)",
-              }} />
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
+interface SelectedOpponent {
+  id: string;
+  name: string;
+  avatar_url?: string | null;
+  isTop5: boolean;
 }
 
 export default function Connect4Page() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [gameMode, setGameMode] = useState<GameMode>("menu");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
-
-  const opponentName = searchParams.get("name") || undefined;
-
-  function selectMode(mode: "vs-guest" | "vs-bot") {
-    setGameMode(mode);
-  }
+  const [opponent, setOpponent] = useState<SelectedOpponent | null>(null);
 
   return (
     <div style={{
@@ -115,21 +79,27 @@ export default function Connect4Page() {
             {/* Subtitle */}
             <p style={{
               fontSize: 13, color: "rgba(255,255,255,0.45)",
-              margin: "0 0 36px", textAlign: "center",
+              margin: "0 0 24px", textAlign: "center",
             }}>
               Challenge a match. First to four wins.
             </p>
 
-            {/* Mini board preview */}
-            <div style={{ marginBottom: 40 }}>
-              <MiniBoard />
+            {/* Landing image */}
+            <div style={{ marginBottom: 28, width: "100%", borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}>
+              <img
+                src="https://ik.imagekit.io/dateme/Untitledfgdsfgdsfsdf.png"
+                alt="Connect 4"
+                style={{ width: "100%", display: "block", objectFit: "cover" }}
+              />
             </div>
 
             {/* Buttons */}
             <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+
+              {/* Select Player */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => selectMode("vs-guest")}
+                onClick={() => setGameMode("select-player")}
                 style={{
                   width: "100%", height: 56, borderRadius: 16, border: "none",
                   background: "linear-gradient(135deg, #92400e, #d4af37, #f0d060)",
@@ -138,21 +108,28 @@ export default function Connect4Page() {
                   letterSpacing: "-0.01em",
                 }}
               >
-                🎮 Play vs Guest
+                🌍 Select Player
               </motion.button>
 
+              {/* Play Ted */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
-                onClick={() => selectMode("vs-bot")}
+                onClick={() => { setOpponent(null); setGameMode("vs-bot"); }}
                 style={{
                   width: "100%", height: 56, borderRadius: 16,
                   background: "rgba(255,255,255,0.06)",
                   border: "1px solid rgba(212,175,55,0.3)",
                   color: "#d4af37", fontWeight: 900, fontSize: 16, cursor: "pointer",
                   letterSpacing: "-0.01em",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                 }}
               >
-                🤖 Play vs Bot
+                <img
+                  src="https://ik.imagekit.io/dateme/Teddy%20bear%20in%20a%20cozy%20office.png?updatedAt=1774818471382"
+                  alt="Ted"
+                  style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", border: "1px solid rgba(212,175,55,0.4)" }}
+                />
+                Play Ted
               </motion.button>
             </div>
 
@@ -167,6 +144,32 @@ export default function Connect4Page() {
             >
               How to Play
             </button>
+          </motion.div>
+        )}
+
+        {/* ── SELECT PLAYER ─────────────────────────────────────────── */}
+        {gameMode === "select-player" && (
+          <motion.div
+            key="select-player"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ duration: 0.25 }}
+            style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0,
+              paddingTop: "max(0px,env(safe-area-inset-top,0px))" }}
+          >
+            <SelectPlayerScreen
+              onBack={() => setGameMode("menu")}
+              onChallenge={(player) => {
+                setOpponent({
+                  id: player.id,
+                  name: player.name,
+                  avatar_url: player.avatar_url,
+                  isTop5: !!player.rank,
+                });
+                setGameMode("vs-guest");
+              }}
+            />
           </motion.div>
         )}
 
@@ -185,7 +188,9 @@ export default function Connect4Page() {
           >
             <Connect4Board
               mode={gameMode}
-              opponentName={opponentName}
+              opponentName={opponent?.name}
+              opponentAvatar={opponent?.avatar_url ?? undefined}
+              isTop5Opponent={opponent?.isTop5 ?? false}
             />
           </motion.div>
         )}
