@@ -464,22 +464,32 @@ export default function InboxPage() {
           padding: `max(18px,env(safe-area-inset-top,18px)) 18px 12px`,
           flexShrink: 0,
         }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            {/* Title + back */}
-            <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-              <motion.button
-                whileTap={{ scale: 0.92 }}
-                onClick={() => navigate("/home")}
-                style={{
-                  background: "none", border: "none",
-                  padding: 0, cursor: "pointer", flexShrink: 0,
-                  display: "flex", alignItems: "center",
-                }}
-              >
-                <AppLogo style={{ width: 36, height: 36, objectFit: "contain" }} />
-              </motion.button>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            {/* Logo */}
+            <AppLogo style={{ width: 36, height: 36, objectFit: "contain" }} />
+
+            {/* Title */}
+            <div style={{
+              fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em",
+              background: "linear-gradient(90deg,white 40%,rgba(236,72,153,0.8))",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+            }}>
+              Inbox
             </div>
 
+            {/* Home button */}
+            <motion.button
+              whileTap={{ scale: 0.92 }}
+              onClick={() => navigate("/home")}
+              style={{
+                width: 36, height: 36, borderRadius: "50%",
+                background: "rgba(255,255,255,0.1)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                color: "white", fontSize: 16,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0,
+              }}
+            >🏠</motion.button>
           </div>
 
         </div>
