@@ -149,7 +149,6 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
   const [scores, setScores] = useState({ p1: 0, p2: 0 });
   const [lastDrop, setLastDrop] = useState<[number, number] | null>(null);
   const [lastPlayed, setLastPlayed] = useState<{ col: number; color: string } | null>(null);
-  const [fallingChips, setFallingChips] = useState<{ id: number; x: number; color: string; delay: number; dur: number; spin: number }[]>([]);
   const chipsSpawned = useRef(false);
 
   // ── Bet state ─────────────────────────────────────────────────────────────────
@@ -393,33 +392,21 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
       if (win) { setWinner(2); setWinCells(win); setScores(s => ({ ...s, p2: s.p2 + 1 })); return; }
       if (isBoardFull(newBoard)) { setIsDraw(true); return; }
       setCurrentPlayer(1);
-    }, 650);
+    }, 1400 + Math.random() * 1600); // 1.4–3s natural pace
     return () => clearTimeout(t);
   }, [currentPlayer, board, mode, winner, isDraw, betPhase]);
 
   // ── Falling chips on game end ────────────────────────────────────────────────
   useEffect(() => {
-    if ((winner !== 0 || isDraw) && !chipsSpawned.current) {
-      chipsSpawned.current = true;
-      const boardW = COLS * cellSize + (COLS - 1) * gap;
-      setFallingChips(Array.from({ length: 24 }, (_, i) => ({
-        id: i,
-        x: Math.random() * (boardW - cellSize * 0.8),
-        color: Math.random() > 0.5 ? RED : GOLD,
-        delay: Math.random() * 0.55,
-        dur: 0.85 + Math.random() * 0.55,
-        spin: (Math.random() - 0.5) * 600,
-      })));
-    }
-    if (!winner && !isDraw) { chipsSpawned.current = false; setFallingChips([]); }
-  }, [winner, isDraw, cellSize]);
+    if (!winner && !isDraw) chipsSpawned.current = false;
+  }, [winner, isDraw]);
 
   // ── Reset ────────────────────────────────────────────────────────────────────
   function resetGame() {
     setBoard(Array(ROWS).fill(null).map(() => Array(COLS).fill(EMPTY)));
     setCurrentPlayer(1); setWinner(0); setWinCells([]);
     setIsDraw(false); setLastDrop(null); setLastPlayed(null); setIsDropping(false);
-    chipsSpawned.current = false; setFallingChips([]);
+    chipsSpawned.current = false;
     setBetPhase("p1-select"); setActiveBet(0); setPendingBet(0);
     setFallingCoins([]); coinSettled.current = false;
     setTurnTimeLeft(15); timedOut.current = false;
@@ -586,22 +573,6 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
             }} />
           ))}
 
-          {/* Falling chips */}
-          {fallingChips.map(chip => (
-            <motion.div key={chip.id}
-              initial={{ y: 0, opacity: 1, rotate: 0, scale: 1 }}
-              animate={{ y: 480, opacity: [1, 1, 0.6, 0], rotate: chip.spin, scale: [1, 1, 0.7] }}
-              transition={{ duration: chip.dur, delay: chip.delay, ease: [0.2, 0, 1, 1] }}
-              style={{
-                position: "absolute", bottom: 40, top: "auto", left: chip.x + boardPad,
-                width: cellSize * 0.82, height: cellSize * 0.82,
-                borderRadius: "50%", pointerEvents: "none", zIndex: 60,
-                background: chip.color === RED
-                  ? `radial-gradient(circle at 35% 32%, #ff5a5a, ${RED} 55%, #8b0000)`
-                  : `radial-gradient(circle at 35% 32%, #fff176, ${YELLOW} 55%, #b8860b)`,
-                boxShadow: `0 4px 12px rgba(0,0,0,0.5), 0 0 8px ${chip.color === RED ? RED_GLOW : GOLD_GLOW}`,
-              }} />
-          ))}
 
           {/* Turn timer */}
           {betPhase === "active" && !winner && !isDraw && (
@@ -667,7 +638,7 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
         {/* P2 right */}
         <PlayerCard label={p2Label} score={scores.p2}
           isActive={betPhase === "active" && !winner && !isDraw && currentPlayer === 2}
-          color={GOLD} glow={GOLD_GLOW} initial={p2Initial} imageUrl={p2Image} />
+          color={GOLD} glow={GOLD_GLOW} initial={p2Initial} imageUrl={p2Image} showGo />
 
       </div>{/* end board row */}
 

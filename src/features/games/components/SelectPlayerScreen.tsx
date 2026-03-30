@@ -52,6 +52,40 @@ function isOnline(lastSeenAt?: string | null): boolean {
   return Date.now() - new Date(lastSeenAt).getTime() < 3 * 60 * 1000;
 }
 
+// ── Mock players (dev preview) ────────────────────────────────────────────────
+const now = () => new Date().toISOString();
+const minsAgo = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
+
+const MOCK_PLAYERS: Player[] = [
+  // ── Top 5 tier (high coins) ──────────────────────────────────────────────
+  { id: "mock-1", name: "Zara King",      country: "South Africa", coins_balance: 3840, last_seen_at: now(),        avatar_url: null },
+  { id: "mock-2", name: "Marcus Cole",    country: "United States",coins_balance: 3210, last_seen_at: minsAgo(1),   avatar_url: null },
+  { id: "mock-3", name: "Aisha Okonkwo", country: "Nigeria",      coins_balance: 2760, last_seen_at: now(),        avatar_url: null },
+  { id: "mock-4", name: "Luca Ferrari",   country: "Italy",        coins_balance: 2490, last_seen_at: minsAgo(2),   avatar_url: null },
+  { id: "mock-5", name: "Priya Sharma",   country: "India",        coins_balance: 2210, last_seen_at: now(),        avatar_url: null },
+
+  // ── South Africa (local) ─────────────────────────────────────────────────
+  { id: "mock-6",  name: "Thabo Dlamini",  country: "South Africa", coins_balance: 980,  last_seen_at: now(),        avatar_url: null },
+  { id: "mock-7",  name: "Nomsa Khumalo",  country: "South Africa", coins_balance: 740,  last_seen_at: minsAgo(1),   avatar_url: null },
+  { id: "mock-8",  name: "Sipho Ndlovu",   country: "South Africa", coins_balance: 510,  last_seen_at: minsAgo(4),   avatar_url: null },
+  { id: "mock-9",  name: "Lerato Molefe",  country: "South Africa", coins_balance: 390,  last_seen_at: null,         avatar_url: null },
+  { id: "mock-10", name: "Kagiso Sithole", country: "South Africa", coins_balance: 260,  last_seen_at: minsAgo(2),   avatar_url: null },
+
+  // ── Worldwide ────────────────────────────────────────────────────────────
+  { id: "mock-11", name: "Amara Diallo",   country: "Ghana",        coins_balance: 1750, last_seen_at: now(),        avatar_url: null },
+  { id: "mock-12", name: "Jake Morrison",  country: "Australia",    coins_balance: 1540, last_seen_at: minsAgo(1),   avatar_url: null },
+  { id: "mock-13", name: "Sofia Mendes",   country: "Brazil",       coins_balance: 1320, last_seen_at: now(),        avatar_url: null },
+  { id: "mock-14", name: "Yuki Tanaka",    country: "Japan",        coins_balance: 1180, last_seen_at: minsAgo(2),   avatar_url: null },
+  { id: "mock-15", name: "Emma Clarke",    country: "United Kingdom",coins_balance: 970, last_seen_at: now(),        avatar_url: null },
+  { id: "mock-16", name: "Carlos Ruiz",    country: "Mexico",       coins_balance: 860,  last_seen_at: minsAgo(1),   avatar_url: null },
+  { id: "mock-17", name: "Fatima Al-Rashid",country:"UAE",          coins_balance: 780,  last_seen_at: now(),        avatar_url: null },
+  { id: "mock-18", name: "Oluwaseun Bello",country: "Nigeria",      coins_balance: 690,  last_seen_at: minsAgo(3),   avatar_url: null },
+  { id: "mock-19", name: "Hannah Schmidt", country: "Germany",      coins_balance: 540,  last_seen_at: null,         avatar_url: null },
+  { id: "mock-20", name: "Diego Alvarez",  country: "Argentina",    coins_balance: 430,  last_seen_at: minsAgo(1),   avatar_url: null },
+  { id: "mock-21", name: "Mei Lin",        country: "China",        coins_balance: 380,  last_seen_at: now(),        avatar_url: null },
+  { id: "mock-22", name: "James Okafor",   country: "Kenya",        coins_balance: 310,  last_seen_at: minsAgo(2),   avatar_url: null },
+];
+
 // ── Player Card ───────────────────────────────────────────────────────────────
 function PlayerCard({
   player, onChallenge, invited, onInvite, onUninvite, inviteFull,
@@ -221,14 +255,19 @@ export default function SelectPlayerScreen({ onBack, onChallenge }: Props) {
         .order("coins_balance", { ascending: false })
         .limit(200);
 
-      const profiles = ((data as any[]) ?? []).filter(p =>
+      const realProfiles = ((data as any[]) ?? []).filter(p =>
         user ? p.id !== user.id : true
       );
 
+      // Merge real + mock, deduplicate by id, sort by coins desc
+      const merged = [...realProfiles, ...MOCK_PLAYERS]
+        .filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i)
+        .sort((a, b) => b.coins_balance - a.coins_balance);
+
       // Top 5 globally by coins
-      const top = profiles.slice(0, 5).map((p, i) => ({ ...p, rank: i + 1 }));
+      const top = merged.slice(0, 5).map((p, i) => ({ ...p, rank: i + 1 }));
       setTop5(top);
-      setAllPlayers(profiles);
+      setAllPlayers(merged);
       setLoading(false);
     }
     load();
