@@ -58,7 +58,6 @@ interface Gift {
   last_seen_at?: string | null;
 }
 
-type Tab = "all" | "chats" | "blind" | "likes";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -385,7 +384,6 @@ function AnswerModal({ q, userId, onDone }: { q: BlindQuestion; userId: string; 
 export default function InboxPage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("all");
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [questions,     setQuestions]     = useState<BlindQuestion[]>([]);
@@ -446,24 +444,9 @@ export default function InboxPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // Derived counts
-  const unreadChats    = conversations.filter(c => c.unread_count > 0).length;
-  const unansweredQs   = questions.filter(q => !q.answer).length;
-  const newLikes       = likes.length;
-  const newGifts       = gifts.filter(g => g.status === "pending").length;
-  const totalBadge     = unreadChats + unansweredQs + newLikes + newGifts;
-
-  const tabs: { key: Tab; label: string; emoji: string }[] = [
-    { key: "all",   label: "All",        emoji: "✨" },
-    { key: "chats", label: "Chats",      emoji: "💬" },
-    { key: "blind", label: "Blind Date", emoji: "💘" },
-    { key: "likes", label: "Likes",      emoji: "♥"  },
-  ];
-
-  const showChats  = tab === "all" || tab === "chats";
-  const showBlinds = tab === "all" || tab === "blind";
-  const showLikes  = tab === "all" || tab === "likes";
-  const showGifts  = tab === "all";
+  // Derived counts (for subtitles only)
+  const unreadChats = conversations.filter(c => c.unread_count > 0).length;
+  const unansweredQs = questions.filter(q => !q.answer).length;
 
   return (
     <div style={{
@@ -495,41 +478,10 @@ export default function InboxPage() {
               >
                 <AppLogo style={{ width: 36, height: 36, objectFit: "contain" }} />
               </motion.button>
-              <div>
-                <div style={{
-                  fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em",
-                  background: "linear-gradient(90deg,white 40%,rgba(236,72,153,0.8))",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                }}>
-                  💎 Inbox
-                </div>
-              </div>
             </div>
 
           </div>
 
-          {/* Tab bar */}
-          <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 2 }}>
-            {tabs.map(t => (
-              <motion.button
-                key={t.key} whileTap={{ scale: 0.95 }}
-                onClick={() => setTab(t.key)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 5,
-                  padding: "7px 14px", borderRadius: 50, cursor: "pointer", flexShrink: 0,
-                  background: tab === t.key ? "linear-gradient(135deg,#c2185b,#e91e8c)" : "rgba(255,255,255,0.07)",
-                  border: tab === t.key ? "none" : "1px solid rgba(255,255,255,0.1)",
-                  boxShadow: tab === t.key ? "0 3px 14px rgba(194,24,91,0.35)" : "none",
-                  transition: "all 0.2s",
-                }}
-              >
-                <span style={{ fontSize: 12 }}>{t.emoji}</span>
-                <span style={{ fontSize: 12, fontWeight: 700, color: tab === t.key ? "white" : "rgba(255,255,255,0.6)" }}>
-                  {t.label}
-                </span>
-              </motion.button>
-            ))}
-          </div>
         </div>
 
         {/* ── Body ───────────────────────────────────────────────────── */}
@@ -551,7 +503,7 @@ export default function InboxPage() {
             <>
 
               {/* ── Messages ─────────────────────────────────────────── */}
-              {showChats && (
+              {(
                 <FeatureCard
                   icon="💬" color="#e91e8c" label="Messages"
                   subtitle={
@@ -559,7 +511,7 @@ export default function InboxPage() {
                       ? "No conversations yet"
                       : `${conversations.length} conversation${conversations.length !== 1 ? "s" : ""}${unreadChats ? ` · ${unreadChats} unread` : ""}`
                   }
-                  onSeeAll={conversations.length > 0 ? () => setTab("chats") : undefined}
+                  onSeeAll={undefined}
                 >
                   {conversations.length === 0 ? (
                     <div style={{ padding: "16px 18px", fontSize: 12, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
@@ -598,7 +550,7 @@ export default function InboxPage() {
               )}
 
               {/* ── Blind Date Questions ──────────────────────────────── */}
-              {showBlinds && (
+              {(
                 <FeatureCard
                   icon="💘" color="#c2185b" label="Blind Date"
                   subtitle={
@@ -606,7 +558,7 @@ export default function InboxPage() {
                       ? "No blind date questions yet"
                       : `${questions.length} question${questions.length !== 1 ? "s" : ""} received${unansweredQs ? ` · ${unansweredQs} waiting` : ""}`
                   }
-                  onSeeAll={questions.length > 0 ? () => setTab("blind") : undefined}
+                  onSeeAll={undefined}
                 >
                   {questions.length === 0 ? (
                     <div style={{ padding: "16px 18px", fontSize: 12, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
@@ -648,7 +600,7 @@ export default function InboxPage() {
               )}
 
               {/* ── Gifts received ────────────────────────────────────── */}
-              {showGifts && (
+              {(
                 <FeatureCard
                   icon="🎁" color="#a855f7" label="Gifts Received"
                   subtitle={
@@ -684,7 +636,7 @@ export default function InboxPage() {
               )}
 
               {/* ── Likes ─────────────────────────────────────────────── */}
-              {showLikes && (
+              {(
                 <FeatureCard
                   icon="♥" color="#f43f5e" label="Likes"
                   subtitle={
@@ -692,7 +644,7 @@ export default function InboxPage() {
                       ? "No likes yet"
                       : `${likes.length} like${likes.length !== 1 ? "s" : ""}${likes.filter(l => l.is_rose).length ? ` · ${likes.filter(l => l.is_rose).length} 🌹 rose` : ""}`
                   }
-                  onSeeAll={likes.length > 0 ? () => setTab("likes") : undefined}
+                  onSeeAll={undefined}
                 >
                   {likes.length === 0 ? (
                     <div style={{ padding: "16px 18px", fontSize: 12, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
@@ -753,7 +705,7 @@ export default function InboxPage() {
               )}
 
               {/* ── Who Viewed Me ─────────────────────────────────────── */}
-              {tab === "all" && (
+              {(
                 <FeatureCard
                   icon="👁️" color="#e91e8c" label="Who Viewed Me"
                   subtitle={viewerCount === 0 ? "No profile views yet" : `${viewerCount} ${viewerCount === 1 ? "person" : "people"} checked your profile`}
@@ -773,7 +725,7 @@ export default function InboxPage() {
               )}
 
               {/* ── Explore features ──────────────────────────────────── */}
-              {tab === "all" && (
+              {(
                 <>
                   <div style={{
                     fontSize: 10, fontWeight: 800, letterSpacing: "0.08em",
