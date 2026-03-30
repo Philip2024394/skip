@@ -61,177 +61,176 @@ interface MysteryCard {
   questions: MysteryQuestion[];
 }
 
-// ── Age clues ─────────────────────────────────────────────────────────────────
+// ── Age stories ───────────────────────────────────────────────────────────────
 function ageClue(age: number): { label: string; clue: string } {
   if (age <= 22) return {
     label: "18 – 22",
-    clue: "\"Growing up my whole childhood was shaped by short-form videos — TikTok trends were basically our yearbook. My older cousins still make fun of me for it.\"",
+    clue: "My first serious crush and I used to send each other BeReal notifications at the same time every day for three months. We never actually met. Last year someone sent me a TikTok of him and I didn't recognise him for a full ten seconds. That felt like a summary of my whole generation.",
   };
   if (age <= 26) return {
     label: "23 – 26",
-    clue: "\"I graduated right as the whole world locked down. My first job was remote from day one — I've never actually been to my company's office in person.\"",
+    clue: "I defended my thesis on a Zoom call. The examiner's cat walked across the keyboard twice. My mum stood outside the door holding a handwritten sign that said GO! I passed, but my graduation ceremony was cancelled — we took a photo in the garden instead. That's the photo on my parents' wall.",
   };
   if (age <= 30) return {
     label: "27 – 30",
-    clue: "\"I remember being in middle school when the 2008 financial crisis hit. My parents suddenly went very quiet about money. I didn't fully understand it then.\"",
+    clue: "I remember my dad sitting very still in front of the news for a long time in 2008. He didn't want to explain it to me. That year we stopped going on holiday and my parents spoke in quieter voices about things I wasn't supposed to hear. I didn't connect all of it until years later.",
   };
   if (age <= 35) return {
     label: "31 – 35",
-    clue: "\"I was a teenager when Facebook launched and genuinely thought it was the most revolutionary thing I'd ever seen. I check it maybe once a year now.\"",
+    clue: "I made a Facebook profile the week it opened up outside university emails. I spent four hours choosing my profile photo. I posted a cryptic song lyric and waited to see who noticed. Now I log in maybe once a year to check if someone I went to school with got married.",
   };
   if (age <= 40) return {
     label: "36 – 40",
-    clue: "\"My first phone had a pull-out antenna and a screen the size of a postage stamp. I thought it was incredible. We burned CDs for road trips.\"",
+    clue: "My first phone had a pull-out antenna and a ringtone I changed every week. I remember the exact screech of a dial-up connection and the specific disappointment when someone picked up the landline and killed the internet. We had one family computer in the hallway and took turns.",
   };
   return {
     label: "40+",
-    clue: "\"We passed notes in class, not texts. The internet came to our house when I was a teenager and we had one shared computer in the hallway.\"",
+    clue: "I had a pen pal. A real one — letters, stamps, two weeks to get a reply. She lived in another city and we wrote to each other for three years before we actually met. When I finally saw her I already knew everything important about her. I've never felt that kind of anticipation from a notification.",
   };
 }
 
-// ── Location clues ────────────────────────────────────────────────────────────
+// ── Location stories ──────────────────────────────────────────────────────────
 function locationClue(city: string | null, country: string): { clue: string; label: string; options: string[] } {
   const c = (city || country).toLowerCase();
 
   if (c.includes("bali")) return {
-    clue: "\"Every morning before sunrise there are canang sari offerings at every doorstep — flowers, rice, incense. Temple ceremonies happen every few weeks and the whole village shows up. It's completely ordinary here, which is the extraordinary part.\"",
+    clue: "There's a temple at the end of my road that holds ceremonies every few weeks. The night before, the women leave small woven offerings — flowers, rice, incense — at every doorstep before sunrise. I've lived here long enough that I smell the incense before I see it. It's completely ordinary. Which is the extraordinary part.",
     label: "Bali, Indonesia",
     options: shuffle(["Bali, Indonesia", "Sri Lanka", "Thailand", "Philippines"]),
   };
   if (c.includes("jakarta")) return {
-    clue: "\"My commute is two hours each way and nobody thinks that's unusual. During Lebaran the whole city empties out and for three days you can drive anywhere in ten minutes — it's the only time the streets make sense.\"",
+    clue: "My commute used to be two hours each way and nobody on the bus ever thought that was strange. Last Lebaran the roads went completely empty and I drove across the city in eighteen minutes. I pulled over and just sat there with the engine running. It felt like a different planet. The same streets, completely unrecognisable.",
     label: "Jakarta, Indonesia",
     options: shuffle(["Jakarta, Indonesia", "Manila", "Ho Chi Minh City", "Bangkok"]),
   };
   if (c.includes("indonesia") || c.includes("surabaya") || c.includes("bandung") || c.includes("medan") || c.includes("yogyakarta")) return {
-    clue: "\"Lebaran brings the whole country home — streets go quiet, family tables go loud. When the rains come in November the smell of petrichor on warm pavement is one of those things that never gets old.\"",
+    clue: "Every November the first big rain arrives and the whole city smells like warm earth and electricity at the same time. I've tried describing it to people who didn't grow up here and I can never quite get it right. You have to be standing on that pavement at that exact moment. Nothing else smells like home the same way.",
     label: "Indonesia",
     options: shuffle(["Indonesia", "Malaysia", "Philippines", "Vietnam"]),
   };
   if (c.includes("malaysia") || c.includes("kuala lumpur") || c.includes("penang")) return {
-    clue: "\"We celebrate Raya, Chinese New Year, Deepavali and Christmas within the same year and somehow each one feels equally real. Mamak stalls are open at 2am and I've had some of my best conversations over roti canai at midnight.\"",
+    clue: "Growing up we celebrated everything — Raya, Chinese New Year, Deepavali, Christmas. Different houses, different food, different songs. My grandmother made rendang, my best friend's grandmother made tang yuan, my neighbour made murukku. We ate at all three tables in the same week. Nobody thought that was unusual. I think about that a lot now.",
     label: "Malaysia",
     options: shuffle(["Malaysia", "Indonesia", "Singapore", "Brunei"]),
   };
   if (c.includes("singapore")) return {
-    clue: "\"National Day fireworks, hawker centers that food critics fly in for, and the fact that you can get almost anywhere in 30 minutes. Small country but nothing feels small about living here.\"",
+    clue: "National Day rehearsal happens every July and you can hear the jets from anywhere on the island. I used to climb onto my uncle's shophouse roof to watch. Last year I watched from a condo balcony on the 28th floor and I still craned my neck the exact same way I did at nine years old.",
     label: "Singapore",
     options: shuffle(["Singapore", "Malaysia", "Hong Kong", "Taiwan"]),
   };
   if (c.includes("philippines") || c.includes("manila") || c.includes("cebu")) return {
-    clue: "\"Fiesta season means the whole barangay is outside, the streets smell like lechon, and the procession runs past midnight. Christmas season starts in September and nobody apologizes for it.\"",
+    clue: "Christmas lights go up in September and nobody apologises. Noche Buena means the whole family is still awake at midnight eating and arguing about nothing that matters. The year we had it in a different house because of the typhoon, my grandmother brought her own parols and hung them before she'd even unpacked her bag.",
     label: "Philippines",
     options: shuffle(["Philippines", "Indonesia", "Thailand", "Vietnam"]),
   };
   if (c.includes("thailand") || c.includes("bangkok") || c.includes("chiang mai")) return {
-    clue: "\"Songkran isn't just a water festival — it's three days of the entire country deciding nothing matters except being outside and getting soaked. Loy Krathong on the river at night is something you can't describe, only feel.\"",
+    clue: "Songkran — I got completely soaked walking to the 7-Eleven twenty metres from my front door. I was carrying groceries. A child on a motorbike hit me with a water gun from three metres away and looked very pleased with himself. I couldn't even be angry. For three days that's just the rule. Everyone gets wet.",
     label: "Thailand",
     options: shuffle(["Thailand", "Vietnam", "Cambodia", "Laos"]),
   };
   if (c.includes("vietnam") || c.includes("ho chi minh") || c.includes("hanoi")) return {
-    clue: "\"Tết Nguyên Đán — the whole country transforms. Red and gold everywhere, families gather from across the country, and every meal for a week is a ceremony in itself.\"",
+    clue: "The morning of Tết my grandmother was already up at 4am arranging the altar. Red and gold everywhere, fruit stacked into towers, incense lit before sunrise. She said the ancestors arrive first thing and you have to be ready for them. I've lived abroad for four years now and I still wake up at 4am on Tết morning without an alarm.",
     label: "Vietnam",
     options: shuffle(["Vietnam", "Thailand", "Cambodia", "Myanmar"]),
   };
   if (c.includes("japan") || c.includes("tokyo") || c.includes("osaka")) return {
-    clue: "\"Cherry blossom season is two weeks and everyone treats it like a countdown. Obon in August when the lanterns go out on the water — that stillness is something you carry with you.\"",
+    clue: "Cherry blossom season lasts maybe ten days. My whole neighbourhood treats those days like a countdown — people reserve hanami spots weeks in advance. One year it rained for seven of the ten days. We went anyway. Sat under wet trees, passed a flask of sake around, and nobody once suggested leaving early.",
     label: "Japan",
     options: shuffle(["Japan", "South Korea", "China", "Taiwan"]),
   };
   if (c.includes("korea") || c.includes("seoul")) return {
-    clue: "\"Chuseok means going home no matter how far — traffic for twelve hours, worth it every time. The seasons here are four distinct personalities: cherry blossoms, monsoon heat, golden maple, and snowfall.\"",
+    clue: "Chuseok means going home no matter where you are. I drove twelve hours once because the flights were full. The traffic was so bad we stopped at a motorway rest stop for two hours and ate ramyeon standing up. When I finally got there my grandmother pretended she hadn't been waiting by the window. She had been.",
     label: "South Korea",
     options: shuffle(["South Korea", "Japan", "China", "Taiwan"]),
   };
   if (c.includes("india") || c.includes("mumbai") || c.includes("delhi") || c.includes("bangalore")) return {
-    clue: "\"Diwali means every rooftop in the neighbourhood lit up at once — the smell of fireworks and mithai everywhere for a week. Holi is the one day strangers are expected to cover each other in colour and nobody objects.\"",
+    clue: "Diwali night from our rooftop — every rooftop in the neighbourhood lit up at once, fireworks going in every direction, the air thick with gunpowder and the smell of mithai from someone's kitchen. My father burned the same sparklers he'd bought since I was small. I have no idea where he finds them every year. I've never asked.",
     label: "India",
     options: shuffle(["India", "Sri Lanka", "Pakistan", "Bangladesh"]),
   };
   if (c.includes("australia") || c.includes("sydney") || c.includes("melbourne") || c.includes("brisbane")) return {
-    clue: "\"Christmas BBQ at 38°C, New Year's fireworks over the harbour, and a long weekend that somehow always coincides with perfect surf. Summer here starts just when the rest of the world goes dark.\"",
+    clue: "Christmas lunch at 40 degrees on my aunt's back patio, ceiling fan at full speed, someone always burning their hand on the BBQ. My cousin fell asleep in a deck chair by 2pm with sunscreen on his nose. We did the same thing every year and complained about the heat every year and then planned it again in December.",
     label: "Australia",
     options: shuffle(["Australia", "New Zealand", "South Africa", "Canada"]),
   };
   if (c.includes("london") || c.includes("uk") || c.includes("england") || c.includes("manchester")) return {
-    clue: "\"Bank holiday Monday and everyone migrates to the nearest pub garden the second the sun appears. 18°C counts as a heatwave. Guy Fawkes Night, the smell of sparklers and bonfires — some things never change.\"",
+    clue: "Bank holiday Monday and the entire country migrates to the nearest beer garden the second the temperature hits 17 degrees. My friend texted me 'gorgeous out' at 9am. It was overcast with a light drizzle. We went anyway and sat there in jackets, sunglasses on, calling it summer. Some things are just tradition.",
     label: "United Kingdom",
     options: shuffle(["United Kingdom", "Ireland", "Australia", "Canada"]),
   };
   if (c.includes("dubai") || c.includes("uae") || c.includes("abu dhabi")) return {
-    clue: "\"Iftar at sunset during Ramadan — the whole city synchronises in that one quiet moment before it all starts again. Desert camping at night with no light pollution and a sky that doesn't look real.\"",
+    clue: "Iftar during Ramadan — the whole office goes quiet in that last hour before sunset. Everyone waiting. Then at the exact moment the call to prayer starts, something releases. Food appears from everywhere at once. A colleague shared dates with me on my very first day and explained this is how you begin. I've never forgotten the taste of that first one.",
     label: "UAE / Gulf",
     options: shuffle(["UAE / Gulf", "Saudi Arabia", "Qatar", "Bahrain"]),
   };
   if (c.includes("nigeria") || c.includes("lagos") || c.includes("abuja")) return {
-    clue: "\"Owambe parties where everyone is dressed to compete and the jollof is always a topic of debate. Lagos energy is something visitors talk about for years — relentless, loud, magnetic.\"",
+    clue: "I went to an owambe last month where I counted fourteen different ankara prints on fourteen different people and none of them clashed. The jollof debate started before the food even arrived. Someone's auntie won an argument she had no business winning. I ate three plates and still left feeling like I should have had one more.",
     label: "Nigeria",
     options: shuffle(["Nigeria", "Ghana", "Kenya", "South Africa"]),
   };
   if (c.includes("south africa") || c.includes("cape town") || c.includes("johannesburg")) return {
-    clue: "\"Braai culture is basically a religion here — weekend, weekday, celebration or Tuesday, someone is firing up the grill. Heritage Day in September is just the official excuse.\"",
+    clue: "My uncle lights the braai before he even says hello. It doesn't matter if it's a Tuesday, a heatwave, or someone's birthday — if people are coming over, the fire is going. Heritage Day is just the one day the whole country admits what we already do every weekend.",
     label: "South Africa",
     options: shuffle(["South Africa", "Nigeria", "Kenya", "Zimbabwe"]),
   };
   if (c.includes("brazil") || c.includes("rio") || c.includes("são paulo")) return {
-    clue: "\"Carnaval is five days where the whole country drops everything. The smell of street food, samba from every speaker, strangers dancing with strangers at 4am — nothing prepares you for it.\"",
+    clue: "I watched Carnaval from a window above the street the year I was too sick to go down. The sound, the colour, strangers dancing with strangers at 4am like they'd known each other for years. I was devastated to miss it. I've made sure I've never missed it since.",
     label: "Brazil",
     options: shuffle(["Brazil", "Argentina", "Colombia", "Mexico"]),
   };
   if (c.includes("mexico") || c.includes("cdmx")) return {
-    clue: "\"Día de los Muertos is one of the most beautiful things you'll ever see — altars covered in marigolds, photos of people who are gone, candlelight in every cemetery. It's grief turned into something luminous.\"",
+    clue: "The Día de los Muertos altar my grandmother builds every year has photos going back four generations. Marigolds, candles, favourite foods of people long gone. I used to think it was sad. Now I think it's the most honest thing I've ever seen — grief that doesn't pretend, just lights a candle and sets a place at the table.",
     label: "Mexico",
     options: shuffle(["Mexico", "Colombia", "Brazil", "Argentina"]),
   };
   if (c.includes("usa") || c.includes("new york") || c.includes("los angeles") || c.includes("chicago")) return {
-    clue: "\"Fourth of July means every neighbourhood competing on fireworks intensity. Thanksgiving is the one holiday where the whole country is somehow doing the exact same thing at the same time.\"",
+    clue: "Fourth of July at my neighbour's house — their fireworks budget is genuinely alarming and they treat it like a personal competition with the rest of the street. Thanksgiving my whole family does the exact same meal in the exact same order and any deviation is treated like a constitutional crisis. I love both of those things more than I can explain.",
     label: "United States",
     options: shuffle(["United States", "Canada", "Australia", "United Kingdom"]),
   };
   if (c.includes("canada") || c.includes("toronto") || c.includes("vancouver")) return {
-    clue: "\"Hockey playoff season turns quiet people into shouting strangers in bars who feel like old friends. Maple syrup season in spring, the northern lights if you're far enough north — this country has moods.\"",
+    clue: "Hockey playoffs turn quiet people into strangers who are shouting at each other in bars and somehow feel like old friends by the third period. I drove four hours north once just to see the northern lights properly. Pulled over on a completely dark road, engine off, and stood there in minus fifteen for forty minutes. Worth every second.",
     label: "Canada",
     options: shuffle(["Canada", "United States", "Australia", "New Zealand"]),
   };
 
-  // Tropical generic fallback
   return {
-    clue: "\"Rainy season here is its own personality — the kind of downpour that stops traffic and smells like earth and electricity. Mango season though. Worth every flooded street.\"",
+    clue: "The first big rain of the season here stops everything. Traffic, conversations, plans. Everyone just stands and watches it come down. The smell afterwards — warm pavement and wet earth — is something I've tried to explain to people who didn't grow up with it. I never quite manage it.",
     label: country,
     options: shuffle([country, "Australia", "Europe", "North America"]),
   };
 }
 
-// ── Intent clues ──────────────────────────────────────────────────────────────
+// ── Intent stories ────────────────────────────────────────────────────────────
 function intentClue(lookingFor: string | null): { clue: string; label: string; options: string[] } {
   const lf = (lookingFor || "").toLowerCase();
   if (lf.includes("marriage") || lf.includes("marry")) return {
-    clue: "\"I'm past the stage of collecting interesting experiences with people I'll never see again. I want someone to build something with — the kind of thing that's still standing in thirty years.\"",
+    clue: "My parents have been married 34 years and still argue about how to load the dishwasher. Last year I watched my father quietly refold a blanket my mother had just folded badly. She pretended not to notice. He pretended not to do it. I want the 34-year version of that. That's the whole thing.",
     label: "Marriage / Long-term",
     options: shuffle(["Marriage / Long-term", "Casual dating", "Just friends", "Still figuring it out"]),
   };
   if (lf.includes("serious") || lf.includes("relationship")) return {
-    clue: "\"I've done casual. What I actually want is someone I'll still be calling when something good happens — or something bad. Someone who becomes a habit you're glad you formed.\"",
+    clue: "I kept a note on my phone of every first date I went on for two years. 26 entries. At some point I realised I was collecting experiences rather than building anything. I deleted the note, deleted the apps, and took six months off. I'm back now and what I want is completely different. I know exactly what it is.",
     label: "Serious relationship",
     options: shuffle(["Serious relationship", "Casual & free", "Friendship only", "Travel partner"]),
   };
   if (lf.includes("casual") || lf.includes("fun") || lf.includes("something fun")) return {
-    clue: "\"No heavy expectations, no pressure — I just want to meet real people and see what happens. Life is too short for manufactured urgency.\"",
+    clue: "A stranger at a coffee shop started talking to me about a book I was reading last year. We talked for two hours. I never saw him again. That conversation stayed with me for weeks — the ease of it, no agenda, no follow-up needed. That's what I'm actually looking for. Not the drama. Just that ease.",
     label: "Casual / No pressure",
     options: shuffle(["Casual / No pressure", "Serious relationship", "Marriage", "Friendship"]),
   };
   if (lf.includes("friend")) return {
-    clue: "\"Every great relationship I've witnessed started as genuine friends first. I'm not in a rush. The right thing built slowly beats the fast thing built on nothing.\"",
+    clue: "The closest friends I have were strangers I ended up next to by accident — a queue, a shared table, a delayed flight. My favourite relationship I've ever witnessed started as a three-year friendship where both people pretended not to have feelings. I'm not in a rush. I'd rather get it right than get it fast.",
     label: "Friendship first",
     options: shuffle(["Friendship first", "Serious relationship", "Marriage", "Casual dating"]),
   };
   if (lf.includes("travel")) return {
-    clue: "\"I want someone to explore with — not a tourist, a real travel companion. Someone who chooses the unmarked path, eats street food at midnight, and isn't checking a list.\"",
+    clue: "I once spent three days in a city I hadn't planned to visit because my connection got cancelled and the next flight wasn't until Thursday. I had nothing arranged. I ate at places with no English menus, got lost twice, and it was the best three days of the entire trip. I want the kind of person who hears that story and says: I would have done the same thing.",
     label: "Travel partner / Adventure",
     options: shuffle(["Travel partner / Adventure", "Marriage", "Casual fun", "Stay-home comfort"]),
   };
   return {
-    clue: "\"I'm not here with a rigid checklist. I want connection that feels real — where it goes from there is a conversation, not a decision I've already made.\"",
+    clue: "Someone asked me recently what I was looking for and I gave them the honest answer: I don't fully know yet. I know how I want to feel. I know what I don't want. The rest I'd rather figure out with someone than decide alone in advance. That feels more true than any checklist I've ever written.",
     label: "Open / Exploring",
     options: shuffle(["Open / Exploring", "Serious relationship", "Marriage", "Casual only"]),
   };
@@ -343,15 +342,20 @@ function BlindDateQAModal({
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 30 }}
         style={{
-          width: "100%", maxWidth: 380,
-          background: "rgba(20,10,15,0.95)",
-          border: "1.5px solid rgba(194,24,91,0.5)",
-          borderRadius: 20,
-          boxShadow: "0 0 40px rgba(194,24,91,0.3)",
-          padding: "28px 22px",
-          display: "flex", flexDirection: "column", gap: 20,
+          width: "100%", maxWidth: 400,
+          backgroundImage: "url('/images/app-background.png')",
+          backgroundSize: "cover", backgroundPosition: "center",
+          border: "1.5px solid rgba(194,24,91,0.55)",
+          borderRadius: 22,
+          boxShadow: "0 0 48px rgba(194,24,91,0.35), 0 8px 32px rgba(0,0,0,0.6)",
+          overflow: "hidden",
+          position: "relative",
         }}
       >
+        {/* Dark overlay over background image */}
+        <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.72)", pointerEvents: "none", borderRadius: 22 }} />
+        {/* Modal content sits above overlay */}
+        <div style={{ position: "relative", zIndex: 1, padding: "24px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
@@ -479,6 +483,7 @@ function BlindDateQAModal({
             </motion.button>
           </>
         )}
+        </div>
       </motion.div>
     </motion.div>
   );
