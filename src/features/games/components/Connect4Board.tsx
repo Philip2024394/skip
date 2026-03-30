@@ -114,15 +114,13 @@ function PlayerCard({ label, score, isActive, color, glow, initial, imageUrl, sh
       >{score}</motion.span>
 
       <div style={{ height: 14, display: "flex", alignItems: "center" }}>
-        <AnimatePresence>
-          {showGo && isActive && (
-            <motion.span key="go"
-              initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: [1, 0.3, 1] }} exit={{ opacity: 0 }}
-              transition={{ opacity: { type: "tween", duration: 0.85, repeat: Infinity, ease: "easeInOut" } }}
-              style={{ fontSize: 20, fontWeight: 900, color: "white", textShadow: `0 0 12px ${glow}` }}
-            >Go!</motion.span>
-          )}
-        </AnimatePresence>
+        {showGo && (
+          <motion.span
+            animate={{ opacity: [1, 0.2, 1] }}
+            transition={{ duration: 0.85, repeat: Infinity, ease: "easeInOut" }}
+            style={{ fontSize: 20, fontWeight: 900, color: "white", textShadow: `0 0 12px ${glow}` }}
+          >Go!</motion.span>
+        )}
       </div>
 
       <div style={{
@@ -172,13 +170,60 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
   const timedOut = useRef(false);
 
   // ── Chat state ────────────────────────────────────────────────────────────────
-  const [chatMessages, setChatMessages] = useState<{ id: number; from: string; text: string }[]>([]);
+  interface ChatMsg {
+    id: number;
+    from: string;
+    text: string;           // displayed text (translated if incoming)
+    original?: string;      // original text before translation
+    translated?: boolean;   // true = auto-translated from another language
+    translating?: boolean;  // spinner while fetching
+  }
+  const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [chatInput, setChatInput] = useState("");
+  const [flipped, setFlipped] = useState<Set<number>>(new Set());
   const chatEndRef = useRef<HTMLDivElement>(null);
   const msgId = useRef(1);
 
+  function toggleFlip(id: number) {
+    setFlipped(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  }
+
+  // MyMemory free translation API
+  async function translate(text: string, targetLang = "en"): Promise<string | null> {
+    try {
+      const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=|${targetLang}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      const translated = json?.responseData?.translatedText;
+      // MyMemory returns the original if it can't detect / already same lang
+      if (!translated || translated.toLowerCase() === text.toLowerCase()) return null;
+      return translated;
+    } catch {
+      return null;
+    }
+  }
+
   function addMsg(from: string, text: string) {
     setChatMessages(prev => [...prev, { id: msgId.current++, from, text }]);
+  }
+
+  // Add an incoming message (not from "You") — auto-translate it
+  async function addIncomingMsg(from: string, text: string) {
+    const id = msgId.current++;
+    // Add immediately with translating spinner
+    setChatMessages(prev => [...prev, { id, from, text, translating: true }]);
+    const translated = await translate(text);
+    setChatMessages(prev => prev.map(m =>
+      m.id === id
+        ? translated
+          ? { ...m, text: translated, original: text, translated: true, translating: false }
+          : { ...m, translating: false }
+        : m
+    ));
   }
 
   useEffect(() => {
@@ -188,9 +233,9 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
   // Bot chat reactions
   useEffect(() => {
     if (mode !== "vs-bot" || betPhase !== "active") return;
-    if (winner === 2) addMsg("Ted 🧸", "Ha! I win this round! 😈");
-    else if (winner === 1) addMsg("Ted 🧸", "Well played! You got me 🎉");
-    else if (isDraw) addMsg("Ted 🧸", "A draw! I'll get you next time 🤝");
+    if (winner === 2) addIncomingMsg("Ted 🧸", "Ha! I win this round! 😈");
+    else if (winner === 1) addIncomingMsg("Ted 🧸", "Well played! You got me 🎉");
+    else if (isDraw) addIncomingMsg("Ted 🧸", "A draw! I'll get you next time 🤝");
   }, [winner, isDraw, mode, betPhase]);
 
   function sendChat() {
@@ -200,7 +245,7 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
     setChatInput("");
     if (mode === "vs-bot") {
       const replies = ["Interesting move! 🤔", "I see what you're doing…", "My turn soon! 🤖", "💡 Nice try!", "You won't beat me!"];
-      setTimeout(() => addMsg("Ted 🧸", replies[Math.floor(Math.random() * replies.length)]), 900);
+      setTimeout(() => addIncomingMsg("Ted 🧸", replies[Math.floor(Math.random() * replies.length)]), 900);
     }
   }
 
@@ -440,7 +485,8 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
         {/* P1 left */}
         <PlayerCard label={p1Label} score={scores.p1}
           isActive={betPhase === "active" && !winner && !isDraw && currentPlayer === 1}
-          color={RED} glow={RED_GLOW} initial="Y" showGo />
+          color={RED} glow={RED_GLOW} initial="Y"
+          showGo={betPhase === "active" && !winner && !isDraw && currentPlayer === 1} />
 
         {/* Board column */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -638,7 +684,8 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
         {/* P2 right */}
         <PlayerCard label={p2Label} score={scores.p2}
           isActive={betPhase === "active" && !winner && !isDraw && currentPlayer === 2}
-          color={GOLD} glow={GOLD_GLOW} initial={p2Initial} imageUrl={p2Image} showGo />
+          color={GOLD} glow={GOLD_GLOW} initial={p2Initial} imageUrl={p2Image}
+          showGo={betPhase === "active" && !winner && !isDraw && currentPlayer === 2} />
 
       </div>{/* end board row */}
 
@@ -780,24 +827,58 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
         {betPhase === "active" && (
           <>
             <div style={{ flex: 1, overflowY: "auto", padding: "8px 14px", display: "flex", flexDirection: "column", gap: 6 }}>
-              {chatMessages.map(msg => (
-                <div key={msg.id} style={{ display: "flex", justifyContent: msg.from === "You" ? "flex-end" : "flex-start" }}>
-                  {msg.from === "system" ? (
-                    <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontStyle: "italic", textAlign: "center", width: "100%" }}>{msg.text}</span>
-                  ) : (
-                    <div style={{
-                      maxWidth: "75%",
-                      background: msg.from === "You" ? "rgba(238,28,36,0.18)" : "rgba(255,215,0,0.12)",
-                      border: `1px solid ${msg.from === "You" ? "rgba(238,28,36,0.25)" : "rgba(255,215,0,0.2)"}`,
-                      borderRadius: msg.from === "You" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-                      padding: "6px 10px",
-                    }}>
-                      <div style={{ fontSize: 10, fontWeight: 800, marginBottom: 2, color: msg.from === "You" ? RED : GOLD }}>{msg.from}</div>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>{msg.text}</div>
-                    </div>
-                  )}
-                </div>
-              ))}
+              {chatMessages.map(msg => {
+                const isMe = msg.from === "You";
+                const isFlipped = flipped.has(msg.id);
+                const showOriginal = isFlipped && msg.translated && msg.original;
+                return (
+                  <div key={msg.id} style={{ display: "flex", justifyContent: isMe ? "flex-end" : "flex-start" }}>
+                    {msg.from === "system" ? (
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontStyle: "italic", textAlign: "center", width: "100%" }}>{msg.text}</span>
+                    ) : (
+                      <div style={{ maxWidth: "75%", display: "flex", flexDirection: "column", alignItems: isMe ? "flex-end" : "flex-start", gap: 3 }}>
+                        {/* Bubble */}
+                        <motion.div
+                          animate={{ rotateY: isFlipped ? 180 : 0 }}
+                          transition={{ duration: 0.35, ease: "easeInOut" }}
+                          style={{
+                            background: isMe ? "rgba(238,28,36,0.18)" : "rgba(255,215,0,0.12)",
+                            border: `1px solid ${isMe ? "rgba(238,28,36,0.25)" : "rgba(255,215,0,0.2)"}`,
+                            borderRadius: isMe ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                            padding: "6px 10px",
+                            cursor: msg.translated ? "pointer" : "default",
+                            backfaceVisibility: "hidden",
+                          }}
+                          onClick={() => msg.translated && toggleFlip(msg.id)}
+                        >
+                          <div style={{ fontSize: 10, fontWeight: 800, marginBottom: 2, color: isMe ? RED : GOLD }}>{msg.from}</div>
+                          {msg.translating ? (
+                            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontStyle: "italic" }}>translating…</div>
+                          ) : (
+                            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.4 }}>
+                              {showOriginal ? msg.original : msg.text}
+                            </div>
+                          )}
+                        </motion.div>
+                        {/* Translation badge */}
+                        {msg.translated && (
+                          <div
+                            onClick={() => toggleFlip(msg.id)}
+                            style={{
+                              display: "flex", alignItems: "center", gap: 4, cursor: "pointer",
+                              fontSize: 10, color: "rgba(255,255,255,0.3)",
+                              padding: "0 4px",
+                            }}
+                          >
+                            <span>🌐</span>
+                            <span>{isFlipped ? "Show translation" : "Show original"}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <div ref={chatEndRef} />
             </div>
             <div style={{ display: "flex", gap: 8, padding: "8px 12px", borderTop: "1px solid rgba(255,255,255,0.07)", flexShrink: 0 }}>

@@ -68,21 +68,6 @@ export default function Connect4Page() {
               2DATEME · GAMES
             </div>
 
-            {/* Title */}
-            <h1 style={{
-              fontSize: 38, fontWeight: 900, color: "white",
-              margin: "0 0 8px", letterSpacing: "-0.02em", textAlign: "center",
-            }}>
-              Connect 4
-            </h1>
-
-            {/* Subtitle */}
-            <p style={{
-              fontSize: 13, color: "rgba(255,255,255,0.45)",
-              margin: "0 0 24px", textAlign: "center",
-            }}>
-              Challenge a match. First to four wins.
-            </p>
 
             {/* Landing image */}
             <div style={{ marginBottom: 28, width: "100%", borderRadius: 20, overflow: "hidden", boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}>
