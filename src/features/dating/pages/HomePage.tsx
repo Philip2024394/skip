@@ -42,7 +42,6 @@ import { TokenPurchase, GiftReceiver, MatchPopup, GiftReceivePopup } from "@/fea
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
 import CoinCollectModal, { TEDDY_VIDEO } from "@/features/dating/components/CoinCollectModal";
-import UnlockCollectModal, { UNLOCK_VIDEO } from "@/features/dating/components/UnlockCollectModal";
 import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
 import GlobalDatingUpsell from "@/features/dating/components/GlobalDatingUpsell";
 import { useGlobalDating } from "@/shared/hooks/useGlobalDating";
@@ -415,8 +414,6 @@ const Index = () => {
   const [coinCardCollectedToday, setCoinCardCollectedToday] = useState(() => {
     try { return sessionStorage.getItem("coin_card_date") === new Date().toDateString(); } catch { return false; }
   });
-  const [showUnlockCard, setShowUnlockCard] = useState(false);
-  const [unlockCardCollected, setUnlockCardCollected] = useState(false);
 
   const fisherYates = (arr: Profile[]): Profile[] => {
     const a = [...arr];
@@ -581,24 +578,7 @@ const Index = () => {
       gender: "",
       _coinCard: true,
     };
-    const UNLOCK_CARD: any = {
-      id: "__unlock_card__",
-      name: "Welcome Gift",
-      age: 0, city: "", country: "", bio: "",
-      image: "https://ik.imagekit.io/7grri5v7d/UntitledfsdfsdfsdfsdfDSFSDFSdssdfdasdasdfgsdfgdfssdfssasdasd.png",
-      images: [], gender: "",
-      _unlockCard: true,
-    };
-
     let topWithCard = safeTop;
-    try {
-      // Inject unlock card at position 4 (welcome bonus — shown early)
-      const unlockCollected = localStorage.getItem(`unlock_welcome_${user?.id || "guest"}`) === "1";
-      if (!unlockCollected && safeTop.length >= 2) {
-        topWithCard = [...safeTop];
-        topWithCard.splice(Math.min(4, topWithCard.length), 0, UNLOCK_CARD);
-      }
-    } catch { /* ignore */ }
 
     const COIN_CARD_POSITION = 7;
     try {
@@ -661,7 +641,7 @@ const Index = () => {
 
   // Preload reward videos as soon as page mounts so they're ready when cards appear
   useEffect(() => {
-    [TEDDY_VIDEO, UNLOCK_VIDEO].forEach(src => {
+    [TEDDY_VIDEO].forEach(src => {
       try {
         const vid = document.createElement("video");
         vid.src = src;
@@ -2005,25 +1985,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* ── Unlock Card Modal ────────────────────────────────────── */}
-      <UnlockCollectModal
-        open={showUnlockCard}
-        onCollect={() => {
-          // Store 2 free unlocks in profile
-          if (user?.id) {
-            (supabase as any)
-              .from("profiles")
-              .update({ free_unlocks_remaining: 2 })
-              .eq("id", user.id)
-              .then(() => {});
-            try { localStorage.setItem(`unlock_welcome_${user.id}`, "1"); } catch { /* ignore */ }
-          }
-          setUnlockCardCollected(true);
-          setShowUnlockCard(false);
-          toast.success("🔓 2 free unlocks added! Go find your match.");
-        }}
-        onDismiss={() => setShowUnlockCard(false)}
-      />
 
       {/* ── Coin Card Collect Modal ───────────────────────────────── */}
       <CoinCollectModal

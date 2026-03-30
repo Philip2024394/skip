@@ -302,6 +302,7 @@ export default function MatchCelebrationOverlay({
             </span>
           </motion.div>
 
+
           {/* ── Match expiry notice ── */}
           <motion.div
             initial={{ opacity: 0 }}
