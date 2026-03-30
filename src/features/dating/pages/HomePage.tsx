@@ -1365,7 +1365,7 @@ const Index = () => {
               <img
                 src="https://ik.imagekit.io/dateme/Untitleddasdasdasd-removebg-preview.png"
                 alt="Blind Date"
-                style={{ height: 52, width: "auto", objectFit: "contain", filter: "drop-shadow(0 0 8px rgba(194,24,91,0.5))" }}
+                style={{ height: 104, width: "auto", objectFit: "contain", filter: "drop-shadow(0 0 8px rgba(194,24,91,0.5))", marginRight: 12 }}
               />
             </div>
             <div style={{ position: "relative", zIndex: 1, height: 1, background: "rgba(194,24,91,0.3)", marginBottom: 10 }} />
