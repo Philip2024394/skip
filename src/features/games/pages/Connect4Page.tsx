@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Connect4Board from "../components/Connect4Board";
@@ -19,6 +19,10 @@ export default function Connect4Page() {
   const [gameMode, setGameMode] = useState<GameMode>("menu");
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [opponent, setOpponent] = useState<SelectedOpponent | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem("c4_visited", "1");
+  }, []);
 
   return (
     <div style={{
@@ -175,6 +179,7 @@ export default function Connect4Page() {
               mode={gameMode}
               opponentName={opponent?.name}
               opponentAvatar={opponent?.avatar_url ?? undefined}
+              opponentId={opponent?.id}
               isTop5Opponent={opponent?.isTop5 ?? false}
             />
           </motion.div>

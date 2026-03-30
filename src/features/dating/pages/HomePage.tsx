@@ -614,13 +614,12 @@ const Index = () => {
   const c4SwipeCount = useRef<number>(
     parseInt(localStorage.getItem("c4_total_swipes") ?? "0", 10)
   );
-  const c4Visited = localStorage.getItem("c4_visited") === "1";
-  const C4_THRESHOLD = c4Visited ? 60 : 30;
-
   function tickC4Swipe() {
+    // Never show promo if user has already visited Connect4
+    if (localStorage.getItem("c4_visited") === "1") return;
     c4SwipeCount.current += 1;
     localStorage.setItem("c4_total_swipes", String(c4SwipeCount.current));
-    if (c4SwipeCount.current >= C4_THRESHOLD) {
+    if (c4SwipeCount.current >= 30) {
       c4SwipeCount.current = 0;
       localStorage.setItem("c4_total_swipes", "0");
       setShowC4Promo(true);

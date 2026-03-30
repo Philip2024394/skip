@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const ROWS = 6;
@@ -24,6 +25,7 @@ interface Props {
   mode: "vs-guest" | "vs-bot";
   opponentName?: string;
   opponentAvatar?: string;
+  opponentId?: string;
   isTop5Opponent?: boolean;
 }
 
@@ -133,8 +135,12 @@ function PlayerCard({ label, score, isActive, color, glow, initial, imageUrl, sh
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function Connect4Board({ mode, opponentName, opponentAvatar, isTop5Opponent = false }: Props) {
+export default function Connect4Board({ mode, opponentName, opponentAvatar, opponentId, isTop5Opponent = false }: Props) {
   const navigate = useNavigate();
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+  }, []);
   const [board, setBoard] = useState<number[][]>(
     () => Array(ROWS).fill(null).map(() => Array(COLS).fill(EMPTY))
   );
@@ -343,9 +349,42 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
         addMsg("system", "Draw — no coins awarded.");
       }
       spawnCoins();
+
+      // ── Persist coin movement to Supabase ────────────────────────────────────
+      if (userId) {
+        if (winner !== 0) {
+          if (mode === "vs-bot") {
+            // vs Ted: user wins → award, user loses → spend
+            if (winner === 1) {
+              supabase.rpc("award_coins" as any, { p_user_id: userId, p_amount: activeBet, p_reason: "connect4_win" }).then();
+            } else {
+              supabase.rpc("spend_coins" as any, { p_user_id: userId, p_amount: activeBet, p_reason: "connect4_loss" }).then();
+            }
+          } else {
+            // vs guest: P1 = current user
+            if (winner === 1) {
+              supabase.rpc("award_coins" as any, { p_user_id: userId, p_amount: activeBet, p_reason: "connect4_win" }).then();
+              if (opponentId) supabase.rpc("spend_coins" as any, { p_user_id: opponentId, p_amount: activeBet, p_reason: "connect4_loss" }).then();
+            } else {
+              supabase.rpc("spend_coins" as any, { p_user_id: userId, p_amount: activeBet, p_reason: "connect4_loss" }).then();
+              if (opponentId) supabase.rpc("award_coins" as any, { p_user_id: opponentId, p_amount: activeBet, p_reason: "connect4_win" }).then();
+            }
+          }
+        }
+
+        // ── Save game record ─────────────────────────────────────────────────────
+        (supabase as any).from("connect4_games").insert({
+          player1_id: userId,
+          player2_id: mode === "vs-guest" ? (opponentId ?? null) : null,
+          mode,
+          winner_player: winner === 0 ? null : winner,
+          is_draw: isDraw,
+          bet_amount: activeBet,
+        }).then();
+      }
     }
     if (!winner && !isDraw) coinSettled.current = false;
-  }, [winner, isDraw, activeBet, mode, opponentName]);
+  }, [winner, isDraw, activeBet, mode, opponentName, userId, opponentId]);
 
   // ── Turn countdown — resets each time currentPlayer changes or game becomes active ──
   useEffect(() => {

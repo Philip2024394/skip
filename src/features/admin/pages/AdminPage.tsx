@@ -52,6 +52,8 @@ const AdminPage = () => {
   const [selectedUser, setSelectedUser] = useState<AdminProfile | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dbConnected, setDbConnected] = useState(false);
+  const [gameResults, setGameResults] = useState<any[]>([]);
+  const [reportsList, setReportsList] = useState<any[]>([]);
 
   useEffect(() => {
     const init = async () => {
@@ -98,7 +100,7 @@ const AdminPage = () => {
   const loadData = async () => {
     setRefreshing(true);
     try {
-      const [profilesRes, paymentsRes, likesRes, leadsRes, reportsRes] = await Promise.all([
+      const [profilesRes, paymentsRes, likesRes, leadsRes, reportsRes, gamesRes, reportsListRes] = await Promise.all([
         supabase.from("profiles")
           .select("*")
           .order("created_at", { ascending: false })
@@ -107,6 +109,8 @@ const AdminPage = () => {
         supabase.from("likes").select("id, is_rose", { count: "exact" }),
         (supabase.from as any)("whatsapp_leads").select("id", { count: "exact", head: true }),
         supabase.from("reports").select("id", { count: "exact", head: true }),
+        (supabase.from as any)("connect4_games").select("*, player1:player1_id(name, avatar_url), player2:player2_id(name, avatar_url)").order("created_at", { ascending: false }).limit(200),
+        supabase.from("reports").select("*").order("created_at", { ascending: false }).limit(200),
       ]);
       if (profilesRes.data) { setProfiles(profilesRes.data as unknown as AdminProfile[]); setDbConnected(true); }
       if (paymentsRes.data) setPayments(paymentsRes.data as Payment[]);
@@ -116,6 +120,8 @@ const AdminPage = () => {
       }
       if (leadsRes.count !== null) setWhatsappLeadsCount(leadsRes.count);
       if (reportsRes.count !== null) setReportsCount(reportsRes.count);
+      if (gamesRes.data) setGameResults(gamesRes.data);
+      if (reportsListRes.data) setReportsList(reportsListRes.data);
     } catch (_) {
       setDbConnected(false);
     }
@@ -538,6 +544,8 @@ const AdminPage = () => {
     { id: "ads", label: "Ads", icon: <Image className="w-3.5 h-3.5" /> },
     { id: "gifts", label: "Gifts", icon: <Gift className="w-3.5 h-3.5" /> },
     { id: "new_profiles", label: "New", icon: <CheckCircle2 className="w-3.5 h-3.5" />, badge: newToday || undefined },
+    { id: "games", label: "Games", icon: <Zap className="w-3.5 h-3.5" />, badge: gameResults.length || undefined },
+    { id: "reports", label: "Reports", icon: <AlertCircle className="w-3.5 h-3.5" />, badge: reportsList.length || undefined },
   ];
 
   return (
@@ -1245,6 +1253,181 @@ const AdminPage = () => {
             await loadData();
           }} />
         )}
+
+        {/* ══ GAMES TAB ════════════════════════════════════════════════════ */}
+        {tab === "games" && (() => {
+          const totalGames = gameResults.length;
+          const gamesWithBet = gameResults.filter(g => g.bet_amount > 0);
+          const totalCoinsWagered = gamesWithBet.reduce((s: number, g: any) => s + (g.bet_amount || 0), 0);
+          const botGames = gameResults.filter(g => g.mode === "vs-bot");
+          const guestGames = gameResults.filter(g => g.mode === "vs-guest");
+
+          // Leaderboard: count wins per player1_id
+          const winMap: Record<string, { name: string; avatar: string | null; wins: number; games: number; coinsWon: number }> = {};
+          gameResults.forEach((g: any) => {
+            const id = g.player1_id;
+            if (!id) return;
+            if (!winMap[id]) winMap[id] = { name: g.player1?.name ?? "Unknown", avatar: g.player1?.avatar_url ?? null, wins: 0, games: 0, coinsWon: 0 };
+            winMap[id].games += 1;
+            if (g.winner_player === 1) { winMap[id].wins += 1; winMap[id].coinsWon += g.bet_amount || 0; }
+          });
+          const leaderboard = Object.entries(winMap).map(([id, d]) => ({ id, ...d })).sort((a, b) => b.wins - a.wins).slice(0, 10);
+
+          return (
+            <div className="space-y-4">
+              {/* Stats row */}
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "Total Games", value: totalGames, color: "text-pink-400", bg: "bg-pink-500/15 border-pink-500/30" },
+                  { label: "Coins Wagered", value: `${totalCoinsWagered} 🪙`, color: "text-yellow-400", bg: "bg-yellow-500/15 border-yellow-500/30" },
+                  { label: "vs Ted", value: botGames.length, color: "text-amber-400", bg: "bg-amber-500/15 border-amber-500/30" },
+                  { label: "vs Players", value: guestGames.length, color: "text-sky-400", bg: "bg-sky-500/15 border-sky-500/30" },
+                ].map(s => (
+                  <div key={s.label} className={`p-3 rounded-2xl border ${s.bg}`}>
+                    <p className={`font-bold text-lg ${s.color}`}>{s.value}</p>
+                    <p className="text-white/40 text-[10px] font-medium">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Leaderboard */}
+              {leaderboard.length > 0 && (
+                <div>
+                  <p className="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-2">🏆 Top Players (Connect 4)</p>
+                  <div className="space-y-2">
+                    {leaderboard.map((p, i) => (
+                      <div key={p.id} className="flex items-center gap-3 p-3 bg-white/5 border border-white/10 rounded-2xl">
+                        <span className="text-white/40 text-xs font-bold w-5">#{i + 1}</span>
+                        {p.avatar
+                          ? <img src={p.avatar} className="w-8 h-8 rounded-full object-cover" />
+                          : <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/40 text-xs font-bold">{p.name[0]}</div>
+                        }
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-bold truncate">{p.name}</p>
+                          <p className="text-white/40 text-[10px]">{p.wins}W / {p.games}G · {p.coinsWon} 🪙 won</p>
+                        </div>
+                        <span className="text-yellow-400 text-xs font-bold">{p.games > 0 ? Math.round(p.wins / p.games * 100) : 0}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent games */}
+              <div>
+                <p className="text-white/40 text-[10px] font-bold uppercase tracking-wider mb-2">🕐 Recent Games</p>
+                {gameResults.length === 0 ? (
+                  <div className="text-center py-10 bg-white/5 border border-white/10 rounded-2xl">
+                    <Zap className="w-8 h-8 text-white/20 mx-auto mb-2" />
+                    <p className="text-white/40 text-sm">No games played yet</p>
+                    <p className="text-white/25 text-xs mt-1">Run the SQL migration to create the connect4_games table</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {gameResults.slice(0, 50).map((g: any) => {
+                      const p1 = g.player1?.name ?? "Player 1";
+                      const p2 = g.mode === "vs-bot" ? "Ted 🧸" : (g.player2?.name ?? "Guest");
+                      const result = g.is_draw ? "Draw" : g.winner_player === 1 ? `${p1} won` : `${p2} won`;
+                      return (
+                        <div key={g.id} className="flex items-center gap-3 p-3 bg-white/4 border border-white/8 rounded-xl">
+                          <span className="text-lg">{g.mode === "vs-bot" ? "🤖" : "👥"}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-xs font-bold">{p1} vs {p2}</p>
+                            <p className="text-white/40 text-[10px]">{result}{g.bet_amount > 0 ? ` · ${g.bet_amount} 🪙` : ""}</p>
+                          </div>
+                          <p className="text-white/30 text-[10px]">{new Date(g.created_at).toLocaleDateString()}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ══ REPORTS TAB ═══════════════════════════════════════════════════ */}
+        {tab === "reports" && (() => {
+          const dismissReport = async (id: string) => {
+            await supabase.from("reports").delete().eq("id", id);
+            setReportsList(prev => prev.filter(r => r.id !== id));
+            toast.success("Report dismissed");
+          };
+          const banFromReport = async (reportedId: string, reportId: string) => {
+            await supabase.from("profiles").update({ is_banned: true } as any).eq("id", reportedId);
+            await supabase.from("reports").delete().eq("id", reportId);
+            setProfiles(p => p.map(u => u.id === reportedId ? { ...u, is_banned: true } : u));
+            setReportsList(prev => prev.filter(r => r.id !== reportId));
+            toast.success("User banned + report cleared");
+          };
+
+          return (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-white font-bold text-base">User Reports</h2>
+                  <p className="text-white/40 text-xs mt-0.5">Review and action reported profiles</p>
+                </div>
+                <span className="bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold px-2.5 py-1 rounded-full">
+                  {reportsList.length} pending
+                </span>
+              </div>
+
+              {reportsList.length === 0 ? (
+                <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl">
+                  <CheckCircle2 className="w-10 h-10 text-green-400 mx-auto mb-2" />
+                  <p className="text-white font-semibold text-sm">No pending reports</p>
+                  <p className="text-white/40 text-xs mt-1">All clear</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {reportsList.map((r: any) => {
+                    const reported = profiles.find(p => p.id === r.reported_id);
+                    const reporter = profiles.find(p => p.id === r.reporter_id);
+                    return (
+                      <div key={r.id} className="p-4 bg-red-500/8 border border-red-500/20 rounded-2xl space-y-3">
+                        <div className="flex items-start gap-3">
+                          {reported?.avatar_url
+                            ? <img src={reported.avatar_url} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                            : <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center text-red-400 text-sm font-bold flex-shrink-0">{reported?.name?.[0] ?? "?"}</div>
+                          }
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white font-bold text-sm">{reported?.name ?? r.reported_id}</p>
+                            <p className="text-white/40 text-[10px]">Reported by {reporter?.name ?? r.reporter_id}</p>
+                            {r.reason && <p className="text-red-300/80 text-xs mt-1 bg-red-500/10 rounded-lg px-2 py-1">"{r.reason}"</p>}
+                            <p className="text-white/25 text-[10px] mt-1">{new Date(r.created_at).toLocaleString()}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => reported && setSelectedUser(reported as any)}
+                            className="flex-1 py-1.5 rounded-lg bg-white/8 border border-white/10 text-white/60 text-xs font-bold hover:bg-white/12 transition-colors"
+                          >
+                            View Profile
+                          </button>
+                          <button
+                            onClick={() => dismissReport(r.id)}
+                            className="flex-1 py-1.5 rounded-lg bg-white/8 border border-white/10 text-white/60 text-xs font-bold hover:bg-white/12 transition-colors"
+                          >
+                            Dismiss
+                          </button>
+                          {r.reported_id && (
+                            <button
+                              onClick={() => banFromReport(r.reported_id, r.id)}
+                              className="flex-1 py-1.5 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors"
+                            >
+                              Ban User
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
       </div>
 
       {/* User detail drawer */}

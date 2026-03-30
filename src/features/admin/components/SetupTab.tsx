@@ -93,6 +93,29 @@ VALUES ('YOUR-USER-UUID-HERE', 'admin')
 ON CONFLICT (user_id, role) DO NOTHING;`,
     warn: true,
   },
+  {
+    step: 5,
+    title: "Create connect4_games table",
+    desc: "Stores Connect 4 game results, bets, and win/loss records. Required for the Games tab in admin.",
+    sql: `CREATE TABLE IF NOT EXISTS public.connect4_games (
+  id            uuid primary key default gen_random_uuid(),
+  player1_id    uuid references public.profiles(id) on delete set null,
+  player2_id    uuid references public.profiles(id) on delete set null,
+  mode          text not null check (mode in ('vs-bot', 'vs-guest')),
+  winner_player smallint check (winner_player in (1, 2)),
+  is_draw       boolean not null default false,
+  bet_amount    integer not null default 0,
+  created_at    timestamptz not null default now()
+);
+CREATE INDEX IF NOT EXISTS connect4_games_player1_idx ON public.connect4_games (player1_id);
+CREATE INDEX IF NOT EXISTS connect4_games_player2_idx ON public.connect4_games (player2_id);
+CREATE INDEX IF NOT EXISTS connect4_games_created_idx ON public.connect4_games (created_at desc);
+ALTER TABLE public.connect4_games ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Players can insert own games" ON public.connect4_games FOR INSERT WITH CHECK (auth.uid() = player1_id);
+CREATE POLICY "Players can read own games" ON public.connect4_games FOR SELECT USING (auth.uid() = player1_id OR auth.uid() = player2_id);
+CREATE POLICY "Admins can read all games" ON public.connect4_games FOR SELECT USING (public.is_admin());
+CREATE POLICY "Admins can delete games" ON public.connect4_games FOR DELETE USING (public.is_admin());`,
+  },
 ];
 
 const SetupTab = () => {
