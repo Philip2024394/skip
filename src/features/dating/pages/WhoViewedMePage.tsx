@@ -724,6 +724,12 @@ export default function WhoViewedMePage() {
           background: "transparent",
           flexShrink: 0,
         }}>
+          {/* Logo — left */}
+          <img
+            src="https://ik.imagekit.io/dateme/Untitledfgdsfg-removebg-preview.png"
+            alt="logo"
+            style={{ width: 44, height: 44, objectFit: "contain", flexShrink: 0, filter: "drop-shadow(0 0 6px rgba(255,255,255,0.4))" }}
+          />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 17, fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>
               👁 Who Viewed Me
