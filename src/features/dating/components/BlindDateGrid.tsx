@@ -1521,11 +1521,6 @@ export default function BlindDateGrid({ userId, onClose, onStartChat }: { userId
             <span style={{ fontSize: 13, fontWeight: 800, color: boostActive ? "#f59e0b" : "rgba(255,255,255,0.85)", lineHeight: 1.1 }}>
               {boostActive ? `Boosted · ${boostHoursLeft}h left` : "Boost my profile"}
             </span>
-            {!boostActive && (
-              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>
-                Jump to top of everyone's stack · 40 🪙
-              </span>
-            )}
           </div>
         </motion.button>
       </div>
