@@ -724,15 +724,6 @@ export default function WhoViewedMePage() {
           background: "transparent",
           flexShrink: 0,
         }}>
-          <button
-            onClick={() => navigate("/home")}
-            style={{
-              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 20, width: 34, height: 34, cursor: "pointer",
-              color: "white", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >←</button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 17, fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>
               👁 Who Viewed Me
@@ -750,6 +741,16 @@ export default function WhoViewedMePage() {
           }}>
             🪙 {coinBalance}
           </div>
+          {/* Home button — right */}
+          <button
+            onClick={() => navigate("/home")}
+            style={{
+              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: 20, width: 34, height: 34, cursor: "pointer",
+              color: "white", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >🏠</button>
         </div>
 
         {/* ── Body ──────────────────────────────────────────────────── */}
