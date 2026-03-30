@@ -256,15 +256,22 @@ const AuthPage = () => {
       await processPendingReferral();
       const [{ data: roles }, { data: profile }] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", data.session.user.id),
-        supabase.from("profiles").select("name").eq("id", data.session.user.id).maybeSingle(),
+        (supabase.from("profiles").select("name, avatar_url, photo_flagged, flag_reason") as any).eq("id", data.session.user.id).maybeSingle(),
       ]);
       setLoading(false);
       const isAdmin = roles?.some((r: any) => r.role === "admin");
-      // Admin always goes through onboarding (for testing); new users too
+      // Flagged profile — show re-verification gate
+      if (profile?.photo_flagged) {
+        navigate("/photo-gate", { replace: true });
+        return;
+      }
+      // Brand-new users (no name set) always go through onboarding
       if (isAdmin || !profile?.name) {
         navigate("/welcome", { replace: true });
         return;
       }
+      // Existing users — always send to /home regardless of photo.
+      // The app enforces preview mode (browse-only) inside /home when no avatar.
       navigate("/home", { replace: true });
       return;
     }
@@ -393,6 +400,17 @@ const AuthPage = () => {
                   }}
                 >
                   DEV → Dashboard
+                </button>
+                <button
+                  onClick={() => navigate("/dates")}
+                  style={{
+                    padding: "5px 10px", borderRadius: 8, fontSize: 10, fontWeight: 800,
+                    background: "rgba(236,72,153,0.85)", color: "white", border: "none",
+                    cursor: "pointer", letterSpacing: "0.04em", backdropFilter: "blur(8px)",
+                    boxShadow: "0 2px 10px rgba(236,72,153,0.5)",
+                  }}
+                >
+                  DEV → Dates
                 </button>
               </div>
             )}

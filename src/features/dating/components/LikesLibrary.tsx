@@ -57,7 +57,6 @@ interface LikesLibraryProps {
   onPurchaseFeature: (feature: PremiumFeature) => void;
   onCulturalGuide?: () => void;
   onVisitorGuide?: () => void;
-  onGhostMode?: () => void;
 }
 
 type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
@@ -69,7 +68,7 @@ type DisplayItem =
 const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   new: () => "New",
   sent: () => "I Liked",
-  received: () => "Likes Me",
+  received: (c) => c.received > 0 ? `Likes Me (${c.received})` : "Likes Me",
   treat: () => "Treat",
   unlock: () => "Unlock",
   distance: () => "Distance",
@@ -111,7 +110,7 @@ const LikesLibrary = ({
   hidePrivateTabs,
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
-  onUnlock, onChat, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide, onGhostMode,
+  onUnlock, onChat, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide,
 }: LikesLibraryProps) => {
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
@@ -291,6 +290,46 @@ const LikesLibrary = ({
         </div>
       </div>
 
+      {/* ── Blurred Likes Me upsell banner ── */}
+      <AnimatePresence>
+        {tab === "received" && likedMe.length > 0 && likedMe.some(p => !iLiked.some(l => l.id === p.id)) && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-2 mb-2 flex-shrink-0 overflow-hidden"
+          >
+            <div style={{
+              width: "100%", display: "flex", alignItems: "center", gap: 8,
+              background: "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(168,85,247,0.12))",
+              border: "1px solid rgba(236,72,153,0.22)",
+              borderRadius: 10, padding: "6px 10px",
+            }}>
+              <span style={{ fontSize: 14 }}>👑</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ color: "white", fontSize: 10, fontWeight: 800, margin: 0 }}>
+                  {likedMe.filter(p => !iLiked.some(l => l.id === p.id)).length} people liked you
+                </p>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, margin: 0 }}>
+                  Match back or upgrade VIP to see who
+                </p>
+              </div>
+              <button
+                onClick={() => onPurchaseFeature(PREMIUM_FEATURES.find(f => f.id === "vip") ?? PREMIUM_FEATURES[0])}
+                style={{
+                  background: "linear-gradient(135deg,#ec4899,#a855f7)",
+                  border: "none", borderRadius: 8, padding: "4px 10px",
+                  color: "white", fontSize: 9, fontWeight: 800, cursor: "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                Unlock
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── New profiles label ── */}
       <AnimatePresence>
         {tab === "new" && !isProfileInfoTab && (
@@ -368,7 +407,7 @@ const LikesLibrary = ({
                     { key: "video" as const, label: "Video", emoji: "🎬", action: "video" },
                     { key: "cultural" as const, label: "Cultural Guide", emoji: "🌏", action: "cultural" },
                     { key: "visitor" as const, label: "Travel Guide", emoji: "✈️", action: "visitor" },
-                    { key: "ghost" as const, label: "Ghost Mode", emoji: "👻", action: "ghost" },
+                    { key: "teddy" as const, label: "Teddy Room", emoji: "🧸", action: "teddy" },
                   ] as { key: string; label: string; emoji: string; action: string }[]
                 ).map((s, idx) => (
                   <motion.button
@@ -387,8 +426,8 @@ const LikesLibrary = ({
                         onCulturalGuide?.();
                       } else if (s.action === "visitor") {
                         onVisitorGuide?.();
-                      } else if (s.action === "ghost") {
-                        onGhostMode?.();
+                      } else if (s.action === "teddy") {
+                        window.location.href = "/teddy";
                       } else {
                         onSelectProfileSection?.(s.key as "basic" | "lifestyle" | "interests" | "images");
                       }

@@ -1,9 +1,27 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Send, ShieldCheck, Lock, Video } from "lucide-react";
+import { ArrowLeft, Send, ShieldCheck, Lock, Video, Flag, X } from "lucide-react";
 import { useMessages, validateChatMessage } from "@/shared/hooks/useMessages";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import VideoCallPanel from "@/features/video/components/VideoCallPanel";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+// Patterns that indicate scam / suspicious content
+const SCAM_PATTERNS = [
+  /\b(\+?62|0811|0812|0813|0821|0822|0851|0852|0853|0878|0881|0882)\d{5,10}\b/,   // Indonesian phone
+  /\b\+?[1-9]\d{6,14}\b/,          // generic international phone
+  /\bwhatsapp\b/i,
+  /\btelegram\b/i,
+  /\bbtc|bitcoin|ethereum|usdt|crypto|binance|wallet\b/i,
+  /\bsend.{0,20}(money|cash|fund|usd|\$|dollar)\b/i,
+  /\b(western union|moneygram|transfer)\b/i,
+  /\bgift card\b/i,
+];
+
+function containsScamContent(text: string): boolean {
+  return SCAM_PATTERNS.some(p => p.test(text));
+}
 
 interface ChatPanelProps {
   currentUserId: string;
@@ -32,6 +50,23 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [showVideoCall, setShowVideoCall] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
+
+  const handleReport = async (reason: string) => {
+    try {
+      await (supabase as any).from("message_reports").insert({
+        reporter_id: currentUserId,
+        reported_id: otherUser.id,
+        reason,
+      });
+      setReportSent(true);
+      setShowReport(false);
+      toast.success("Report submitted — our team will review within 24h.");
+    } catch {
+      toast.error("Could not submit report. Try again.");
+    }
+  };
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { messages, loading, sending, sendMessage } = useMessages(currentUserId, otherUser.id);
@@ -156,19 +191,98 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
         )}
       </div>
 
-      {/* ── Privacy bar ── */}
+      {/* ── Safety bar ── */}
       <div style={{
-        display: "flex", alignItems: "center", gap: 6,
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6,
         padding: "7px 16px",
         background: "rgba(14,165,233,0.06)",
         borderBottom: "1px solid rgba(14,165,233,0.1)",
         flexShrink: 0,
       }}>
-        <ShieldCheck style={{ width: 11, height: 11, color: "rgba(125,211,252,0.65)", flexShrink: 0 }} />
-        <span style={{ fontSize: 10, color: "rgba(125,211,252,0.65)", fontWeight: 600 }}>
-          Private chat · No numbers or contact info · Unlock WhatsApp when you're ready
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+          <ShieldCheck style={{ width: 11, height: 11, color: "rgba(125,211,252,0.65)", flexShrink: 0 }} />
+          <span style={{ fontSize: 10, color: "rgba(125,211,252,0.65)", fontWeight: 600 }}>
+            Private · No contact info shared
+          </span>
+        </div>
+        {!reportSent ? (
+          <button
+            onClick={() => setShowReport(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 4,
+              background: "none", border: "1px solid rgba(239,68,68,0.25)",
+              borderRadius: 20, padding: "3px 8px", cursor: "pointer",
+              color: "rgba(239,68,68,0.7)", fontSize: 9, fontWeight: 700,
+            }}
+          >
+            <Flag style={{ width: 8, height: 8 }} />
+            Is this person real?
+          </button>
+        ) : (
+          <span style={{ fontSize: 9, color: "rgba(74,222,128,0.6)", fontWeight: 600 }}>✓ Reported</span>
+        )}
       </div>
+
+      {/* ── Report modal ── */}
+      <AnimatePresence>
+        {showReport && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{
+              position: "absolute", inset: 0, zIndex: 100,
+              background: "rgba(0,0,0,0.72)", backdropFilter: "blur(8px)",
+              display: "flex", alignItems: "flex-end",
+            }}
+            onClick={() => setShowReport(false)}
+          >
+            <motion.div
+              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 380, damping: 34 }}
+              onClick={e => e.stopPropagation()}
+              style={{
+                width: "100%", background: "#0c0c14",
+                border: "1px solid rgba(255,255,255,0.09)",
+                borderRadius: "20px 20px 0 0",
+                padding: "20px 20px 40px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                <p style={{ color: "white", fontWeight: 800, fontSize: 16, margin: 0 }}>
+                  Report {firstName}
+                </p>
+                <button onClick={() => setShowReport(false)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                  <X style={{ width: 20, height: 20, color: "rgba(255,255,255,0.4)" }} />
+                </button>
+              </div>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
+                Your report is anonymous. Our team reviews all reports within 24 hours.
+              </p>
+              {[
+                { key: "fake_profile", label: "Fake or catfish profile", emoji: "🎭" },
+                { key: "suspicious_messages", label: "Suspicious or scam messages", emoji: "⚠️" },
+                { key: "money_request", label: "Asking for money or crypto", emoji: "💸" },
+                { key: "inappropriate", label: "Inappropriate content", emoji: "🚫" },
+                { key: "other", label: "Other concern", emoji: "🔍" },
+              ].map(opt => (
+                <motion.button
+                  key={opt.key}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleReport(opt.key)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: 12,
+                    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: 14, padding: "12px 14px", marginBottom: 8,
+                    cursor: "pointer", textAlign: "left",
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{opt.emoji}</span>
+                  <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, fontWeight: 600 }}>{opt.label}</span>
+                </motion.button>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Message list ── */}
       <div

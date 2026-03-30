@@ -620,6 +620,47 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
           </>
         )}
 
+        {/* -- Date Reputation -- */}
+        {(profile?.date_total_reviews ?? 0) > 0 && (
+          <>
+            <SectionTitle title="Date Reputation" />
+            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", flexWrap: "wrap" }}>
+              {(profile?.date_show_up_count ?? 0) > 0 && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.35)", fontSize: 11, color: "#4ade80", fontWeight: 700 }}>
+                  ✓ Shows Up · {profile!.date_show_up_count}/{profile!.date_total_reviews} dates
+                </span>
+              )}
+              {profile?.date_avg_rating != null && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 10px", borderRadius: 20, background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.35)", fontSize: 11, color: "#fbbf24", fontWeight: 700 }}>
+                  ★ {Number(profile!.date_avg_rating).toFixed(1)} avg rating
+                </span>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* -- Social proof -- */}
+        {profile?.social_platform && profile?.social_followers && (
+          <>
+            <SectionTitle title="Social Proof" />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0" }}>
+              <span style={{ fontSize: 16 }}>
+                {profile.social_platform === "instagram" ? "📸" : profile.social_platform === "tiktok" ? "🎵" : profile.social_platform === "facebook" ? "👥" : profile.social_platform === "youtube" ? "▶️" : "✖️"}
+              </span>
+              <span style={{ fontSize: 13, color: "white", fontWeight: 700 }}>
+                {profile.social_followers >= 1_000_000
+                  ? `${(profile.social_followers / 1_000_000).toFixed(1)}M`
+                  : profile.social_followers >= 1_000
+                  ? `${(profile.social_followers / 1_000).toFixed(profile.social_followers >= 10_000 ? 0 : 1)}K`
+                  : profile.social_followers} followers
+              </span>
+              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", fontWeight: 600, textTransform: "capitalize" }}>
+                on {profile.social_platform}
+              </span>
+            </div>
+          </>
+        )}
+
         {/* -- Lifestyle -- */}
         <SectionHeader title="Lifestyle" />
         {(lifestyleInfo.smoking || lifestyleInfo.drinking || lifestyleInfo.exercise || lifestyleInfo.diet || lifestyleInfo.sleep) && (

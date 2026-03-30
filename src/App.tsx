@@ -22,15 +22,11 @@ const WhatsAppDirectory = lazy(() => import("@/features/admin/components/WhatsAp
 const SecurityDashboard = lazy(() => import("@/features/admin/components/SecurityDashboard"));
 const UltimateSecurityDashboard = lazy(() => import("@/features/admin/components/UltimateSecurityDashboard"));
 const WorldMapDashboard = lazy(() => import("@/features/admin/pages/WorldMapDashboard"));
-const GhostModePage = lazy(() => import("@/features/ghost/pages/GhostModePage"));
-const GhostSetupPage = lazy(() => import("@/features/ghost/pages/GhostSetupPage"));
-const GhostAuthPage = lazy(() => import("@/features/ghost/pages/GhostAuthPage"));
-const GhostPricingPage = lazy(() => import("@/features/ghost/pages/GhostPricingPage"));
-const GhostGatewayPage = lazy(() => import("@/features/ghost/pages/GhostGatewayPage"));
-const GhostBlockPage = lazy(() => import("@/features/ghost/pages/GhostBlockPage"));
-const GhostRoomPage = lazy(() => import("@/features/ghost/pages/GhostRoomPage"));
 const TeddyRoomPage = lazy(() => import("@/features/teddy/pages/TeddyRoomPage"));
+const EventsPage = lazy(() => import("@/features/events/pages/EventsPage"));
 const WelcomePage = lazy(() => import("@/features/onboarding/pages/WelcomePage"));
+const PhotoGatePage = lazy(() => import("@/features/auth/pages/PhotoGatePage"));
+const DateFeedPage = lazy(() => import("@/features/dating/pages/DateFeedPage"));
 
 const queryClient = new QueryClient();
 
@@ -74,15 +70,11 @@ const AppContent = () => {
         <Route path="/admin/security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><SecurityDashboard /></Suspense></ProtectedRoute>} />
         <Route path="/admin/ultimate-security" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><UltimateSecurityDashboard /></Suspense></ProtectedRoute>} />
         <Route path="/admin/world-map" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WorldMapDashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/ghost" element={<Suspense fallback={<LoadingFallback />}><GhostModePage /></Suspense>} />
-        <Route path="/ghost/setup" element={<Suspense fallback={<LoadingFallback />}><GhostSetupPage /></Suspense>} />
-        <Route path="/ghost/auth" element={<Suspense fallback={<LoadingFallback />}><GhostAuthPage /></Suspense>} />
-        <Route path="/ghost/pricing" element={<Suspense fallback={<LoadingFallback />}><GhostPricingPage /></Suspense>} />
-        <Route path="/ghost/mock" element={<Suspense fallback={<LoadingFallback />}><GhostGatewayPage /></Suspense>} />
-        <Route path="/ghost/block" element={<Suspense fallback={<LoadingFallback />}><GhostBlockPage /></Suspense>} />
-        <Route path="/ghost/room" element={<Suspense fallback={<LoadingFallback />}><GhostRoomPage /></Suspense>} />
         <Route path="/teddy" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><TeddyRoomPage /></Suspense></ProtectedRoute>} />
+        <Route path="/events" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><EventsPage /></Suspense></ProtectedRoute>} />
         <Route path="/welcome" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WelcomePage /></Suspense></ProtectedRoute>} />
+        <Route path="/photo-gate" element={<Suspense fallback={<LoadingFallback />}><PhotoGatePage /></Suspense>} />
+        <Route path="/dates" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><DateFeedPage /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes >
     </BrowserRouter >

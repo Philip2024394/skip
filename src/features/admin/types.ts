@@ -52,6 +52,8 @@ export interface AdminProfile {
   video_verified_at: string | null;
   photo_verified: boolean;
   photo_verified_at: string | null;
+  photo_flagged: boolean;
+  flag_reason: string | null;
 }
 
 export interface Payment {
@@ -65,5 +67,5 @@ export interface Payment {
   stripe_session_id: string;
 }
 
-export type Tab = "overview" | "users" | "income" | "alerts" | "verify" | "setup" | "ads" | "gifts";
+export type Tab = "overview" | "users" | "income" | "alerts" | "verify" | "setup" | "ads" | "gifts" | "new_profiles";
 export type UserFilter = "all" | "active" | "banned" | "hidden" | "spotlight" | "mock" | "verified";

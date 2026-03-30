@@ -68,6 +68,10 @@ export interface Profile {
   visiting_badge_expires_at?: string | null;
   intent?: "marriage" | "dating" | "unsure";
   voice_intro_url?: string | null;
+  video_url?: string | null;
+  date_show_up_count?: number | null;
+  date_total_reviews?: number | null;
+  date_avg_rating?: number | null;
   expires_at?: string | null;
   is_rose?: boolean;
   last_seen_at?: string | null;
@@ -109,4 +113,8 @@ export interface Profile {
   bestie_reviews?: Record<string, string>; // key = bestieId, value = their review about this profile
   gift_delivery_opted_in?: boolean;
   delivery_address?: string; // private — only visible to admin, never shown to other users
+  social_platform?: "instagram" | "tiktok" | "facebook" | "youtube" | "x" | null;
+  social_followers?: number | null;
+  video_verified?: boolean;
+  photo_verified?: boolean;
 }

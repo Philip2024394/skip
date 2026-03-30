@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import VoiceRecorder from "@/features/video/components/VoiceRecorder";
+import VideoIntroUploader from "@/features/video/components/VideoIntroUploader";
 import { FIRST_DATE_IDEAS } from "@/data/firstDateIdeas";
 import DatePlacesEditor, { DatePlace } from "./DatePlacesEditor";
 import { LANGUAGES, getCountryFlag, getLanguageFlag, getNativeLanguage } from "@/data/languages";
@@ -93,6 +94,7 @@ interface ProfileData {
   longitude: number | null;
   available_tonight: boolean;
   voice_intro_url: string | null;
+  video_url: string | null;
   image_positions: ImagePosition[];
   first_date_idea: string | null;
   first_date_places: DatePlace[];
@@ -249,6 +251,7 @@ const ProfileEditor = () => {
         latitude: (row.latitude as number | null) ?? null,
         longitude: (row.longitude as number | null) ?? null,
         voice_intro_url: (row.voice_intro_url as string | null) || null,
+        video_url: (row.video_url as string | null) || null,
         image_positions: positions,
         first_date_idea: (row.first_date_idea as string | null) || null,
         first_date_places: ((row.first_date_places as DatePlace[]) || []),
@@ -479,6 +482,7 @@ const ProfileEditor = () => {
         longitude: profile.longitude,
         available_tonight: profile.available_tonight,
         voice_intro_url: profile.voice_intro_url,
+        video_url: profile.video_url,
         image_positions: profile.image_positions as unknown as import("@/integrations/supabase/types").Json,
         first_date_idea: profile.first_date_idea,
         first_date_places: profile.first_date_places as unknown as import("@/integrations/supabase/types").Json,
@@ -1184,6 +1188,13 @@ const ProfileEditor = () => {
             voiceUrl={profile.voice_intro_url}
             userId={userId}
             onSaved={(url) => update("voice_intro_url", url)}
+          />
+
+          {/* Video Intro */}
+          <VideoIntroUploader
+            videoUrl={profile.video_url}
+            userId={userId}
+            onSaved={(url) => update("video_url", url)}
           />
         </>
       )}

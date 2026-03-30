@@ -537,6 +537,7 @@ const AdminPage = () => {
     { id: "setup", label: "Setup", icon: <Settings className="w-3.5 h-3.5" /> },
     { id: "ads", label: "Ads", icon: <Image className="w-3.5 h-3.5" /> },
     { id: "gifts", label: "Gifts", icon: <Gift className="w-3.5 h-3.5" /> },
+    { id: "new_profiles", label: "New", icon: <CheckCircle2 className="w-3.5 h-3.5" />, badge: newToday || undefined },
   ];
 
   return (
@@ -1094,6 +1095,144 @@ const AdminPage = () => {
         {tab === "gifts" && (
           <GiftOrdersTab />
         )}
+
+        {/* ══ NEW PROFILES CHECKLIST TAB ══════════════════════════════ */}
+        {tab === "new_profiles" && (() => {
+          const todayProfiles = profiles
+            .filter(p => isNewToday(p.created_at) && !p.is_mock)
+            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+          const handleFlagPhoto = async (userId: string) => {
+            const reason = window.prompt("Flag reason (shown to user):\ne.g. 'Your photo does not show a real person.'");
+            if (reason === null) return; // cancelled
+            setActionLoading(`flag-${userId}`);
+            const { error } = await (supabase.from("profiles").update as any)({
+              photo_flagged: true,
+              flag_reason: reason || "Your profile photo does not appear to show a real person.",
+              is_active: false,
+            }).eq("id", userId);
+            if (error) { rlsErr(error); }
+            else {
+              toast.success("Profile flagged — hidden from feed");
+              setProfiles(p => p.map(u => u.id === userId ? { ...u, photo_flagged: true, is_active: false } : u));
+            }
+            setActionLoading(null);
+          };
+
+          const handleApprovePhoto = async (userId: string) => {
+            setActionLoading(`approve-${userId}`);
+            const { error } = await (supabase.from("profiles").update as any)({
+              photo_flagged: false,
+              flag_reason: null,
+              is_active: true,
+            }).eq("id", userId);
+            if (error) { rlsErr(error); }
+            else {
+              toast.success("Profile approved ✓");
+              setProfiles(p => p.map(u => u.id === userId ? { ...u, photo_flagged: false, is_active: true } : u));
+            }
+            setActionLoading(null);
+          };
+
+          return (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-white font-bold text-base">New Profiles Today</h2>
+                  <p className="text-white/40 text-xs mt-0.5">Review each photo — flag if not a real human photo</p>
+                </div>
+                <span className="bg-pink-500/20 border border-pink-500/30 text-pink-400 text-xs font-bold px-2.5 py-1 rounded-full">
+                  {todayProfiles.length} today
+                </span>
+              </div>
+
+              {todayProfiles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <CheckCircle2 className="w-10 h-10 text-green-400/50" />
+                  <p className="text-white/30 text-sm">No new profiles today</p>
+                </div>
+              ) : (
+                todayProfiles.map(p => {
+                  const isLoading = actionLoading === `flag-${p.id}` || actionLoading === `approve-${p.id}`;
+                  return (
+                    <div key={p.id} className="flex items-center gap-3 bg-white/5 border border-white/8 rounded-2xl p-3">
+                      {/* Avatar */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/10 border border-white/10">
+                          {p.avatar_url ? (
+                            <img src={p.avatar_url} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Image className="w-6 h-6 text-white/20" />
+                            </div>
+                          )}
+                        </div>
+                        {!p.avatar_url && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 border border-black flex items-center justify-center">
+                            <AlertTriangle className="w-2.5 h-2.5 text-black" />
+                          </span>
+                        )}
+                        {(p as any).photo_flagged && (
+                          <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 border border-black flex items-center justify-center">
+                            <AlertCircle className="w-2.5 h-2.5 text-white" />
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-white font-bold text-sm truncate">{p.name}, {p.age}</p>
+                          {(p as any).photo_flagged && (
+                            <span className="bg-red-500/20 text-red-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">FLAGGED</span>
+                          )}
+                          {!p.avatar_url && (
+                            <span className="bg-amber-500/20 text-amber-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0">NO PHOTO</span>
+                          )}
+                        </div>
+                        <p className="text-white/40 text-[10px] mt-0.5">{p.country}{p.city ? ` · ${p.city}` : ""}</p>
+                        <p className="text-white/25 text-[10px]">
+                          {new Date(p.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} · {p.gender}
+                          {p.photo_verified && <span className="text-green-400 ml-1">· ✓ verified</span>}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex flex-col gap-1.5 flex-shrink-0">
+                        {!(p as any).photo_flagged ? (
+                          <button
+                            onClick={() => handleFlagPhoto(p.id)}
+                            disabled={isLoading}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-500/15 border border-red-500/25 text-red-400 text-[10px] font-bold hover:bg-red-500/25 transition-colors disabled:opacity-50"
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                            Flag
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleApprovePhoto(p.id)}
+                            disabled={isLoading}
+                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-green-500/15 border border-green-500/25 text-green-400 text-[10px] font-bold hover:bg-green-500/25 transition-colors disabled:opacity-50"
+                          >
+                            <CheckCircle2 className="w-3 h-3" />
+                            Approve
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setSelectedUser(p)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/8 border border-white/10 text-white/50 text-[10px] font-bold hover:bg-white/12 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          View
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          );
+        })()}
 
         {tab === "verify" && (
           <VerifyTab profiles={profiles} onApprove={async (id) => {

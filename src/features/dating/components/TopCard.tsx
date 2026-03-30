@@ -1,5 +1,6 @@
 import { motion, animate } from "framer-motion";
 import { Heart, MapPin, Fingerprint, ChevronLeft, ChevronRight, BadgeCheck } from "lucide-react";
+import { calcCompatibilityScore, gradeColor } from "@/shared/utils/compatibilityScore";
 // Badge rendering is centralised in ProfileBadge — do not add badge logic here
 import ProfileBadge from "@/features/dating/components/ProfileBadge";
 import ContactPreferenceBadge from "@/features/dating/components/ContactPreferenceBadge";
@@ -37,6 +38,7 @@ interface TopCardProps {
   persistSessionBehavior: () => void;
   onCoinCard?: () => void;
   onUnlockCard?: () => void;
+  currentUser?: any;
 }
 
 
@@ -219,6 +221,24 @@ export default function TopCard(props: TopCardProps) {
                   : "🤔 Not Sure Yet"}
               </span>
             )}
+            {/* ── Compatibility badge ── */}
+            {props.currentUser && (() => {
+              const compat = calcCompatibilityScore(props.currentUser, props.selectedProfile);
+              const color = gradeColor(compat.grade);
+              return (
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border"
+                    style={{ background: `${color}22`, borderColor: `${color}55`, color }}
+                  >
+                    ✦ {compat.score}% match
+                  </span>
+                  {compat.reasons[0] && (
+                    <span className="text-white/45 text-[10px] italic truncate max-w-[160px]">{compat.reasons[0]}</span>
+                  )}
+                </div>
+              );
+            })()}
             <SentGiftsDisplay profileId={props.selectedProfile.id} />
             {(props.selectedProfile as any).prompt_answer && (
               <div className="mt-2 rounded-xl px-3 py-2.5 border border-white/10"

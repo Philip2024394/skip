@@ -58,7 +58,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/dialog";
-import { FlaskConical, Sparkles, X } from "lucide-react";
+import { FlaskConical, Sparkles, X, Camera } from "lucide-react";
+import PhotoRequiredModal from "@/features/dating/components/PhotoRequiredModal";
 import { useUserCurrency } from "@/shared/hooks/useUserCurrency";
 import BestieRequestPopup, { BestieRequest } from "@/features/dating/components/BestieRequestPopup";
 import BestieReferralPopup, { BestieReferral } from "@/features/dating/components/BestieReferralPopup";
@@ -271,6 +272,7 @@ const Index = () => {
   const [userGender, setUserGender] = useState<string | null>(null);
   const [userLookingFor, setUserLookingFor] = useState<string | null>(null);
   const [chatProfile, setChatProfile] = useState<any>(null);
+  const [photoRequiredAction, setPhotoRequiredAction] = useState<"like" | "match" | "chat" | "unlock" | "rose" | null>(null);
 
   // Register this as a new browsing session (increments counter for popup gating)
   useEffect(() => { registerSession(); }, []);
@@ -1074,8 +1076,33 @@ const Index = () => {
   });
 
 
+  // ── Preview mode: logged-in user with no profile photo yet ──────────────────
+  const isPreviewMode = !!(
+    user &&
+    user.id !== "guest-user" &&
+    !user.avatar_url &&
+    typeof user.id === "string" && user.id.length === 36
+  );
+
+  // ── Preview-gated action wrappers ─────────────────────────────────────────
+  const gatedLike = useCallback((profile: any) => {
+    if (isPreviewMode) { setPhotoRequiredAction("like"); return; }
+    handleLike(profile);
+  }, [isPreviewMode, handleLike]);
+
+  const gatedChat = useCallback((profile: any) => {
+    if (isPreviewMode) { setPhotoRequiredAction("chat"); return; }
+    setChatProfile(profile);
+  }, [isPreviewMode]);
+
+  const gatedUnlock = useCallback((profile: any) => {
+    if (isPreviewMode) { setPhotoRequiredAction("unlock"); return; }
+    handleUnlock(profile);
+  }, [isPreviewMode, handleUnlock]);
+
   // Intercept swipe-up (rose) to show WA lock popup if profile is locked
   const handleRose = useCallback((profile: any) => {
+    if (isPreviewMode) { setPhotoRequiredAction("rose"); return; }
     if (isProfileLocked(profile.id, profile.is_mock)) {
       // Build popup data from WaLock store or fall back to profile fields
       const waLock = isWaLocked(profile.id) || {
@@ -1088,7 +1115,7 @@ const Index = () => {
       return;
     }
     handleRoseRaw(profile);
-  }, [handleRoseRaw, setWaLockPopup]);
+  }, [isPreviewMode, handleRoseRaw, setWaLockPopup]);
 
   const handleLibraryCardDrag = (_: any, info: PanInfo) => {
     const { offset } = info;
@@ -1181,6 +1208,28 @@ const Index = () => {
     <div className="h-screen-safe flex flex-col overflow-hidden relative" style={{ backgroundImage: "url('/images/app-background.png')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="absolute inset-0 bg-black/10 pointer-events-none" />
       {/* Image preloading handled inside SwipeStack */}
+
+      {/* ── Preview mode banner ──────────────────────────────────────────── */}
+      {isPreviewMode && (
+        <div
+          className="relative z-20 flex items-center justify-between gap-3 px-4 py-2"
+          style={{ background: "linear-gradient(90deg,rgba(168,85,247,0.85),rgba(236,72,153,0.85))", backdropFilter: "blur(12px)" }}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Camera className="w-4 h-4 text-white flex-shrink-0" />
+            <p className="text-white text-xs font-semibold leading-snug truncate">
+              Preview mode — add your photo to like &amp; match
+            </p>
+          </div>
+          <button
+            onClick={() => setPhotoRequiredAction("like")}
+            className="flex-shrink-0 px-3 py-1.5 rounded-full bg-white text-pink-600 text-xs font-bold whitespace-nowrap transition-all active:scale-95"
+          >
+            Add Photo
+          </button>
+        </div>
+      )}
+
       {/* Header — padded for status bar safe area */}
       <header className="flex items-center justify-between px-4 py-2.5 relative z-10 pt-safe" style={{ paddingTop: `max(0.625rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-2">
@@ -1295,7 +1344,7 @@ const Index = () => {
                   setImageIndex={setProfileImageViewIndex}
                   onClose={() => setSelectedProfileSection(null)}
                   iLiked={iLiked}
-                  handleLike={handleLike}
+                  handleLike={gatedLike}
                   likedMe={likedMe}
                   onOpenMap={(p) => setMapProfile(p)}
                   onBestieRequest={handleBestieRequest}
@@ -1364,7 +1413,7 @@ const Index = () => {
                   setSelectedIndex={setSelectedIndex}
                   setProfileImageIndex={setProfileImageIndex}
                   setProfileImageDirection={setProfileImageDirection}
-                  handleLike={handleLike}
+                  handleLike={gatedLike}
                   handleRose={handleRose}
                   onOpenMap={(p) => setMapProfile(p)}
                   handleLibraryCardDrag={handleLibraryCardDrag}
@@ -1375,6 +1424,7 @@ const Index = () => {
                   persistSessionBehavior={persistSessionBehavior}
                   onCoinCard={() => setShowCoinCard(true)}
                   onUnlockCard={() => setShowUnlockCard(true)}
+                  currentUser={user}
                 />
 
                 {/* Center - Likes Library */}
@@ -1487,15 +1537,14 @@ const Index = () => {
                       receivedHighlightProfileId={null}
                       heartDropProfileId={null}
                       superLikeGlowProfileId={superLikeGlowProfileId}
-                      onUnlock={handleUnlock}
-                      onChat={(profile) => setChatProfile(profile)}
+                      onUnlock={gatedUnlock}
+                      onChat={(profile) => gatedChat(profile)}
                       onSelectProfile={(profile, sourceList) => {
                         handleSelectProfile(profile, sourceList);
                       }}
                       onPurchaseFeature={handlePurchaseFeature}
                       onCulturalGuide={() => setShowCulturalGuide(true)}
                       onVisitorGuide={() => setShowVisitorGuide(true)}
-                      onGhostMode={() => navigate("/ghost")}
                     />
                   </div>
                 </motion.div>
@@ -1782,6 +1831,14 @@ const Index = () => {
         />
       )}
 
+      {/* ── Photo Required Modal (preview mode gate) ─────────────── */}
+      {photoRequiredAction && (
+        <PhotoRequiredModal
+          action={photoRequiredAction}
+          onClose={() => setPhotoRequiredAction(null)}
+        />
+      )}
+
       {/* ── Video Call Overlays ────────────────────────────────────── */}
       <AnimatePresence>
         {videoCall.incomingCall && !videoCall.activeCall && (
@@ -2044,6 +2101,26 @@ const Index = () => {
                   icon="🧸"
                   label="My Teddy Room"
                   onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
+                />
+
+                {/* ── Date Spots Feed button ── */}
+                <ShimmerButton
+                  gradient="rgba(0,0,0,0.4)"
+                  shimmerColor="rgba(255,255,255,0.08)"
+                  glowColor="rgba(255,255,255,0.04)"
+                  icon="📍"
+                  label="Date Spots"
+                  onClick={() => { setShowDrawer(false); navigate("/dates"); }}
+                />
+
+                {/* ── Events Near Me button ── */}
+                <ShimmerButton
+                  gradient="rgba(0,0,0,0.4)"
+                  shimmerColor="rgba(255,255,255,0.08)"
+                  glowColor="rgba(255,255,255,0.04)"
+                  icon="🎟️"
+                  label="Events Near Me"
+                  onClick={() => { setShowDrawer(false); navigate("/events"); }}
                 />
 
               </div>

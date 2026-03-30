@@ -48,6 +48,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
         if (!profile) return null;
 
         const isMatch = props.matches.some((m) => m.id === profile.id);
+        const isBlurredLike = props.tab === "received" && !isMatch;
         const fresh = props.tab === "new" && props.isNewProfile(profile);
         const iLikedThis = props.iLiked.some((p) => p.id === profile.id);
         const isSuperGlow = props.tab === "received" && props.superLikeGlowProfileId === profile.id;
@@ -93,11 +94,19 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                 src={profile.avatar_url || profile.image || "/placeholder.svg"}
                 alt={profile.name}
                 className="w-12 h-12 rounded-full object-cover border-2 border-white/10 relative z-10"
+                style={isBlurredLike ? { filter: "blur(7px)", transform: "scale(1.08)" } : undefined}
                 onError={(e) => {
                   const img = e.target as HTMLImageElement;
                   if (img.src !== window.location.origin + "/placeholder.svg") img.src = "/placeholder.svg";
                 }}
               />
+              {/* VIP unblur overlay */}
+              {isBlurredLike && (
+                <div className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none z-20"
+                  style={{ background: "rgba(0,0,0,0.18)" }}>
+                  <span style={{ fontSize: 14 }}>👑</span>
+                </div>
+              )}
               {/* Lock badge — replaces heart when profile is in active WhatsApp lock */}
               {locked ? (
                 <div className="absolute inset-0 rounded-full flex items-center justify-center pointer-events-none z-20"
@@ -161,7 +170,8 @@ export default function LikesCarousel(props: LikesCarouselProps) {
               )}
             </div>
 
-            <p className="text-white text-[10px] font-semibold truncate w-full text-center">
+            <p className="text-white text-[10px] font-semibold truncate w-full text-center"
+              style={isBlurredLike ? { filter: "blur(5px)", userSelect: "none" } : undefined}>
               {firstName(profile.name)}, {profile.age}
             </p>
 

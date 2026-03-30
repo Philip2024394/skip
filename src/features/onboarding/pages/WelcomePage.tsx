@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { toast } from "sonner";
+import { checkProfilePhoto } from "@/shared/utils/photoFaceCheck";
+import AppLogo from "@/shared/components/AppLogo";
 
 // ── Data ────────────────────────────────────────────────────────────────────
 
@@ -119,14 +121,39 @@ export default function WelcomePage() {
   const [saving, setSaving] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
+  // ── Coins reward state ───────────────────────────────────────────────────
+  const STEP_COINS: Record<number, number> = { 1: 2, 2: 3, 3: 5, 4: 5 };
+  const SOCIAL_PROOF_BONUS = 5;
+  const STEP_COIN_IMG: Record<number, string> = {
+    2: "https://ik.imagekit.io/dateme/Three%20golden%20coins%20with%20confetti.png",
+  };
+  const CONGRATS_IMG: Record<number, string> = {
+    1: "https://ik.imagekit.io/dateme/Celebrating%20earned%20coins%20with%20confetti.png",
+    2: "https://ik.imagekit.io/dateme/Three%20golden%20coins%20with%20confetti.png",
+    3: "https://ik.imagekit.io/dateme/Congrats%20on%20your%205%20coins!.png",
+    4: "https://ik.imagekit.io/dateme/Celebratory%20coin%20reward%20graphic.png",
+  };
+  const [totalCoins, setTotalCoins] = useState(0);
+  const [coinFalling, setCoinFalling] = useState(false);
+  const [earnedThisStep, setEarnedThisStep] = useState(0);
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [congratsStep, setCongratsStep] = useState(1);
+  const [showCoinsPopup, setShowCoinsPopup] = useState(false);
+
   // Form state
   const [name, setName] = useState("");
   const [country, setCountry] = useState(COUNTRIES[5]); // Indonesia default
   const [language, setLanguage] = useState(LANGUAGES[0]);
-  const [language2, setLanguage2] = useState(LANGUAGES[1]);
+  const [language2, setLanguage2] = useState<typeof LANGUAGES[0] | null>(null);
+  const [gender, setGender] = useState<"man" | "woman" | null>(null);
+  const [dobDay, setDobDay] = useState("");
+  const [dobMonth, setDobMonth] = useState("");
+  const [dobYear, setDobYear] = useState("");
   const [intent, setIntent] = useState(INTENT_OPTIONS[3]); // default: long-term
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [socialPlatform, setSocialPlatform] = useState<string | null>(null);
+  const [socialFollowers, setSocialFollowers] = useState<string>("");
 
   const dragControls = useDragControls();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -141,6 +168,7 @@ export default function WelcomePage() {
 
   // Get session
   useEffect(() => {
+    if (import.meta.env.DEV) { setUserId("dev-user"); return; }
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { navigate("/", { replace: true }); return; }
       setUserId(session.user.id);
@@ -153,10 +181,8 @@ export default function WelcomePage() {
       setCountry(getCountryByCode(code));
       const primary = getLangByCountryCode(code);
       setLanguage(primary);
-      // Smart secondary: English unless primary is English, then Indonesian
-      setLanguage2(primary.code === "EN"
-        ? LANGUAGES.find(l => l.code === "ID")!
-        : LANGUAGES.find(l => l.code === "EN")!);
+      // Secondary defaults to None — user picks manually
+      setLanguage2(null);
     });
   }, []);
 
@@ -166,11 +192,31 @@ export default function WelcomePage() {
     return () => clearTimeout(t);
   }, []);
 
+  // Auto-close coins popup after 5s → open terms
+  useEffect(() => {
+    if (!showCoinsPopup) return;
+    const t = setTimeout(() => { setShowCoinsPopup(false); setStep(5); }, 5000);
+    return () => clearTimeout(t);
+  }, [showCoinsPopup]);
+
   const handlePhotoUpload = async (file: File) => {
     if (!userId) return;
     if (file.size > 10 * 1024 * 1024) { toast.error("Photo must be under 10MB"); return; }
     setUploadingPhoto(true);
     try {
+      // ── Smart photo check (warnings only — never block the upload) ──────────
+      const check = await checkProfilePhoto(file);
+      check.warnings.forEach(w => toast.warning(w, { duration: 4000 }));
+      // ───────────────────────────────────────────────────────────────────────
+
+      // DEV: skip real storage, use object URL
+      if (import.meta.env.DEV) {
+        const url = URL.createObjectURL(file);
+        setAvatarUrl(url);
+        toast.success("Photo uploaded!");
+        return;
+      }
+
       const ext = file.name.split(".").pop() ?? "jpg";
       const path = `${userId}/avatar_${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
@@ -194,12 +240,17 @@ export default function WelcomePage() {
     if (!userId) return;
     setSaving(true);
     try {
+      const followers = parseInt(socialFollowers.replace(/[^0-9]/g, ""), 10);
       await supabase.from("profiles").update({
         name: name.trim(),
         country: country.code,
         preferred_language: language.code.toLowerCase(),
-        languages_spoken: `${language.code.toLowerCase()},${language2.code.toLowerCase()}`,
+        languages_spoken: language2 ? `${language.code.toLowerCase()},${language2.code.toLowerCase()}` : language.code.toLowerCase(),
+        gender: gender ?? undefined,
         looking_for: intent.id,
+        ...(dobDay && dobMonth && dobYear ? { date_of_birth: `${dobYear}-${dobMonth.padStart(2,"0")}-${dobDay.padStart(2,"0")}` } : {}),
+        coins_balance: totalCoins,
+        ...(socialPlatform ? { social_platform: socialPlatform, social_followers: isNaN(followers) ? null : followers } : {}),
       } as any).eq("id", userId);
       const appLocale = language.code.toLowerCase() === "id" ? "id" : "en";
       setLocale(appLocale as any);
@@ -213,7 +264,7 @@ export default function WelcomePage() {
 
   const canNext = () => {
     if (step === 1) return name.trim().length >= 2;
-    if (step === 2) return true;
+    if (step === 2) return gender !== null;
     if (step === 3) return true;
     if (step === 4) return true;
     if (step === 5) return agreedToTerms;
@@ -221,8 +272,44 @@ export default function WelcomePage() {
   };
 
   const handleNext = () => {
-    if (step < 5) setStep(s => s + 1);
-    else handleFinish();
+    if (step <= 4) {
+      // Step 4: coins only for completed tasks
+      let earned: number;
+      if (step === 4) {
+        const photoCoins = avatarUrl ? 5 : 0;
+        const socialCoins = socialPlatform ? SOCIAL_PROOF_BONUS : 0;
+        earned = photoCoins + socialCoins;
+      } else if (step === 2) {
+        earned = gender !== null ? (STEP_COINS[2] ?? 0) : 0;
+      } else {
+        earned = STEP_COINS[step] ?? 0;
+      }
+
+      const advanceStep = () => {
+        if (step === 4) setShowCoinsPopup(true);
+        else setStep(s => s + 1);
+      };
+
+      if (earned === 0) {
+        advanceStep();
+        return;
+      }
+
+      setEarnedThisStep(earned);
+      setCongratsStep(step);
+      setCoinFalling(true);
+      setTimeout(() => {
+        setTotalCoins(t => t + earned);
+        setCoinFalling(false);
+        setShowCongrats(true);
+      }, 1000);
+      setTimeout(() => {
+        setShowCongrats(false);
+        advanceStep();
+      }, 5000);
+    } else {
+      handleFinish();
+    }
   };
 
   return (
@@ -253,18 +340,13 @@ export default function WelcomePage() {
           zIndex: 2, textAlign: "center", padding: "0 32px",
         }}
       >
-        <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>
+        <p style={{ color: "white", fontSize: 12, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8, textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}>
           Welcome to
         </p>
-        <p style={{
-          color: "white", fontSize: 40, fontWeight: 900, lineHeight: 1.1,
-          textShadow: "0 2px 24px rgba(0,0,0,0.7)",
-          background: "linear-gradient(135deg, #fff 30%, #f9a8d4)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-        }}>
+        <p style={{ color: "white", fontSize: 40, fontWeight: 900, lineHeight: 1.1, textShadow: "0 2px 24px rgba(0,0,0,0.8)" }}>
           2DateMe
         </p>
-        <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 14, marginTop: 10, lineHeight: 1.5 }}>
+        <p style={{ color: "white", fontSize: 14, marginTop: 10, lineHeight: 1.5, textShadow: "0 1px 8px rgba(0,0,0,0.8)" }}>
           Indonesia's home for real connections ❤️
         </p>
       </motion.div>
@@ -273,19 +355,6 @@ export default function WelcomePage() {
       <AnimatePresence>
         {showSlider && step <= 4 && (
           <>
-            {/* Scrim — matches PaymentSheet */}
-            <motion.div
-              key="scrim"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              style={{
-                position: "absolute", inset: 0, zIndex: 3,
-                background: "rgba(0,0,0,0.72)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-              }}
-            />
 
             {/* Sheet — matches PaymentSheet */}
             <motion.div
@@ -305,8 +374,10 @@ export default function WelcomePage() {
                 zIndex: 4,
                 maxHeight: "82dvh",
                 borderRadius: "28px 28px 0 0",
-                background: "#0c0c14",
-                border: "1px solid rgba(255,255,255,0.09)",
+                backgroundImage: "url('/images/app-background.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                border: "1px solid rgba(255,255,255,0.15)",
                 borderBottom: "none",
                 display: "flex",
                 flexDirection: "column",
@@ -316,9 +387,7 @@ export default function WelcomePage() {
               {/* ── Accent bar — exact PaymentSheet */}
               <div style={{
                 height: 3, flexShrink: 0,
-                background: "linear-gradient(90deg,#ec4899,#a855f7,#ec4899)",
-                backgroundSize: "200% 100%",
-                animation: "rim-shift 3s linear infinite",
+                background: "#c2185b",
               }} />
 
               {/* ── Drag handle — PaymentSheet style */}
@@ -329,72 +398,149 @@ export default function WelcomePage() {
                 <div style={{ width: 40, height: 4, borderRadius: 4, background: "rgba(255,255,255,0.15)" }} />
               </div>
 
-              {/* ── Progress bar */}
-              <div style={{ display: "flex", gap: 5, padding: "10px 20px 2px", flexShrink: 0 }}>
-                {[1, 2, 3, 4].map(i => (
-                  <div key={i} style={{
-                    flex: 1, height: 3, borderRadius: 99,
-                    background: i <= step
-                      ? "linear-gradient(90deg,#ec4899,#a855f7)"
-                      : "rgba(255,255,255,0.09)",
-                    boxShadow: i === step ? "0 0 8px rgba(236,72,153,0.55)" : "none",
-                    transition: "all 0.35s ease",
-                  }} />
-                ))}
-              </div>
-
-              {/* ── Step label — PaymentSheet section label style */}
-              <div style={{ padding: "6px 20px 0", flexShrink: 0 }}>
-                <span style={{
-                  color: "rgba(255,255,255,0.35)", fontSize: 10,
-                  fontWeight: 800, letterSpacing: "0.12em", textTransform: "uppercase",
-                }}>
-                  Step {step} of 4
-                </span>
-              </div>
 
               {/* Scrollable content */}
               <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px 8px" }}>
                 <AnimatePresence mode="wait">
                   {step === 1 && <Step1 key="s1" name={name} setName={setName} country={country} setCountry={setCountry} />}
-                  {step === 2 && <Step2 key="s2" language={language} setLanguage={setLanguage} language2={language2} setLanguage2={setLanguage2} />}
+                  {step === 2 && <Step2 key="s2" gender={gender} setGender={setGender} dobDay={dobDay} setDobDay={setDobDay} dobMonth={dobMonth} setDobMonth={setDobMonth} dobYear={dobYear} setDobYear={setDobYear} />}
                   {step === 3 && <Step3 key="s3" intent={intent} setIntent={setIntent} />}
-                  {step === 4 && <Step4 key="s4" avatarUrl={avatarUrl} uploading={uploadingPhoto} onUpload={handlePhotoUpload} />}
+                  {step === 4 && <Step4 key="s4" avatarUrl={avatarUrl} uploading={uploadingPhoto} onUpload={handlePhotoUpload} socialPlatform={socialPlatform} setSocialPlatform={setSocialPlatform} socialFollowers={socialFollowers} setSocialFollowers={setSocialFollowers} />}
                 </AnimatePresence>
               </div>
+
+              {/* ── Falling coins → converge into button badge ── */}
+              <AnimatePresence>
+                {coinFalling && Array.from({ length: earnedThisStep }).map((_, i) => {
+                  const startX = (i - (earnedThisStep - 1) / 2) * 38;
+                  const delay = i * 0.1;
+                  const imgSrc = STEP_COIN_IMG[step];
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 1, y: 60, x: startX, scale: 1.2 }}
+                      animate={{ opacity: [1, 1, 1, 0], y: 520, x: 0, scale: [1.2, 1, 0.5] }}
+                      transition={{ duration: 0.9, ease: "easeIn", delay }}
+                      style={{ position: "absolute", left: "50%", top: 0, marginLeft: -16, zIndex: 20, pointerEvents: "none" }}
+                    >
+                      {imgSrc
+                        ? <img src={imgSrc} alt="coin" style={{ width: 32, height: 32, objectFit: "contain" }} />
+                        : <span style={{ fontSize: 28 }}>🪙</span>
+                      }
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+
+              {/* ── Congrats overlay ── */}
+              <AnimatePresence>
+                {showCongrats && (
+                  <motion.div
+                    key="congrats"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    style={{
+                      position: "absolute", inset: 0, zIndex: 30,
+                      background: "rgba(0,0,0,0.78)",
+                      backdropFilter: "blur(8px)",
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "center", gap: 14,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    <motion.img
+                      src={
+                        congratsStep === 4
+                          ? earnedThisStep >= 10
+                            ? CONGRATS_IMG[4]
+                            : "https://ik.imagekit.io/dateme/Congrats%20on%20your%205%20coins!.png"
+                          : CONGRATS_IMG[congratsStep]
+                      }
+                      alt="Congrats"
+                      initial={{ scale: 0.3, rotate: -20 }}
+                      animate={{ scale: [0.3, 1.25, 1], rotate: [-20, 8, 0] }}
+                      transition={{ duration: 0.55, ease: "easeOut" }}
+                      style={{ width: 150, height: 150, objectFit: "contain" }}
+                    />
+                    <motion.p
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25, duration: 0.35 }}
+                      style={{ color: "white", fontWeight: 900, fontSize: 31, margin: 0, textAlign: "center", lineHeight: 1.3 }}
+                    >
+                      Congrats!
+                    </motion.p>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.6 }}
+                      animate={{ opacity: 1, scale: [0.6, 1.18, 1] }}
+                      transition={{ delay: 0.35, duration: 0.4 }}
+                      style={{
+                        background: "linear-gradient(135deg,#f59e0b,#fbbf24)",
+                        borderRadius: 22, padding: "12px 28px",
+                        display: "flex", alignItems: "center", gap: 10,
+                        boxShadow: "0 4px 28px rgba(251,191,36,0.55)",
+                      }}
+                    >
+                      <span style={{ fontSize: 28 }}>🪙</span>
+                      <span style={{ color: "#78350f", fontWeight: 900, fontSize: 22 }}>+{earnedThisStep} coins earned!</span>
+                    </motion.div>
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.55 }}
+                      style={{ color: "rgba(255,255,255,0.65)", fontSize: 13, margin: 0 }}
+                    >
+                      Total balance: 🪙 {totalCoins}
+                    </motion.p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* ── CTA — PaymentSheet sticky footer */}
               <div style={{
                 flexShrink: 0,
                 padding: "12px 16px 32px",
-                background: "linear-gradient(to top, #0c0c14 60%, transparent)",
-                borderTop: "1px solid rgba(255,255,255,0.06)",
+                background: "linear-gradient(to top, #c2185b 60%, transparent)",
               }}>
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleNext}
-                  disabled={!canNext() || saving}
+                  disabled={!canNext() || saving || coinFalling || showCongrats}
                   style={{
                     width: "100%", height: 52, borderRadius: 16, border: "none",
-                    background: canNext() && !saving
-                      ? "linear-gradient(135deg,#ec4899,#a855f7)"
-                      : "rgba(255,255,255,0.08)",
+                    background: "linear-gradient(135deg,#ec4899,#a855f7)",
                     color: "white", fontWeight: 900, fontSize: 16,
-                    cursor: canNext() && !saving ? "pointer" : "default",
+                    cursor: canNext() && !saving && !coinFalling && !showCongrats ? "pointer" : "default",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                    boxShadow: canNext() && !saving ? "0 4px 20px rgba(236,72,153,0.38)" : "none",
-                    transition: "all 0.2s",
+                    opacity: canNext() && !saving ? 1 : 0.45,
+                    animation: canNext() && !saving && !coinFalling && !showCongrats ? "btn-glow 1.8s ease-in-out infinite" : "none",
+                    transition: "opacity 0.2s",
                   }}
                 >
                   {saving ? (
                     <span style={{ width: 20, height: 20, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white", animation: "spin 0.7s linear infinite", display: "inline-block" }} />
-                  ) : step < 4 ? (
-                    <span>Continue →</span>
                   ) : (
-                    avatarUrl ? <span>Continue →</span> : <span>Skip & Continue →</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", justifyContent: "center" }}>
+                      <span>{step < 4 ? "Continue →" : avatarUrl ? "Continue →" : "Skip & Continue →"}</span>
+                      <motion.span
+                        key={totalCoins}
+                        animate={coinFalling ? { scale: [1, 1.4, 1] } : {}}
+                        transition={{ duration: 0.4 }}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 3,
+                          background: "rgba(0,0,0,0.25)", borderRadius: 10,
+                          padding: "2px 8px", fontSize: 12, fontWeight: 900,
+                          color: "#fbbf24", border: "1px solid rgba(251,191,36,0.4)",
+                        }}
+                      >
+                        🪙 {totalCoins}
+                      </motion.span>
+                    </span>
                   )}
                 </motion.button>
-                <p style={{ textAlign: "center", fontSize: 10, color: "rgba(255,255,255,0.22)", marginTop: 8 }}>
+                <p style={{ textAlign: "center", fontSize: 10, color: "#fbbf24", marginTop: 8, fontWeight: 600 }}>
                   🔒 Your data is private and secure
                 </p>
               </div>
@@ -403,134 +549,201 @@ export default function WelcomePage() {
         )}
       </AnimatePresence>
 
-      {/* ── Terms & Conditions full-screen overlay (step 5) ──────── */}
+      {/* ── Coins earned popup (shown after step 4, before terms) ── */}
+      <AnimatePresence>
+        {showCoinsPopup && (
+          <motion.div
+            key="coins-popup-scrim"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{
+              position: "absolute", inset: 0, zIndex: 20,
+              background: "rgba(0,0,0,0.65)", backdropFilter: "blur(10px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "0 32px",
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 24 }}
+              transition={{ type: "spring", stiffness: 340, damping: 28 }}
+              style={{
+                width: "100%", borderRadius: 28,
+                backgroundImage: "url('https://ik.imagekit.io/dateme/tretert.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                border: "1.5px solid rgba(251,191,36,0.35)",
+                boxShadow: "0 8px 48px rgba(251,191,36,0.2)",
+                padding: "32px 24px 28px",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 16,
+                textAlign: "center",
+                overflow: "hidden",
+              }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.18, 1], rotate: [0, -8, 8, 0] }}
+                transition={{ duration: 0.7, delay: 0.2 }}
+                style={{ fontSize: 56 }}
+              >
+                🪙
+              </motion.div>
+              <p style={{ color: "white", fontWeight: 900, fontSize: 22, margin: 0, lineHeight: 1.2 }}>
+                You earned
+              </p>
+              <motion.div
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: [0.5, 1.3, 1], opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                style={{
+                  background: "linear-gradient(135deg,#f59e0b,#fbbf24)",
+                  borderRadius: 22, padding: "10px 28px",
+                  color: "#78350f", fontWeight: 900, fontSize: 32,
+                  boxShadow: "0 4px 24px rgba(251,191,36,0.5)",
+                }}
+              >
+                🪙 {totalCoins} coins
+              </motion.div>
+              <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 13, margin: 0, lineHeight: 1.5 }}>
+                Coins unlock premium features — keep going to earn more!
+              </p>
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setShowCoinsPopup(false); setStep(5); }}
+                style={{
+                  width: "100%", height: 52, borderRadius: 16, border: "none",
+                  background: "linear-gradient(135deg,#ec4899,#a855f7)",
+                  color: "white", fontWeight: 900, fontSize: 17,
+                  cursor: "pointer",
+                  boxShadow: "0 4px 20px rgba(236,72,153,0.4)",
+                  marginTop: 4,
+                }}
+              >
+                Let's Go 🚀
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Terms & Conditions — frosted glass popup ─────────────── */}
       <AnimatePresence>
         {step === 5 && (
           <motion.div
-            key="terms"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            key="terms-scrim"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{
               position: "absolute", inset: 0, zIndex: 10,
-              display: "flex", flexDirection: "column",
-              background: "#0c0c14",
+              background: "rgba(0,0,0,0.6)", backdropFilter: "blur(10px)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              padding: "20px 16px",
             }}
           >
-            {/* Header */}
-            <div style={{
-              flexShrink: 0,
-              background: "linear-gradient(135deg, #e848c7, #c33cff)",
-              padding: "max(44px, env(safe-area-inset-top, 44px)) 20px 18px",
-              display: "flex", alignItems: "center", gap: 12,
-            }}>
-              <button
-                onClick={() => setStep(4)}
-                style={{
-                  width: 36, height: 36, borderRadius: "50%", border: "none",
-                  background: "rgba(255,255,255,0.2)", color: "white",
-                  fontSize: 18, cursor: "pointer", display: "flex",
-                  alignItems: "center", justifyContent: "center", flexShrink: 0,
-                }}
-              >
-                ←
-              </button>
-              <div>
-                <p style={{ color: "white", fontWeight: 900, fontSize: 18, margin: 0 }}>Terms & Conditions</p>
-                <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: 0, marginTop: 2 }}>Please read before joining</p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.93, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.93, y: 24 }}
+              transition={{ type: "spring", stiffness: 320, damping: 30 }}
+              style={{
+                width: "100%", maxHeight: "90dvh",
+                borderRadius: 24,
+                backgroundImage: "url('/images/app-background.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backdropFilter: "blur(28px)", WebkitBackdropFilter: "blur(28px)",
+                border: "1.5px solid rgba(255,255,255,0.2)",
+                boxShadow: "0 8px 48px rgba(0,0,0,0.6)",
+                display: "flex", flexDirection: "column", overflow: "hidden",
+              }}
+            >
+              {/* ── Accent top bar */}
+              <div style={{ height: 3, background: "linear-gradient(90deg,#ec4899,#a855f7,#ec4899)", backgroundSize: "200% 100%", animation: "rim-shift 3s linear infinite", flexShrink: 0 }} />
+
+              {/* ── Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 18px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)", flexShrink: 0 }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ color: "white", fontWeight: 900, fontSize: 16, margin: 0, lineHeight: 1 }}>Terms & Conditions</p>
+                  <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 11, margin: "3px 0 0" }}>Scroll down to read · then accept</p>
+                </div>
+                <AppLogo style={{ width: 44, height: 44, objectFit: "contain" }} />
               </div>
-            </div>
 
-            {/* Scrollable T&C body */}
-            <div style={{
-              flex: 1, overflowY: "auto",
-              padding: "24px 20px",
-              fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.75,
-            }}>
-              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 20px" }}>
-                Last updated: March 2026
-              </p>
+              {/* ── Scrollable body */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "18px 18px 8px", scrollbarWidth: "thin", scrollbarColor: "rgba(236,72,153,0.4) transparent" }}>
 
-              {[
-                ["1. Eligibility", "You must be 18 years of age or older to use 2DateMe. By creating an account you confirm you meet this requirement. We reserve the right to terminate accounts that violate this rule."],
-                ["2. Respectful Conduct", "You agree to treat all members with respect. Harassment, hate speech, threats, unsolicited explicit content, or abusive behaviour toward any user will result in immediate and permanent account removal."],
-                ["3. Authentic Profiles", "You agree to represent yourself honestly. Fake profiles, impersonation of real people, catfishing, and any scam or fraudulent activity are strictly prohibited."],
-                ["4. Privacy & Data", "We collect and store only the information necessary to operate the service. We do not sell your personal data to third parties. Your location is used only to show you nearby members and is never shared without consent."],
-                ["5. Payments & Refunds", "Premium features are billed through Stripe. Monthly subscriptions auto-renew unless cancelled at least 24 hours before the renewal date. One-time purchases are final. Refunds are handled in accordance with local consumer law."],
-                ["6. User Content", "You retain ownership of photos and content you upload. By uploading you grant 2DateMe a non-exclusive licence to display your content within the platform. You must not upload illegal, explicit, violent, or copyright-infringing content."],
-                ["7. Safety", "2DateMe is not responsible for the actions of other users. Always meet in public places for first dates. Report suspicious behaviour using the in-app report feature and our support team will review within 24 hours."],
-                ["8. Limitation of Liability", "The platform is provided 'as is'. We do not guarantee you will find a match. We are not liable for any loss or damage arising from your use of the service beyond the maximum permitted by law."],
-                ["9. Changes to Terms", "We may update these terms at any time. We will notify you of significant changes via the app or email. Continued use after notice constitutes acceptance of the updated terms."],
-                ["10. Contact", "For questions or support: support@date2me.com"],
-              ].map(([title, body]) => (
-                <div key={title as string} style={{ marginBottom: 22 }}>
-                  <p style={{ color: "white", fontWeight: 700, fontSize: 14, margin: "0 0 6px" }}>{title}</p>
-                  <p style={{ margin: 0 }}>{body}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <div style={{
-              flexShrink: 0,
-              padding: "16px 20px max(28px, env(safe-area-inset-bottom, 28px))",
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-              background: "rgba(0,0,0,0.3)",
-            }}>
-              {/* Agree checkbox */}
-              <button
-                onClick={() => setAgreedToTerms(!agreedToTerms)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 12,
-                  padding: "12px 16px", borderRadius: 14, border: "none", width: "100%",
-                  background: agreedToTerms ? "rgba(232,72,199,0.12)" : "rgba(255,255,255,0.05)",
-                  outline: agreedToTerms ? "2px solid rgba(232,72,199,0.5)" : "2px solid rgba(255,255,255,0.1)",
-                  cursor: "pointer", textAlign: "left", marginBottom: 12,
-                  transition: "all 0.2s",
-                }}
-              >
-                <div style={{
-                  width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                  background: agreedToTerms ? "linear-gradient(135deg, #e848c7, #c33cff)" : "rgba(255,255,255,0.08)",
-                  border: agreedToTerms ? "none" : "1.5px solid rgba(255,255,255,0.25)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  transition: "all 0.2s",
-                }}>
-                  {agreedToTerms && <span style={{ color: "white", fontSize: 13, fontWeight: 900 }}>✓</span>}
-                </div>
-                <p style={{ margin: 0, color: agreedToTerms ? "white" : "rgba(255,255,255,0.55)", fontSize: 13, fontWeight: 600 }}>
-                  I have read and agree to the Terms & Conditions
+                <p style={{ color: "rgba(236,72,153,0.7)", fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", margin: "0 0 16px" }}>
+                  Last updated: March 2026
                 </p>
-              </button>
+                {[
+                  ["1. Eligibility", "You must be 18 years of age or older to use 2DateMe. By creating an account you confirm you meet this requirement. We reserve the right to terminate accounts that violate this rule."],
+                  ["2. Respectful Conduct", "You agree to treat all members with respect. Harassment, hate speech, threats, unsolicited explicit content, or abusive behaviour toward any user will result in immediate and permanent account removal."],
+                  ["3. Authentic Profiles", "You agree to represent yourself honestly. Fake profiles, impersonation of real people, catfishing, and any scam or fraudulent activity are strictly prohibited."],
+                  ["4. Privacy & Data", "We collect and store only the information necessary to operate the service. We do not sell your personal data to third parties. Your location is used only to show you nearby members and is never shared without consent."],
+                  ["5. Payments & Refunds", "Premium features are billed through Stripe. Monthly subscriptions auto-renew unless cancelled at least 24 hours before the renewal date. One-time purchases are final. Refunds are handled in accordance with local consumer law."],
+                  ["6. User Content", "You retain ownership of photos and content you upload. By uploading you grant 2DateMe a non-exclusive licence to display your content within the platform. You must not upload illegal, explicit, violent, or copyright-infringing content."],
+                  ["7. Safety", "2DateMe is not responsible for the actions of other users. Always meet in public places for first dates. Report suspicious behaviour using the in-app report feature and our support team will review within 24 hours."],
+                  ["8. Limitation of Liability", "The platform is provided 'as is'. We do not guarantee you will find a match. We are not liable for any loss or damage arising from your use of the service beyond the maximum permitted by law."],
+                  ["9. Changes to Terms", "We may update these terms at any time. We will notify you of significant changes via the app or email. Continued use after notice constitutes acceptance of the updated terms."],
+                  ["10. Contact", "For questions or support: 2dateme.com@gmail.com"],
+                ].map(([title, body]) => (
+                  <div key={title as string} style={{ marginBottom: 18, padding: "12px 14px", borderRadius: 14, background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p style={{ color: "#ec4899", fontWeight: 800, fontSize: 13, margin: "0 0 5px" }}>{title}</p>
+                    <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 12.5, margin: 0, lineHeight: 1.7 }}>{body}</p>
+                  </div>
+                ))}
+                {/* ── Accept section at the end of scroll ── */}
+                <div style={{ marginTop: 8, paddingTop: 18, borderTop: "1px solid rgba(255,255,255,0.15)" }}>
+                  {/* Checkbox row */}
+                  <button
+                    onClick={() => setAgreedToTerms(!agreedToTerms)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 12,
+                      padding: "12px 14px", borderRadius: 14, border: "none", width: "100%", cursor: "pointer",
+                      background: agreedToTerms ? "rgba(0,0,0,0.4)" : "rgba(0,0,0,0.3)",
+                      outline: agreedToTerms ? "2px solid rgba(255,255,255,0.6)" : "1.5px solid rgba(255,255,255,0.2)",
+                      textAlign: "left", marginBottom: 12, transition: "all 0.2s",
+                    }}
+                  >
+                    <div style={{
+                      width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                      background: agreedToTerms ? "linear-gradient(135deg,#fff,#f9a8d4)" : "rgba(0,0,0,0.4)",
+                      border: agreedToTerms ? "none" : "1.5px solid rgba(255,255,255,0.3)",
+                      display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s",
+                    }}>
+                      {agreedToTerms && <span style={{ color: "#c2185b", fontSize: 14, fontWeight: 900 }}>✓</span>}
+                    </div>
+                    <p style={{ margin: 0, color: "white", fontSize: 13, fontWeight: 700 }}>
+                      I have read and agree to the Terms & Conditions
+                    </p>
+                  </button>
 
-              {/* Agree button */}
-              <button
-                onClick={handleFinish}
-                disabled={!agreedToTerms || saving}
-                style={{
-                  width: "100%", height: 52, borderRadius: 16, border: "none",
-                  background: agreedToTerms && !saving
-                    ? "linear-gradient(135deg, #e848c7, #c33cff)"
-                    : "rgba(255,255,255,0.08)",
-                  color: "white", fontWeight: 900, fontSize: 16,
-                  cursor: agreedToTerms && !saving ? "pointer" : "default",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-                  boxShadow: agreedToTerms ? "0 4px 24px rgba(195,60,255,0.45)" : "none",
-                  transition: "all 0.2s",
-                }}
-              >
-                {saving ? (
-                  <span style={{
-                    width: 20, height: 20, borderRadius: "50%",
-                    border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white",
-                    animation: "spin 0.7s linear infinite", display: "inline-block",
-                  }} />
-                ) : (
-                  <span>I Agree & Enter the App 🚀</span>
-                )}
-              </button>
-            </div>
+                  {/* CTA button */}
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleFinish}
+                    disabled={!agreedToTerms || saving}
+                    style={{
+                      width: "100%", height: 52, borderRadius: 16, border: "none",
+                      background: agreedToTerms && !saving
+                        ? "linear-gradient(135deg,#ec4899,#a855f7)"
+                        : "rgba(0,0,0,0.5)",
+                      color: "white",
+                      fontWeight: 900, fontSize: 16, letterSpacing: "0.04em",
+                      cursor: agreedToTerms && !saving ? "pointer" : "default",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                      boxShadow: agreedToTerms ? "0 4px 20px rgba(236,72,153,0.38)" : "none",
+                      transition: "all 0.2s", marginBottom: 8,
+                    } as React.CSSProperties}
+                  >
+                    {saving ? (
+                      <span style={{ width: 20, height: 20, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "white", animation: "spin 0.7s linear infinite", display: "inline-block" }} />
+                    ) : (
+                      <span>🔓 Grant Me ACCESS</span>
+                    )}
+                  </motion.button>
+                </div>
+                <div style={{ height: 6 }} />
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -538,103 +751,15 @@ export default function WelcomePage() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes rim-shift { 0%{background-position:0% 50%} 100%{background-position:200% 50%} }
+        @keyframes btn-glow {
+          0%,100% { box-shadow: 0 0 10px 2px rgba(236,72,153,0.35), 0 0 0 0 rgba(236,72,153,0); }
+          50%      { box-shadow: 0 0 22px 6px rgba(168,85,247,0.55), 0 0 40px 10px rgba(236,72,153,0.2); }
+        }
       `}</style>
     </div>
   );
 }
 
-// ── Wheel Picker ──────────────────────────────────────────────────────────────
-
-const ITEM_H = 58;
-
-function WheelPicker({ items, selected, onSelect }: {
-  items: { key: string; label: string }[];
-  selected: string;
-  onSelect: (key: string) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [activeIdx, setActiveIdx] = useState(() => Math.max(0, items.findIndex(i => i.key === selected)));
-  const snapTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    el.scrollTop = activeIdx * ITEM_H;
-  }, []);
-
-  const handleScroll = () => {
-    const el = ref.current;
-    if (!el) return;
-    const idx = Math.round(el.scrollTop / ITEM_H);
-    const clamped = Math.max(0, Math.min(idx, items.length - 1));
-    setActiveIdx(clamped);
-    clearTimeout(snapTimer.current);
-    snapTimer.current = setTimeout(() => {
-      el.scrollTo({ top: clamped * ITEM_H, behavior: "smooth" });
-      onSelect(items[clamped].key);
-    }, 120);
-  };
-
-  return (
-    <div style={{ position: "relative", height: ITEM_H * 3, overflow: "hidden", borderRadius: 14, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-      {/* ── Top fade ── */}
-      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to bottom, #0c0c14, transparent)", zIndex: 2, pointerEvents: "none" }} />
-      {/* ── Bottom fade ── */}
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: ITEM_H, background: "linear-gradient(to top, #0c0c14, transparent)", zIndex: 2, pointerEvents: "none" }} />
-      {/* ── Centre highlight: PaymentSheet selected card style ── */}
-      <div style={{
-        position: "absolute", top: ITEM_H, left: 4, right: 4, height: ITEM_H,
-        background: "rgba(255,255,255,0.07)",
-        outline: "2px solid rgba(236,72,153,0.55)",
-        outlineOffset: 0,
-        borderRadius: 12,
-        zIndex: 1, pointerEvents: "none",
-      }} />
-      {/* Scrollable list */}
-      <div
-        ref={ref}
-        onScroll={handleScroll}
-        className="wheel-hide-scroll"
-        style={{ height: "100%", overflowY: "scroll", scrollSnapType: "y mandatory", paddingTop: ITEM_H, paddingBottom: ITEM_H, scrollbarWidth: "none", position: "relative", zIndex: 0 }}
-      >
-        {items.map((item, i) => {
-          const dist = Math.abs(i - activeIdx);
-          const isCenter = i === activeIdx;
-          return (
-            <div
-              key={item.key}
-              onClick={() => {
-                setActiveIdx(i);
-                ref.current?.scrollTo({ top: i * ITEM_H, behavior: "smooth" });
-                onSelect(item.key);
-              }}
-              style={{
-                height: ITEM_H, scrollSnapAlign: "center",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-              }}
-            >
-              <span style={{
-                color: isCenter ? "#ffffff" : dist === 1 ? "#ffffffaa" : "#ffffff55",
-                fontSize: isCenter ? 15 : dist === 1 ? 13 : 11,
-                fontWeight: isCenter ? 800 : dist === 1 ? 500 : 400,
-                letterSpacing: isCenter ? "0.02em" : 0,
-                transition: "all 0.18s",
-                textAlign: "center",
-                userSelect: "none",
-                paddingLeft: 8,
-                paddingRight: 4,
-              }}>
-                {item.label}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-      <style>{`.wheel-hide-scroll::-webkit-scrollbar{display:none}`}</style>
-    </div>
-  );
-}
 
 // ── Step 1: Name + Country ────────────────────────────────────────────────────
 
@@ -644,16 +769,21 @@ function Step1({ name, setName, country, setCountry }: {
   country: { code: string; name: string; flag: string };
   setCountry: (v: { code: string; name: string; flag: string }) => void;
 }) {
-  const countryItems = COUNTRIES.map(c => ({ key: c.code, label: `${c.flag}  ${c.name}` }));
-
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
       transition={{ duration: 0.22 }}
     >
-      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 18px" }}>
-        What shall we call you?
-      </p>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "0 0 18px" }}>
+        <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: 0 }}>
+          What shall we call you?
+        </p>
+        <img
+          src="https://ik.imagekit.io/dateme/Thoughtful%20teddy%20bear%20in%20soft%20light.png"
+          alt=""
+          style={{ width: 64, height: 64, objectFit: "contain", flexShrink: 0 }}
+        />
+      </div>
 
       {/* Name input */}
       <div style={{ marginBottom: 18 }}>
@@ -666,82 +796,213 @@ function Step1({ name, setName, country, setCountry }: {
           autoFocus
           style={{
             width: "100%", height: 48, borderRadius: 14, padding: "0 16px",
-            background: "rgba(255,255,255,0.05)",
-            border: "1.5px solid rgba(255,255,255,0.09)",
+            background: "#c2185b",
+            border: "1.5px solid rgba(255,255,255,0.25)",
             color: "white", fontSize: 15, fontWeight: 600, outline: "none",
             boxSizing: "border-box",
           }}
-          onFocus={(e) => { e.target.style.borderColor = "rgba(236,72,153,0.55)"; e.target.style.boxShadow = "0 0 0 3px rgba(236,72,153,0.12)"; }}
-          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.09)"; e.target.style.boxShadow = "none"; }}
+          onFocus={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.7)"; e.target.style.boxShadow = "0 0 0 3px rgba(236,72,153,0.25)"; }}
+          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.25)"; e.target.style.boxShadow = "none"; }}
         />
       </div>
 
-      {/* Country wheel */}
-      <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+      {/* Country dropdown */}
+      <label style={{ color: "white", fontSize: 12, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
         Your country
       </label>
-      <WheelPicker
-        items={countryItems}
-        selected={country.code}
-        onSelect={(key) => {
-          const found = COUNTRIES.find(c => c.code === key);
-          if (found) setCountry(found);
-        }}
-      />
+      <div style={{ position: "relative" }}>
+        <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 22, pointerEvents: "none", zIndex: 1 }}>
+          {country.flag}
+        </span>
+        <select
+          value={country.code}
+          onChange={(e) => {
+            const found = COUNTRIES.find(c => c.code === e.target.value);
+            if (found) setCountry(found);
+          }}
+          style={{
+            width: "100%", height: 52, borderRadius: 14,
+            paddingLeft: 48, paddingRight: 36,
+            background: "#c2185b",
+            border: "1.5px solid rgba(255,255,255,0.25)",
+            color: "white", fontSize: 15, fontWeight: 600,
+            appearance: "none", WebkitAppearance: "none",
+            cursor: "pointer", outline: "none",
+            boxSizing: "border-box",
+          }}
+          onFocus={(e) => { e.target.style.borderColor = "rgba(236,72,153,0.65)"; e.target.style.boxShadow = "0 0 0 3px rgba(236,72,153,0.15)"; }}
+          onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.14)"; e.target.style.boxShadow = "none"; }}
+        >
+          {COUNTRIES.map(c => (
+            <option key={c.code} value={c.code} style={{ background: "#000", color: "white" }}>
+              {c.flag}  {c.name}
+            </option>
+          ))}
+        </select>
+        {/* chevron */}
+        <span style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "rgba(255,255,255,0.5)", fontSize: 12 }}>▼</span>
+      </div>
     </motion.div>
   );
 }
 
-// ── Step 2: Language — two side-by-side wheel carousels ───────────────────────
+// ── Step 2: I am … + Date of Birth ───────────────────────────────────────────
 
-function Step2({ language, setLanguage, language2, setLanguage2 }: {
-  language: typeof LANGUAGES[0];
-  setLanguage: (v: typeof LANGUAGES[0]) => void;
-  language2: typeof LANGUAGES[0];
-  setLanguage2: (v: typeof LANGUAGES[0]) => void;
+function Step2({ gender, setGender, dobDay, setDobDay, dobMonth, setDobMonth, dobYear, setDobYear }: {
+  gender: "man" | "woman" | null;
+  setGender: (v: "man" | "woman") => void;
+  dobDay: string; setDobDay: (v: string) => void;
+  dobMonth: string; setDobMonth: (v: string) => void;
+  dobYear: string; setDobYear: (v: string) => void;
 }) {
-  const langItems = LANGUAGES.map(l => ({ key: l.code, label: `${l.flag}  ${l.name}` }));
+  const maxYear = new Date().getFullYear() - 18;
+
+  // Days in selected month (account for leap year)
+  const maxDay = (() => {
+    const m = parseInt(dobMonth, 10);
+    const y = parseInt(dobYear, 10) || 2000;
+    if (!m || m < 1 || m > 12) return 31;
+    return new Date(y, m, 0).getDate(); // day 0 of next month = last day of current month
+  })();
+
+  const handleDay = (v: string) => {
+    const n = v.replace(/\D/g, "").slice(0, 2);
+    const num = parseInt(n, 10);
+    if (n === "" || (num >= 1 && num <= maxDay)) setDobDay(n);
+    else if (num > maxDay) setDobDay(String(maxDay));
+  };
+
+  const handleMonth = (v: string) => {
+    const n = v.replace(/\D/g, "").slice(0, 2);
+    const num = parseInt(n, 10);
+    if (n === "" || (num >= 1 && num <= 12)) setDobMonth(n);
+    else if (num > 12) setDobMonth("12");
+    // re-clamp day if month changes
+    const newMax = new Date(parseInt(dobYear, 10) || 2000, num, 0).getDate();
+    if (dobDay && parseInt(dobDay, 10) > newMax) setDobDay(String(newMax));
+  };
+
+  const handleYear = (v: string) => {
+    const n = v.replace(/\D/g, "").slice(0, 4);
+    const num = parseInt(n, 10);
+    if (n.length < 4) { setDobYear(n); return; }
+    if (num < 1950) setDobYear("1950");
+    else if (num > maxYear) setDobYear(String(maxYear));
+    else setDobYear(n);
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%", height: 52, borderRadius: 14, padding: "0 14px",
+    background: "#c2185b", border: "1.5px solid rgba(255,255,255,0.25)",
+    color: "white", fontSize: 16, fontWeight: 700, outline: "none",
+    boxSizing: "border-box",
+  };
+
+  const [glowSide, setGlowSide] = useState(0); // 0 = man, 1 = woman
+
+  // Cycle glow between the two cards until one is selected
+  useEffect(() => {
+    if (gender !== null) return;
+    const t = setInterval(() => setGlowSide(s => s === 0 ? 1 : 0), 800);
+    return () => clearInterval(t);
+  }, [gender]);
 
   return (
     <motion.div
       initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
       transition={{ duration: 0.22 }}
     >
-      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px" }}>
-        Which language do you speak?
+      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 14px" }}>
+        I am a…
       </p>
-      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
-        Select up to 2 languages
+
+      <div style={{ display: "flex", gap: 20, marginBottom: 26 }}>
+        {(["man", "woman"] as const).map((id, idx) => {
+          const selected = gender === id;
+          const glowing = gender === null && glowSide === idx;
+          const imgSrc = id === "man"
+            ? "https://ik.imagekit.io/dateme/sas-removebg-preview.png"
+            : "https://ik.imagekit.io/dateme/sasfd-removebg-preview.png";
+          return (
+            <motion.div
+              key={id}
+              whileTap={{ scale: 0.93 }}
+              onClick={() => setGender(id)}
+              style={{
+                flex: 1, display: "flex", flexDirection: "column",
+                alignItems: "center", gap: 8, cursor: "pointer",
+                padding: "12px 8px", borderRadius: 20,
+                background: selected ? "rgba(194,24,91,0.18)" : glowing ? "rgba(194,24,91,0.08)" : "none",
+                outline: selected
+                  ? "2.5px solid #c2185b"
+                  : "1.5px solid #c2185b",
+                boxShadow: selected
+                  ? "0 0 20px rgba(194,24,91,0.45)"
+                  : glowing
+                    ? "0 0 18px rgba(194,24,91,0.7), 0 0 6px #c2185b"
+                    : "none",
+                transition: "outline 0.2s, box-shadow 0.2s, background 0.2s",
+              }}
+            >
+              <img src={imgSrc} alt={id} style={{ width: 64, height: 64, objectFit: "contain" }} />
+              <span style={{
+                fontWeight: 900, fontSize: 18,
+                color: selected ? "#c2185b" : "white",
+                textShadow: selected ? "0 0 12px rgba(194,24,91,0.8)" : "none",
+                transition: "all 0.2s",
+              }}>
+                {id === "man" ? "Male" : "Female"}
+              </span>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 14px" }}>
+        Date of birth
       </p>
 
       <div style={{ display: "flex", gap: 10 }}>
-        {/* Primary */}
+        {/* Day */}
         <div style={{ flex: 1 }}>
-          <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>
-            Primary
+          <label style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 5 }}>
+            Day <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>1–{maxDay}</span>
           </label>
-          <WheelPicker
-            items={langItems}
-            selected={language.code}
-            onSelect={(key) => {
-              const found = LANGUAGES.find(l => l.code === key);
-              if (found) setLanguage(found);
-            }}
+          <input
+            type="text" inputMode="numeric" placeholder="DD"
+            value={dobDay}
+            onChange={(e) => handleDay(e.target.value)}
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.7)"; e.target.style.boxShadow = "0 0 0 3px rgba(236,72,153,0.25)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.25)"; e.target.style.boxShadow = "none"; }}
           />
         </div>
-
-        {/* Also speaks */}
+        {/* Month */}
         <div style={{ flex: 1 }}>
-          <label style={{ color: "rgba(255,255,255,0.8)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 4 }}>
-            Also speaks
+          <label style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 5 }}>
+            Month <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>1–12</span>
           </label>
-          <WheelPicker
-            items={langItems}
-            selected={language2.code}
-            onSelect={(key) => {
-              const found = LANGUAGES.find(l => l.code === key);
-              if (found) setLanguage2(found);
-            }}
+          <input
+            type="text" inputMode="numeric" placeholder="MM"
+            value={dobMonth}
+            onChange={(e) => handleMonth(e.target.value)}
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.7)"; e.target.style.boxShadow = "0 0 0 3px rgba(236,72,153,0.25)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.25)"; e.target.style.boxShadow = "none"; }}
+          />
+        </div>
+        {/* Year */}
+        <div style={{ flex: 1.6 }}>
+          <label style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", marginBottom: 5 }}>
+            Year <span style={{ color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>1950–{maxYear}</span>
+          </label>
+          <input
+            type="text" inputMode="numeric" placeholder="YYYY"
+            value={dobYear}
+            onChange={(e) => handleYear(e.target.value)}
+            style={inputStyle}
+            onFocus={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.7)"; e.target.style.boxShadow = "0 0 0 3px rgba(236,72,153,0.25)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.25)"; e.target.style.boxShadow = "none"; }}
           />
         </div>
       </div>
@@ -755,23 +1016,22 @@ function Step3({ intent, setIntent }: {
   intent: typeof INTENT_OPTIONS[0];
   setIntent: (v: typeof INTENT_OPTIONS[0]) => void;
 }) {
-  // expanded = tapped but not yet confirmed; confirmed = intent.id
-  const [expanded, setExpanded] = useState<string | null>(intent.id);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [glowIdx, setGlowIdx] = useState(0);
   const confirmed = intent.id;
 
+  // Cycle the rim glow across all containers
+  useEffect(() => {
+    const t = setInterval(() => setGlowIdx(i => (i + 1) % INTENT_OPTIONS.length), 500);
+    return () => clearInterval(t);
+  }, []);
+
   const handleTap = (o: typeof INTENT_OPTIONS[0]) => {
-    if (expanded === o.id) {
-      // second tap on already-expanded = confirm
-      setIntent(o);
-    } else {
-      setExpanded(o.id);
-    }
+    setExpanded(prev => (prev === o.id ? null : o.id));
+    setIntent(o);
   };
 
-  const handleConfirm = (o: typeof INTENT_OPTIONS[0]) => {
-    setIntent(o);
-    // keep expanded so user sees their confirmed choice
-  };
+  const expandedOption = INTENT_OPTIONS.find(o => o.id === expanded) ?? null;
 
   return (
     <motion.div
@@ -781,147 +1041,110 @@ function Step3({ intent, setIntent }: {
       <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 2px" }}>
         What are you seeking?
       </p>
-      <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 12, margin: "0 0 14px", lineHeight: 1.5 }}>
-        Tap to explore · tap again to confirm
+      <p style={{ color: "white", fontSize: 13, margin: "0 0 10px", lineHeight: 1.5 }}>
+        Tap a card to see what it means
       </p>
 
+      {/* ── Center detail panel — always same position ── */}
+      <AnimatePresence mode="wait">
+        {expandedOption ? (
+          <motion.div
+            key={expandedOption.id}
+            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              width: "100%",
+              borderRadius: 18,
+              background: "#c2185b",
+              outline: "2.5px solid rgba(255,255,255,0.9)",
+              boxShadow: "0 0 22px rgba(255,255,255,0.35)",
+              padding: "14px 16px",
+              marginBottom: 10,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 26 }}>{expandedOption.icon}</span>
+              <span style={{ color: "white", fontWeight: 900, fontSize: 15, flex: 1 }}>{expandedOption.label}</span>
+              <span style={{ color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: 700 }}>✓ Selected</span>
+            </div>
+            <p style={{ color: "rgba(255,255,255,0.92)", fontSize: 13, lineHeight: 1.6, margin: 0 }}>
+              {expandedOption.desc}
+            </p>
+            {expandedOption.vip && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 8,
+                padding: "8px 12px", borderRadius: 10, marginTop: 10,
+                background: "rgba(251,191,36,0.12)",
+                border: "1px solid rgba(251,191,36,0.3)",
+              }}>
+                <span style={{ fontSize: 14 }}>⭐</span>
+                <p style={{ margin: 0, color: "#fbbf24", fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>
+                  VIP members get priority visibility for this intent
+                </p>
+              </div>
+            )}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* ── 3-column grid — all cards always same size ── */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        {INTENT_OPTIONS.map(o => {
-          const isExpanded = expanded === o.id;
+        {INTENT_OPTIONS.map((o, idx) => {
           const isConfirmed = confirmed === o.id;
+          const isGlowing = glowIdx === idx;
 
           return (
             <motion.div
               key={o.id}
-              layout
+              whileTap={{ scale: 0.93 }}
               style={{
-                gridColumn: isExpanded ? "1 / -1" : undefined,
-                borderRadius: 18,
+                borderRadius: 16,
+                background: "#c2185b",
                 outline: isConfirmed
-                  ? "2px solid rgba(236,72,153,0.55)"
-                  : isExpanded
-                    ? "2px solid rgba(168,85,247,0.45)"
-                    : "2px solid rgba(255,255,255,0.07)",
-                outlineOffset: 0,
-                background: isConfirmed
-                  ? "rgba(255,255,255,0.07)"
-                  : isExpanded
-                    ? "rgba(255,255,255,0.05)"
-                    : "rgba(255,255,255,0.03)",
+                  ? "2.5px solid rgba(255,255,255,0.95)"
+                  : isGlowing
+                    ? "2.5px solid rgba(255,255,255,0.75)"
+                    : "2px solid rgba(255,255,255,0.1)",
                 boxShadow: isConfirmed
-                  ? "0 2px 14px rgba(236,72,153,0.3)"
-                  : "none",
+                  ? "0 0 18px rgba(255,255,255,0.35)"
+                  : isGlowing
+                    ? "0 0 12px rgba(255,255,255,0.25)"
+                    : "none",
                 overflow: "hidden",
                 cursor: "pointer",
-                transition: "outline 0.18s, background 0.18s, box-shadow 0.18s",
+                transition: "outline 0.15s, box-shadow 0.15s",
+                padding: "12px 8px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 5,
+                minHeight: 72,
               }}
               onClick={() => handleTap(o)}
             >
-              {/* ── Collapsed / header row ── */}
-              <div style={{
-                padding: isExpanded ? "12px 14px 8px" : "11px 8px",
-                display: "flex",
-                flexDirection: isExpanded ? "row" : "column",
-                alignItems: isExpanded ? "center" : "flex-start",
-                gap: isExpanded ? 10 : 5,
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{o.icon}</span>
+              <span style={{
+                color: "white",
+                fontSize: 11,
+                fontWeight: isConfirmed ? 800 : 600,
+                lineHeight: 1.2,
+                textAlign: "center",
               }}>
-                <span style={{ fontSize: isExpanded ? 22 : 20, lineHeight: 1, flexShrink: 0 }}>{o.icon}</span>
+                {o.label}
+              </span>
+              {isConfirmed && (
+                <span style={{ fontSize: 9, color: "rgba(255,255,255,0.75)", fontWeight: 700 }}>✓</span>
+              )}
+              {o.vip && !isConfirmed && (
                 <span style={{
-                  color: isConfirmed || isExpanded ? "white" : "rgba(255,255,255,0.6)",
-                  fontSize: isExpanded ? 14 : 11,
-                  fontWeight: isConfirmed ? 800 : isExpanded ? 700 : 500,
-                  lineHeight: 1.2,
-                  flex: 1,
-                }}>
-                  {o.label}
-                </span>
-                {isExpanded && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", flexShrink: 0 }}
-                  >
-                    {isConfirmed ? "✓ Selected" : ""}
-                  </motion.span>
-                )}
-                {/* VIP badge */}
-                {o.vip && !isExpanded && (
-                  <span style={{
-                    fontSize: 8, fontWeight: 800, color: "#fbbf24",
-                    background: "rgba(251,191,36,0.15)", borderRadius: 6,
-                    padding: "2px 5px", border: "1px solid rgba(251,191,36,0.3)",
-                    alignSelf: "flex-start",
-                  }}>VIP</span>
-                )}
-              </div>
-
-              {/* ── Expanded body ── */}
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.22 }}
-                    style={{ overflow: "hidden" }}
-                  >
-                    <div style={{ padding: "0 14px 14px" }}>
-                      {/* Description */}
-                      <p style={{
-                        color: "rgba(255,255,255,0.65)", fontSize: 12.5,
-                        lineHeight: 1.6, margin: "0 0 12px",
-                      }}>
-                        {o.desc}
-                      </p>
-
-                      {/* VIP notice */}
-                      {o.vip && (
-                        <div style={{
-                          display: "flex", alignItems: "center", gap: 8,
-                          padding: "8px 12px", borderRadius: 10, marginBottom: 12,
-                          background: "rgba(251,191,36,0.08)",
-                          border: "1px solid rgba(251,191,36,0.25)",
-                        }}>
-                          <span style={{ fontSize: 14 }}>⭐</span>
-                          <p style={{ margin: 0, color: "#fbbf24", fontSize: 11, fontWeight: 600, lineHeight: 1.4 }}>
-                            VIP members get priority visibility for this intent
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Action row */}
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <motion.button
-                          whileTap={{ scale: 0.96 }}
-                          onClick={(e) => { e.stopPropagation(); setExpanded(null); }}
-                          style={{
-                            flex: 1, height: 40, borderRadius: 12, border: "1px solid rgba(255,255,255,0.12)",
-                            background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)",
-                            fontSize: 13, fontWeight: 700, cursor: "pointer",
-                          }}
-                        >
-                          ← Back
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.96 }}
-                          onClick={(e) => { e.stopPropagation(); handleConfirm(o); }}
-                          style={{
-                            flex: 2, height: 40, borderRadius: 12, border: "none",
-                            background: isConfirmed
-                              ? "linear-gradient(135deg,rgba(236,72,153,0.6),rgba(168,85,247,0.6))"
-                              : "linear-gradient(135deg,#ec4899,#a855f7)",
-                            color: "white", fontSize: 13, fontWeight: 900,
-                            cursor: "pointer",
-                            boxShadow: "0 3px 14px rgba(195,60,255,0.4)",
-                          }}
-                        >
-                          {isConfirmed ? "✓ Confirmed" : "Confirm →"}
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                  fontSize: 8, fontWeight: 800, color: "#fbbf24",
+                  background: "rgba(251,191,36,0.2)", borderRadius: 6,
+                  padding: "2px 5px", border: "1px solid rgba(251,191,36,0.4)",
+                }}>VIP</span>
+              )}
             </motion.div>
           );
         })}
@@ -932,10 +1155,22 @@ function Step3({ intent, setIntent }: {
 
 // ── Step 4: Profile photo ─────────────────────────────────────────────────────
 
-function Step4({ avatarUrl, uploading, onUpload }: {
+const SOCIAL_PLATFORMS = [
+  { key: "instagram", label: "Instagram", emoji: "📸" },
+  { key: "tiktok",    label: "TikTok",    emoji: "🎵" },
+  { key: "facebook",  label: "Facebook",  emoji: "👥" },
+  { key: "youtube",   label: "YouTube",   emoji: "▶️" },
+  { key: "x",         label: "X (Twitter)", emoji: "✖️" },
+];
+
+function Step4({ avatarUrl, uploading, onUpload, socialPlatform, setSocialPlatform, socialFollowers, setSocialFollowers }: {
   avatarUrl: string | null;
   uploading: boolean;
   onUpload: (file: File) => void;
+  socialPlatform: string | null;
+  setSocialPlatform: (v: string | null) => void;
+  socialFollowers: string;
+  setSocialFollowers: (v: string) => void;
 }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -948,9 +1183,10 @@ function Step4({ avatarUrl, uploading, onUpload }: {
       <p style={{ color: "white", fontWeight: 900, fontSize: 20, margin: "0 0 4px", alignSelf: "flex-start" }}>
         Add your photo 📸
       </p>
-      <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 12, margin: "0 0 28px", lineHeight: 1.5, alignSelf: "flex-start" }}>
-        Profiles with a photo get 5× more matches — you can skip for now
+      <p style={{ color: "white", fontSize: 13, margin: "0 0 12px", lineHeight: 1.5, alignSelf: "flex-start" }}>
+        Upload a photo to earn <span style={{ color: "#fbbf24", fontWeight: 800 }}>🪙 +5 coins</span> — skip and earn nothing
       </p>
+
 
       <motion.button
         whileTap={{ scale: 0.97 }}
@@ -976,7 +1212,18 @@ function Step4({ avatarUrl, uploading, onUpload }: {
             animation: "spin 0.7s linear infinite",
           }} />
         ) : (
-          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 11, fontWeight: 700 }}>Tap to upload</span>
+          <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <img
+              src="https://ik.imagekit.io/dateme/Thoughtful%20teddy%20bear%20in%20soft%20light.png"
+              alt=""
+              style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+            />
+            {/* Dark overlay so text is readable */}
+            <div style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "rgba(0,0,0,0.45)" }} />
+            <span style={{ position: "absolute", color: "white", fontSize: 13, fontWeight: 800, textAlign: "center", textShadow: "0 1px 4px rgba(0,0,0,0.8)", lineHeight: 1.3 }}>
+              Tap to<br />upload
+            </span>
+          </div>
         )}
       </motion.button>
 
@@ -986,7 +1233,7 @@ function Step4({ avatarUrl, uploading, onUpload }: {
           onClick={() => fileRef.current?.click()}
           style={{
             marginTop: 16, padding: "8px 20px", borderRadius: 24,
-            background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)",
+            background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.15)",
             color: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 700,
             cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
           }}
@@ -995,9 +1242,77 @@ function Step4({ avatarUrl, uploading, onUpload }: {
         </motion.button>
       )}
 
-      <p style={{ color: "rgba(255,255,255,0.22)", fontSize: 10, marginTop: 20, textAlign: "center" }}>
+      <p style={{ color: "white", fontSize: 12, marginTop: 20, textAlign: "center" }}>
         JPG or PNG · Max 10MB · You can update this later in your profile
       </p>
+
+      {/* ── Social proof (optional) ── */}
+      <div style={{ width: "100%", marginTop: 24, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 20 }}>
+        <p style={{ color: "white", fontSize: 13, fontWeight: 800, margin: "0 0 4px", display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+          Social Proof
+          <span style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", color: "rgba(255,255,255,0.7)", fontSize: 9, fontWeight: 700, padding: "2px 7px", borderRadius: 20, border: "1px solid rgba(255,255,255,0.15)" }}>optional</span>
+          <span style={{ background: "linear-gradient(135deg,#f59e0b,#fbbf24)", color: "#78350f", fontSize: 10, fontWeight: 900, padding: "2px 8px", borderRadius: 20, boxShadow: "0 2px 8px rgba(251,191,36,0.4)" }}>🪙 +5 coins bonus</span>
+        </p>
+        <p style={{ color: "white", fontSize: 13, margin: "0 0 14px", lineHeight: 1.5 }}>
+          Show your follower count — no link or username shared
+        </p>
+
+        {/* Platform pills */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 14 }}>
+          {SOCIAL_PLATFORMS.map(p => (
+            <button
+              key={p.key}
+              onClick={() => setSocialPlatform(socialPlatform === p.key ? null : p.key)}
+              style={{
+                padding: "6px 12px", borderRadius: 22, cursor: "pointer",
+                background: socialPlatform === p.key
+                  ? "linear-gradient(135deg,#ec4899,#a855f7)"
+                  : "rgba(0,0,0,0.45)",
+                border: socialPlatform === p.key ? "none" : "1px solid rgba(255,255,255,0.12)",
+                color: "white",
+                fontWeight: 700, fontSize: 12,
+                transition: "all 0.15s",
+              }}
+            >
+              {p.emoji} {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Follower count input */}
+        {socialPlatform && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          >
+            <input
+              type="text"
+              inputMode="numeric"
+              value={socialFollowers}
+              onChange={e => setSocialFollowers(e.target.value.replace(/[^0-9]/g, ""))}
+              placeholder={`Your ${SOCIAL_PLATFORMS.find(p => p.key === socialPlatform)?.label} followers (e.g. 12500)`}
+              style={{
+                width: "100%", height: 44, borderRadius: 12,
+                border: "1.5px solid rgba(255,255,255,0.14)",
+                background: "rgba(0,0,0,0.45)",
+                backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+                color: "white", fontSize: 14, padding: "0 14px",
+                outline: "none", fontFamily: "inherit", boxSizing: "border-box",
+              }}
+            />
+            {socialFollowers && (
+              <p style={{ color: "white", fontSize: 12, margin: "6px 0 0" }}>
+                Shown as: <span style={{ color: "#ec4899", fontWeight: 700 }}>
+                  {parseInt(socialFollowers) >= 1_000_000
+                    ? `${(parseInt(socialFollowers) / 1_000_000).toFixed(1)}M`
+                    : parseInt(socialFollowers) >= 1_000
+                    ? `${(parseInt(socialFollowers) / 1_000).toFixed(parseInt(socialFollowers) >= 10_000 ? 0 : 1)}K`
+                    : socialFollowers} {SOCIAL_PLATFORMS.find(p => p.key === socialPlatform)?.emoji} followers
+                </span>
+              </p>
+            )}
+          </motion.div>
+        )}
+      </div>
 
       <input
         ref={fileRef}

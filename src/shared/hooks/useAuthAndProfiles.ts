@@ -48,7 +48,7 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
         // Check rose availability, terms acceptance, and gender
         const { data: myProfile } = await supabase
           .from("profiles")
-          .select("last_rose_at, terms_accepted_at, gender, country, is_active, name, super_likes_count, referral_code, last_seen_at")
+          .select("last_rose_at, terms_accepted_at, gender, country, is_active, name, super_likes_count, referral_code, last_seen_at, avatar_url, looking_for")
           .eq("id", session.user.id)
           .single();
         if (myProfile) {
@@ -105,6 +105,13 @@ export const useAuthAndProfiles = (props: UseAuthAndProfilesProps) => {
             props.welcomeBackName.current = name;
             props.setShowWelcomeBack(true);
           }
+
+          // Merge profile fields into user object so components can detect preview mode
+          props.setUser((prev: any) => ({
+            ...prev,
+            avatar_url: (myProfile as any).avatar_url ?? null,
+            looking_for: (myProfile as any).looking_for ?? null,
+          }));
 
           try {
             const shown = localStorage.getItem(REFERRAL_POPUP_SHOWN_KEY);
