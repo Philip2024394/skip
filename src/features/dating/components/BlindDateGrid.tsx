@@ -1377,7 +1377,6 @@ export default function BlindDateGrid({ userId, onClose, onStartChat }: { userId
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>💘 Blind Date</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>Swipe ← → to skip · Tap to answer · ↑ to unlock</div>
           </div>
         </div>
 
