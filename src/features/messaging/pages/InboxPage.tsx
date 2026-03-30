@@ -746,7 +746,7 @@ export default function InboxPage() {
                   </div>
                   <FeatureCard icon="💘" color="#c2185b" label="Blind Date" subtitle="Swipe anonymously — reveal on match" onSeeAll={() => navigate("/home")} />
                   <FeatureCard icon="🗺️" color="#3b82f6" label="Nearby Map" subtitle="See who's around you right now" onSeeAll={() => navigate("/map")} />
-                  <FeatureCard icon="📍" color="#10b981" label="Date Spots" subtitle="Discover great places to meet" onSeeAll={() => navigate("/dates")} />
+                  <FeatureCard icon="📍" color="#c2185b" label="Date Spots" subtitle="Discover great places to meet" onSeeAll={() => navigate("/dates")} />
                   <FeatureCard icon="🧸" color="#f59e0b" label="Teddy Room" subtitle="Your virtual cosy space" onSeeAll={() => navigate("/teddy")} />
                   <FeatureCard icon="🎟️" color="#8b5cf6" label="Events Near Me" subtitle="Local events and meetups" onSeeAll={() => navigate("/events")} />
                 </>
