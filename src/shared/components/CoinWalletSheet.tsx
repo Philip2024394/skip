@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, animate } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
+import { useKeyBalance } from "@/shared/hooks/useKeyBalance";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const GOLD         = "#f59e0b";
@@ -132,6 +133,7 @@ interface Props { userId: string; onClose: () => void; }
 
 export default function CoinWalletSheet({ userId, onClose }: Props) {
   const { balance, loading, refetch } = useCoinBalance(userId);
+  const keyBal                       = useKeyBalance(userId);
   const [section, setSection]       = useState<"wallet" | "buy">("wallet");
   const [transactions, setTx]       = useState<Transaction[]>([]);
   const [txLoading, setTxLoading]   = useState(true);
@@ -323,6 +325,53 @@ export default function CoinWalletSheet({ userId, onClose }: Props) {
             <motion.div key="wallet" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22 }}>
 
               <DailyEarnBar transactions={transactions} />
+
+              {/* Key balance card */}
+              {!keyBal.loading && (
+                <div style={{
+                  marginTop: 12,
+                  background: "rgba(245,158,11,0.08)",
+                  border: "1px solid rgba(245,158,11,0.22)",
+                  borderRadius: 16, padding: "12px 16px",
+                  display: "flex", alignItems: "center", gap: 12,
+                }}>
+                  <span style={{ fontSize: 28, flexShrink: 0 }}>🗝️</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 16, fontWeight: 900, color: "#fbbf24" }}>
+                        {keyBal.keys} Key{keyBal.keys !== 1 ? "s" : ""}
+                      </span>
+                      {keyBal.keys > 0 && (
+                        <span style={{
+                          fontSize: 9, fontWeight: 800, color: "#f59e0b",
+                          background: "rgba(245,158,11,0.18)", border: "1px solid rgba(245,158,11,0.35)",
+                          borderRadius: 20, padding: "1px 7px", letterSpacing: "0.06em",
+                        }}>READY</span>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
+                      {[0, 1, 2].map(i => (
+                        <div key={i} style={{
+                          width: 18, height: 18, borderRadius: "50%", fontSize: 10,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          background: i < keyBal.fragments ? "rgba(245,158,11,0.35)" : "rgba(255,255,255,0.07)",
+                          border: i < keyBal.fragments ? "1px solid rgba(245,158,11,0.5)" : "1px solid rgba(255,255,255,0.1)",
+                          opacity: i < keyBal.fragments ? 1 : 0.4,
+                        }}>
+                          {i < keyBal.fragments ? "🧩" : ""}
+                        </div>
+                      ))}
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginLeft: 2 }}>
+                        {keyBal.fragments}/3 fragments
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "right", lineHeight: 1.4 }}>
+                    <span>Each key</span><br />
+                    <span>opens 1 safe</span>
+                  </div>
+                </div>
+              )}
 
               {/* Recent activity */}
               <div style={{ marginTop: 20 }}>

@@ -94,6 +94,91 @@ ON CONFLICT (user_id, role) DO NOTHING;`,
     warn: true,
   },
   {
+    step: 6,
+    title: "Key & Safe system",
+    desc: "Adds key_fragments + keys_balance to profiles, creates key_transactions table, and 3 RPCs: convert_coins_to_key (500 coins → 1 key), award_key_fragment (activity rewards), unlock_with_key (spend key + reveal contact bypassing RLS).",
+    sql: `-- Add key columns to profiles
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS key_fragments INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS keys_balance  INTEGER NOT NULL DEFAULT 0;
+
+-- Key transaction log
+CREATE TABLE IF NOT EXISTS public.key_transactions (
+  id         uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id    uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type       text        NOT NULL CHECK (type IN ('earn_fragment','combine','purchase','spend','convert_coins')),
+  amount     integer     NOT NULL DEFAULT 1,
+  reason     text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.key_transactions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read own key_transactions"
+  ON public.key_transactions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own key_transactions"
+  ON public.key_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- RPC: 500 coins → 1 key (returns new keys_balance, -1 if insufficient coins)
+CREATE OR REPLACE FUNCTION public.convert_coins_to_key(p_user_id uuid)
+RETURNS integer LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE v_keys integer;
+BEGIN
+  UPDATE public.profiles
+  SET coins_balance = coins_balance - 500,
+      keys_balance  = keys_balance  + 1
+  WHERE id = p_user_id AND coins_balance >= 500
+  RETURNING keys_balance INTO v_keys;
+  IF v_keys IS NULL THEN RETURN -1; END IF;
+  INSERT INTO public.key_transactions (user_id, type, amount, reason)
+  VALUES (p_user_id, 'convert_coins', 1, '500_coins');
+  RETURN v_keys;
+END; $$;
+
+-- RPC: award 1 fragment, auto-combine when 3 collected
+CREATE OR REPLACE FUNCTION public.award_key_fragment(p_user_id uuid, p_reason text DEFAULT 'activity')
+RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE v_frags integer; v_keys integer; v_combined boolean := false;
+BEGIN
+  UPDATE public.profiles
+  SET key_fragments = CASE WHEN key_fragments >= 2 THEN 0             ELSE key_fragments + 1 END,
+      keys_balance  = CASE WHEN key_fragments >= 2 THEN keys_balance+1 ELSE keys_balance     END
+  WHERE id = p_user_id
+  RETURNING key_fragments, keys_balance INTO v_frags, v_keys;
+  v_combined := (v_frags = 0);
+  IF v_combined THEN
+    INSERT INTO public.key_transactions (user_id, type, amount, reason)
+    VALUES (p_user_id, 'combine', 1, '3_fragments_combined');
+  END IF;
+  INSERT INTO public.key_transactions (user_id, type, amount, reason)
+  VALUES (p_user_id, 'earn_fragment', 1, p_reason);
+  RETURN json_build_object('fragments', v_frags, 'keys', v_keys, 'combined', v_combined);
+END; $$;
+
+-- RPC: spend 1 key, return contact info (SECURITY DEFINER bypasses RLS on whatsapp_leads)
+CREATE OR REPLACE FUNCTION public.unlock_with_key(p_user_id uuid, p_target_id uuid)
+RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE v_whatsapp text; v_name text; v_keys integer;
+BEGIN
+  UPDATE public.profiles
+  SET keys_balance = keys_balance - 1
+  WHERE id = p_user_id AND keys_balance > 0
+  RETURNING keys_balance INTO v_keys;
+  IF v_keys IS NULL THEN
+    RETURN json_build_object('success', false, 'error', 'No keys available');
+  END IF;
+  INSERT INTO public.key_transactions (user_id, type, amount, reason)
+  VALUES (p_user_id, 'spend', 1, 'unlock_' || p_target_id);
+  SELECT phone INTO v_whatsapp FROM public.whatsapp_leads WHERE user_id = p_target_id LIMIT 1;
+  SELECT name  INTO v_name     FROM public.profiles        WHERE id      = p_target_id;
+  INSERT INTO public.connections (user_a, user_b)
+  VALUES (p_user_id, p_target_id) ON CONFLICT DO NOTHING;
+  RETURN json_build_object(
+    'success',   true,
+    'whatsapp',  COALESCE(v_whatsapp, ''),
+    'name',      COALESCE(v_name, 'Your Match')
+  );
+END; $$;`,
+  },
+  {
     step: 5,
     title: "Create connect4_games table",
     desc: "Stores Connect 4 game results, bets, and win/loss records. Required for the Games tab in admin.",

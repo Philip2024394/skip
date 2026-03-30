@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Star, MessageCircle } from "lucide-react";
+import { Heart, Star } from "lucide-react";
 import MatchCelebrationOverlay from "@/features/dating/components/MatchCelebrationOverlay";
 import { Button } from "@/shared/components/button";
 import {
@@ -14,8 +14,8 @@ import FilterPanel from "@/features/dating/components/FilterPanel";
 import TermsAcceptanceDialog from "@/features/auth/components/TermsAcceptanceDialog";
 import GuestAuthPrompt from "@/features/auth/components/GuestAuthPrompt";
 import AppLogo from "@/shared/components/AppLogo";
+import KeySafeModal from "@/shared/components/KeySafeModal";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { hasUnlockBadges } from "@/shared/utils/unlockPrice";
 import { toast } from "sonner";
 
 interface AppDialogsProps {
@@ -151,46 +151,20 @@ export default function AppDialogs(props: AppDialogsProps) {
         />
       )}
 
-      {/* Unlock Payment Dialog */}
-      <Dialog open={props.showUnlockDialog} onOpenChange={() => props.setShowUnlockDialog(false)}>
-        <DialogContent className="text-white max-w-xs mx-auto rounded-3xl overflow-hidden p-0 border-0" style={{ background: "rgba(12,12,18,0.85)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)", border: "1px solid rgba(255,255,255,0.10)" }}>
-          {/* Pink top bar */}
-          <div style={{ height: 4, background: "linear-gradient(90deg, #ec4899, #f472b6, #ec4899)" }} />
-          <div className="px-6 pt-5 pb-6">
-            <DialogHeader>
-              <DialogTitle className="font-display text-center text-white">
-                <MessageCircle className="w-10 h-10 mx-auto mb-2" fill="white" stroke="white" />
-                {t("popup.unlockTitle")}
-              </DialogTitle>
-              <DialogDescription className="text-center text-white/60">
-                {props.unlockProfile && hasUnlockBadges(props.unlockProfile) ? t("popup.unlockDesc299") : t("popup.unlockDesc")}
-              </DialogDescription>
-            </DialogHeader>
-            <ul className="text-white/50 text-xs space-y-1 mt-3">
-              <li>💬 {t("popup.unlockBullet1")}</li>
-              <li>🔒 {t("popup.unlockBullet2")}</li>
-              <li>⏰ {t("popup.unlockBullet3")}</li>
-            </ul>
-
-            {/* Expectation setter — friendly, not a warning */}
-            <div
-              className="mt-4 rounded-2xl px-4 py-3"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-            >
-              <p className="text-white/70 text-[11px] leading-relaxed text-center">
-                <span className="text-pink-400 font-bold">💭 A gentle note —</span> unlocking gives you their real contact details. Some people are shy, busy, or take a little time to warm up. That's perfectly normal. Give it a day or two — great connections are worth the wait. 🌸
-              </p>
-            </div>
-
-            <div className="flex gap-3 mt-4">
-              <Button variant="outline" onClick={() => props.setShowUnlockDialog(false)} className="flex-1 border-white/10 text-white/70 hover:bg-white/10 hover:text-white">{t("popup.cancel")}</Button>
-              <Button onClick={props.confirmUnlock} disabled={props.paymentLoading} className="flex-1 gradient-love text-primary-foreground border-0 font-bold">
-                {props.paymentLoading ? t("popup.processing") : (props.unlockProfile && hasUnlockBadges(props.unlockProfile) ? t("popup.pay299") : t("popup.pay199"))}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Key & Safe Unlock Modal */}
+      <AnimatePresence>
+        {props.showUnlockDialog && props.unlockProfile && props.user && (
+          <KeySafeModal
+            profile={props.unlockProfile}
+            userId={props.user.id}
+            onClose={() => props.setShowUnlockDialog(false)}
+            onBuyKey={() => {
+              props.setShowUnlockDialog(false);
+              props.confirmUnlock();
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Feature Purchase Sheet */}
       <PaymentSheet
