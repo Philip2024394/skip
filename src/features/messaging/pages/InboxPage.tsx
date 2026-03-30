@@ -421,25 +421,34 @@ export default function InboxPage() {
     if (!userId) return;
     setLoading(true);
 
-    const [convRes, qRes, likeRes, giftRes, viewRes] = await Promise.all([
-      supabase.rpc("get_conversations" as any, { p_user_id: userId }),
-      supabase.rpc("get_received_blind_date_questions" as any, { p_user_id: userId }),
-      supabase.rpc("get_received_likes" as any, { p_user_id: userId }),
-      (supabase as any)
-        .from("sent_gifts")
-        .select("id, sender_id, sender_name, gift_name, gift_emoji, message, created_at, status")
-        .eq("recipient_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(5),
-      supabase.rpc("get_who_viewed_me" as any, { p_user_id: userId }),
-    ]);
+    // Wrap each query so a missing RPC/table never blocks the whole load
+    const safe = <T,>(p: Promise<{ data: T | null }>): Promise<{ data: T | null }> =>
+      p.then(r => r).catch(() => ({ data: null }));
 
-    setConversations((convRes.data as Conversation[]) || []);
-    setQuestions((qRes.data as BlindQuestion[]) || []);
-    setLikes((likeRes.data as Like[]) || []);
-    setGifts(((giftRes as any).data as Gift[]) || []);
-    setViewerCount(((viewRes as any).data as any[])?.length ?? 0);
-    setLoading(false);
+    try {
+      const [convRes, qRes, likeRes, giftRes, viewRes] = await Promise.all([
+        safe(supabase.rpc("get_conversations" as any, { p_user_id: userId })),
+        safe(supabase.rpc("get_received_blind_date_questions" as any, { p_user_id: userId })),
+        safe(supabase.rpc("get_received_likes" as any, { p_user_id: userId })),
+        safe(
+          (supabase as any)
+            .from("sent_gifts")
+            .select("id, sender_id, sender_name, gift_name, gift_emoji, message, created_at, status")
+            .eq("recipient_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(5)
+        ),
+        safe(supabase.rpc("get_who_viewed_me" as any, { p_user_id: userId })),
+      ]);
+
+      setConversations((convRes.data as Conversation[]) || []);
+      setQuestions((qRes.data as BlindQuestion[]) || []);
+      setLikes((likeRes.data as Like[]) || []);
+      setGifts((giftRes.data as Gift[]) || []);
+      setViewerCount((viewRes.data as any[])?.length ?? 0);
+    } finally {
+      setLoading(false);
+    }
   }, [userId]);
 
   useEffect(() => { load(); }, [load]);
@@ -506,11 +515,6 @@ export default function InboxPage() {
                 }}>
                   💎 Inbox
                 </div>
-                {totalBadge > 0 && (
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
-                    {totalBadge} new {totalBadge === 1 ? "activity" : "activities"}
-                  </div>
-                )}
               </div>
             </div>
 
@@ -549,16 +553,6 @@ export default function InboxPage() {
                 <span style={{ fontSize: 12, fontWeight: 700, color: tab === t.key ? "white" : "rgba(255,255,255,0.6)" }}>
                   {t.label}
                 </span>
-                {t.count !== undefined && (
-                  <div style={{
-                    background: tab === t.key ? "rgba(255,255,255,0.25)" : "linear-gradient(135deg,#c2185b,#e91e8c)",
-                    borderRadius: 20, minWidth: 18, height: 18,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 9, fontWeight: 800, color: "white", padding: "0 4px",
-                  }}>
-                    {t.count}
-                  </div>
-                )}
               </motion.button>
             ))}
           </div>
