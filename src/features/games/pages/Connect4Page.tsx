@@ -58,7 +58,7 @@ export default function Connect4Page() {
 
   return (
     <div style={{
-      minHeight: "100dvh",
+      height: "100dvh",
       background: "#08060a",
       display: "flex", flexDirection: "column",
       maxWidth: 480, margin: "0 auto",
@@ -84,7 +84,7 @@ export default function Connect4Page() {
           >
             {/* Back */}
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/games")}
               style={{
                 position: "absolute", top: "max(18px,env(safe-area-inset-top,18px))", left: 18,
                 background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
@@ -179,14 +179,13 @@ export default function Connect4Page() {
             exit={{ opacity: 0, x: -40 }}
             transition={{ duration: 0.28 }}
             style={{
-              flex: 1, display: "flex", flexDirection: "column",
+              flex: 1, display: "flex", flexDirection: "column", minHeight: 0,
               paddingTop: "max(14px,env(safe-area-inset-top,14px))",
             }}
           >
             <Connect4Board
               mode={gameMode}
               opponentName={opponentName}
-              onBack={() => setGameMode("menu")}
             />
           </motion.div>
         )}
@@ -194,7 +193,9 @@ export default function Connect4Page() {
       </AnimatePresence>
 
       {/* ── How to Play popup ──────────────────────────────────────── */}
-      <Connect4HowToPlay open={showHowToPlay} onClose={() => setShowHowToPlay(false)} />
+      <AnimatePresence>
+        {showHowToPlay && <Connect4HowToPlay onClose={() => setShowHowToPlay(false)} />}
+      </AnimatePresence>
     </div>
   );
 }
