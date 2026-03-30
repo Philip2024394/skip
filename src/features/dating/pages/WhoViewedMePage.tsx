@@ -210,18 +210,6 @@ function ViewerCard({
           }}>🔒</div>
         )}
 
-        {/* Time ago label */}
-        <div style={{
-          position: "absolute", top: 7, right: locked ? 7 : 20,
-          ...(locked ? {} : {}),
-          background: "rgba(0,0,0,0.6)",
-          borderRadius: 10, padding: "2px 6px",
-          fontSize: 8, color: "rgba(255,255,255,0.55)",
-          backdropFilter: "blur(4px)",
-          display: locked ? "none" : "block",
-        }}>
-          {timeAgo(viewer.last_viewed_at)}
-        </div>
       </div>
     </motion.div>
   );
