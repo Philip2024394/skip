@@ -408,12 +408,16 @@ export default function InboxPage() {
   const [chatWith,      setChatWith]      = useState<Conversation | null>(null);
   const [answerQ,       setAnswerQ]       = useState<BlindQuestion | null>(null);
 
-  const { balance } = useCoinBalance(userId ?? undefined);
+  useCoinBalance(userId ?? undefined);
 
   // ProtectedRoute already guards — just grab userId once
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) setUserId(session.user.id);
+      if (session?.user) {
+        setUserId(session.user.id);
+      } else {
+        setLoading(false); // no session — stop spinner so cards still render
+      }
     });
   }, []);
 
@@ -422,8 +426,9 @@ export default function InboxPage() {
     setLoading(true);
 
     // Wrap each query so a missing RPC/table never blocks the whole load
-    const safe = <T,>(p: Promise<{ data: T | null }>): Promise<{ data: T | null }> =>
-      p.then(r => r).catch(() => ({ data: null }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const safe = (p: any): Promise<{ data: any }> =>
+      Promise.resolve(p).then((r: any) => r ?? { data: null }).catch(() => ({ data: null }));
 
     try {
       const [convRes, qRes, likeRes, giftRes, viewRes] = await Promise.all([
@@ -518,20 +523,6 @@ export default function InboxPage() {
               </div>
             </div>
 
-            {/* Coin pill */}
-            <motion.button
-              whileTap={{ scale: 0.94 }}
-              onClick={() => navigate("/home")}
-              style={{
-                display: "flex", alignItems: "center", gap: 5,
-                background: "rgba(245,158,11,0.12)",
-                border: "1px solid rgba(245,158,11,0.3)",
-                borderRadius: 20, padding: "7px 13px", cursor: "pointer",
-              }}
-            >
-              <span style={{ fontSize: 14 }}>🪙</span>
-              <span style={{ fontSize: 13, fontWeight: 800, color: "#f59e0b" }}>{balance}</span>
-            </motion.button>
           </div>
 
           {/* Tab bar */}
@@ -821,35 +812,6 @@ export default function InboxPage() {
                 </>
               )}
 
-              {/* All-tab empty state */}
-              {tab === "all" && !loading &&
-                conversations.length === 0 && questions.length === 0 &&
-                likes.length === 0 && gifts.length === 0 && (
-                <div style={{
-                  display: "flex", flexDirection: "column", alignItems: "center",
-                  padding: "48px 24px", gap: 12, textAlign: "center",
-                }}>
-                  <div style={{ fontSize: 48 }}>💎</div>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: "rgba(255,255,255,0.5)" }}>
-                    Your inbox is empty
-                  </div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.25)", lineHeight: 1.5 }}>
-                    Start swiping on the home feed — likes, messages, gifts and blind date questions will all appear here.
-                  </div>
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => navigate("/home")}
-                    style={{
-                      marginTop: 8, padding: "12px 28px", borderRadius: 50,
-                      background: "linear-gradient(135deg,#c2185b,#e91e8c)",
-                      border: "none", color: "white", fontSize: 14, fontWeight: 700,
-                      cursor: "pointer", boxShadow: "0 4px 20px rgba(194,24,91,0.4)",
-                    }}
-                  >
-                    🏠 Go to home feed
-                  </motion.button>
-                </div>
-              )}
             </>
           )}
         </div>
