@@ -77,6 +77,7 @@ import {
 } from "@/shared/hooks/usePopupQueue";
 import ChatPanel from "@/features/messaging/components/ChatPanel";
 import { usePushNotifications } from "@/shared/hooks/usePushNotifications";
+import BlindDateGrid from "@/features/dating/components/BlindDateGrid";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -289,6 +290,7 @@ const Index = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
+  const [showBlindDate, setShowBlindDate] = useState(false);
   const [filters, setFilters] = useState<FilterState>(() => defaultFilters);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
@@ -1286,6 +1288,26 @@ const Index = () => {
                   >
                     <Zap className="w-4 h-4" />
                   </button>
+                  {/* Blind Date toggle */}
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowBlindDate(v => !v)}
+                    aria-label="Blind Date"
+                    title="Blind Date"
+                    style={{
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: showBlindDate ? "#c2185b" : "rgba(0,0,0,0.5)",
+                      border: showBlindDate ? "1.5px solid #c2185b" : "1px solid rgba(255,255,255,0.15)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", fontSize: 16, flexShrink: 0,
+                      boxShadow: showBlindDate ? "0 0 14px rgba(194,24,91,0.6)" : "none",
+                      backdropFilter: "blur(8px)",
+                      transition: "background 0.25s, box-shadow 0.25s, border-color 0.25s",
+                    }}
+                  >
+                    💘
+                  </motion.button>
+
                   {/* Side drawer toggle */}
                   <button
                     onClick={() => setShowDrawer(true)}
@@ -1308,6 +1330,47 @@ const Index = () => {
           )}
         </div>
       </header>
+
+      {/* ── Blind Date Grid overlay ───────────────────────────────────────── */}
+      <AnimatePresence>
+        {showBlindDate && user && (
+          <motion.div
+            key="blind-date-grid"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.25 }}
+            style={{
+              position: "absolute", inset: 0,
+              zIndex: 30,
+              backgroundImage: "url('/images/app-background.png')",
+              backgroundSize: "cover", backgroundPosition: "center",
+              display: "flex", flexDirection: "column",
+              paddingTop: "max(64px, env(safe-area-inset-top, 64px))",
+              paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))",
+              paddingLeft: 10, paddingRight: 10,
+            }}
+          >
+            {/* Dark overlay */}
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
+
+            {/* Section header */}
+            <div style={{ position: "relative", zIndex: 1, marginBottom: 12, paddingLeft: 4 }}>
+              <div style={{ fontSize: 18, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>
+                💘 Blind Date
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginTop: 2 }}>
+                Answer 2 of 3 questions to unlock the chat
+              </div>
+              <div style={{ height: 1, background: "rgba(194,24,91,0.3)", marginTop: 10 }} />
+            </div>
+
+            <div style={{ position: "relative", zIndex: 1, flex: 1, overflowY: "auto" }}>
+              <BlindDateGrid userId={user.id} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main 3-container layout */}
       {(() => {
