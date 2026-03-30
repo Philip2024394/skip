@@ -1351,8 +1351,6 @@ const Index = () => {
               paddingLeft: 10, paddingRight: 10,
             }}
           >
-            {/* Dark overlay */}
-            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", pointerEvents: "none" }} />
 
             {/* Section header */}
             <div style={{ position: "relative", zIndex: 1, marginBottom: 12, paddingLeft: 4 }}>
