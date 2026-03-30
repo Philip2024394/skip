@@ -58,6 +58,21 @@ function shouldShowTimestamp(messages: any[], idx: number) {
   return gap > 5 * 60 * 1000;
 }
 
+// ── MyMemory translation helper ───────────────────────────────────────────────
+async function translateText(text: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=|en`
+    );
+    const json = await res.json();
+    const result = json?.responseData?.translatedText as string | undefined;
+    if (!result || result.toLowerCase() === text.toLowerCase()) return null;
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock }: ChatPanelProps) {
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +83,42 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   const [contactPlatform, setContactPlatform] = useState<PlatformId>("whatsapp");
   const [contactValue, setContactValue] = useState("");
   const [sendingContact, setSendingContact] = useState(false);
+
+  // ── Translation state ────────────────────────────────────────────────────────
+  // translationCache: msgId → { translated, original, loading }
+  const [translationCache, setTranslationCache] = useState<Record<string, { translated: string; original: string } | "loading">>({});
+  // flipped: set of msgIds currently showing original
+  const [flippedIds, setFlippedIds] = useState<Set<string>>(new Set());
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  async function requestTranslation(msgId: string, content: string) {
+    if (translationCache[msgId]) return; // already cached or loading
+    setTranslationCache(prev => ({ ...prev, [msgId]: "loading" }));
+    const result = await translateText(content);
+    if (result) {
+      setTranslationCache(prev => ({ ...prev, [msgId]: { translated: result, original: content } }));
+    } else {
+      // No translation needed — remove loading entry
+      setTranslationCache(prev => { const n = { ...prev }; delete n[msgId]; return n; });
+    }
+  }
+
+  function toggleFlip(msgId: string) {
+    setFlippedIds(prev => {
+      const s = new Set(prev);
+      s.has(msgId) ? s.delete(msgId) : s.add(msgId);
+      return s;
+    });
+  }
+
+  // Auto-close flipped bubbles on scroll
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const handler = () => setFlippedIds(new Set());
+    el.addEventListener("scroll", handler, { passive: true });
+    return () => el.removeEventListener("scroll", handler);
+  }, []);
 
   const { balance, deductCoins } = useCoinBalance(currentUserId);
 
@@ -325,6 +376,7 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
 
       {/* ── Message list ── */}
       <div
+        ref={scrollContainerRef}
         style={{
           flex: 1, overflowY: "auto", padding: "16px 16px 8px",
           display: "flex", flexDirection: "column", gap: 6,
@@ -432,20 +484,55 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
                           </div>
                         );
                       }
+                      // Trigger translation for incoming messages on first render
+                      if (!isMine && !decodeContactCard(msg.content)) {
+                        requestTranslation(msg.id, msg.content);
+                      }
+                      const cache = translationCache[msg.id];
+                      const isLoading = cache === "loading";
+                      const xlat = cache && cache !== "loading" ? cache : null;
+                      const isFlipped = flippedIds.has(msg.id);
+                      const displayText = !isMine && xlat && !isFlipped ? xlat.translated : msg.content;
+
                       return (
-                        <div style={{
-                          maxWidth: "76%",
-                          padding: "10px 14px",
-                          borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                          background: isMine
-                            ? "linear-gradient(135deg, #f472b6, #ec4899)"
-                            : "rgba(255,255,255,0.08)",
-                          border: isMine ? "none" : "1px solid rgba(255,255,255,0.1)",
-                          color: "white", fontSize: 14, lineHeight: 1.45,
-                          wordBreak: "break-word",
-                          boxShadow: isMine ? "0 2px 14px rgba(236,72,153,0.28)" : "none",
-                        }}>
-                          {msg.content}
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: isMine ? "flex-end" : "flex-start", gap: 3, maxWidth: "76%" }}>
+                          <motion.div
+                            animate={{ rotateY: isFlipped ? 180 : 0 }}
+                            transition={{ duration: 0.32, ease: "easeInOut" }}
+                            onClick={() => xlat && toggleFlip(msg.id)}
+                            style={{
+                              padding: "10px 14px",
+                              borderRadius: isMine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                              background: isMine
+                                ? "linear-gradient(135deg, #f472b6, #ec4899)"
+                                : "rgba(255,255,255,0.08)",
+                              border: isMine ? "none" : "1px solid rgba(255,255,255,0.1)",
+                              color: "white", fontSize: 14, lineHeight: 1.45,
+                              wordBreak: "break-word",
+                              boxShadow: isMine ? "0 2px 14px rgba(236,72,153,0.28)" : "none",
+                              cursor: xlat ? "pointer" : "default",
+                            }}
+                          >
+                            {isLoading
+                              ? <span style={{ fontSize: 12, opacity: 0.4, fontStyle: "italic" }}>translating…</span>
+                              : displayText
+                            }
+                          </motion.div>
+                          {/* 🌐 flip badge — only on translated incoming messages */}
+                          {!isMine && xlat && (
+                            <div
+                              onClick={() => toggleFlip(msg.id)}
+                              style={{
+                                display: "flex", alignItems: "center", gap: 3,
+                                cursor: "pointer", userSelect: "none",
+                                fontSize: 10, color: "rgba(255,255,255,0.3)",
+                                padding: "0 4px",
+                              }}
+                            >
+                              <span style={{ fontSize: 12 }}>🌐</span>
+                              <span>{isFlipped ? "Show translation" : "Show original"}</span>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
