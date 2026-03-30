@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
+import { AppLogo } from "@/shared/components";
 import ChatPanel from "@/features/messaging/components/ChatPanel";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -132,10 +133,10 @@ function Avatar({
 // ── Feature landscape card ─────────────────────────────────────────────────────
 
 function FeatureCard({
-  icon, color, label, count, subtitle, onSeeAll, children,
+  icon, color, label, subtitle, onSeeAll, children,
 }: {
   icon: string; color: string; label: string;
-  count?: number; subtitle?: string;
+  subtitle?: string;
   onSeeAll?: () => void; children?: React.ReactNode;
 }) {
   return (
@@ -173,19 +174,6 @@ function FeatureCard({
             letterSpacing: "-0.01em",
           }}>
             {label}
-            {count !== undefined && count > 0 && (
-              <span style={{
-                marginLeft: 8, display: "inline-flex",
-                alignItems: "center", justifyContent: "center",
-                background: `linear-gradient(135deg,#c2185b,#e91e8c)`,
-                borderRadius: 20, padding: "1px 8px",
-                fontSize: 10, fontWeight: 800, color: "white",
-                verticalAlign: "middle",
-                boxShadow: "0 0 8px rgba(233,30,140,0.4)",
-              }}>
-                {count > 99 ? "99+" : count}
-              </span>
-            )}
           </div>
           {subtitle && (
             <div style={{
@@ -502,14 +490,13 @@ export default function InboxPage() {
                 whileTap={{ scale: 0.92 }}
                 onClick={() => navigate("/home")}
                 style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  color: "white", fontSize: 16,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer", flexShrink: 0,
+                  background: "none", border: "none",
+                  padding: 0, cursor: "pointer", flexShrink: 0,
+                  display: "flex", alignItems: "center",
                 }}
-              >🏠</motion.button>
+              >
+                <AppLogo style={{ width: 36, height: 36, objectFit: "contain" }} />
+              </motion.button>
               <div>
                 <div style={{
                   fontSize: 20, fontWeight: 900, letterSpacing: "-0.02em",
@@ -569,7 +556,6 @@ export default function InboxPage() {
               {showChats && (
                 <FeatureCard
                   icon="💬" color="#e91e8c" label="Messages"
-                  count={unreadChats}
                   subtitle={
                     conversations.length === 0
                       ? "No conversations yet"
@@ -617,7 +603,6 @@ export default function InboxPage() {
               {showBlinds && (
                 <FeatureCard
                   icon="💘" color="#c2185b" label="Blind Date"
-                  count={unansweredQs}
                   subtitle={
                     questions.length === 0
                       ? "No blind date questions yet"
@@ -668,7 +653,6 @@ export default function InboxPage() {
               {showGifts && (
                 <FeatureCard
                   icon="🎁" color="#a855f7" label="Gifts Received"
-                  count={newGifts}
                   subtitle={
                     gifts.length === 0
                       ? "No gifts yet"
@@ -705,7 +689,6 @@ export default function InboxPage() {
               {showLikes && (
                 <FeatureCard
                   icon="♥" color="#f43f5e" label="Likes"
-                  count={newLikes}
                   subtitle={
                     likes.length === 0
                       ? "No likes yet"
@@ -775,7 +758,6 @@ export default function InboxPage() {
               {tab === "all" && (
                 <FeatureCard
                   icon="👁️" color="#e91e8c" label="Who Viewed Me"
-                  count={viewerCount}
                   subtitle={viewerCount === 0 ? "No profile views yet" : `${viewerCount} ${viewerCount === 1 ? "person" : "people"} checked your profile`}
                   onSeeAll={() => navigate("/who-viewed-me")}
                 >
