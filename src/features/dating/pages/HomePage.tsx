@@ -2046,16 +2046,18 @@ const Index = () => {
               exit={{ x: "100%" }}
               transition={{ type: "spring", stiffness: 340, damping: 32 }}
               style={{
-                position: "fixed", top: 0, right: 0, bottom: 0, width: 256,
+                position: "fixed", top: 0, right: 0, bottom: 0, width: 270,
                 backgroundImage: "url('/images/app-background.png')",
                 backgroundSize: "cover", backgroundPosition: "center",
                 zIndex: 91, display: "flex", flexDirection: "column",
                 paddingTop: "max(48px, env(safe-area-inset-top, 48px))",
                 paddingBottom: "max(24px, env(safe-area-inset-bottom, 24px))",
+                borderLeft: "2px solid #c2185b",
+                boxShadow: "-4px 0 32px rgba(194,24,91,0.35)",
               }}
             >
               {/* Dark overlay */}
-              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.52)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.58)", pointerEvents: "none" }} />
 
               {/* ── Close button ── */}
               <motion.button
@@ -2063,67 +2065,159 @@ const Index = () => {
                 onClick={() => setShowDrawer(false)}
                 style={{
                   position: "absolute", top: "max(14px, env(safe-area-inset-top, 14px))", right: 16,
-                  width: 36, height: 36, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.18)",
-                  background: "rgba(255,255,255,0.08)", color: "white", fontSize: 18,
+                  width: 36, height: 36, borderRadius: "50%", border: "1px solid rgba(194,24,91,0.4)",
+                  background: "rgba(194,24,91,0.15)", color: "white", fontSize: 18,
                   display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 2,
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.4)",
+                  boxShadow: "0 2px 12px rgba(194,24,91,0.3)",
                 }}
               >×</motion.button>
 
               {/* ── Content ── */}
-              <div style={{ position: "relative", zIndex: 1, padding: "8px 18px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ position: "relative", zIndex: 1, padding: "8px 14px", flex: 1, display: "flex", flexDirection: "column", gap: 8, overflowY: "auto" }}>
 
-                {/* Header: Control Center */}
+                {/* Header */}
                 <div style={{ marginBottom: 4, marginTop: 4 }}>
-                  <AnimatedGradientText
-                    style={{ fontSize: 16, letterSpacing: "0.04em", fontWeight: 800 }}
-                  >
+                  <AnimatedGradientText style={{ fontSize: 16, letterSpacing: "0.04em", fontWeight: 800 }}>
                     Control Center
                   </AnimatedGradientText>
-                  <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginTop: 8 }} />
+                  <div style={{ height: 1, background: "rgba(194,24,91,0.35)", marginTop: 8 }} />
                 </div>
 
-                {/* ── Coins button ── */}
-                <ShimmerButton
-                  gradient="rgba(0,0,0,0.4)"
-                  shimmerColor="rgba(255,255,255,0.08)"
-                  glowColor="rgba(255,255,255,0.04)"
-                  icon="🪙"
-                  label={`Coins · ${coinBalance.loading ? "…" : coinBalance.balance}`}
-                  onClick={() => { setShowDrawer(false); setShowCoinRefuel(true); }}
-                />
+                {/* ── Drawer button helper ── */}
+                {(() => {
+                  const DrawerBtn = ({ icon, label, onClick: handleClick }: { icon: string; label: string; onClick: () => void }) => (
+                    <motion.button
+                      whileTap={{ scale: 0.96 }}
+                      onClick={handleClick}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        width: "100%", padding: "11px 14px",
+                        background: "rgba(194,24,91,0.18)",
+                        border: "1.5px solid rgba(194,24,91,0.45)",
+                        borderRadius: 12, cursor: "pointer", color: "white",
+                        fontSize: 14, fontWeight: 600, letterSpacing: "0.01em",
+                        boxShadow: "0 2px 12px rgba(194,24,91,0.18)",
+                        backdropFilter: "blur(6px)",
+                        transition: "background 0.2s, border-color 0.2s",
+                      }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(194,24,91,0.35)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#c2185b"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(194,24,91,0.18)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(194,24,91,0.45)"; }}
+                    >
+                      <span style={{ fontSize: 18 }}>{icon}</span>
+                      <span>{label}</span>
+                    </motion.button>
+                  );
 
-                {/* ── Teddy Room button ── */}
-                <ShimmerButton
-                  gradient="rgba(0,0,0,0.4)"
-                  shimmerColor="rgba(255,255,255,0.08)"
-                  glowColor="rgba(255,255,255,0.04)"
-                  icon="🧸"
-                  label="My Teddy Room"
-                  onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
-                />
+                  const boost = HOME_UNLOCK_PACKAGES.find(p => p.key === "unlock:boost");
+                  const vip = HOME_UNLOCK_PACKAGES.find(p => p.key === "unlock:vip");
 
-                {/* ── Date Spots Feed button ── */}
-                <ShimmerButton
-                  gradient="rgba(0,0,0,0.4)"
-                  shimmerColor="rgba(255,255,255,0.08)"
-                  glowColor="rgba(255,255,255,0.04)"
-                  icon="📍"
-                  label="Date Spots"
-                  onClick={() => { setShowDrawer(false); navigate("/dates"); }}
-                />
+                  return (
+                    <>
+                      {/* Coins */}
+                      <DrawerBtn
+                        icon="🪙"
+                        label={`Coins · ${coinBalance.loading ? "…" : coinBalance.balance}`}
+                        onClick={() => { setShowDrawer(false); setShowCoinRefuel(true); }}
+                      />
 
-                {/* ── Events Near Me button ── */}
-                <ShimmerButton
-                  gradient="rgba(0,0,0,0.4)"
-                  shimmerColor="rgba(255,255,255,0.08)"
-                  glowColor="rgba(255,255,255,0.04)"
-                  icon="🎟️"
-                  label="Events Near Me"
-                  onClick={() => { setShowDrawer(false); navigate("/events"); }}
-                />
+                      {/* Boost Profile */}
+                      <DrawerBtn
+                        icon="🔥"
+                        label="Boost My Profile"
+                        onClick={() => {
+                          setShowDrawer(false);
+                          if (boost) setFeatureDialog(KEY_TO_FEATURE["unlock:boost"]);
+                        }}
+                      />
+
+                      {/* Who Viewed Me */}
+                      <DrawerBtn
+                        icon="👁️"
+                        label="Who Viewed Me"
+                        onClick={() => {
+                          setShowDrawer(false);
+                          if (vip) setFeatureDialog(KEY_TO_FEATURE["unlock:vip"]);
+                        }}
+                      />
+
+                      {/* Divider */}
+                      <div style={{ height: 1, background: "rgba(194,24,91,0.2)", margin: "2px 0" }} />
+
+                      {/* My Matches */}
+                      <DrawerBtn
+                        icon="💬"
+                        label="My Matches"
+                        onClick={() => { setShowDrawer(false); navigate("/home"); }}
+                      />
+
+                      {/* Nearby Map */}
+                      <DrawerBtn
+                        icon="🗺️"
+                        label="Nearby Map"
+                        onClick={() => { setShowDrawer(false); navigate("/map"); }}
+                      />
+
+                      {/* Teddy Room */}
+                      <DrawerBtn
+                        icon="🧸"
+                        label="My Teddy Room"
+                        onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
+                      />
+
+                      {/* Date Spots */}
+                      <DrawerBtn
+                        icon="📍"
+                        label="Date Spots"
+                        onClick={() => { setShowDrawer(false); navigate("/dates"); }}
+                      />
+
+                      {/* Events */}
+                      <DrawerBtn
+                        icon="🎟️"
+                        label="Events Near Me"
+                        onClick={() => { setShowDrawer(false); navigate("/events"); }}
+                      />
+
+                      {/* Divider */}
+                      <div style={{ height: 1, background: "rgba(194,24,91,0.2)", margin: "2px 0" }} />
+
+                      {/* Upgrade VIP */}
+                      <DrawerBtn
+                        icon="👑"
+                        label="Upgrade to VIP"
+                        onClick={() => {
+                          setShowDrawer(false);
+                          setFeatureDialog(KEY_TO_FEATURE["unlock:vip"]);
+                        }}
+                      />
+                    </>
+                  );
+                })()}
 
               </div>
+
+              {/* ── Footer: Logout ── */}
+              <div style={{ position: "relative", zIndex: 1, padding: "12px 14px", borderTop: "1px solid rgba(194,24,91,0.25)" }}>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={async () => {
+                    setShowDrawer(false);
+                    await supabase.auth.signOut();
+                  }}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                    width: "100%", padding: "10px 14px",
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 12, cursor: "pointer",
+                    color: "rgba(255,255,255,0.55)", fontSize: 13, fontWeight: 500,
+                  }}
+                >
+                  <span>↩</span>
+                  <span>Log Out</span>
+                </motion.button>
+              </div>
+
             </motion.div>
           </>
         )}
