@@ -78,27 +78,22 @@ const TermsAcceptanceDialog = ({ onAccept }: TermsAcceptanceDialogProps) => {
 
         {/* ── Header ──────────────────────────────────────────────────── */}
         <div style={{
-          display: "flex", alignItems: "center", gap: 12,
+          display: "flex", alignItems: "center",
           padding: "20px 22px 16px",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
-          flexShrink: 0,
+          flexShrink: 0, position: "relative",
         }}>
-          <AppLogo style={{ width: 36, height: 36, objectFit: "contain" }} />
-          <div style={{ flex: 1 }}>
+          {/* Logo — left */}
+          <AppLogo style={{ width: 42, height: 42, objectFit: "contain", flexShrink: 0 }} />
+
+          {/* Title — centred absolutely so logo doesn't push it */}
+          <div style={{ position: "absolute", left: 0, right: 0, textAlign: "center", pointerEvents: "none" }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: "white", letterSpacing: "-0.01em" }}>
               Terms & Conditions
             </div>
             <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>
               Please read before joining 2DateMe
             </div>
-          </div>
-          <div style={{
-            background: "rgba(194,24,91,0.18)",
-            border: "1px solid rgba(194,24,91,0.35)",
-            borderRadius: 20, padding: "4px 10px",
-            fontSize: 10, fontWeight: 700, color: "rgba(236,72,153,0.9)",
-          }}>
-            🔒 Secure
           </div>
         </div>
 
