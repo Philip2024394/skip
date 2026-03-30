@@ -2148,6 +2148,14 @@ const Index = () => {
                         onClick={() => { setShowDrawer(false); navigate("/inbox"); }}
                       />
 
+                      {/* ── Games ──────────────────────────────── */}
+                      <SectionLabel label="Games" />
+                      <DrawerBtn
+                        icon="🔴"
+                        label="Connect 4"
+                        onClick={() => { setShowDrawer(false); navigate("/games/connect4"); }}
+                      />
+
                       {/* ── Discover ───────────────────────────── */}
                       <SectionLabel label="Discover" />
                       <DrawerBtn
