@@ -485,8 +485,6 @@ export default function InboxPage() {
       display: "flex", flexDirection: "column",
       fontFamily: "inherit", color: "white",
     }}>
-      {/* Dark overlay so text is readable over the background */}
-      <div style={{ position: "absolute", inset: 0, background: "rgba(4,2,10,0.72)", pointerEvents: "none" }} />
 
       <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100%" }}>
 
