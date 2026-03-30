@@ -92,7 +92,6 @@ function ViewerCard({
   const photo = viewer.photos?.[0] || "/placeholder.svg";
   const status = onlineStatus(viewer.last_seen_at);
   const locked = viewer.view_count >= 3 && !unlocked;
-  const cost = unlockCost(viewer.view_count);
 
   return (
     <motion.div
@@ -575,6 +574,30 @@ function UnlockModal({
   );
 }
 
+// ── Mock viewers (shown when DB has no data yet) ──────────────────────────────
+const MOCK_VIEWERS: Viewer[] = [
+  { viewer_id: "mock-01", name: "Putri",   age: 24, city: "Jakarta",  photos: ["https://i.pravatar.cc/300?img=1"],  last_seen_at: new Date(Date.now()-2*60000).toISOString(),    view_count: 1, last_viewed_at: new Date(Date.now()-5*60000).toISOString() },
+  { viewer_id: "mock-02", name: "Dewi",    age: 22, city: "Bali",     photos: ["https://i.pravatar.cc/300?img=5"],  last_seen_at: new Date(Date.now()-18*60000).toISOString(),   view_count: 2, last_viewed_at: new Date(Date.now()-20*60000).toISOString() },
+  { viewer_id: "mock-03", name: "Sari",    age: 26, city: "Surabaya", photos: ["https://i.pravatar.cc/300?img=9"],  last_seen_at: new Date(Date.now()-90*60000).toISOString(),   view_count: 1, last_viewed_at: new Date(Date.now()-100*60000).toISOString() },
+  { viewer_id: "mock-04", name: "Ayu",     age: 23, city: "Bandung",  photos: ["https://i.pravatar.cc/300?img=10"], last_seen_at: new Date(Date.now()-4*60000).toISOString(),    view_count: 4, last_viewed_at: new Date(Date.now()-8*60000).toISOString() },
+  { viewer_id: "mock-05", name: "Rina",    age: 25, city: "Yogya",    photos: ["https://i.pravatar.cc/300?img=12"], last_seen_at: null,                                          view_count: 6, last_viewed_at: new Date(Date.now()-3*60*60000).toISOString() },
+  { viewer_id: "mock-06", name: "Wulan",   age: 21, city: "Medan",    photos: ["https://i.pravatar.cc/300?img=15"], last_seen_at: new Date(Date.now()-30*60000).toISOString(),   view_count: 2, last_viewed_at: new Date(Date.now()-35*60000).toISOString() },
+  { viewer_id: "mock-07", name: "Indah",   age: 27, city: "Makassar", photos: ["https://i.pravatar.cc/300?img=20"], last_seen_at: new Date(Date.now()-1*60000).toISOString(),    view_count: 8, last_viewed_at: new Date(Date.now()-2*60000).toISOString() },
+  { viewer_id: "mock-08", name: "Ratna",   age: 29, city: "Bali",     photos: ["https://i.pravatar.cc/300?img=25"], last_seen_at: null,                                          view_count: 3, last_viewed_at: new Date(Date.now()-5*60*60000).toISOString() },
+  { viewer_id: "mock-09", name: "Mega",    age: 24, city: "Jakarta",  photos: ["https://i.pravatar.cc/300?img=27"], last_seen_at: new Date(Date.now()-3*60000).toISOString(),    view_count: 1, last_viewed_at: new Date(Date.now()-6*60000).toISOString() },
+  { viewer_id: "mock-10", name: "Dian",    age: 23, city: "Semarang", photos: ["https://i.pravatar.cc/300?img=29"], last_seen_at: new Date(Date.now()-50*60000).toISOString(),   view_count: 5, last_viewed_at: new Date(Date.now()-60*60000).toISOString() },
+  { viewer_id: "mock-11", name: "Anisa",   age: 22, city: "Bandung",  photos: ["https://i.pravatar.cc/300?img=30"], last_seen_at: null,                                          view_count: 2, last_viewed_at: new Date(Date.now()-2*24*60*60000).toISOString() },
+  { viewer_id: "mock-12", name: "Fitri",   age: 26, city: "Surabaya", photos: ["https://i.pravatar.cc/300?img=32"], last_seen_at: new Date(Date.now()-7*60000).toISOString(),    view_count: 12,last_viewed_at: new Date(Date.now()-15*60000).toISOString() },
+  { viewer_id: "mock-13", name: "Nurul",   age: 25, city: "Lombok",   photos: ["https://i.pravatar.cc/300?img=33"], last_seen_at: null,                                          view_count: 3, last_viewed_at: new Date(Date.now()-8*60*60000).toISOString() },
+  { viewer_id: "mock-14", name: "Sinta",   age: 28, city: "Bali",     photos: ["https://i.pravatar.cc/300?img=35"], last_seen_at: new Date(Date.now()-2*60000).toISOString(),    view_count: 1, last_viewed_at: new Date(Date.now()-4*60000).toISOString() },
+  { viewer_id: "mock-15", name: "Kartika", age: 24, city: "Jakarta",  photos: ["https://i.pravatar.cc/300?img=40"], last_seen_at: new Date(Date.now()-25*60000).toISOString(),   view_count: 7, last_viewed_at: new Date(Date.now()-30*60000).toISOString() },
+  { viewer_id: "mock-16", name: "Melati",  age: 21, city: "Yogya",    photos: ["https://i.pravatar.cc/300?img=44"], last_seen_at: null,                                          view_count: 2, last_viewed_at: new Date(Date.now()-1*24*60*60000).toISOString() },
+  { viewer_id: "mock-17", name: "Citra",   age: 23, city: "Bandung",  photos: ["https://i.pravatar.cc/300?img=47"], last_seen_at: new Date(Date.now()-4*60000).toISOString(),    view_count: 4, last_viewed_at: new Date(Date.now()-10*60000).toISOString() },
+  { viewer_id: "mock-18", name: "Bunga",   age: 27, city: "Medan",    photos: ["https://i.pravatar.cc/300?img=48"], last_seen_at: null,                                          view_count: 9, last_viewed_at: new Date(Date.now()-4*60*60000).toISOString() },
+  { viewer_id: "mock-19", name: "Kirana",  age: 22, city: "Surabaya", photos: ["https://i.pravatar.cc/300?img=56"], last_seen_at: new Date(Date.now()-1*60000).toISOString(),    view_count: 1, last_viewed_at: new Date(Date.now()-3*60000).toISOString() },
+  { viewer_id: "mock-20", name: "Dinda",   age: 25, city: "Bali",     photos: ["https://i.pravatar.cc/300?img=60"], last_seen_at: new Date(Date.now()-12*60000).toISOString(),   view_count: 3, last_viewed_at: new Date(Date.now()-20*60000).toISOString() },
+];
+
 // ── WhoViewedMePage ────────────────────────────────────────────────────────────
 export default function WhoViewedMePage() {
   const navigate = useNavigate();
@@ -590,7 +613,13 @@ export default function WhoViewedMePage() {
   // Auth
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) setUserId(session.user.id);
+      if (session?.user) {
+        setUserId(session.user.id);
+      } else {
+        // No session — show mocks immediately
+        setViewers(MOCK_VIEWERS);
+        setLoading(false);
+      }
     });
   }, []);
 
@@ -605,7 +634,8 @@ export default function WhoViewedMePage() {
       supabase.from("viewer_unlocks" as any).select("viewer_id").eq("user_id", userId),
     ]);
 
-    setViewers(((viewRes as any).data as Viewer[]) || []);
+    const fetchedViewers: Viewer[] = ((viewRes as any).data as Viewer[]) || [];
+    setViewers(fetchedViewers.length > 0 ? fetchedViewers : MOCK_VIEWERS);
     setCoinBalance((profileRes.data as any)?.coins_balance ?? 0);
     const prevUnlocked = new Set<string>(
       (((unlockRes as any).data ?? []) as { viewer_id: string }[]).map((r) => r.viewer_id)
@@ -643,14 +673,14 @@ export default function WhoViewedMePage() {
   async function handleSend(payload: { type: "message" | "game" | "gift"; data: any }) {
     if (!messageTarget || !userId) return;
     if (payload.type === "message") {
-      await supabase.from("messages").insert({
+      await (supabase as any).from("messages").insert({
         sender_id: userId,
         receiver_id: messageTarget.viewer_id,
         content: payload.data.text,
       });
       showToast("Message sent!");
     } else if (payload.type === "game") {
-      await supabase.from("messages").insert({
+      await (supabase as any).from("messages").insert({
         sender_id: userId,
         receiver_id: messageTarget.viewer_id,
         content: `🎮 Game invite: ${payload.data.game === "connect4" ? "Connect 4" : "Memory Match"}`,
