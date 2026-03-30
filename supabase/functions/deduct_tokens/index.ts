@@ -1,88 +1,61 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-
-interface RequestBody {
-  p_user_id: string;
-  p_tokens: number;
-}
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { p_user_id, p_tokens }: RequestBody = await req.json()
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
-    if (!p_user_id || !p_tokens || p_tokens <= 0) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid parameters' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
-    // Create Supabase client
+    // Verify caller
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
-    )
-
-    // Check user's current token balance
-    const { data: userTokens, error: fetchError } = await supabaseClient
-      .from('user_tokens')
-      .select('tokens_balance')
-      .eq('user_id', p_user_id)
-      .single()
-
-    if (fetchError || !userTokens) {
-      return new Response(
-        JSON.stringify({ error: 'User tokens not found' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
-      )
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
+    );
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401,
+      });
     }
 
-    if (userTokens.tokens_balance < p_tokens) {
-      return new Response(
-        JSON.stringify({ error: 'Insufficient tokens' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+    const { p_tokens, p_reason } = await req.json();
+    if (!p_tokens || p_tokens <= 0) {
+      return new Response(JSON.stringify({ error: "Invalid token amount" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
+      });
     }
 
-    // Deduct tokens
-    const { error: updateError } = await supabaseClient
-      .from('user_tokens')
-      .update({ 
-        tokens_balance: userTokens.tokens_balance - p_tokens,
-        total_gifts_sent: supabaseClient.rpc('increment', { x: 1 })
-      })
-      .eq('user_id', p_user_id)
+    // Use spend_coins RPC for atomicity — writes coin_transactions + updates profiles.coins_balance
+    const { data: newBalance, error: rpcError } = await supabaseAdmin.rpc("spend_coins" as any, {
+      p_user_id: user.id,
+      p_amount: p_tokens,
+      p_reason: p_reason ?? "spend",
+    });
 
-    if (updateError) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to deduct tokens' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
+    if (rpcError) throw rpcError;
+    if (newBalance === -1) {
+      return new Response(JSON.stringify({ error: "Insufficient coins" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400,
+      });
     }
 
-    return new Response(
-      JSON.stringify({ success: true, new_balance: userTokens.tokens_balance - p_tokens }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
-    )
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    )
+    return new Response(JSON.stringify({ success: true, new_balance: newBalance }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Internal error";
+    return new Response(JSON.stringify({ error: msg }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500,
+    });
   }
-})
+});

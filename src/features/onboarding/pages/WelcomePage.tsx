@@ -271,6 +271,20 @@ export default function WelcomePage() {
     return false;
   };
 
+  // Persist earned coins to DB atomically via award_coins RPC
+  const persistCoins = async (amount: number, reason: string) => {
+    if (!userId || amount <= 0 || import.meta.env.DEV) return;
+    try {
+      await supabase.rpc("award_coins" as any, {
+        p_user_id: userId,
+        p_amount: amount,
+        p_reason: reason,
+      });
+    } catch {
+      // Non-blocking — UI already updated optimistically
+    }
+  };
+
   const handleNext = () => {
     if (step <= 4) {
       // Step 4: coins only for completed tasks
@@ -294,6 +308,15 @@ export default function WelcomePage() {
         advanceStep();
         return;
       }
+
+      // Persist to DB (fire-and-forget, non-blocking)
+      const reasonMap: Record<number, string> = {
+        1: "onboarding_step_1_name",
+        2: "onboarding_step_2_gender",
+        3: "onboarding_step_3_intent",
+        4: "onboarding_step_4_photo",
+      };
+      persistCoins(earned, reasonMap[step] ?? `onboarding_step_${step}`);
 
       setEarnedThisStep(earned);
       setCongratsStep(step);

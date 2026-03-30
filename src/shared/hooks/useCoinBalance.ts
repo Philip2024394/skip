@@ -4,147 +4,87 @@ import { supabase } from "@/integrations/supabase/client";
 interface CoinBalanceState {
   balance: number;
   loading: boolean;
-  error: string | null;
 }
 
 /**
  * Real-time coin balance hook.
- * Fetches from user_wallets table, falls back to localStorage for dev/admin.
- * Subscribes to realtime updates when a user is authenticated.
+ * Reads coins_balance from profiles table.
+ * Writes via award_coins / spend_coins RPCs for atomicity.
  */
 export function useCoinBalance(userId?: string | null) {
-  const [state, setState] = useState<CoinBalanceState>({
-    balance: 0,
-    loading: true,
-    error: null,
-  });
+  const [state, setState] = useState<CoinBalanceState>({ balance: 0, loading: true });
 
   const fetchBalance = useCallback(async () => {
     if (!userId) {
-      // Check localStorage for admin/dev session
-      const adminSession = localStorage.getItem("admin-12345");
-      if (adminSession) {
-        const stored = localStorage.getItem("coin_balance_admin");
-        setState({ balance: stored ? parseInt(stored, 10) : 500, loading: false, error: null });
-        return;
-      }
-      setState({ balance: 0, loading: false, error: null });
+      setState({ balance: 0, loading: false });
       return;
     }
+    const { data } = await supabase
+      .from("profiles")
+      .select("coins_balance")
+      .eq("id", userId)
+      .single();
 
-    try {
-      const { data, error } = await (supabase as any)
-        .from("user_wallets")
-        .select("current_balance")
-        .eq("user_id", userId)
-        .single();
-
-      if (error) {
-        // Table may not exist yet — use localStorage fallback
-        const stored = localStorage.getItem(`coin_balance_${userId}`);
-        setState({
-          balance: stored ? parseInt(stored, 10) : 500,
-          loading: false,
-          error: null,
-        });
-        return;
-      }
-
-      setState({
-        balance: data?.current_balance ?? 0,
-        loading: false,
-        error: null,
-      });
-    } catch {
-      // Fallback for any error
-      const stored = localStorage.getItem(`coin_balance_${userId || "admin"}`);
-      setState({
-        balance: stored ? parseInt(stored, 10) : 500,
-        loading: false,
-        error: null,
-      });
-    }
+    setState({ balance: (data as any)?.coins_balance ?? 0, loading: false });
   }, [userId]);
 
-  // Deduct coins locally (optimistic) and persist
-  const deductCoins = useCallback(
-    async (amount: number): Promise<boolean> => {
-      if (state.balance < amount) return false;
+  // Award coins — inserts ledger row + increments balance atomically
+  const awardCoins = useCallback(async (amount: number, reason: string): Promise<number> => {
+    if (!userId || amount <= 0) return state.balance;
+    const { data } = await supabase.rpc("award_coins" as any, {
+      p_user_id: userId,
+      p_amount: amount,
+      p_reason: reason,
+    });
+    const newBalance = (data as number) ?? state.balance + amount;
+    setState(prev => ({ ...prev, balance: newBalance }));
+    return newBalance;
+  }, [userId, state.balance]);
 
-      const newBalance = state.balance - amount;
-      setState((prev) => ({ ...prev, balance: newBalance }));
+  // Spend coins — deducts only if sufficient funds
+  const deductCoins = useCallback(async (amount: number, reason = "spend"): Promise<boolean> => {
+    if (!userId) return false;
+    const { data } = await supabase.rpc("spend_coins" as any, {
+      p_user_id: userId,
+      p_amount: amount,
+      p_reason: reason,
+    });
+    const newBalance = data as number;
+    if (newBalance === -1) return false; // insufficient
+    setState(prev => ({ ...prev, balance: newBalance }));
+    return true;
+  }, [userId]);
 
-      // Persist to localStorage as fallback
-      const key = userId ? `coin_balance_${userId}` : "coin_balance_admin";
-      localStorage.setItem(key, newBalance.toString());
+  // Legacy addCoins kept for compatibility — uses award_coins under the hood
+  const addCoins = useCallback((amount: number) => {
+    awardCoins(amount, "manual_add");
+  }, [awardCoins]);
 
-      // Try to update Supabase
-      if (userId) {
-        try {
-          await (supabase as any)
-            .from("user_wallets")
-            .update({ current_balance: newBalance })
-            .eq("user_id", userId);
-        } catch {
-          // localStorage fallback already persisted
-        }
-      }
+  useEffect(() => { fetchBalance(); }, [fetchBalance]);
 
-      return true;
-    },
-    [state.balance, userId]
-  );
-
-  // Add coins (after purchase)
-  const addCoins = useCallback(
-    (amount: number) => {
-      const newBalance = state.balance + amount;
-      setState((prev) => ({ ...prev, balance: newBalance }));
-      const key = userId ? `coin_balance_${userId}` : "coin_balance_admin";
-      localStorage.setItem(key, newBalance.toString());
-    },
-    [state.balance, userId]
-  );
-
-  // Fetch on mount and userId change
-  useEffect(() => {
-    fetchBalance();
-  }, [fetchBalance]);
-
-  // Subscribe to realtime changes on user_wallets
+  // Realtime: listen for profile coins_balance changes
   useEffect(() => {
     if (!userId) return;
-
     const channel = supabase
-      .channel(`wallet-${userId}`)
-      .on(
-        "postgres_changes" as any,
-        {
-          event: "*",
-          schema: "public",
-          table: "user_wallets",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload: any) => {
-          if (payload.new?.current_balance !== undefined) {
-            setState((prev) => ({
-              ...prev,
-              balance: payload.new.current_balance,
-            }));
-          }
+      .channel(`coins-${userId}`)
+      .on("postgres_changes" as any, {
+        event: "UPDATE",
+        schema: "public",
+        table: "profiles",
+        filter: `id=eq.${userId}`,
+      }, (payload: any) => {
+        if (payload.new?.coins_balance !== undefined) {
+          setState(prev => ({ ...prev, balance: payload.new.coins_balance }));
         }
-      )
+      })
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [userId]);
 
   return {
     balance: state.balance,
     loading: state.loading,
-    error: state.error,
+    awardCoins,
     deductCoins,
     addCoins,
     refetch: fetchBalance,
