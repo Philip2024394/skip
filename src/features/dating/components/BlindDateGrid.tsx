@@ -16,6 +16,10 @@ interface BlindProfile {
   bio: string | null;
   avatar_url: string | null;
   created_at: string;
+  // AI-generated stories — null until first blind-date view
+  blind_date_story_age:      string | null;
+  blind_date_story_location: string | null;
+  blind_date_story_intent:   string | null;
 }
 
 // DEV-only mock blind profiles — mapped from the existing mock profile generator
@@ -30,6 +34,9 @@ const DEV_BLIND_PROFILES: BlindProfile[] = generateIndonesianProfiles(20).map(p 
   bio: p.bio ?? null,
   avatar_url: p.image ?? (p.images?.[0] ?? null),
   created_at: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString(),
+  blind_date_story_age: null,
+  blind_date_story_location: null,
+  blind_date_story_intent: null,
 }));
 
 interface Question {
@@ -280,13 +287,51 @@ function BlindDateQAModal({
   userId,
   onClose,
   onPassed,
+  onStoriesReady,
 }: {
   profile: BlindProfile;
   userId: string;
   onClose: () => void;
   onPassed: () => void;
+  onStoriesReady: (id: string, stories: { age: string; location: string; intent: string }) => void;
 }) {
-  const { questions } = generateMysteryCard(profile);
+  // Use AI stories if already generated, otherwise fall back to hardcoded
+  const hasAiStories = !!(profile.blind_date_story_age && profile.blind_date_story_location && profile.blind_date_story_intent);
+  const [generatingStories, setGeneratingStories] = useState(!hasAiStories && !import.meta.env.DEV);
+  const [aiProfile, setAiProfile] = useState<BlindProfile>(profile);
+
+  // Generate stories on first open if missing (production only)
+  useEffect(() => {
+    if (hasAiStories || import.meta.env.DEV) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-blind-date-stories", {
+          body: {
+            profile_id: profile.id,
+            age: profile.age,
+            city: profile.city,
+            country: profile.country,
+            looking_for: profile.looking_for,
+          },
+        });
+        if (!cancelled && !error && data?.story_age) {
+          const updated = {
+            ...profile,
+            blind_date_story_age:      data.story_age,
+            blind_date_story_location: data.story_location,
+            blind_date_story_intent:   data.story_intent,
+          };
+          setAiProfile(updated);
+          onStoriesReady(profile.id, { age: data.story_age, location: data.story_location, intent: data.story_intent });
+        }
+      } catch { /* fall back to hardcoded silently */ }
+      finally { if (!cancelled) setGeneratingStories(false); }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const { questions } = generateMysteryCard(aiProfile);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<boolean[]>([]);
@@ -356,6 +401,21 @@ function BlindDateQAModal({
         <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.72)", pointerEvents: "none", borderRadius: 22 }} />
         {/* Modal content sits above overlay */}
         <div style={{ position: "relative", zIndex: 1, padding: "24px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+
+        {/* Story generating spinner — shown while Claude writes stories */}
+        {generatingStories && (
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "32px 0", gap: 14 }}>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+              style={{ width: 36, height: 36, borderRadius: "50%", border: "3px solid rgba(194,24,91,0.2)", borderTopColor: "#c2185b" }}
+            />
+            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", textAlign: "center" }}>
+              Writing their story…
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
@@ -369,8 +429,8 @@ function BlindDateQAModal({
           <button onClick={onClose} style={{ color: "rgba(255,255,255,0.4)", fontSize: 22, background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>×</button>
         </div>
 
-        {/* Progress dots */}
-        <div style={{ display: "flex", gap: 6 }}>
+        {/* Progress dots — hidden while story is generating */}
+        {!generatingStories && <div style={{ display: "flex", gap: 6 }}>
           {questions.map((_: Question, i: number) => (
             <div key={i} style={{
               flex: 1, height: 4, borderRadius: 4,
@@ -378,10 +438,10 @@ function BlindDateQAModal({
               transition: "background 0.3s",
             }} />
           ))}
-        </div>
+        </div>}
 
-        {/* Result screen */}
-        {result ? (
+        {/* Quiz — hidden while story is generating */}
+        {!generatingStories && result ? (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>{result === "passed" ? "💘" : "💔"}</div>
             <div style={{ fontSize: 20, fontWeight: 800, color: result === "passed" ? "#c2185b" : "rgba(255,255,255,0.7)", marginBottom: 8 }}>
@@ -513,6 +573,24 @@ export default function BlindDateGrid({ userId }: { userId: string }) {
     setSelected(null);
   };
 
+  // Cache AI-generated stories back into the profiles list so re-opens are instant
+  const handleStoriesReady = (id: string, stories: { age: string; location: string; intent: string }) => {
+    setProfiles(prev => prev.map(p => p.id !== id ? p : {
+      ...p,
+      blind_date_story_age:      stories.age,
+      blind_date_story_location: stories.location,
+      blind_date_story_intent:   stories.intent,
+    }));
+    if (selected?.id === id) {
+      setSelected(prev => prev ? {
+        ...prev,
+        blind_date_story_age:      stories.age,
+        blind_date_story_location: stories.location,
+        blind_date_story_intent:   stories.intent,
+      } : prev);
+    }
+  };
+
   const isNew = (p: BlindProfile) => {
     const days = (Date.now() - new Date(p.created_at).getTime()) / 86400000;
     return days <= 3;
@@ -642,6 +720,7 @@ export default function BlindDateGrid({ userId }: { userId: string }) {
             userId={userId}
             onClose={() => setSelected(null)}
             onPassed={() => handlePassed(selected.id)}
+            onStoriesReady={handleStoriesReady}
           />
         )}
       </AnimatePresence>
