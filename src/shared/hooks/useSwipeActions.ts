@@ -70,11 +70,25 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
         liker_id: props.user.id,
         liked_id: profile.id,
       });
+
+      // Award +2 coins for sending a like (daily cap + duplicate guard enforced in DB)
+      supabase.rpc("award_like_coins" as any, {
+        p_user_id:   props.user.id,
+        p_target_id: profile.id,
+      }).then(({ data }) => {
+        if (data && data !== -1) {
+          props.toast("🪙 +2 coins", { description: "Earned for liking a profile" });
+        }
+      }).catch(() => {});
     }
 
     const isMatch = props.likedMe.some((p) => p.id === profile.id);
     if (isMatch) {
       props.setMatchDialog(profile);
+      // Match coins (+5 each) are awarded automatically by DB trigger — show toast after short delay
+      setTimeout(() => {
+        props.toast("🪙 +5 coins", { description: "Bonus earned for a new match! 🎉" });
+      }, 1200);
       // Push: notify the other person of the match
       supabase.functions.invoke("send-push", { body: {
         recipientId: profile.id,
