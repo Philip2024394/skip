@@ -733,7 +733,7 @@ export default function WhoViewedMePage() {
             <div style={{ fontSize: 17, fontWeight: 900, color: "white", letterSpacing: "-0.02em" }}>
               Who Viewed Me
             </div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.75)", marginTop: 1 }}>
               {viewers.length} {viewers.length === 1 ? "person" : "people"} checked your profile
             </div>
           </div>
@@ -762,14 +762,14 @@ export default function WhoViewedMePage() {
         <div style={{ flex: 1, overflowY: "auto", padding: "14px 12px", paddingBottom: "max(20px,env(safe-area-inset-bottom,20px))" }}>
 
           {loading ? (
-            <div style={{ textAlign: "center", paddingTop: 60, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
+            <div style={{ textAlign: "center", paddingTop: 60, color: "white", fontSize: 13 }}>
               Loading...
             </div>
           ) : viewers.length === 0 ? (
             <div style={{ textAlign: "center", paddingTop: 80 }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>👁</div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "white", marginBottom: 8 }}>No views yet</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", lineHeight: 1.6 }}>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", lineHeight: 1.6 }}>
                 When someone views your profile,<br />they'll appear here.
               </div>
             </div>
@@ -778,7 +778,7 @@ export default function WhoViewedMePage() {
               {/* Free viewers */}
               {freeViewers.length > 0 && (
                 <>
-                  <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: "white", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 10 }}>
                     Recent Visitors
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 20 }}>
@@ -799,7 +799,7 @@ export default function WhoViewedMePage() {
               {lockedViewers.length > 0 && (
                 <>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(236,72,153,0.8)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "#ec4899", letterSpacing: "0.08em", textTransform: "uppercase" }}>
                       🔥 Seriously Interested
                     </div>
                     <div style={{
@@ -813,9 +813,9 @@ export default function WhoViewedMePage() {
                   <div style={{
                     background: "rgba(194,24,91,0.06)", border: "1px solid rgba(194,24,91,0.2)",
                     borderRadius: 14, padding: "10px 12px", marginBottom: 12,
-                    fontSize: 11, color: "rgba(255,255,255,0.45)", lineHeight: 1.55,
+                    fontSize: 11, color: "rgba(255,255,255,0.9)", lineHeight: 1.55,
                   }}>
-                    These people have viewed your profile <strong style={{ color: "rgba(236,72,153,0.8)" }}>3+ times</strong>. They're clearly interested — unlock to see who they are and start a conversation.
+                    These people have viewed your profile <strong style={{ color: "#ec4899" }}>3+ times</strong>. They're clearly interested — unlock to see who they are and start a conversation.
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
                     {lockedViewers.map((v) => (
