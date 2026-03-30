@@ -609,6 +609,28 @@ const Index = () => {
   const [showReferralPopup, setShowReferralPopup] = useState(false);
   const [showCoinCard, setShowCoinCard] = useState(false);
 
+  // ── Connect 4 promo card ──────────────────────────────────────────────────────
+  const [showC4Promo, setShowC4Promo] = useState(false);
+  const c4SwipeCount = useRef<number>(
+    parseInt(localStorage.getItem("c4_total_swipes") ?? "0", 10)
+  );
+  const c4Visited = localStorage.getItem("c4_visited") === "1";
+  const C4_THRESHOLD = c4Visited ? 60 : 30;
+
+  function tickC4Swipe() {
+    c4SwipeCount.current += 1;
+    localStorage.setItem("c4_total_swipes", String(c4SwipeCount.current));
+    if (c4SwipeCount.current >= C4_THRESHOLD) {
+      c4SwipeCount.current = 0;
+      localStorage.setItem("c4_total_swipes", "0");
+      setShowC4Promo(true);
+    }
+  }
+
+  function dismissC4Promo() {
+    setShowC4Promo(false);
+  }
+
   const sessionStatsRef = useRef({
     viewed: 0,
     liked: 0,
@@ -1442,7 +1464,83 @@ const Index = () => {
                   onCoinCard={() => setShowCoinCard(true)}
                   onUnlockCard={() => setShowUnlockCard(true)}
                   currentUser={user}
+                  onSwipeAction={tickC4Swipe}
                 />
+
+                {/* ── Connect 4 Promo Card ────────────────────────────── */}
+                <AnimatePresence>
+                  {showC4Promo && (
+                    <motion.div
+                      key="c4-promo"
+                      initial={{ opacity: 0, scale: 0.94 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.94 }}
+                      transition={{ type: "spring", stiffness: 320, damping: 28 }}
+                      onClick={() => { dismissC4Promo(); navigate("/connect4"); }}
+                      style={{
+                        position: "absolute", inset: 0, zIndex: 120,
+                        borderRadius: 24, overflow: "hidden",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {/* Ted image */}
+                      <img
+                        src="https://ik.imagekit.io/dateme/Untitledfgdsfgdsfsdfasdasddsfsdf.png"
+                        alt="Connect 4"
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                      {/* Frosted overlay */}
+                      <div style={{
+                        position: "absolute", inset: 0,
+                        background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.1) 100%)",
+                      }} />
+                      {/* Content */}
+                      <div style={{
+                        position: "absolute", bottom: 0, left: 0, right: 0,
+                        padding: "0 20px 24px",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
+                      }}>
+                        <div style={{
+                          background: "rgba(212,175,55,0.15)", border: "1px solid rgba(212,175,55,0.4)",
+                          borderRadius: 20, padding: "4px 14px",
+                          fontSize: 11, fontWeight: 800, color: "#d4af37", letterSpacing: "0.08em",
+                        }}>🎮 CONNECT 4</div>
+                        <p style={{
+                          fontSize: 22, fontWeight: 900, color: "white", margin: 0,
+                          textAlign: "center", lineHeight: 1.2,
+                          textShadow: "0 2px 12px rgba(0,0,0,0.8)",
+                        }}>Challenge friends & players worldwide</p>
+                        <p style={{
+                          fontSize: 13, color: "rgba(255,255,255,0.6)", margin: 0,
+                          textAlign: "center", lineHeight: 1.5,
+                        }}>Invite up to 5 guests · Play online · Win coins</p>
+                        {/* Buttons */}
+                        <div style={{ display: "flex", gap: 10, marginTop: 6, width: "100%" }}>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => { e.stopPropagation(); dismissC4Promo(); navigate("/connect4"); }}
+                            style={{
+                              flex: 1, height: 50, borderRadius: 16, border: "none",
+                              background: "linear-gradient(135deg, #92400e, #d4af37, #f0d060)",
+                              color: "#000", fontWeight: 900, fontSize: 15, cursor: "pointer",
+                              boxShadow: "0 4px 20px rgba(212,175,55,0.45)",
+                            }}
+                          >🎮 Play Now</motion.button>
+                          <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => { e.stopPropagation(); dismissC4Promo(); }}
+                            style={{
+                              width: 50, height: 50, borderRadius: 16,
+                              background: "rgba(255,255,255,0.1)",
+                              border: "1px solid rgba(255,255,255,0.2)",
+                              color: "white", fontSize: 20, cursor: "pointer",
+                            }}
+                          >✕</motion.button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Center - Likes Library */}
                 <motion.div
@@ -1587,6 +1685,7 @@ const Index = () => {
                           sessionStatsRef.current.passed += 1;
                           setSessionTick((v) => v + 1);
                           advanceBottomQueue(p.id);
+                          tickC4Swipe();
                         }}
                       />
                     )}

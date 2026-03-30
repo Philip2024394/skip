@@ -904,6 +904,96 @@ export default function Connect4Board({ mode, opponentName, opponentAvatar, isTo
         )}
       </div>
 
+      {/* ── Ted wins — full-page frosted screen ──────────────────────── */}
+      <AnimatePresence>
+        {showWinBanner && winner === 2 && mode === "vs-bot" && (
+          <motion.div
+            key="ted-wins"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{
+              position: "absolute", inset: 0, zIndex: 300,
+              borderRadius: 0, overflow: "hidden",
+            }}
+          >
+            {/* Ted image background */}
+            <img
+              src="https://ik.imagekit.io/dateme/Teddy%20bear%20in%20a%20cozy%20office.png?updatedAt=1774818471382"
+              alt="Ted wins"
+              style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0 }}
+            />
+            {/* Frosted overlay */}
+            <div style={{
+              position: "absolute", inset: 0,
+              background: "linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.2) 100%)",
+              backdropFilter: "blur(4px)",
+            }} />
+            {/* Content */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0,
+              padding: "0 24px max(36px,env(safe-area-inset-bottom,36px))",
+              display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
+            }}>
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 20 }}
+                style={{ fontSize: 56, lineHeight: 1 }}
+              >🏆</motion.div>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                style={{ fontSize: 28, fontWeight: 900, color: GOLD, margin: 0, textAlign: "center",
+                  textShadow: `0 0 32px ${GOLD_GLOW}` }}
+              >Ted Wins!</motion.p>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                style={{ fontSize: 14, color: "rgba(255,255,255,0.55)", margin: 0, textAlign: "center" }}
+              >Better luck next time! Ted's still unbeaten. 🧸</motion.p>
+              {activeBet > 0 && (
+                <motion.p
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+                  style={{ fontSize: 15, fontWeight: 900, color: GOLD, margin: 0 }}
+                >🪙 −{activeBet} coins</motion.p>
+              )}
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.55 }}
+                style={{ display: "flex", gap: 10, width: "100%", marginTop: 6 }}
+              >
+                <motion.button whileTap={{ scale: 0.95 }} onClick={resetGame}
+                  style={{
+                    flex: 1, height: 54, borderRadius: 16, border: "none",
+                    background: "linear-gradient(135deg, #92400e, #d4af37, #f0d060)",
+                    color: "#000", fontWeight: 900, fontSize: 15, cursor: "pointer",
+                    boxShadow: "0 4px 20px rgba(212,175,55,0.4)",
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  }}
+                >
+                  <img src="https://ik.imagekit.io/dateme/Teddy%20bear%20in%20a%20cozy%20office.png?updatedAt=1774818471382"
+                    style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }} />
+                  Play Ted Again
+                </motion.button>
+                <motion.button whileTap={{ scale: 0.95 }} onClick={() => navigate("/games")}
+                  style={{
+                    width: 54, height: 54, borderRadius: 16,
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    color: "white", fontSize: 20, cursor: "pointer",
+                  }}
+                >🏠</motion.button>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* ── Falling coins overlay ─────────────────────────────────────── */}
       {fallingCoins.map(coin => (
         <motion.div key={coin.id}

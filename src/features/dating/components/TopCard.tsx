@@ -38,6 +38,7 @@ interface TopCardProps {
   persistSessionBehavior: () => void;
   onCoinCard?: () => void;
   onUnlockCard?: () => void;
+  onSwipeAction?: () => void;
   currentUser?: any;
 }
 
@@ -263,6 +264,7 @@ export default function TopCard(props: TopCardProps) {
           onLike={(p) => {
             props.handleLike(p);
             props.advanceQueue(p.id);
+            props.onSwipeAction?.();
             if (props.user) props.navigate(`/profile/${p.id}`);
           }}
           onPass={(p) => {
@@ -270,6 +272,7 @@ export default function TopCard(props: TopCardProps) {
             props.setSessionTick((v: number) => v + 1);
             props.persistSessionBehavior();
             props.advanceQueue(p.id);
+            props.onSwipeAction?.();
           }}
           onCoinCard={props.onCoinCard}
           onUnlockCard={props.onUnlockCard}
