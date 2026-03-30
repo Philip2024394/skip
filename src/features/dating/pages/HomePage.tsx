@@ -37,7 +37,7 @@ import { TopCard } from "@/features/dating/components";
 import { useVideoCall } from "@/shared/hooks/useVideoCall";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
 import CoinHub from "@/shared/components/CoinHub";
-import CoinShop from "@/shared/components/CoinShop";
+import CoinWalletSheet from "@/shared/components/CoinWalletSheet";
 import { TokenPurchase, GiftReceiver, MatchPopup, GiftReceivePopup } from "@/features/gifts/components";
 import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
@@ -269,7 +269,7 @@ const Index = () => {
   usePushNotifications(user?.id ?? null);
   const [globalDatingUpsell, setGlobalDatingUpsell] = useState<any>(null);
   const [waLockPopup, setWaLockPopup] = useState<WaLock | null>(null);
-  const [showCoinRefuel, setShowCoinRefuel] = useState(false);
+  const [showCoinWallet, setShowCoinWallet] = useState(false);
   const [userGender, setUserGender] = useState<string | null>(null);
   const [userLookingFor, setUserLookingFor] = useState<string | null>(null);
   const [chatProfile, setChatProfile] = useState<any>(null);
@@ -1317,6 +1317,13 @@ const Index = () => {
                     💘
                   </motion.button>
 
+                  {/* Coin balance badge */}
+                  <CoinHub
+                    balance={coinBalance.balance}
+                    loading={coinBalance.loading}
+                    onClick={() => setShowCoinWallet(true)}
+                  />
+
                   {/* Side drawer toggle */}
                   <button
                     onClick={() => setShowDrawer(true)}
@@ -1979,9 +1986,11 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {showCoinRefuel && user && (
-        <CoinShop userId={user.id} onClose={() => setShowCoinRefuel(false)} />
-      )}
+      <AnimatePresence>
+        {showCoinWallet && user && (
+          <CoinWalletSheet userId={user.id} onClose={() => setShowCoinWallet(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Dev: test gift receive popup */}
       {testGiftOpen && (
@@ -2217,7 +2226,7 @@ const Index = () => {
                       <DrawerBtn
                         icon="🪙"
                         label={`Coins · ${coinBalance.loading ? "…" : coinBalance.balance}`}
-                        onClick={() => { setShowDrawer(false); setShowCoinRefuel(true); }}
+                        onClick={() => { setShowDrawer(false); setShowCoinWallet(true); }}
                       />
                       <DrawerBtn
                         icon="🔥"
