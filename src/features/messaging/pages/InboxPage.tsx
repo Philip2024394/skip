@@ -466,7 +466,7 @@ export default function InboxPage() {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             {/* Logo */}
-            <AppLogo style={{ width: 36, height: 36, objectFit: "contain" }} />
+            <AppLogo style={{ width: 52, height: 52, objectFit: "contain" }} />
 
             {/* Title */}
             <div style={{
