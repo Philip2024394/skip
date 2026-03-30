@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { generateIndonesianProfiles } from "@/data/indonesianProfiles";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -17,67 +18,27 @@ interface BlindProfile {
   created_at: string;
 }
 
+// DEV-only mock blind profiles — mapped from the existing mock profile generator
+const DEV_BLIND_PROFILES: BlindProfile[] = generateIndonesianProfiles(20).map(p => ({
+  id: p.id,
+  name: p.name,
+  age: p.age,
+  city: p.city ?? null,
+  country: p.country,
+  gender: p.gender ?? null,
+  looking_for: (p as any).looking_for ?? null,
+  bio: p.bio ?? null,
+  avatar_url: p.image ?? (p.images?.[0] ?? null),
+  created_at: new Date(Date.now() - Math.random() * 7 * 86400000).toISOString(),
+}));
+
 interface Question {
   text: string;
   options: string[];
   correct: number; // index into options
 }
 
-// ── Question generator ────────────────────────────────────────────────────────
-
-function generateQuestions(p: BlindProfile): Question[] {
-  const qs: Question[] = [];
-
-  // Q1 — Age (easy)
-  if (p.age) {
-    const wrong = [p.age - 2, p.age + 2, p.age + 4].filter(n => n > 17 && n !== p.age);
-    const opts = shuffle([p.age, ...wrong.slice(0, 3)]).map(String);
-    qs.push({
-      text: `How old is ${p.name}?`,
-      options: opts,
-      correct: opts.indexOf(String(p.age)),
-    });
-  }
-
-  // Q2 — City / Country (easy)
-  const location = p.city || p.country;
-  if (location) {
-    const fakes = ["London", "Jakarta", "Sydney", "Dubai", "Toronto", "Bangkok", "Berlin"].filter(c => c !== location);
-    const opts = shuffle([location, ...fakes.slice(0, 3)]);
-    qs.push({
-      text: `Where is ${p.name} from?`,
-      options: opts,
-      correct: opts.indexOf(location),
-    });
-  }
-
-  // Q3 — Looking for (medium)
-  if (p.looking_for) {
-    const all = ["Casual Dating", "Serious Relationship", "Marriage", "Friendship", "Travel Partner", "Something Fun"];
-    const fakes = all.filter(v => v !== p.looking_for);
-    const opts = shuffle([p.looking_for, ...fakes.slice(0, 3)]);
-    qs.push({
-      text: `What is ${p.name} looking for?`,
-      options: opts,
-      correct: opts.indexOf(p.looking_for),
-    });
-  }
-
-  // Q4 — Gender fallback if we only have 2 questions
-  if (qs.length < 3 && p.gender) {
-    const opts = shuffle(["Male", "Female", "Non-binary", "Prefer not to say"]);
-    const correct = opts.findIndex(o => o.toLowerCase() === p.gender!.toLowerCase());
-    if (correct !== -1) {
-      qs.push({
-        text: `What is ${p.name}'s gender?`,
-        options: opts,
-        correct,
-      });
-    }
-  }
-
-  return qs.slice(0, 3);
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -86,6 +47,132 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// ── Mystery bio generator ─────────────────────────────────────────────────────
+// Produces a clue-filled narrative paragraph + 3 questions the reader can
+// actually answer by reading carefully. No raw data is ever shown directly.
+
+interface MysteryCard {
+  bio: string;         // clue-filled narrative
+  questions: Question[];
+}
+
+function ageRange(age: number): { label: string; clue: string } {
+  if (age <= 22) return {
+    label: "18 – 22",
+    clue: "I was still in school when everyone started obsessing over short-form videos — that whole era basically defined my teenage years.",
+  };
+  if (age <= 26) return {
+    label: "23 – 26",
+    clue: "I graduated just as the world went into lockdown. My first 'real job' was fully remote — I've never actually met half my old colleagues in person.",
+  };
+  if (age <= 30) return {
+    label: "27 – 30",
+    clue: "I remember my parents stressing about the 2008 financial crisis when I was in middle school. Didn't understand it then — understand it too well now.",
+  };
+  if (age <= 35) return {
+    label: "31 – 35",
+    clue: "I was a teenager when Facebook launched and thought it was the coolest thing alive. These days I barely open it.",
+  };
+  if (age <= 40) return {
+    label: "36 – 40",
+    clue: "I grew up with dial-up internet and cassette tapes. My first phone had an antenna you had to pull out.",
+  };
+  return {
+    label: "40+",
+    clue: "I remember when mobile phones were a luxury. We wrote letters and actually waited for replies — patience wasn't optional.",
+  };
+}
+
+function locationClue(city: string | null, country: string): { hint: string; regionLabel: string; regionOptions: string[] } {
+  const c = (city || country).toLowerCase();
+
+  if (c.includes("bali"))       return { hint: "The smell of incense and rice offerings at sunrise is just part of daily life here. Temple bells on ceremony days.", regionLabel: "Bali, Indonesia", regionOptions: shuffle(["Bali, Indonesia", "Thailand", "Philippines", "Sri Lanka"]) };
+  if (c.includes("jakarta"))    return { hint: "Two-hour commutes through gridlock, street food on every corner, and a skyline that never stops growing.", regionLabel: "Jakarta, Indonesia", regionOptions: shuffle(["Jakarta, Indonesia", "Kuala Lumpur", "Ho Chi Minh City", "Manila"]) };
+  if (c.includes("indonesia") || c.includes("surabaya") || c.includes("bandung") || c.includes("medan")) return { hint: "Monsoon season here is no joke — streets flood and the air smells electric before the rain hits. Lebaran is the biggest event of the year.", regionLabel: "Indonesia", regionOptions: shuffle(["Indonesia", "Malaysia", "Philippines", "Vietnam"]) };
+  if (c.includes("malaysia") || c.includes("kuala lumpur")) return { hint: "Mamak stalls open past midnight, the skyline is iconic, and you can eat four different cuisines in one street.", regionLabel: "Malaysia", regionOptions: shuffle(["Malaysia", "Indonesia", "Singapore", "Thailand"]) };
+  if (c.includes("singapore"))  return { hint: "Everything is close, everything is clean, and you can get food at 3am without thinking twice.", regionLabel: "Singapore", regionOptions: shuffle(["Singapore", "Malaysia", "Hong Kong", "Taiwan"]) };
+  if (c.includes("philippines") || c.includes("manila")) return { hint: "Island hopping is a real weekend plan here, not a dream. The ocean is never far.", regionLabel: "Philippines", regionOptions: shuffle(["Philippines", "Indonesia", "Thailand", "Vietnam"]) };
+  if (c.includes("thailand") || c.includes("bangkok")) return { hint: "Songkran water festival, street markets, and temples that glow orange at dusk.", regionLabel: "Thailand", regionOptions: shuffle(["Thailand", "Vietnam", "Cambodia", "Myanmar"]) };
+  if (c.includes("australia") || c.includes("sydney") || c.includes("melbourne")) return { hint: "Summer here means UV warnings before 10am. Beaches on Christmas Day are completely normal.", regionLabel: "Australia", regionOptions: shuffle(["Australia", "New Zealand", "South Africa", "Canada"]) };
+  if (c.includes("london") || c.includes("uk") || c.includes("england")) return { hint: "We complain about the weather constantly but still somehow look surprised when it rains in July.", regionLabel: "United Kingdom", regionOptions: shuffle(["United Kingdom", "Australia", "Canada", "Ireland"]) };
+  if (c.includes("dubai") || c.includes("uae")) return { hint: "40°C in summer is just Tuesday here. The desert sunsets though — nothing compares.", regionLabel: "UAE / Middle East", regionOptions: shuffle(["UAE / Middle East", "Saudi Arabia", "Qatar", "Bahrain"]) };
+
+  // Generic tropical fallback
+  return { hint: "The rainy season here is relentless — but mango season makes up for everything.", regionLabel: country, regionOptions: shuffle([country, "Australia", "Europe", "North America"]) };
+}
+
+function intentClue(lookingFor: string | null): { hint: string; label: string; options: string[] } {
+  const lf = (lookingFor || "").toLowerCase();
+  if (lf.includes("marriage") || lf.includes("marry")) return {
+    hint: "I'm at the point in life where I want to build something real — not just collect memories, but share them with one person long-term.",
+    label: "Marriage / Long-term",
+    options: shuffle(["Marriage / Long-term", "Casual dating", "Just friends", "Still figuring it out"]),
+  };
+  if (lf.includes("serious") || lf.includes("relationship")) return {
+    hint: "I've done the casual thing. What I actually want now is someone I can still be talking to in ten years.",
+    label: "Serious relationship",
+    options: shuffle(["Serious relationship", "Casual fun", "Friendship only", "Travel companion"]),
+  };
+  if (lf.includes("casual") || lf.includes("fun") || lf.includes("something fun")) return {
+    hint: "No pressure, no heavy expectations — I just want to meet interesting people and see what happens naturally.",
+    label: "Casual / No pressure",
+    options: shuffle(["Casual / No pressure", "Serious relationship", "Marriage", "Friendship"]),
+  };
+  if (lf.includes("friend")) return {
+    hint: "Honestly, the best relationships I've seen started as close friendships first. I'm not rushing anything.",
+    label: "Friendship first",
+    options: shuffle(["Friendship first", "Serious relationship", "Marriage", "Casual dating"]),
+  };
+  if (lf.includes("travel")) return {
+    hint: "I want someone to explore with — not a tourist, a travel partner. Someone who reads the side streets, not just the guidebook.",
+    label: "Travel partner / Adventure",
+    options: shuffle(["Travel partner / Adventure", "Marriage", "Casual fun", "Stay-home connection"]),
+  };
+  return {
+    hint: "I'm open to where things go. Connection first — labels can come later.",
+    label: "Open / Exploring",
+    options: shuffle(["Open / Exploring", "Serious relationship", "Marriage", "Casual only"]),
+  };
+}
+
+function generateMysteryCard(p: BlindProfile): MysteryCard {
+  const age   = ageRange(p.age);
+  const loc   = locationClue(p.city, p.country);
+  const intent = intentClue(p.looking_for);
+
+  // Stitch the three clues into a flowing bio paragraph
+  const bio = `${age.clue} ${loc.hint} ${intent.hint}`;
+
+  const questions: Question[] = [
+    {
+      text: "Based on the story above — how old do you think this person roughly is?",
+      options: shuffle(["18 – 22", "23 – 26", "27 – 30", "31 – 35", "36 – 40", "40+"]).slice(0, 4),
+      get correct() {
+        const idx = this.options.indexOf(age.label);
+        return idx === -1 ? 0 : idx;
+      },
+    },
+    {
+      text: "From the clues in their story — where do you think they're from?",
+      options: loc.regionOptions.slice(0, 4),
+      get correct() {
+        const idx = this.options.indexOf(loc.regionLabel);
+        return idx === -1 ? 0 : idx;
+      },
+    },
+    {
+      text: "Reading between the lines — what is this person really looking for?",
+      options: intent.options.slice(0, 4),
+      get correct() {
+        const idx = this.options.indexOf(intent.label);
+        return idx === -1 ? 0 : idx;
+      },
+    },
+  ];
+
+  return { bio, questions };
 }
 
 // ── QA Modal ──────────────────────────────────────────────────────────────────
@@ -101,7 +188,7 @@ function BlindDateQAModal({
   onClose: () => void;
   onPassed: () => void;
 }) {
-  const questions = generateQuestions(profile);
+  const { bio: mysteryBio, questions } = generateMysteryCard(profile);
   const [step, setStep] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answers, setAnswers] = useState<boolean[]>([]);
@@ -181,7 +268,7 @@ function BlindDateQAModal({
 
         {/* Progress dots */}
         <div style={{ display: "flex", gap: 6 }}>
-          {questions.map((_, i) => (
+          {questions.map((_: Question, i: number) => (
             <div key={i} style={{
               flex: 1, height: 4, borderRadius: 4,
               background: i < step ? "#c2185b" : i === step ? "rgba(194,24,91,0.5)" : "rgba(255,255,255,0.12)",
@@ -217,19 +304,34 @@ function BlindDateQAModal({
           </div>
         ) : (
           <>
-            {/* Blurred avatar hint */}
+            {/* Blurred avatar + mystery name */}
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{
-                width: 52, height: 52, borderRadius: "50%",
-                background: profile.avatar_url ? `url(${profile.avatar_url}) center/cover` : "#c2185b33",
-                filter: "blur(10px)", overflow: "hidden", flexShrink: 0,
+                width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
+                backgroundImage: profile.avatar_url ? `url(${profile.avatar_url})` : undefined,
+                backgroundSize: "cover", backgroundPosition: "center",
+                filter: "blur(10px)",
                 border: "2px solid rgba(194,24,91,0.4)",
+                background: profile.avatar_url ? undefined : "#c2185b33",
               }} />
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>{profile.name}, {profile.age}</div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>{profile.city || profile.country}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>Mystery Person</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>Read the story — then answer</div>
               </div>
             </div>
+
+            {/* Mystery bio */}
+            {step === 0 && (
+              <div style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(194,24,91,0.25)",
+                borderRadius: 12, padding: "14px 16px",
+                fontSize: 13, color: "rgba(255,255,255,0.8)",
+                lineHeight: 1.65, fontStyle: "italic",
+              }}>
+                "{mysteryBio}"
+              </div>
+            )}
 
             {/* Question */}
             <div style={{ fontSize: 15, fontWeight: 700, color: "white", lineHeight: 1.4 }}>
@@ -238,7 +340,7 @@ function BlindDateQAModal({
 
             {/* Options */}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {current.options.map((opt, idx) => {
+              {current.options.map((opt: string, idx: number) => {
                 const isSelected = selected === idx;
                 const isCorrect = selected !== null && idx === current.correct;
                 const isWrong = isSelected && idx !== current.correct;
@@ -309,7 +411,9 @@ export default function BlindDateGrid({ userId }: { userId: string }) {
   const load = useCallback(async () => {
     setLoading(true);
     const { data } = await supabase.rpc("get_blind_date_profiles" as any, { p_user_id: userId });
-    setProfiles((data as BlindProfile[]) || []);
+    const live = (data as BlindProfile[]) || [];
+    // Fall back to mock profiles in DEV when DB has no blind date records yet
+    setProfiles(live.length > 0 ? live : import.meta.env.DEV ? DEV_BLIND_PROFILES : []);
     setLoading(false);
   }, [userId]);
 
