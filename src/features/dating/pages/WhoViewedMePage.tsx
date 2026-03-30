@@ -678,12 +678,17 @@ export default function WhoViewedMePage() {
       });
       showToast("Message sent!");
     } else if (payload.type === "game") {
+      if (payload.data.game === "connect4") {
+        // Navigate directly to the Connect 4 game
+        navigate(`/games/connect4?name=${encodeURIComponent(messageTarget.name)}&photo=${encodeURIComponent(messageTarget.photos?.[0] || "")}`);
+        return;
+      }
       await (supabase as any).from("messages").insert({
         sender_id: userId,
         receiver_id: messageTarget.viewer_id,
-        content: `🎮 Game invite: ${payload.data.game === "connect4" ? "Connect 4" : "Memory Match"}`,
+        content: `🎮 Game invite: Memory Match`,
       });
-      showToast(`${payload.data.game === "connect4" ? "Connect 4" : "Memory Match"} invite sent!`);
+      showToast("Memory Match invite sent!");
     } else if (payload.type === "gift") {
       const g = GIFTS.find((x) => x.label === payload.data.gift);
       if (g) {

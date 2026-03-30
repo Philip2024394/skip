@@ -29,6 +29,7 @@ const PhotoGatePage = lazy(() => import("@/features/auth/pages/PhotoGatePage"));
 const DateFeedPage = lazy(() => import("@/features/dating/pages/DateFeedPage"));
 const InboxPage        = lazy(() => import("@/features/messaging/pages/InboxPage"));
 const WhoViewedMePage  = lazy(() => import("@/features/dating/pages/WhoViewedMePage"));
+const Connect4Page     = lazy(() => import("@/features/games/pages/Connect4Page"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const AppContent = () => {
         <Route path="/dates" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><DateFeedPage /></Suspense></ProtectedRoute>} />
         <Route path="/inbox" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><InboxPage /></Suspense></ProtectedRoute>} />
         <Route path="/who-viewed-me" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><WhoViewedMePage /></Suspense></ProtectedRoute>} />
+        <Route path="/games/connect4" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><Connect4Page /></Suspense></ProtectedRoute>} />
         <Route path="*" element={<AuthPage />} />
       </Routes >
     </BrowserRouter >
