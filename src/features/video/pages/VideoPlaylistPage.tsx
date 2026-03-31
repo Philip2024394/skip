@@ -46,15 +46,12 @@ export default function VideoPlaylistPage({ profileId, profileName = "Profile" }
           <div className="h-full w-full flex flex-col">
             {/* Header with brand name */}
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => navigate(-1)}
-                className="text-white/80 hover:text-white hover:bg-white/10"
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
               >
-                <ChevronLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
+                ← Back
+              </button>
 
               <h1 className="text-white text-lg font-semibold">
                 2DateMe Video

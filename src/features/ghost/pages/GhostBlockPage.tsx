@@ -130,14 +130,9 @@ export default function GhostBlockPage() {
       }}>
         <button
           onClick={() => navigate(-1)}
-          style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", color: "rgba(255,255,255,0.6)",
-          }}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
         >
-          <ArrowLeft size={16} />
+          ← Back
         </button>
         <div style={{ flex: 1 }}>
           <h1 style={{ fontSize: 16, fontWeight: 900, margin: 0 }}>Ghost Shield</h1>

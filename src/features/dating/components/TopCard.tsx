@@ -230,7 +230,7 @@ export default function TopCard(props: TopCardProps) {
                 <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                   <span
                     className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold border"
-                    style={{ background: `${color}22`, borderColor: `${color}55`, color }}
+                    style={{ background: "rgba(250,204,21,0.12)", borderColor: "rgba(250,204,21,0.35)", color: "#facc15" }}
                   >
                     ✦ {compat.score}% match
                   </span>

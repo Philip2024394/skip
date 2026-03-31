@@ -10,7 +10,7 @@ import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
 import { firstName } from "@/shared/utils";
 import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
-type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
+type Tab = "sent" | "received" | "new" | "treat" | "match" | "distance" | "gifts" | "video";
 
 interface LikesCarouselProps {
   displayItemsWithTarot: any[];

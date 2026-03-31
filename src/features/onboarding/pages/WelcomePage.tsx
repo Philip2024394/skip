@@ -248,6 +248,10 @@ export default function WelcomePage() {
         languages_spoken: language2 ? `${language.code.toLowerCase()},${language2.code.toLowerCase()}` : language.code.toLowerCase(),
         gender: gender ?? undefined,
         looking_for: intent.id,
+        // Auto-apply grid badge based on intent
+        available_tonight: intent.id === "tonight",
+        weekend_plans: intent.id === "weekend",
+        is_plusone: intent.id === "events",
         ...(dobDay && dobMonth && dobYear ? { date_of_birth: `${dobYear}-${dobMonth.padStart(2,"0")}-${dobDay.padStart(2,"0")}` } : {}),
         coins_balance: 50 + totalCoins,
         ...(socialPlatform ? { social_platform: socialPlatform, social_followers: isNaN(followers) ? null : followers } : {}),

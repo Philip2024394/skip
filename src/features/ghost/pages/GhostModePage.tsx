@@ -2243,11 +2243,7 @@ export default function GhostModePage() {
               {/* Back button */}
               <button
                 onClick={() => navigate("/")}
-                style={{
-                  background: "none", border: "none", color: "rgba(255,255,255,0.35)",
-                  fontSize: 12, cursor: "pointer", padding: 0, marginBottom: 14,
-                  display: "flex", alignItems: "center", gap: 5,
-                }}
+                style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 14 }}
               >
                 ← Back
               </button>

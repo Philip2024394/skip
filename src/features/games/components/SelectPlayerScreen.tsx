@@ -319,12 +319,7 @@ export default function SelectPlayerScreen({ onBack, onChallenge }: Props) {
         display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <button onClick={onBack} style={{
-          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-          borderRadius: 20, padding: "7px 14px",
-          color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: 700, cursor: "pointer",
-          flexShrink: 0,
-        }}>← Back</button>
+        <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}>← Back</button>
         <div style={{ flex: 1 }}>
           <div style={{ color: "white", fontWeight: 900, fontSize: 16 }}>Select Player</div>
           <div style={{ color: "rgba(255,255,255,0.35)", fontSize: 11 }}>

@@ -53,12 +53,7 @@ export default function Connect4Page() {
             {/* Back */}
             <button
               onClick={() => navigate("/games")}
-              style={{
-                position: "absolute", top: "max(18px,env(safe-area-inset-top,18px))", left: 18,
-                background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: 20, padding: "7px 14px",
-                color: "rgba(255,255,255,0.6)", fontSize: 13, fontWeight: 700, cursor: "pointer",
-              }}
+              style={{ position: "absolute", top: "max(18px,env(safe-area-inset-top,18px))", left: 18, display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
             >← Back</button>
 
             {/* Gold bar */}

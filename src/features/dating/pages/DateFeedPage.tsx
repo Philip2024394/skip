@@ -252,8 +252,8 @@ export default function DateFeedPage() {
         flexShrink: 0,
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={() => navigate(-1)} style={{ background: "rgba(255,255,255,0.07)", border: "none", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-            <ChevronLeft style={{ width: 18, height: 18, color: "rgba(255,255,255,0.7)" }} />
+          <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+            ← Back
           </button>
           <div>
             <p style={{ color: "white", fontWeight: 900, fontSize: 17, margin: 0, lineHeight: 1 }}>Date Spots</p>

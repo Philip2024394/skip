@@ -58,7 +58,7 @@ interface LikesLibraryProps {
   onCulturalGuide?: () => void;
 }
 
-type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
+type Tab = "sent" | "received" | "new" | "treat" | "match" | "distance" | "gifts" | "video";
 type DisplayItem =
   | { type: "profile"; profile: Profile }
   | { type: "promo"; profile: null };
@@ -69,13 +69,13 @@ const TAB_LABELS: Record<Tab, (counts: Record<Tab, number>) => string> = {
   sent: () => "I Liked",
   received: (c) => c.received > 0 ? `Likes Me (${c.received})` : "Likes Me",
   treat: () => "Treat",
-  unlock: () => "Unlock",
+  match: (c) => c.match > 0 ? `Match (${c.match})` : "Match",
   distance: () => "Distance",
   gifts: () => "Super",
   video: () => "Video",
 };
-// Home page shows New / Treat / Unlock; profile page shows About Me / Date Ideas / Unlock / Distance
-const HOME_TABS: Tab[] = ["new", "sent", "received", "unlock"];
+// Home page shows New / I Liked / Likes Me / Match
+const HOME_TABS: Tab[] = ["new", "sent", "received", "match"];
 const PROFILE_TABS: Tab[] = ["new", "sent", "treat", "gifts"];
 
 const TREAT_ITEMS = [
@@ -131,14 +131,15 @@ const LikesLibrary = ({
   const currentList: Profile[] =
     tab === "sent" ? iLiked :
       tab === "received" ? likedMe :
-        sortedNew;
+        tab === "match" ? matches :
+          sortedNew;
 
   const counts: Record<Tab, number> = {
     sent: iLiked.length,
     received: likedMe.length,
     new: sortedNew.length,
     treat: 0,
-    unlock: 0,
+    match: matches.length,
     distance: 0,
     gifts: 0,
     video: 0,
@@ -226,9 +227,7 @@ const LikesLibrary = ({
     tabLabelOverrides?.new === "Profile";
 
   const isTreatTab = tab === "treat";
-  const isUnlockTab =
-    tab === "unlock" ||
-    (tab === "received" && tabLabelOverrides?.received === "Unlock");
+  const isMatchTab = tab === "match";
 
   const dateIdeas = (
     (profileDatePlaces || [])
@@ -366,7 +365,7 @@ const LikesLibrary = ({
       {/* ── Scrollable card row — native scroll, no tab-switch interference ── */}
       <div
         ref={scrollRef}
-        className={`flex-1 [&::-webkit-scrollbar]:hidden ${isDateIdeasTab || isProfileInfoTab || isTreatTab || tab === "gifts"
+        className={`flex-1 [&::-webkit-scrollbar]:hidden ${isDateIdeasTab || isProfileInfoTab || isTreatTab || isMatchTab || tab === "gifts"
           ? "overflow-y-auto overflow-x-hidden"
           : "overflow-x-auto overflow-y-hidden"
           }`}
@@ -374,7 +373,7 @@ const LikesLibrary = ({
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           WebkitOverflowScrolling: "touch",
-          ...(isDateIdeasTab || isProfileInfoTab || isTreatTab || tab === "gifts"
+          ...(isDateIdeasTab || isProfileInfoTab || isTreatTab || isMatchTab || tab === "gifts"
             ? { overscrollBehaviorY: "contain", touchAction: "pan-y" }
             : { overscrollBehaviorX: "contain", touchAction: "pan-x" }),
         }}
@@ -386,7 +385,7 @@ const LikesLibrary = ({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.18 }}
-            className={(isDateIdeasTab || isProfileInfoTab || isTreatTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
+            className={(isDateIdeasTab || isProfileInfoTab || isTreatTab || isMatchTab) ? "h-full py-1" : "flex gap-2 h-full py-1"}
           >
             {isProfileInfoTab ? (
               <div
@@ -490,55 +489,60 @@ const LikesLibrary = ({
                   </motion.button>
                 ))}
               </div>
-            ) : isUnlockTab ? (
-              <div className="flex gap-2 h-full pb-2 pl-2">
-                {([
-                  { key: "unlock:single", emoji: null, label: "1 Unlock", price: "$1.99" },
-                  { key: "unlock:pack3", emoji: null, label: "3 Pack", price: "$4.99" },
-                  { key: "unlock:pack10", emoji: null, label: "10 Pack", price: "$12.99" },
-                  { key: "unlock:vip", emoji: "👑", label: "VIP", price: "$10.99" },
-                  { key: "unlock:superlike", emoji: "⭐", label: "Super Like", price: "$1.99" },
-                  { key: "unlock:boost", emoji: "🚀", label: "Boost", price: "$1.99" },
-                  { key: "unlock:verified", emoji: "✅", label: "Verified", price: "$1.99" },
-                  { key: "unlock:incognito", emoji: "👻", label: "Incognito", price: "$2.99" },
-                  { key: "unlock:spotlight", emoji: "🌟", label: "Spotlight", price: "$4.99" },
-                ] as const).map((p, idx) => (
-                  <motion.button
-                    key={p.key}
-                    type="button"
-                    initial={{ opacity: 0, scale: 0.92 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.92 }}
-                    transition={{ delay: Math.min(idx * 0.04, 0.24) }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onSelectUnlockItem?.(p.key);
-                    }}
-                    className="flex flex-col items-center justify-between p-2 rounded-xl cursor-pointer transition-all hover:scale-[1.03] bg-black/50 backdrop-blur-md flex-shrink-0"
-                    style={{
-                      width: 80, height: 104,
-                      border: selectedUnlockItemKey === p.key
-                        ? "1.5px solid rgba(236,72,153,0.85)"
-                        : "1.5px solid rgba(255,255,255,0.1)",
-                      boxShadow: selectedUnlockItemKey === p.key
-                        ? "0 0 14px rgba(236,72,153,0.55), 0 0 6px rgba(236,72,153,0.35), inset 0 0 10px rgba(236,72,153,0.1)"
-                        : "none",
-                    }}
-                    aria-label={p.label}
-                  >
-                    {p.emoji ? (
-                      <span style={{ fontSize: 38 }}>{p.emoji}</span>
-                    ) : (
-                      <img src="https://ik.imagekit.io/7grri5v7d/logo_unlock-removebg-preview.png?updatedAt=1773430238745" alt="unlock" style={{ width: 52, height: 52, objectFit: "contain" }} />
-                    )}
-                    <div className="flex flex-col items-center gap-0.5">
-                      <p className="text-white text-[9px] font-bold text-center leading-tight">{p.label}</p>
-                      <span style={{ background: "linear-gradient(135deg, hsl(320,50%,50%), hsl(315,40%,55%))", color: "#fff", fontSize: 7, fontWeight: 700, padding: "1.5px 6px", borderRadius: 20, whiteSpace: "nowrap", marginBottom: 2 }}>View</span>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
+            ) : isMatchTab ? (
+              matches.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3 px-4">
+                  <span style={{ fontSize: 32 }}>💞</span>
+                  <p className="text-white/40 text-xs text-center">No mutual matches yet — keep liking!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 pb-2">
+                  {matches.map((profile, idx) => (
+                    <motion.div
+                      key={profile.id}
+                      initial={{ opacity: 0, scale: 0.88 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: Math.min(idx * 0.05, 0.2) }}
+                      onClick={() => onSelectProfile(profile, matches)}
+                      style={{
+                        position: "relative", borderRadius: 14, overflow: "hidden",
+                        border: "1.5px solid rgba(244,114,182,0.55)",
+                        boxShadow: "0 0 12px rgba(244,114,182,0.25)",
+                        cursor: "pointer", aspectRatio: "3/4",
+                      }}
+                    >
+                      <img
+                        src={profile.avatar_url || profile.image || "/placeholder.svg"}
+                        alt={profile.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                        onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }}
+                      />
+                      {/* gradient overlay */}
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)" }} />
+                      {/* name */}
+                      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "0 6px 6px" }}>
+                        <p style={{ color: "#fff", fontSize: 10, fontWeight: 700, margin: "0 0 4px", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                          {(profile.name || "").split(" ")[0]}
+                        </p>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onUnlock(profile); }}
+                          style={{
+                            width: "100%", height: 24, borderRadius: 8, border: "none",
+                            background: "linear-gradient(135deg, #ec4899, #a855f7)",
+                            color: "#fff", fontSize: 9, fontWeight: 800, cursor: "pointer",
+                          }}
+                        >
+                          Connect
+                        </button>
+                      </div>
+                      {/* mutual heart badge */}
+                      <div style={{ position: "absolute", top: 5, right: 5, background: "rgba(0,0,0,0.6)", borderRadius: "50%", width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Heart style={{ width: 10, height: 10, color: "#f472b6" }} fill="#f472b6" />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )
             ) : isDateIdeasTab ? (
               !hasDateIdeas ? (
                 <div className="flex items-center justify-center h-full px-4">

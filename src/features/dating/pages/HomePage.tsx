@@ -722,7 +722,7 @@ const Index = () => {
   const REFERRAL_POPUP_SHOWN_KEY = "referralPopupShown";
   const SUPER_LIKES_BALANCE_KEY = "superLikesBalanceLast";
 
-  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "gifts" | "unlock" | "distance" | "video">("new");
+  const [aboutMeTab, setAboutMeTab] = useState<"new" | "sent" | "received" | "treat" | "gifts" | "match" | "distance" | "video">("new");
   const [homeUnlockKey, setHomeUnlockKey] = useState<string>("unlock:single");
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
@@ -1031,6 +1031,23 @@ const Index = () => {
     upsertLocalLikedProfile,
     saveLocalLikedMeProfiles,
   });
+
+  // Auto-open the matching grid tab based on user's looking_for intent
+  const autoOpenedRef = React.useRef(false);
+  useEffect(() => {
+    if (autoOpenedRef.current || !userLookingFor) return;
+    const modeMap: Record<string, "tonight" | "weekend" | "plus1"> = {
+      tonight: "tonight",
+      weekend: "weekend",
+      events:  "plus1",
+    };
+    const mode = modeMap[userLookingFor];
+    if (mode) {
+      autoOpenedRef.current = true;
+      setBrowseInitialMode(mode);
+      setShowBrowse(true);
+    }
+  }, [userLookingFor]);
 
   useRealtimeLikes({
     user,
@@ -1680,7 +1697,7 @@ const Index = () => {
                         // On home page: switching away from unlock tab clears the package detail
                         if (!isProfileRoute) {
                           setAboutMeTab(t);
-                          if (t !== "unlock") setHomeUnlockKey("");
+                          if (t !== "match") setHomeUnlockKey("");
                           return;
                         }
                         // Only reset selections when actually switching tabs (not on re-render)
@@ -1703,7 +1720,7 @@ const Index = () => {
                           setSelectedUnlockItemKey(key);
                         } else {
                           setHomeUnlockKey(key);
-                          setAboutMeTab("unlock");
+                          setAboutMeTab("match");
                         }
                       }}
                       selectedTreatItem={selectedTreatItem}
@@ -1747,28 +1764,24 @@ const Index = () => {
                 {/* Bottom Card — home page: swipe stack / package detail */}
                 {!isProfileRoute && (
                   <div className="relative rounded-2xl overflow-hidden min-h-0 bg-gradient-to-br from-fuchsia-900/30 via-black/30 to-purple-900/30 backdrop-blur-xl border-2 border-fuchsia-400/25 shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.3)] ring-1 ring-fuchsia-300/15 isolate" style={{ contain: "layout" }}>
-                    {aboutMeTab === "unlock" ? (
-                      <HomePackageDetail packageKey={homeUnlockKey || "unlock:single"} onClose={() => { setHomeUnlockKey(""); setAboutMeTab("new"); }} onPurchase={handlePurchaseFeature} />
-                    ) : (
-                      <SwipeStack
-                        key="bottom-stack"
-                        profiles={bottomProfiles}
-                        direction="down"
-                        roseAvailable={roseAvailable}
-                        onRose={handleRose}
-                        onLike={(p) => {
-                          handleLike(p);
-                          advanceBottomQueue(p.id);
-                          if (user) navigate(`/profile/${p.id}`);
-                        }}
-                        onPass={(p) => {
-                          sessionStatsRef.current.passed += 1;
-                          setSessionTick((v) => v + 1);
-                          advanceBottomQueue(p.id);
-                          tickC4Swipe();
-                        }}
-                      />
-                    )}
+                    <SwipeStack
+                      key="bottom-stack"
+                      profiles={bottomProfiles}
+                      direction="down"
+                      roseAvailable={roseAvailable}
+                      onRose={handleRose}
+                      onLike={(p) => {
+                        handleLike(p);
+                        advanceBottomQueue(p.id);
+                        if (user) navigate(`/profile/${p.id}`);
+                      }}
+                      onPass={(p) => {
+                        sessionStatsRef.current.passed += 1;
+                        setSessionTick((v) => v + 1);
+                        advanceBottomQueue(p.id);
+                        tickC4Swipe();
+                      }}
+                    />
                   </div>
                 )}
 
@@ -2610,22 +2623,6 @@ const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonig
             )}
           </div>
 
-          {/* Mode badge */}
-          {(showTonightBadge || showWeekendBadge || showPlus1Badge) && (
-            <div style={{
-              position: "absolute", top: 6, left: 6,
-              background: showTonightBadge ? "rgba(234,179,8,0.92)"
-                : showWeekendBadge ? "rgba(99,102,241,0.92)"
-                : "rgba(236,72,153,0.92)",
-              backdropFilter: "blur(6px)",
-              borderRadius: 5, padding: "2px 6px",
-              fontSize: 8, fontWeight: 800,
-              color: showTonightBadge ? "#1a1000" : "#fff",
-              letterSpacing: "0.04em",
-            }}>
-              {showTonightBadge ? "🌙 TONIGHT" : showWeekendBadge ? "📅 WEEKEND" : "➕ PLUS 1"}
-            </div>
-          )}
 
           {/* Status dot — green pulsing when online */}
           {status === "online" && (
@@ -2706,7 +2703,7 @@ function MemberBrowser({ profiles, onClose, onSelect, currentUserId, currentUser
     { key: "grid",    img: "https://ik.imagekit.io/dateme/Thoughtful%20teddy%20bear%20with%20glowing%20stars.png?updatedAt=1774983728232", label: "Online Profiles" },
     { key: "tonight", img: "https://ik.imagekit.io/dateme/Free%20tonight%20celebration%20with%20bear.png?updatedAt=1774983850249", label: "Tonight" },
     { key: "weekend", img: "https://ik.imagekit.io/dateme/Weekend%20celebration%20with%20teddy%20bear%20joy.png?updatedAt=1774983752349", label: "Weekend" },
-    { key: "plus1",   img: "https://ik.imagekit.io/dateme/Teddy%20bear%20celebrates%20with%20_+1_%20sign.png?updatedAt=1774983776229", label: "+1" },
+    { key: "plus1",   img: "https://ik.imagekit.io/dateme/Teddy%20bear%20celebrates%20with%20_+1_%20sign.png?updatedAt=1774983776229", label: "Plus 1" },
   ] as const;
 
   const sortOnlineFirst = (arr: any[]) => {

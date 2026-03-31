@@ -65,9 +65,9 @@ const TermsPage = () => {
   return (
     <div className="h-screen overflow-y-auto overflow-x-hidden bg-black text-white scroll-touch">
       <div className="max-w-2xl mx-auto px-5 py-8 pb-20">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="text-white/70 hover:text-white mb-6 -ml-2">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back
-        </Button>
+        <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer", marginBottom: 24 }}>
+          ← Back
+        </button>
 
         {/* ── Language Selector ─────────────────────────────── */}
         <div style={{

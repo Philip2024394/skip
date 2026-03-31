@@ -359,10 +359,9 @@ const FaqPage = () => {
       <div className="shrink-0 sticky top-0 z-10 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/8 px-4 py-3 flex items-center gap-3" style={{ paddingTop: `max(0.75rem, env(safe-area-inset-top, 0px))` }}>
         <button
           onClick={() => navigate(-1)}
-          className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center hover:bg-white/15 transition-colors"
-          aria-label="Go back"
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 16px", borderRadius: 20, border: "1.5px solid rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.15)", color: "white", fontSize: 13, fontWeight: 700, cursor: "pointer" }}
         >
-          <ChevronDown className="w-4 h-4 rotate-90" />
+          ← Back
         </button>
         <div className="flex items-center gap-2">
           <AppLogo className="w-7 h-7 object-contain" />
