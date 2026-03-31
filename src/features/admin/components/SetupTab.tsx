@@ -236,6 +236,78 @@ CREATE POLICY "Admin full access media"
   ON public.teddy_room_media FOR ALL USING (public.is_admin());`,
   },
   {
+    step: 9,
+    title: "Analytics — page_events table",
+    desc: "Stores anonymous page-view events for traffic and engagement stats in the Stats tab.",
+    sql: `CREATE TABLE IF NOT EXISTS public.page_events (
+  id         uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id text        NOT NULL,
+  page       text        NOT NULL,
+  country    text,
+  device     text,
+  user_id    uuid        REFERENCES public.profiles(id) ON DELETE SET NULL,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS page_events_created_idx ON public.page_events (created_at DESC);
+CREATE INDEX IF NOT EXISTS page_events_session_idx ON public.page_events (session_id);
+ALTER TABLE public.page_events ENABLE ROW LEVEL SECURITY;
+
+-- Anyone (including anonymous) can insert events
+CREATE POLICY "Anyone can insert page events"
+  ON public.page_events FOR INSERT WITH CHECK (true);
+
+-- Only admins can read
+CREATE POLICY "Admin can read page events"
+  ON public.page_events FOR SELECT USING (public.is_admin());
+
+-- Auto-delete events older than 60 days to keep storage low
+CREATE OR REPLACE FUNCTION public.cleanup_old_page_events()
+RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
+  DELETE FROM public.page_events
+  WHERE created_at < now() - interval '60 days';
+$$;`,
+  },
+  {
+    step: 10,
+    title: "Analytics — admin_audit_log table",
+    desc: "Records every admin action (ban, delete, verify, etc.) with timestamp for accountability.",
+    sql: `CREATE TABLE IF NOT EXISTS public.admin_audit_log (
+  id             uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  admin_id       uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  action         text        NOT NULL,
+  target_user_id uuid,
+  details        jsonb,
+  created_at     timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS audit_log_created_idx ON public.admin_audit_log (created_at DESC);
+ALTER TABLE public.admin_audit_log ENABLE ROW LEVEL SECURITY;
+
+-- Only admins can read or insert
+CREATE POLICY "Admin can manage audit log"
+  ON public.admin_audit_log FOR ALL USING (public.is_admin());`,
+  },
+  {
+    step: 11,
+    title: "Analytics — ad_impressions table",
+    desc: "Persists ad view counts to the database so analytics survive page refreshes.",
+    sql: `CREATE TABLE IF NOT EXISTS public.ad_impressions (
+  id         uuid        DEFAULT gen_random_uuid() PRIMARY KEY,
+  ad_id      text        NOT NULL,
+  country    text,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ad_impressions_ad_id_idx ON public.ad_impressions (ad_id, created_at DESC);
+ALTER TABLE public.ad_impressions ENABLE ROW LEVEL SECURITY;
+
+-- Anyone can insert an impression (ad views fire client-side)
+CREATE POLICY "Anyone can insert ad impression"
+  ON public.ad_impressions FOR INSERT WITH CHECK (true);
+
+-- Only admins can read
+CREATE POLICY "Admin can read ad impressions"
+  ON public.ad_impressions FOR SELECT USING (public.is_admin());`,
+  },
+  {
     step: 5,
     title: "Create connect4_games table",
     desc: "Stores Connect 4 game results, bets, and win/loss records. Required for the Games tab in admin.",

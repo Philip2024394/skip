@@ -8,6 +8,7 @@ import { useEffect, Suspense, lazy } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthPage } from "@/features/auth/pages";
 import { ProtectedRoute, LoadingFallback } from "@/shared/components";
+import { usePageTracking } from "@/shared/hooks/usePageTracking";
 
 // Lazy load heavy pages to reduce initial bundle size
 const HomePage = lazy(() => import("@/features/dating/pages/HomePage"));
@@ -34,6 +35,9 @@ const Connect4Page     = lazy(() => import("@/features/games/pages/Connect4Page"
 const queryClient = new QueryClient();
 
 const AppContent = () => {
+  // Anonymous page-view tracking — feeds the Stats tab in admin dashboard
+  usePageTracking();
+
   useEffect(() => {
     // Track ad link opens (for ad analytics)
     try {

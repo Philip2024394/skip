@@ -23,6 +23,21 @@ import AlertsTab from "../components/AlertsTab";
 import { AlertItem } from "../components/AlertsTab";
 import AdCreatorTab from "../components/AdCreatorTab";
 import GiftOrdersTab from "../components/GiftOrdersTab";
+import StatsTab from "../components/StatsTab";
+
+// ── Admin audit helper — fire-and-forget ──────────────────────────────────────
+const logAdminAction = async (action: string, targetUserId?: string, details?: Record<string, any>) => {
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    await (supabase.from as any)("admin_audit_log").insert({
+      admin_id: session.user.id,
+      action,
+      target_user_id: targetUserId ?? null,
+      details: details ?? null,
+    });
+  } catch { /* silent */ }
+};
 
 // ── Main component ────────────────────────────────────────────────────────────
 const AdminPage = () => {
@@ -329,6 +344,7 @@ const AdminPage = () => {
       toast.success(ban ? `User banned` : `User unbanned`);
       setProfiles(p => p.map(u => u.id === userId ? { ...u, is_banned: ban } : u));
       if (selectedUser?.id === userId) setSelectedUser(u => u ? { ...u, is_banned: ban } : u);
+      logAdminAction(ban ? "ban" : "unban", userId);
     }
     setActionLoading(null);
   };
@@ -340,6 +356,7 @@ const AdminPage = () => {
     else {
       toast.success("Account deleted");
       setProfiles(p => p.filter(u => u.id !== userId));
+      logAdminAction("delete", userId);
     }
     setActionLoading(null);
   };
@@ -353,6 +370,7 @@ const AdminPage = () => {
       toast.success(on ? "Spotlight activated (7 days)" : "Spotlight removed");
       setProfiles(p => p.map(u => u.id === userId ? { ...u, is_spotlight: on } : u));
       if (selectedUser?.id === userId) setSelectedUser(u => u ? { ...u, is_spotlight: on } : u);
+      logAdminAction(on ? "spotlight" : "spotlight_off", userId);
     }
     setActionLoading(null);
   };
@@ -376,6 +394,7 @@ const AdminPage = () => {
       toast.success(mock ? "Marked as mock profile" : "Removed mock flag");
       setProfiles(p => p.map(u => u.id === userId ? { ...u, is_mock: mock } : u));
       if (selectedUser?.id === userId) setSelectedUser(u => u ? { ...u, is_mock: mock } : u);
+      logAdminAction(mock ? "mock" : "unmock", userId);
     }
     setActionLoading(null);
   };
@@ -391,6 +410,7 @@ const AdminPage = () => {
       toast.success(verify ? "✅ User verified" : "Verification removed");
       setProfiles(p => p.map(u => u.id === userId ? { ...u, is_verified: verify, verification_status: verify ? "approved" : null } : u));
       if (selectedUser?.id === userId) setSelectedUser(u => u ? { ...u, is_verified: verify } : u);
+      logAdminAction(verify ? "verify" : "unverify", userId);
     }
     setActionLoading(null);
   };
@@ -546,6 +566,7 @@ const AdminPage = () => {
     { id: "new_profiles", label: "New", icon: <CheckCircle2 className="w-3.5 h-3.5" />, badge: newToday || undefined },
     { id: "games", label: "Games", icon: <Zap className="w-3.5 h-3.5" />, badge: gameResults.length || undefined },
     { id: "reports", label: "Reports", icon: <AlertCircle className="w-3.5 h-3.5" />, badge: reportsList.length || undefined },
+    { id: "stats", label: "Stats", icon: <Activity className="w-3.5 h-3.5" /> },
   ];
 
   return (
@@ -1428,6 +1449,11 @@ const AdminPage = () => {
             </div>
           );
         })()}
+
+        {/* ══ STATS TAB ══════════════════════════════════════════════════════ */}
+        {tab === "stats" && (
+          <StatsTab profiles={profiles} payments={payments} />
+        )}
       </div>
 
       {/* User detail drawer */}

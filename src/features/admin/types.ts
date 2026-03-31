@@ -67,5 +67,5 @@ export interface Payment {
   stripe_session_id: string;
 }
 
-export type Tab = "overview" | "users" | "income" | "alerts" | "verify" | "setup" | "ads" | "gifts" | "new_profiles" | "games" | "reports";
+export type Tab = "overview" | "users" | "income" | "alerts" | "verify" | "setup" | "ads" | "gifts" | "new_profiles" | "games" | "reports" | "stats";
 export type UserFilter = "all" | "active" | "banned" | "hidden" | "spotlight" | "mock" | "verified";
