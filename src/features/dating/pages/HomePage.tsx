@@ -44,8 +44,8 @@ import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
 import CoinCollectModal, { TEDDY_VIDEO } from "@/features/dating/components/CoinCollectModal";
 import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
-import FreeTonightSheet from "@/features/dating/components/FreeTonightSheet";
 import TonightInboxModal from "@/features/dating/components/TonightInboxModal";
+import TonightRequestModal from "@/features/dating/components/TonightRequestModal";
 import GlobalDatingUpsell from "@/features/dating/components/GlobalDatingUpsell";
 import { useGlobalDating } from "@/shared/hooks/useGlobalDating";
 import { getUserCountry } from "@/shared/hooks/useUserCurrency";
@@ -344,7 +344,8 @@ const Index = () => {
   // 50 mocks when 0 real users → 0 mocks when ≥50 real users
   const mockProfiles = useMemo(() => generateIndonesianProfiles(50), []);
   const allProfiles = useMemo(() => {
-    const mockCount = Math.max(0, 50 - dbProfiles.length);
+    // Always keep at least 30 mocks so tonight/weekend/+1 filtered grids always have content
+    const mockCount = Math.max(30, 50 - dbProfiles.length);
     const base = [...mockProfiles.slice(0, mockCount), ...dbProfiles];
     // When city is live, filter to local city profiles only
     if (cityStatus?.is_live && user?.city) {
@@ -734,7 +735,7 @@ const Index = () => {
   // Cultural Bridge Guide overlay
   const [showCulturalGuide, setShowCulturalGuide] = useState(false);
   // Free Tonight
-  const [showFreeTonightSheet, setShowFreeTonightSheet] = useState(false);
+  const [browseInitialMode, setBrowseInitialMode] = useState<"grid" | "tonight" | "weekend" | "plus1">("grid");
   const [showTonightInbox, setShowTonightInbox] = useState(false);
   const [tonightInboxCount, setTonightInboxCount] = useState(0);
 
@@ -1346,7 +1347,7 @@ const Index = () => {
                   </button>
                   {/* Free Tonight button */}
                   <button
-                    onClick={() => setShowFreeTonightSheet(true)}
+                    onClick={() => { setBrowseInitialMode("tonight"); setShowBrowse(true); }}
                     aria-label="Free Tonight"
                     title="Free Tonight"
                     className="relative w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-yellow-400/30 flex items-center justify-center transition-colors hover:border-yellow-400/60"
@@ -2001,15 +2002,6 @@ const Index = () => {
       </AnimatePresence>
 
 
-      {/* ── Free Tonight Sheet ───────────────────────────────────── */}
-      <FreeTonightSheet
-        open={showFreeTonightSheet}
-        onClose={() => setShowFreeTonightSheet(false)}
-        currentUserId={user?.id ?? ""}
-        currentUserCoins={coinBalance.balance}
-        onCoinsSpent={(amount) => coinBalance.addCoins(-amount)}
-      />
-
       {/* ── Tonight Inbox Modal ───────────────────────────────────── */}
       <TonightInboxModal
         open={showTonightInbox}
@@ -2506,11 +2498,16 @@ const Index = () => {
         {showBrowse && (
           <MemberBrowser
             profiles={allProfiles}
-            onClose={() => setShowBrowse(false)}
+            onClose={() => { setShowBrowse(false); setBrowseInitialMode("grid"); }}
             onSelect={(p) => {
               setShowBrowse(false);
+              setBrowseInitialMode("grid");
               navigate(`/profile/${p.id}`);
             }}
+            currentUserId={user?.id ?? ""}
+            currentUserCoins={coinBalance.balance}
+            onCoinsSpent={(amount) => coinBalance.addCoins(-amount)}
+            initialMode={browseInitialMode}
           />
         )}
       </AnimatePresence>
@@ -2544,22 +2541,15 @@ export default Index;
 
 // ── Member Browser ─────────────────────────────────────────────────────────────
 
-// Individual profile card — own timer so images cycle independently of scroll
-const BrowseCard = React.memo(function BrowseCard({ profile, onSelect }: { profile: any; onSelect: (p: any) => void }) {
+// Individual profile card — static image, no cycling flash
+const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonightBadge, showWeekendBadge, showPlus1Badge, isLiked, onHeartPress }: { profile: any; onSelect: (p: any) => void; showTonightBadge?: boolean; showWeekendBadge?: boolean; showPlus1Badge?: boolean; isLiked?: boolean; onHeartPress?: (p: any) => void }) {
   const extras = (Array.isArray((profile as any).images) ? (profile as any).images : []) as string[];
   const imgList = [profile.image, ...extras, profile.avatar_url]
     .filter((u): u is string => typeof u === "string" && u.length > 0)
     .filter((u, i, arr) => arr.indexOf(u) === i);
   if (imgList.length === 0) imgList.push("/placeholder.svg");
 
-  const [imgIdx, setImgIdx] = useState(0);
-  useEffect(() => {
-    if (imgList.length <= 1) return;
-    const id = setInterval(() => setImgIdx(i => (i + 1) % imgList.length), 2500);
-    return () => clearInterval(id);
-  }, [imgList.length]);
-
-  const src = imgList[imgIdx] || "/placeholder.svg";
+  const src = imgList[0] || "/placeholder.svg";
 
   const nowMs = Date.now();
   const lastMs = profile.last_seen_at ? new Date(profile.last_seen_at).getTime() : 0;
@@ -2567,90 +2557,183 @@ const BrowseCard = React.memo(function BrowseCard({ profile, onSelect }: { profi
   const status: "online" | "busy" | "offline" =
     diffMin < 5 ? "online" : diffMin < 30 ? "busy" : "offline";
 
+  const hasHeartButton = !!onHeartPress;
+
   return (
-    <motion.div
-      whileTap={{ scale: 0.94 }}
-      onClick={() => onSelect(profile)}
-      style={{
-        position: "relative",
-        width: "100%",
-        paddingBottom: "133%",
-        borderRadius: 12,
-        overflow: "hidden",
-        border: "1.5px solid rgba(255,255,255,0.12)",
-        background: "#111",
-        cursor: "pointer",
-        flexShrink: 0,
-      }}
-    >
-      <div style={{ position: "absolute", inset: 0 }}>
-        <motion.img
-          key={src}
-          src={src}
-          alt={profile.name}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 0%", display: "block" }}
-          onError={(e) => {
-            const img = e.target as HTMLImageElement;
-            if (!img.src.endsWith("/placeholder.svg")) img.src = "/placeholder.svg";
-          }}
-        />
+    <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
+      {/* Photo area */}
+      <motion.div
+        whileTap={{ scale: 0.96 }}
+        onClick={() => onSelect(profile)}
+        style={{
+          position: "relative",
+          width: "100%",
+          paddingBottom: "133%",
+          borderRadius: hasHeartButton ? "12px 12px 0 0" : 12,
+          overflow: "hidden",
+          border: status === "online"
+            ? "2px solid rgba(244,114,182,0.9)"
+            : "1.5px solid rgba(255,255,255,0.12)",
+          borderBottom: hasHeartButton ? "none" : undefined,
+          background: "#111",
+          cursor: "pointer",
+          boxShadow: status === "online"
+            ? "0 0 0 0 rgba(244,114,182,0.5)"
+            : "none",
+          animation: status === "online" ? "card-heartbeat 1.8s ease-in-out infinite" : "none",
+        }}
+      >
+        <div style={{ position: "absolute", inset: 0 }}>
+          <img
+            src={src}
+            alt={profile.name}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 0%", display: "block" }}
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              if (!img.src.endsWith("/placeholder.svg")) img.src = "/placeholder.svg";
+            }}
+          />
 
-        {/* Bottom gradient */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0,
-          background: "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.25) 60%, transparent 100%)",
-          padding: "22px 6px 6px",
-        }}>
-          <p style={{ color: "white", fontWeight: 800, fontSize: 11, margin: 0, lineHeight: 1.25, textShadow: "0 1px 3px rgba(0,0,0,0.9)", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-            {profile.name}{profile.age ? `, ${profile.age}` : ""}
-          </p>
-          {profile.city && (
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, margin: 0, lineHeight: 1.2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
-              {profile.city}
+          {/* Bottom gradient + name */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0,
+            background: "linear-gradient(to top, rgba(0,0,0,0.90) 0%, rgba(0,0,0,0.25) 60%, transparent 100%)",
+            padding: "22px 6px 6px",
+          }}>
+            <p style={{ color: "white", fontWeight: 800, fontSize: 11, margin: 0, lineHeight: 1.25, textShadow: "0 1px 3px rgba(0,0,0,0.9)", overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+              {(profile.name || "").split(" ")[0]}{profile.age ? `, ${profile.age}` : ""}
             </p>
-          )}
-        </div>
-
-        {/* Status dot — green online / orange busy */}
-        {status !== "offline" && (
-          <span style={{
-            position: "absolute", top: 6, right: 6,
-            width: 9, height: 9, borderRadius: "50%",
-            background: status === "online" ? "#4ade80" : "#fb923c",
-            border: "1.5px solid rgba(0,0,0,0.55)",
-            display: "block",
-            animation: "browse-pulse 1.6s ease-in-out infinite",
-            boxShadow: status === "online"
-              ? "0 0 0 0 rgba(74,222,128,0.7)"
-              : "0 0 0 0 rgba(251,146,60,0.7)",
-          }} />
-        )}
-
-        {/* Image progress dots */}
-        {imgList.length > 1 && (
-          <div style={{ position: "absolute", top: 5, left: 5, display: "flex", gap: 3 }}>
-            {imgList.slice(0, 4).map((_, di) => (
-              <span key={di} style={{
-                width: 4, height: 4, borderRadius: "50%",
-                background: di === imgIdx % Math.min(imgList.length, 4) ? "white" : "rgba(255,255,255,0.3)",
-                display: "block", transition: "background 0.3s",
-              }} />
-            ))}
+            {profile.city && (
+              <p style={{ color: "rgba(255,255,255,0.5)", fontSize: 9, margin: 0, lineHeight: 1.2, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                {profile.city}
+              </p>
+            )}
           </div>
-        )}
-      </div>
-    </motion.div>
+
+          {/* Mode badge */}
+          {(showTonightBadge || showWeekendBadge || showPlus1Badge) && (
+            <div style={{
+              position: "absolute", top: 6, left: 6,
+              background: showTonightBadge ? "rgba(234,179,8,0.92)"
+                : showWeekendBadge ? "rgba(99,102,241,0.92)"
+                : "rgba(236,72,153,0.92)",
+              backdropFilter: "blur(6px)",
+              borderRadius: 5, padding: "2px 6px",
+              fontSize: 8, fontWeight: 800,
+              color: showTonightBadge ? "#1a1000" : "#fff",
+              letterSpacing: "0.04em",
+            }}>
+              {showTonightBadge ? "🌙 TONIGHT" : showWeekendBadge ? "📅 WEEKEND" : "➕ PLUS 1"}
+            </div>
+          )}
+
+          {/* Status dot — green pulsing when online */}
+          {status === "online" && (
+            <span style={{
+              position: "absolute", top: 7, right: 7,
+              width: 11, height: 11, borderRadius: "50%",
+              background: "#4ade80",
+              border: "2px solid rgba(0,0,0,0.8)",
+              display: "block",
+              animation: "dot-pulse 1.6s ease-in-out infinite",
+              boxShadow: "0 0 8px 2px rgba(74,222,128,0.9)",
+            }} />
+          )}
+
+          {/* Finger-tap view button — bottom right */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onSelect(profile); }}
+            style={{
+              position: "absolute", bottom: 8, right: 7,
+              width: 28, height: 28, borderRadius: "50%",
+              background: "rgba(255,255,255,0.18)",
+              backdropFilter: "blur(8px)",
+              border: "1.5px solid rgba(255,255,255,0.35)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", fontSize: 14,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+            }}
+          >
+            👆
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Heart invite button */}
+      {hasHeartButton && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onHeartPress!(profile); }}
+          style={{
+            width: "100%", padding: "8px 0",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+            background: isLiked ? "rgba(236,72,153,0.25)" : "rgba(0,0,0,0.55)",
+            border: "1.5px solid rgba(255,255,255,0.12)",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "0 0 12px 12px",
+            cursor: isLiked ? "default" : "pointer",
+            transition: "background 0.2s",
+          }}
+        >
+          <Heart
+            size={15}
+            color={isLiked ? "#f472b6" : "rgba(255,255,255,0.45)"}
+            fill={isLiked ? "#f472b6" : "none"}
+            style={{ transition: "all 0.2s" }}
+          />
+          <span style={{ fontSize: 10, fontWeight: 700, color: isLiked ? "#f472b6" : "rgba(255,255,255,0.45)" }}>
+            {isLiked ? "Invited" : "Invite"}
+          </span>
+        </button>
+      )}
+    </div>
   );
 });
 
-function MemberBrowser({ profiles, onClose, onSelect }: {
+function MemberBrowser({ profiles, onClose, onSelect, currentUserId, currentUserCoins, onCoinsSpent, initialMode }: {
   profiles: any[];
   onClose: () => void;
   onSelect: (p: any) => void;
+  currentUserId: string;
+  currentUserCoins: number;
+  onCoinsSpent: (amount: number) => void;
+  initialMode?: "grid" | "tonight" | "weekend" | "plus1";
 }) {
+  const [browseMode, setBrowseMode] = useState<"grid" | "tonight" | "weekend" | "plus1">(initialMode ?? "grid");
+  const [requestTarget, setRequestTarget] = useState<any>(null);
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+
+  const MODES = [
+    { key: "grid",    img: "https://ik.imagekit.io/dateme/Thoughtful%20teddy%20bear%20with%20glowing%20stars.png?updatedAt=1774983728232", label: "Online Profiles" },
+    { key: "tonight", img: "https://ik.imagekit.io/dateme/Free%20tonight%20celebration%20with%20bear.png?updatedAt=1774983850249", label: "Tonight" },
+    { key: "weekend", img: "https://ik.imagekit.io/dateme/Weekend%20celebration%20with%20teddy%20bear%20joy.png?updatedAt=1774983752349", label: "Weekend" },
+    { key: "plus1",   img: "https://ik.imagekit.io/dateme/Teddy%20bear%20celebrates%20with%20_+1_%20sign.png?updatedAt=1774983776229", label: "+1" },
+  ] as const;
+
+  const sortOnlineFirst = (arr: any[]) => {
+    const now = Date.now();
+    return [...arr].sort((a, b) => {
+      const aOnline = a.last_seen_at ? (now - new Date(a.last_seen_at).getTime()) < 5 * 60000 : false;
+      const bOnline = b.last_seen_at ? (now - new Date(b.last_seen_at).getTime()) < 5 * 60000 : false;
+      return (bOnline ? 1 : 0) - (aOnline ? 1 : 0);
+    });
+  };
+
+  const displayProfiles =
+    browseMode === "tonight" ? sortOnlineFirst(profiles.filter((p: any) => p.available_tonight)) :
+    browseMode === "weekend" ? sortOnlineFirst(profiles.filter((p: any) => p.weekend_plans)) :
+    browseMode === "plus1"   ? sortOnlineFirst(profiles.filter((p: any) => p.is_plusone)) :
+    profiles;
+
+  const handleCardTap = (profile: any) => {
+    onSelect(profile);
+  };
+
+  const handleHeartPress = (profile: any) => {
+    if (likedIds.has(profile.id)) return;
+    setLikedIds(prev => new Set([...prev, profile.id]));
+    setRequestTarget(profile);
+  };
+
   return (
     <motion.div
       key="member-browser"
@@ -2661,18 +2744,19 @@ function MemberBrowser({ profiles, onClose, onSelect }: {
       style={{
         position: "fixed", inset: 0, zIndex: 80,
         display: "flex", flexDirection: "column",
-        backgroundImage: "url('/images/app-background.png')",
+        backgroundImage: "url('https://ik.imagekit.io/dateme/Untitledfdsfsdfdsfsdfgdsds.png')",
         backgroundSize: "cover", backgroundPosition: "center",
       }}
     >
-      {/* Header — transparent so wrapper's app-background.png shows through */}
+      {/* Dark shade overlay — behind header/grid only */}
+      <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 0, pointerEvents: "none" }} />
+      {/* Header — transparent so wrapper's bg shows through */}
       <header style={{
         position: "relative", zIndex: 2, flexShrink: 0,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         paddingTop: "max(44px, env(safe-area-inset-top, 44px))",
         paddingLeft: 16, paddingRight: 16, paddingBottom: 12,
         background: "transparent",
-        borderBottom: "1px solid rgba(255,255,255,0.12)",
       }}>
         {/* Left: logo + app name */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -2683,8 +2767,11 @@ function MemberBrowser({ profiles, onClose, onSelect }: {
           />
           <div>
             <span style={{ color: "white", fontWeight: 900, fontSize: 18, letterSpacing: "-0.01em", lineHeight: 1, display: "block" }}>{APP_NAME}</span>
-            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 10, fontWeight: 600 }}>
-              {profiles.length} members
+            <span style={{ color: "rgba(255,255,255,0.65)", fontSize: 10, fontWeight: 600 }}>
+              {browseMode === "tonight" ? "Profiles Free Tonight"
+               : browseMode === "weekend" ? "Weekend Free"
+               : browseMode === "plus1"   ? "Ready To Accompany You"
+               : "Profiles Online Now"}
             </span>
           </div>
         </div>
@@ -2704,30 +2791,118 @@ function MemberBrowser({ profiles, onClose, onSelect }: {
         </button>
       </header>
 
-      {/* Scrollable grid */}
-      <div
-        style={{
-          position: "relative", zIndex: 1,
-          flex: 1, overflowY: "auto", overflowX: "hidden",
-          padding: "10px",
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "6px",
-          alignContent: "start",
-          paddingBottom: "max(10px, env(safe-area-inset-bottom, 10px))",
-          background: "transparent",
-        }}
-      >
-        {profiles.map((profile) => (
-          <BrowseCard key={profile.id} profile={profile} onSelect={onSelect} />
-        ))}
+      {/* ── Mode Circles ─────────────────────────────────────────────── */}
+      <div style={{
+        display: "flex", justifyContent: "center", gap: 20,
+        padding: "14px 16px 10px", flexShrink: 0,
+        position: "relative", zIndex: 2,
+      }}>
+        {MODES.map(({ key, img, label }) => {
+          const active = browseMode === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setBrowseMode(key)}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+                background: "none", border: "none", cursor: "pointer", padding: 0,
+              }}
+            >
+              <div style={{
+                width: 62, height: 62, borderRadius: "50%",
+                overflow: "hidden",
+                border: active
+                  ? "2.5px solid rgba(251,191,36,0.9)"
+                  : "1.5px solid rgba(255,255,255,0.18)",
+                boxShadow: active ? "0 0 18px rgba(234,179,8,0.5)" : "none",
+                transition: "all 0.18s",
+                flexShrink: 0,
+              }}>
+                <img src={img} alt={label} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              </div>
+              <span style={{
+                color: active ? "#fbbf24" : "rgba(255,255,255,0.55)",
+                fontSize: 10, fontWeight: 700,
+                transition: "color 0.18s",
+              }}>
+                {label}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
+      {/* Scrollable grid */}
+      {displayProfiles.length === 0 && browseMode !== "grid" ? (
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 12, color: "rgba(255,255,255,0.4)" }}>
+          <span style={{ fontSize: 48 }}>
+            {browseMode === "tonight" ? "🌙" : browseMode === "weekend" ? "📅" : "➕"}
+          </span>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, textAlign: "center" }}>
+            {browseMode === "tonight" ? "No one is free tonight yet" :
+             browseMode === "weekend" ? "No weekend plans yet" :
+             "No +1 requests yet"}
+          </p>
+          <p style={{ margin: 0, fontSize: 12, textAlign: "center", maxWidth: 220 }}>
+            {browseMode === "tonight" ? "Check back later or turn on your Free Tonight badge" :
+             browseMode === "weekend" ? "Check back later or add your Weekend Plans" :
+             "Check back later or add your +1 preference"}
+          </p>
+        </div>
+      ) : (
+        <div
+          style={{
+            position: "relative", zIndex: 1,
+            flex: 1, overflowY: "auto", overflowX: "hidden",
+            padding: "10px",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "6px",
+            alignContent: "start",
+            paddingBottom: "max(10px, env(safe-area-inset-bottom, 10px))",
+            background: "transparent",
+          }}
+        >
+          {displayProfiles.map((profile: any) => (
+            <BrowseCard
+              key={profile.id}
+              profile={profile}
+              onSelect={handleCardTap}
+              showTonightBadge={browseMode === "tonight"}
+              showWeekendBadge={browseMode === "weekend"}
+              showPlus1Badge={browseMode === "plus1"}
+              isLiked={likedIds.has(profile.id)}
+              onHeartPress={handleHeartPress}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Tonight invite modal */}
+      <TonightRequestModal
+        open={!!requestTarget}
+        profile={requestTarget}
+        currentUserId={currentUserId}
+        currentUserCoins={currentUserCoins}
+        onClose={() => setRequestTarget(null)}
+        onSent={(_profileId, coinsSpent) => {
+          onCoinsSpent(coinsSpent);
+          setRequestTarget(null);
+        }}
+      />
+
       <style>{`
-        @keyframes browse-pulse {
-          0%   { box-shadow: 0 0 0 0 var(--pulse-color, rgba(74,222,128,0.7)); }
-          60%  { box-shadow: 0 0 0 5px transparent; }
-          100% { box-shadow: 0 0 0 0 transparent; }
+        @keyframes dot-pulse {
+          0%   { box-shadow: 0 0 0 0 rgba(74,222,128,0.8); }
+          60%  { box-shadow: 0 0 0 5px rgba(74,222,128,0); }
+          100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); }
+        }
+        @keyframes card-heartbeat {
+          0%   { box-shadow: 0 0 0 0 rgba(244,114,182,0.7); }
+          25%  { box-shadow: 0 0 8px 4px rgba(244,114,182,0.4); }
+          50%  { box-shadow: 0 0 0 0 rgba(244,114,182,0); }
+          75%  { box-shadow: 0 0 6px 3px rgba(244,114,182,0.3); }
+          100% { box-shadow: 0 0 0 0 rgba(244,114,182,0); }
         }
       `}</style>
     </motion.div>

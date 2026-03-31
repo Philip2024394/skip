@@ -172,7 +172,7 @@ export default function LikesCarousel(props: LikesCarouselProps) {
 
             <p className="text-white text-[10px] font-semibold truncate w-full text-center"
               style={isBlurredLike ? { filter: "blur(5px)", userSelect: "none" } : undefined}>
-              {firstName(profile.name)}, {profile.age}
+              {profile.name}, {profile.age}
             </p>
 
             {props.tab === "new" ? (

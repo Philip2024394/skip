@@ -121,6 +121,7 @@ interface ProfileData {
   orientation: string;
   contact_preference: string;
   contact_provider: string;
+  mobile_carrier: string | null;
   contact_confirmed: boolean;
   contact_locked: boolean;
   contact_unlock_requested: boolean;
@@ -832,7 +833,7 @@ const ProfileEditor = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
                     <div className="absolute bottom-3 left-3 pointer-events-none">
                       <p className="font-display font-bold text-lg text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">
-                        {firstName(profile.name)}, {profile.age}
+                        {profile.name}, {profile.age}
                       </p>
                       <p className="text-white/80 text-xs flex items-center gap-1 mt-0.5">
                         <MapPin className="w-3 h-3" /> {profile.city || "Your city"}, {profile.country}
@@ -1168,7 +1169,7 @@ const ProfileEditor = () => {
                   <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">Mobile carrier (Indonesia)</p>
                   <select
                     value={profile.mobile_carrier ?? ""}
-                    onChange={e => update("mobile_carrier" as any, e.target.value || null)}
+                    onChange={e => update("mobile_carrier", e.target.value || null)}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm appearance-none"
                   >
                     <option value="" className="bg-[#1a1a1a]">Select your carrier…</option>
@@ -1633,34 +1634,6 @@ const ProfileEditor = () => {
             )}
           </div>
 
-          {/* Generous Lifestyle badge */}
-          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Gift className="w-4 h-4 text-amber-400" />
-                <div>
-                  <p className="text-white text-sm font-medium">Generous Lifestyle</p>
-                  <p className="text-white/40 text-[10px]">You enjoy treating companions to dinners, events & memorable experiences</p>
-                </div>
-              </div>
-              <Switch
-                checked={profile.generous_lifestyle}
-                onCheckedChange={(checked) => {
-                  update("generous_lifestyle", checked);
-                  if (checked) clearOtherBadges("generous_lifestyle");
-                }}
-              />
-            </div>
-            {profile.generous_lifestyle && (
-              <div className="flex items-start gap-1.5 bg-amber-500/10 border border-amber-400/30 rounded-lg px-2.5 py-1.5">
-                <Gift className="w-3 h-3 text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-amber-300 text-[10px] leading-relaxed">
-                  Your <span className="font-bold">Generous Lifestyle</span> badge is live. It signals that you enjoy sharing experiences and thoughtful gestures—no expectations or obligations.
-                </p>
-              </div>
-            )}
-          </div>
-
           {/* Weekend Plans badge */}
           <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
             <div className="flex items-center justify-between">
@@ -1696,26 +1669,6 @@ const ProfileEditor = () => {
                 onCheckedChange={(checked) => {
                   update("late_night_chat", checked);
                   if (checked) clearOtherBadges("late_night_chat");
-                }}
-              />
-            </div>
-          </div>
-
-          {/* No Drama badge */}
-          <div className="rounded-xl p-3 space-y-2 bg-white/5 border border-white/10">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-yellow-400" />
-                <div>
-                  <p className="text-white text-sm font-medium">No Drama</p>
-                  <p className="text-white/40 text-[10px]">Prefer relaxed, positive & respectful connections</p>
-                </div>
-              </div>
-              <Switch
-                checked={profile.no_drama}
-                onCheckedChange={(checked) => {
-                  update("no_drama", checked);
-                  if (checked) clearOtherBadges("no_drama");
                 }}
               />
             </div>

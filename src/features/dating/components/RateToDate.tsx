@@ -1206,7 +1206,7 @@ export default function RateToDate({ userId, onClose, onStartChat }: Props) {
                     {/* Info */}
                     <div style={{ position: "absolute", bottom: 10, left: 10, right: 10, textAlign: "left" }}>
                       <div style={{ fontSize: 13, fontWeight: 800, color: "white", lineHeight: 1 }}>
-                        {p.name.split(" ")[0]}
+                        {p.name}
                       </div>
                       <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", marginTop: 3 }}>
                         {p.age} · {p.city ?? p.country}

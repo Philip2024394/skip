@@ -691,7 +691,14 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     const offset = () => ((fi * 17 + 3) % 100 - 50) / 100 * 0.6;
     const latitude = lat + offset();
     const longitude = lng + offset();
-    const { last_seen_at } = computeOnlineStatus(fi, "Female");
+    const { last_seen_at: _f_last_seen } = computeOnlineStatus(fi, "Female");
+    // Force half of tonight/weekend profiles always online — they're actively using the app
+    const fIsTonight = fi % 3 === 0;
+    const fIsWeekend = fi % 7 === 1;
+    const fForceOnline = (fIsTonight && fi % 2 === 0) || (fIsWeekend && fi % 2 === 0);
+    const last_seen_at = fForceOnline
+      ? new Date(Date.now() - (fi % 7) * 20_000).toISOString()
+      : _f_last_seen;
     const imgUrl = FEMALE_IMAGES_UNSPLASH[fi % FEMALE_IMAGES_UNSPLASH.length];
     const extraLangs = EXTRA_LANGS_POOL[fi % EXTRA_LANGS_POOL.length];
 
@@ -760,7 +767,14 @@ export const generateIndonesianProfiles = (_count?: number): Profile[] => {
     const offset = () => ((mi * 13 + 7) % 100 - 50) / 100 * 0.6;
     const latitude = lat + offset();
     const longitude = lng + offset();
-    const { last_seen_at } = computeOnlineStatus(mi, "Male");
+    const { last_seen_at: _m_last_seen } = computeOnlineStatus(mi, "Male");
+    // Force half of tonight/weekend profiles always online
+    const mIsTonight = mi % 4 === 0;
+    const mIsWeekend = mi % 5 === 3;
+    const mForceOnline = (mIsTonight && mi % 2 === 0) || (mIsWeekend && mi % 2 === 1);
+    const last_seen_at = mForceOnline
+      ? new Date(Date.now() - (mi % 7) * 20_000).toISOString()
+      : _m_last_seen;
     const imgUrl = MALE_IMAGES_UNSPLASH[mi % MALE_IMAGES_UNSPLASH.length];
     const extraLangs = EXTRA_LANGS_POOL[mi % EXTRA_LANGS_POOL.length];
 

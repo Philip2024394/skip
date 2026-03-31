@@ -533,7 +533,7 @@ export default function SwipeStack({
                 {profile.is_verified && (
                   <BadgeCheck className="w-5 h-5 text-yellow-400 drop-shadow-[0_0_6px_rgba(250,204,21,0.8)] flex-shrink-0" />
                 )}
-                {firstName(profile.name)}, {profile.age}
+                {profile.name}, {profile.age}
                 <ProfileBadge profile={profile} isProfilePage={false} />
               </h3>
               {(profile.is_mock && (profile as any).mock_online_hours

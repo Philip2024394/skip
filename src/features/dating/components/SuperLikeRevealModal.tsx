@@ -117,7 +117,7 @@ export default function SuperLikeRevealModal({ profile, onComplete }: SuperLikeR
               className="w-full h-full object-cover"
             />
           </div>
-          <p className="text-white font-display font-bold text-xl mt-3">{firstName(profile.name)}</p>
+          <p className="text-white font-display font-bold text-xl mt-3">{profile.name}</p>
           <p className="text-amber-300/90 text-sm">Super Liked you! ⭐</p>
         </motion.div>
 

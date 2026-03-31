@@ -1205,7 +1205,7 @@ function BlindDateCard({ profile, stackIndex, revealedBlur, unlocked, isFeatured
           <div style={{ flex: 1, minWidth: 0 }}>
             {/* Name + age */}
             <div style={{ fontSize: 24, fontWeight: 800, color: "white", lineHeight: 1.1 }}>
-              {profile.name.split(" ")[0]}<span style={{ fontWeight: 400, fontSize: 20, color: "rgba(255,255,255,0.75)" }}>, {profile.age}</span>
+              {profile.name}<span style={{ fontWeight: 400, fontSize: 20, color: "rgba(255,255,255,0.75)" }}>, {profile.age}</span>
             </div>
             {/* City */}
             {profile.city && (
