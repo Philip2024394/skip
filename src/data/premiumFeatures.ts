@@ -122,9 +122,9 @@ export const PREMIUM_FEATURES: PremiumFeature[] = [
     // ⚠️ BEFORE LAUNCH: Create a Plus-One Premium one-time price in Stripe dashboard
     // and replace the priceId and productId below with the real values.
     id: "plusone",
-    name: "Plus-One Premium",
+    name: "Plus One",
     emoji: "🎫",
-    description: "Your trusted companion for events & outings. Connect via WhatsApp to coordinate plans and enjoy experiences together.",
+    description: "Show you enjoy social experiences and meeting new people. Connect with like-minded members looking for genuine friendships.",
     price: "$34.99",
     priceCents: 3499,
     priceId: import.meta.env.VITE_STRIPE_PRICE_PLUSONE ?? "price_plusone_premium",
@@ -132,11 +132,11 @@ export const PREMIUM_FEATURES: PremiumFeature[] = [
     color: "fresh",
     icon: "calendar",
     perks: [
-      "🎫 Plus-One badge on your profile",
-      "💬 WhatsApp connection for fast coordination",
-      "🍽 Dinners, weddings, concerts & more",
-      "✈️ Travel outings & social gatherings",
-      "🤝 Great company, no pressure — events & experiences",
+      "🎫 Plus One badge visible on your profile",
+      "💬 WhatsApp connection for easy coordination",
+      "🌍 Connect with social, outgoing members",
+      "🤝 Build real friendships through shared interests",
+      "✅ Non-commercial — genuine connections only",
     ],
   },
   {

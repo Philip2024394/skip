@@ -53,12 +53,12 @@ const featureDetails: Record<string, { bullets: string[]; tagline: string }> = {
     ],
   },
   plusone: {
-    tagline: "Great company for events & experiences.",
+    tagline: "Meet social, outgoing people — genuine connections only.",
     bullets: [
-      "🎫 Plus-One badge on your profile",
-      "💬 WhatsApp connection for fast coordination",
-      "🍽 Dinners, weddings, concerts & more",
-      "🤝 Events and outings — no pressure, just good company",
+      "🎫 Plus One badge visible on your profile",
+      "💬 WhatsApp connection for easy coordination",
+      "🌍 Connect with like-minded, social members",
+      "🤝 Real friendships — non-commercial, no arrangements",
     ],
   },
 };

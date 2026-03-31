@@ -121,15 +121,15 @@ const BADGE_INFO: Record<string, { icon: string; label: string; meaning: string;
   },
   is_plusone: {
     icon: "✚",
-    label: "+1 Plus One",
-    meaning: "This person is looking for someone to come with them as a plus one. It could be a dinner, event, gathering, or outing. They are open to freely accommodating you as a close friend — no strings attached, just good company.",
-    tip: "Ask what the event is — easy conversation starter!",
+    label: "Plus One",
+    meaning: "This person enjoys social settings and is open to building genuine friendships through shared experiences. They are looking for real, mutual connections — not any form of paid or arranged arrangement.",
+    tip: "Ask what kind of social activities they enjoy most.",
   },
   generous_lifestyle: {
     icon: "🎁",
-    label: "Generous",
-    meaning: "This person has a generous approach and genuinely enjoys treating others. They appreciate quality experiences and like going the extra mile to make someone feel special. They value giving as much as connection.",
-    tip: "Share what experiences you enjoy most.",
+    label: "Generous Spirit",
+    meaning: "This person is warm, kind, and naturally thoughtful in how they connect with people. They care about making others feel valued through genuine attention and kindness — it's a personality trait, not a financial one.",
+    tip: "Ask what matters most to them in a connection.",
   },
   weekend_plans: {
     icon: "📅",

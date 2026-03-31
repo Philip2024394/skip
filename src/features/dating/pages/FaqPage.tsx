@@ -135,8 +135,8 @@ const FAQ_SECTIONS: FaqSection[] = [
     color: "text-pink-400",
     items: [
       {
-        q: "What is +1 Plus One?",
-        a: "The Plus-One option is for profiles who enjoy being part of social occasions and good company but are not currently looking for a traditional date or a serious relationship.\n\nPeople who select this option prefer a more relaxed connection. They may be open to attending events, dinners, gatherings, or special occasions as a companion, without the expectation of constant communication or romantic commitment.\n\nIn many cases, Plus-One members may be shy about dating or new to the dating world. This feature allows them to connect with others in a comfortable, low-pressure way. Over time, these connections may naturally grow into friendship, closer companionship, or potentially a relationship if both people feel the same.\n\nBecause many Plus-One profiles may have limited dating experience, it's important to approach them with respect, patience, and emotional consideration.",
+        q: "What is Plus One?",
+        a: "The Plus One option is for members who enjoy social settings and meeting new people but are not currently looking for a traditional romantic relationship.\n\nPeople who select this option are open to building genuine friendships and real connections through shared activities and social experiences. This is about finding like-minded people to enjoy life with — not a paid or arranged social service of any kind.\n\n2DateMe strictly prohibits any financial exchange between members for social activities, outings, or companionship. All connections made through this feature must be entirely voluntary, mutual, and non-commercial.\n\nApproach Plus One members with the same respect, honesty, and patience you would with any other member. Over time, these connections may grow naturally into friendship or a relationship if both people feel the same way.",
       },
     ],
   },
@@ -146,8 +146,8 @@ const FAQ_SECTIONS: FaqSection[] = [
     color: "text-pink-400",
     items: [
       {
-        q: "What does the \"Generous Lifestyle\" badge mean?",
-        a: "The Generous Lifestyle badge indicates that a member enjoys sharing experiences and may like treating their companion to things such as dinners, events, travel, or special outings.\n\nMembers who select this badge often appreciate traditional gestures of generosity and enjoy creating memorable moments when spending time with someone. It reflects a lifestyle preference where kindness, appreciation, and thoughtful experiences are part of the connection.\n\nThis badge does not imply any expectations or obligations between members. It simply helps people understand each other's lifestyle preferences and dating style. All interactions should remain respectful, genuine, and based on mutual interest.",
+        q: "What does the \"Generous Spirit\" badge mean?",
+        a: "The Generous Spirit badge reflects a member's personality — someone who is naturally warm, kind, and thoughtful in the way they connect with others.\n\nThis is a character trait, not a financial statement. It means this person values genuine connection and enjoys showing appreciation through kindness, care, and thoughtful gestures that are personal rather than transactional.\n\nThis badge does not imply any financial arrangements, obligations, or expectations between members. All interactions on 2DateMe must remain respectful, consensual, and based on mutual interest. No member may exchange money or gifts in expectation of companionship, dates, or any form of social engagement.",
       },
       {
         q: "What does the \"Weekend Plans\" badge mean?",

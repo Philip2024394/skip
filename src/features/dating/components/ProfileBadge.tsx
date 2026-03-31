@@ -54,8 +54,8 @@ export default function ProfileBadge({ profile, t, isProfilePage = false }: Prof
   const labels: Record<string, { icon: string; label: string }> = {
     is_visiting: { icon: "", label: visitingLabel },
     available_tonight: { icon: "", label: t?.("popup.freeTonight") ?? "Free Tonight" },
-    is_plusone: { icon: "", label: "+1 Plus One" },
-    generous_lifestyle: { icon: "", label: "Generous" },
+    is_plusone: { icon: "", label: "Plus One" },
+    generous_lifestyle: { icon: "", label: "Generous Spirit" },
     weekend_plans: { icon: "", label: "Weekend Plans" },
     late_night_chat: { icon: "", label: "Late Night" },
     no_drama: { icon: "", label: "No Drama" },
