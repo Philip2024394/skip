@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Unlock, Clock, Sparkles, MapPin, Star, CalendarDays, MoonStar, ShieldCheck } from "lucide-react";
+import LikesVault from "@/features/dating/components/LikesVault";
 import { Profile } from "./SwipeCard";
 import LikesCarousel from "@/features/dating/components/likes-library/LikesCarousel";
 import { Button } from "@/shared/components/button";
@@ -56,6 +57,7 @@ interface LikesLibraryProps {
   onSelectProfile: (profile: Profile, sourceList: Profile[]) => void;
   onPurchaseFeature: (feature: PremiumFeature) => void;
   onCulturalGuide?: () => void;
+  onBuyCoins?: () => void;
 }
 
 type Tab = "sent" | "received" | "new" | "treat" | "match" | "distance" | "gifts" | "video";
@@ -109,7 +111,7 @@ const LikesLibrary = ({
   hidePrivateTabs,
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
-  onUnlock, onChat, onSelectProfile, onPurchaseFeature, onCulturalGuide,
+  onUnlock, onChat, onSelectProfile, onPurchaseFeature, onCulturalGuide, onBuyCoins,
 }: LikesLibraryProps) => {
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
@@ -294,45 +296,15 @@ const LikesLibrary = ({
         </div>
       </div>
 
-      {/* ── Blurred Likes Me upsell banner ── */}
-      <AnimatePresence>
-        {tab === "received" && likedMe.length > 0 && likedMe.some(p => !iLiked.some(l => l.id === p.id)) && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-2 mb-2 flex-shrink-0 overflow-hidden"
-          >
-            <div style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 8,
-              background: "linear-gradient(135deg, rgba(236,72,153,0.12), rgba(168,85,247,0.12))",
-              border: "1px solid rgba(236,72,153,0.22)",
-              borderRadius: 10, padding: "6px 10px",
-            }}>
-              <span style={{ fontSize: 14 }}>👑</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ color: "white", fontSize: 10, fontWeight: 800, margin: 0 }}>
-                  {likedMe.filter(p => !iLiked.some(l => l.id === p.id)).length} people liked you
-                </p>
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 9, margin: 0 }}>
-                  Match back or upgrade VIP to see who
-                </p>
-              </div>
-              <button
-                onClick={() => onPurchaseFeature(PREMIUM_FEATURES.find(f => f.id === "vip") ?? PREMIUM_FEATURES[0])}
-                style={{
-                  background: "linear-gradient(135deg,#ec4899,#a855f7)",
-                  border: "none", borderRadius: 8, padding: "4px 10px",
-                  color: "white", fontSize: 9, fontWeight: 800, cursor: "pointer",
-                  flexShrink: 0,
-                }}
-              >
-                Unlock
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* ── Likes Vault (blurred coin-reveal vault) ── */}
+      {tab === "received" && currentUserId && likedMe.length > 0 && (
+        <LikesVault
+          userId={currentUserId}
+          likedMeProfiles={likedMe}
+          onSelectProfile={(p) => onSelectProfile(p as Profile, likedMe)}
+          onBuyCoins={onBuyCoins ?? (() => onPurchaseFeature(PREMIUM_FEATURES.find(f => f.id === "vip") ?? PREMIUM_FEATURES[0]))}
+        />
+      )}
 
       {/* ── New profiles label ── */}
       <AnimatePresence>

@@ -84,6 +84,12 @@ import RateToDate from "@/features/dating/components/RateToDate";
 import { FEATURE_UNLOCKS } from "@/shared/components/FeatureJourneyBanner";
 import CityProgressBanner from "@/shared/components/CityProgressBanner";
 import { useCityLaunch } from "@/shared/hooks/useCityLaunch";
+import { useScoredFeed } from "@/shared/hooks/useScoredFeed";
+import { useFrustrationDetector } from "@/shared/hooks/useFrustrationDetector";
+import DailyBoostButton from "@/features/dating/components/DailyBoostButton";
+import NewUserBoostBanner from "@/features/dating/components/NewUserBoostBanner";
+import FrustrationModal from "@/features/dating/components/FrustrationModal";
+import ScoreRing from "@/features/dating/components/ScoreRing";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -314,6 +320,15 @@ const Index = () => {
   const [filters, setFilters] = useState<FilterState>(() => defaultFilters);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
+  // ── Monetization / retention engine ──────────────────────────────────────────
+  const { sortProfiles, fetchFeed, getHopeInjectProfile } = useScoredFeed(user?.id ?? null);
+  const { frustration, onSwipe: onFrustrationSwipe, onMatch: onFrustrationMatch, onVaultPeek, dismiss: dismissFrustration, clearHopeInject } = useFrustrationDetector(user?.id ?? null);
+
+  // Fetch scored feed on mount
+  useEffect(() => {
+    if (user?.id) fetchFeed({ country: filters.country ?? null, genderFilter: filters.gender ?? null });
+  }, [user?.id, fetchFeed, filters.country, filters.gender]);
+
   // Load blocked user IDs so they are filtered from the feed
   useEffect(() => {
     if (!user) return;
@@ -423,6 +438,9 @@ const Index = () => {
     });
   }, [allProfiles, filters, blockedIds, userLookingFor]);
 
+  // ── Score-sorted feed ────────────────────────────────────────────────────
+  const scoredProfiles = useMemo(() => sortProfiles(filteredProfiles), [sortProfiles, filteredProfiles]);
+
   // ── Stable randomised queue ──────────────────────────────────────────────
   // Shuffled ONCE per session. Persists across dashboard/map navigation via
   // sessionStorage so the same order isn't replayed on remount.
@@ -450,24 +468,24 @@ const Index = () => {
     return a;
   };
 
-  // Build/restore independent queues for top and bottom whenever filteredProfiles changes
+  // Build/restore independent queues for top and bottom whenever scoredProfiles changes
   useEffect(() => {
-    if (filteredProfiles.length === 0) return;
+    if (scoredProfiles.length === 0) return;
 
     // Initialize independent queues for top and bottom
     const topStored = sessionStorage.getItem("top_swipe_queue_ids");
     const topSeenStored = sessionStorage.getItem("top_swipe_seen_ids");
-    if (topStored) topShuffledQueueRef.current = filteredProfiles.filter(p => JSON.parse(topStored).includes(p.id));
+    if (topStored) topShuffledQueueRef.current = scoredProfiles.filter(p => JSON.parse(topStored).includes(p.id));
     if (topSeenStored) topSeenIdsRef.current = new Set(JSON.parse(topSeenStored));
 
     const bottomStored = sessionStorage.getItem("bottom_swipe_queue_ids");
     const bottomSeenStored = sessionStorage.getItem("bottom_swipe_seen_ids");
-    if (bottomStored) bottomShuffledQueueRef.current = filteredProfiles.filter(p => JSON.parse(bottomStored).includes(p.id));
+    if (bottomStored) bottomShuffledQueueRef.current = scoredProfiles.filter(p => JSON.parse(bottomStored).includes(p.id));
     if (bottomSeenStored) bottomSeenIdsRef.current = new Set(JSON.parse(bottomSeenStored));
 
     // If no stored queues, create fresh independent shuffles with NO overlapping profiles
     if (topShuffledQueueRef.current.length === 0 || bottomShuffledQueueRef.current.length === 0) {
-      const shuffled = fisherYates(filteredProfiles);
+      const shuffled = fisherYates(scoredProfiles);
       const midPoint = Math.floor(shuffled.length / 2);
 
       // Split the shuffled array into two non-overlapping halves
@@ -475,11 +493,11 @@ const Index = () => {
       bottomShuffledQueueRef.current = shuffled.slice(midPoint);
 
       // Ensure both queues have at least some profiles
-      if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
-        topShuffledQueueRef.current = [filteredProfiles[0]];
+      if (topShuffledQueueRef.current.length === 0 && scoredProfiles.length > 0) {
+        topShuffledQueueRef.current = [scoredProfiles[0]];
       }
-      if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 1) {
-        bottomShuffledQueueRef.current = [filteredProfiles[1]];
+      if (bottomShuffledQueueRef.current.length === 0 && scoredProfiles.length > 1) {
+        bottomShuffledQueueRef.current = [scoredProfiles[1]];
       }
 
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
@@ -488,7 +506,7 @@ const Index = () => {
 
     // Trigger recompute of topProfiles/bottomProfiles
     setQueueTick(t => t + 1);
-  }, [filteredProfiles]);
+  }, [scoredProfiles]);
 
   // Advance the top queue — called by SwipeStack on each pass/like
   const advanceTopQueue = useCallback((profileId: string) => {
@@ -505,18 +523,18 @@ const Index = () => {
       sessionStorage.removeItem("bottom_swipe_seen_ids");
 
       // Reshuffle both queues with new non-overlapping profiles
-      const shuffled = fisherYates(filteredProfiles);
+      const shuffled = fisherYates(scoredProfiles);
       const midPoint = Math.floor(shuffled.length / 2);
 
       topShuffledQueueRef.current = shuffled.slice(0, midPoint);
       bottomShuffledQueueRef.current = shuffled.slice(midPoint);
 
       // Ensure both queues have profiles
-      if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
-        topShuffledQueueRef.current = [filteredProfiles[0]];
+      if (topShuffledQueueRef.current.length === 0 && scoredProfiles.length > 0) {
+        topShuffledQueueRef.current = [scoredProfiles[0]];
       }
-      if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
-        bottomShuffledQueueRef.current = [filteredProfiles[Math.min(1, filteredProfiles.length - 1)]];
+      if (bottomShuffledQueueRef.current.length === 0 && scoredProfiles.length > 0) {
+        bottomShuffledQueueRef.current = [scoredProfiles[Math.min(1, scoredProfiles.length - 1)]];
       }
 
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
@@ -524,7 +542,7 @@ const Index = () => {
     }
     // Trigger re-render so topProfiles/bottomProfiles recompute
     setQueueTick(t => t + 1);
-  }, [filteredProfiles]);
+  }, [scoredProfiles]);
 
   // Advance the bottom queue — called by SwipeStack on each pass/like
   const advanceBottomQueue = useCallback((profileId: string) => {
@@ -541,18 +559,18 @@ const Index = () => {
       sessionStorage.removeItem("bottom_swipe_seen_ids");
 
       // Reshuffle both queues with new non-overlapping profiles
-      const shuffled = fisherYates(filteredProfiles);
+      const shuffled = fisherYates(scoredProfiles);
       const midPoint = Math.floor(shuffled.length / 2);
 
       topShuffledQueueRef.current = shuffled.slice(0, midPoint);
       bottomShuffledQueueRef.current = shuffled.slice(midPoint);
 
       // Ensure both queues have profiles
-      if (topShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
-        topShuffledQueueRef.current = [filteredProfiles[0]];
+      if (topShuffledQueueRef.current.length === 0 && scoredProfiles.length > 0) {
+        topShuffledQueueRef.current = [scoredProfiles[0]];
       }
-      if (bottomShuffledQueueRef.current.length === 0 && filteredProfiles.length > 0) {
-        bottomShuffledQueueRef.current = [filteredProfiles[Math.min(1, filteredProfiles.length - 1)]];
+      if (bottomShuffledQueueRef.current.length === 0 && scoredProfiles.length > 0) {
+        bottomShuffledQueueRef.current = [scoredProfiles[Math.min(1, scoredProfiles.length - 1)]];
       }
 
       sessionStorage.setItem("top_swipe_queue_ids", JSON.stringify(topShuffledQueueRef.current.map(p => p.id)));
@@ -560,7 +578,7 @@ const Index = () => {
     }
     // Trigger re-render so bottomProfiles recompute
     setQueueTick(t => t + 1);
-  }, [filteredProfiles]);
+  }, [scoredProfiles]);
 
   // Legacy advanceQueue for compatibility
   const advanceQueue = useCallback((profileId: string) => {
@@ -569,9 +587,9 @@ const Index = () => {
 
   // Derive ordered top/bottom from independent queues, ensuring no overlap
   const { topProfiles, bottomProfiles } = useMemo(() => {
-    // Use filteredProfiles as immediate fallback before queues are built (first render)
-    const topQueue = topShuffledQueueRef.current.length > 0 ? topShuffledQueueRef.current : filteredProfiles;
-    const bottomQueue = bottomShuffledQueueRef.current.length > 0 ? bottomShuffledQueueRef.current : filteredProfiles;
+    // Use scoredProfiles as immediate fallback before queues are built (first render)
+    const topQueue = topShuffledQueueRef.current.length > 0 ? topShuffledQueueRef.current : scoredProfiles;
+    const bottomQueue = bottomShuffledQueueRef.current.length > 0 ? bottomShuffledQueueRef.current : scoredProfiles;
 
     const topUnseen = topQueue.filter(p => !topSeenIdsRef.current.has(p.id));
     const bottomUnseen = bottomQueue.filter(p => !bottomSeenIdsRef.current.has(p.id));
@@ -617,7 +635,7 @@ const Index = () => {
 
     return { topProfiles: topWithCard, bottomProfiles: finalBottom };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredProfiles, queueTick, coinCardCollectedToday]);
+  }, [scoredProfiles, queueTick, coinCardCollectedToday]);
 
   // topIndex/bottomIndex removed — managed inside SwipeStack
   const [iLiked, setILiked] = useState<Profile[]>([]);
@@ -853,6 +871,23 @@ const Index = () => {
     }
   }, [daysSinceLastActive, iLiked, likedMe, user?.id]);
 
+
+  // Frustration detector: fire onMatch whenever a match dialog appears
+  useEffect(() => {
+    if (matchDialog) onFrustrationMatch();
+  }, [matchDialog, onFrustrationMatch]);
+
+  // Hope injection: when detector says inject, put highest-scoring profile at front of top queue
+  useEffect(() => {
+    if (!frustration.shouldInjectHope) return;
+    const hopeProfile = getHopeInjectProfile(scoredProfiles);
+    if (hopeProfile) {
+      topShuffledQueueRef.current = [hopeProfile, ...topShuffledQueueRef.current.filter(p => p.id !== hopeProfile.id)];
+      topSeenIdsRef.current.delete(hopeProfile.id);
+      setQueueTick(t => t + 1);
+    }
+    clearHopeInject();
+  }, [frustration.shouldInjectHope, getHopeInjectProfile, scoredProfiles, clearHopeInject]);
 
   // Reset tab state whenever the viewed profile changes so Video panel never auto-shows
   useEffect(() => {
@@ -1160,8 +1195,9 @@ const Index = () => {
   // ── Preview-gated action wrappers ─────────────────────────────────────────
   const gatedLike = useCallback((profile: any) => {
     if (isPreviewMode) { setPhotoRequiredAction("like"); return; }
+    onFrustrationSwipe(); // track swipe for frustration detector
     handleLike(profile);
-  }, [isPreviewMode, handleLike]);
+  }, [isPreviewMode, handleLike, onFrustrationSwipe]);
 
   const gatedChat = useCallback((profile: any) => {
     if (isPreviewMode) { setPhotoRequiredAction("chat"); return; }
@@ -1377,6 +1413,11 @@ const Index = () => {
                       </span>
                     )}
                   </button>
+
+                  {/* Score ring — attractiveness score */}
+                  {user?.id && user.id !== "guest-user" && (
+                    <ScoreRing userId={user.id} size={32} onBoostPress={() => setShowCoinWallet(true)} />
+                  )}
 
                   {/* Coin balance badge */}
                   <CoinHub
@@ -1757,6 +1798,7 @@ const Index = () => {
                       }}
                       onPurchaseFeature={handlePurchaseFeature}
                       onCulturalGuide={() => setShowCulturalGuide(true)}
+                      onBuyCoins={() => setShowCoinWallet(true)}
                     />
                   </div>
                 </motion.div>
@@ -2085,6 +2127,23 @@ const Index = () => {
           <CoinWalletSheet userId={user.id} onClose={() => setShowCoinWallet(false)} />
         )}
       </AnimatePresence>
+
+      {/* ── Daily boost FAB — bottom-right ─────────────────────────── */}
+      {user?.id && user.id !== "guest-user" && !isProfileRoute && (
+        <div style={{ position: "fixed", bottom: 88, right: 16, zIndex: 90, width: 220 }}>
+          <DailyBoostButton userId={user.id} />
+        </div>
+      )}
+
+      {/* ── Frustration modal ──────────────────────────────────────── */}
+      <FrustrationModal
+        open={frustration.shouldShow}
+        trigger={frustration.trigger}
+        swipeCount={frustration.swipeCount}
+        onBuyCoins={() => { setShowCoinWallet(true); }}
+        onBoost={() => { setShowCoinWallet(true); }}
+        onDismiss={() => dismissFrustration(false)}
+      />
 
       {/* Dev: test gift receive popup */}
       {testGiftOpen && (
@@ -2427,6 +2486,11 @@ const Index = () => {
 
                   return (
                     <>
+                      {/* ── New user boost banner ───────────────── */}
+                      {user?.id && user.id !== "guest-user" && (
+                        <NewUserBoostBanner userId={user.id} />
+                      )}
+
                       {/* ── City Progress ───────────────────────── */}
                       {cityStatus && (
                         <CityProgressBanner
