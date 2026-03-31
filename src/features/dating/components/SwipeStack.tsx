@@ -13,6 +13,11 @@ import DistanceBadge from "@/features/dating/components/DistanceBadge";
 import VoicePlayer from "@/features/video/components/VoicePlayer";
 import { isProfileLocked } from "@/features/dating/utils/profileLock";
 
+const PROVIDER_EMOJI: Record<string, string> = {
+  whatsapp: "💬", telegram: "✈️", instagram: "📸", tiktok: "🎵",
+  snapchat: "👻", phone: "📞", line: "🟢", wechat: "💚", signal: "🔵", facebook: "📘",
+};
+
 const TEDDY_CARD_IMAGE = "https://ik.imagekit.io/7grri5v7d/UntitledfsdfsdfsdfsdfDSFSDFSdssdfdasdasdfgsdfgdfssdfs.png";
 const UNLOCK_CARD_IMAGE = "https://ik.imagekit.io/7grri5v7d/UntitledfsdfsdfsdfsdfDSFSDFSdssdfdasdasdfgsdfgdfssdfssasdasd.png";
 
@@ -543,6 +548,23 @@ export default function SwipeStack({
             <p className="text-white/80 text-sm flex items-center gap-1 mt-1 drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
               <MapPin className="w-3 h-3" /> {profile.city}, {profile.country}
             </p>
+            {/* Contact provider + chat-first badges */}
+            {(profile.contact_provider || profile.chat_first) && (
+              <div className="flex items-center flex-wrap gap-1.5 mt-1.5">
+                {profile.chat_first && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"
+                    style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.18)" }}>
+                    💬 Chat first
+                  </span>
+                )}
+                {profile.contact_provider && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"
+                    style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.75)", border: "1px solid rgba(255,255,255,0.18)" }}>
+                    {PROVIDER_EMOJI[profile.contact_provider.toLowerCase()] ?? "💬"} {profile.contact_provider}
+                  </span>
+                )}
+              </div>
+            )}
             {/* Voice intro teaser — pointer-events-auto so it's tappable */}
             {profile.voice_intro_url && (
               <div className="mt-2 pointer-events-auto">

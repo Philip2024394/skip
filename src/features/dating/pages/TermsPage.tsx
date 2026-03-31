@@ -260,7 +260,7 @@ const TermsPage = () => {
         </Section>
 
         <Section title="8. Plus-One Feature — Companion Connections">
-          <p>The Plus-One feature is designed for members seeking event companions and social experiences. It is not a commercial escort service. By activating Plus-One:</p>
+          <p>The Plus-One feature is designed for members seeking social companions for events and experiences — such as dinners, weddings, travel outings, and social gatherings. This feature is strictly for legitimate social companionship only. By activating Plus-One:</p>
           <ul className="list-disc list-inside space-y-1 pl-2">
             <li>You confirm the connection is consensual and social in nature</li>
             <li>You agree not to use the feature for any commercial, exploitative, or illegal purpose</li>
@@ -304,7 +304,7 @@ const TermsPage = () => {
             <li>Unauthorised access to or alteration of your data</li>
             <li>Any failure or delay in the operation of a purchased feature due to technical issues beyond our reasonable control</li>
           </ul>
-          <p className="mt-2"><strong className="text-white">2DateMe provides a platform for adults to connect voluntarily. We are not a dating agency, matchmaking service, escort service, or relationship broker. We accept no responsibility for any outcome — romantic, social, financial, physical, or otherwise — that arises from any connection made through the platform.</strong></p>
+          <p className="mt-2"><strong className="text-white">2DateMe is a social introduction and matchmaking platform. We are not a dating agency, matchmaking agency, or relationship broker. We accept no responsibility for any outcome — romantic, social, financial, physical, or otherwise — that arises from any connection made through the platform.</strong></p>
           <p className="mt-2">Where liability cannot be excluded under applicable law, our total aggregate liability to you shall not exceed the total amount you paid to us in the 12 months preceding the claim.</p>
         </Section>
 

@@ -36,14 +36,61 @@ interface BlindProfile {
   longitude?:                number | null;
 }
 
-interface Question {
+interface ProfileQuestion {
   text: string;
-  options: string[];
-  correct: number;
+  subtitle: string; // shown as italic clue above the question
+  field: string;    // profile field this answer fills
+  emoji: string;
+  options: Array<{ label: string; value: string }>;
 }
 
-interface MysteryQuestion extends Question {
-  clue: string;
+// ── Profile-building question bank ────────────────────────────────────────────
+
+const PROFILE_QUESTIONS: ProfileQuestion[] = [
+  {
+    text: "What's your ideal first date?",
+    subtitle: "Your answer will be shared with them — help them picture you before they say yes.",
+    field: "date_style",
+    emoji: "🌙",
+    options: [
+      { label: "Cosy café, just talking for hours", value: "Cosy café conversation" },
+      { label: "Walk somewhere with a view", value: "Scenic walk" },
+      { label: "Something spontaneous — surprise me", value: "Spontaneous adventure" },
+      { label: "Dinner, good wine, no rush", value: "Dinner date" },
+    ],
+  },
+  {
+    text: "How would your best friend describe you?",
+    subtitle: "They'll see this. Make it honest — real beats polished every time.",
+    field: "personality_type",
+    emoji: "✨",
+    options: [
+      { label: "The one who plans everything", value: "The planner" },
+      { label: "Loyal to the core, deep friendships", value: "Deeply loyal" },
+      { label: "Chaotic, hilarious, unpredictable", value: "Chaotic fun energy" },
+      { label: "Calm, steady, always there", value: "Calm and reliable" },
+    ],
+  },
+  {
+    text: "What are you actually looking for right now?",
+    subtitle: "Be honest — they'll respect you more for it, and it'll save you both time.",
+    field: "looking_for",
+    emoji: "💭",
+    options: [
+      { label: "Something real, not just talking", value: "Serious relationship" },
+      { label: "Easy, fun, see where it goes", value: "Casual dating" },
+      { label: "A genuine connection, no pressure", value: "New friends" },
+      { label: "Honestly still figuring it out", value: "Not sure yet" },
+    ],
+  },
+];
+
+// ── Viewer answer record ───────────────────────────────────────────────────────
+
+interface ViewerAnswer {
+  field: string;
+  question: string;
+  answer: string;
 }
 
 // ── DEV mock data ──────────────────────────────────────────────────────────────
@@ -270,37 +317,10 @@ function intentClue(lookingFor: string | null): { clue: string; label: string; o
   };
 }
 
-// ── Mystery card builder ───────────────────────────────────────────────────────
-
-function buildQuestions(p: BlindProfile): MysteryQuestion[] {
-  const age = ageClue(p.age);
-  const loc = locationClue(p.city, p.country);
-  const int = intentClue(p.looking_for);
-
-  const makeQ = (
-    text: string,
-    label: string,
-    allOptions: string[],
-    clue: string,
-  ): MysteryQuestion => {
-    const correct = label;
-    const pool = allOptions.includes(label)
-      ? allOptions
-      : shuffle([...allOptions.slice(0, 3), label]);
-    const shuffled = shuffle(pool.slice(0, 4));
-    return {
-      text,
-      clue,
-      options: shuffled,
-      correct: shuffled.indexOf(correct),
-    };
-  };
-
-  return [
-    makeQ("How old do you think they are?",          age.label, ["18 – 22","23 – 26","27 – 30","31 – 35","36 – 40","40+"], p.blind_date_story_age || age.clue),
-    makeQ("Where do you think they're from?",        loc.label, loc.options,          p.blind_date_story_location || loc.clue),
-    makeQ("What are they looking for?",              int.label, int.options,          p.blind_date_story_intent    || int.clue),
-  ];
+// ── Profile question picker ────────────────────────────────────────────────────
+// Returns all 3 profile questions — no randomisation needed, always the same set.
+function buildQuestions(_p: BlindProfile): ProfileQuestion[] {
+  return PROFILE_QUESTIONS;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -319,103 +339,61 @@ interface QAModalProps {
 function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlockedWithCoins, onStartChat }: QAModalProps) {
   const { balance, deductCoins } = useCoinBalance(userId);
 
-  const hasAiStories = !!(
-    profile.blind_date_story_age &&
-    profile.blind_date_story_location &&
-    profile.blind_date_story_intent
-  );
+  const [blurLevel, setBlurLevel]           = useState(BLUR_START);
+  const [step, setStep]                     = useState(0);
+  const [selected, setSelected]             = useState<number | null>(null);
+  const [viewerAnswers, setViewerAnswers]   = useState<ViewerAnswer[]>([]);
+  const [phase, setPhase]                   = useState<"quiz" | "passed" | "ask" | "asked" | "unlocked">("quiz");
+  const [unlocking, setUnlocking]           = useState(false);
+  const [submitting, setSubmitting]         = useState(false);
+  const [revealFlash, setRevealFlash]       = useState(false);
+  const [question, setQuestion]             = useState("");
+  const [sendingQ, setSendingQ]             = useState(false);
+  const [questionTier, setQuestionTier]     = useState<"preset" | "custom" | null>(null);
 
-  const [generatingStories, setGeneratingStories] = useState(!hasAiStories && !import.meta.env.DEV);
-  const [aiProfile, setAiProfile]                 = useState<BlindProfile>(profile);
-  const [blurLevel, setBlurLevel]                 = useState(BLUR_START);
-  const [step, setStep]                           = useState(0);
-  const [selected, setSelected]                   = useState<number | null>(null);
-  const [answers, setAnswers]                     = useState<boolean[]>([]);
-  const [phase, setPhase]                         = useState<"quiz" | "passed" | "ask" | "asked" | "failed" | "unlocked">("quiz");
-  const [unlocking, setUnlocking]                 = useState(false);
-  const [submitting, setSubmitting]               = useState(false);
-  const [revealFlash, setRevealFlash]             = useState(false);
-  const [question, setQuestion]                   = useState("");
-  const [sendingQ, setSendingQ]                   = useState(false);
-
-  // Generate AI stories on first open (production only)
-  useEffect(() => {
-    if (hasAiStories || import.meta.env.DEV) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("generate-blind-date-stories", {
-          body: { profile_id: profile.id, age: profile.age, city: profile.city, country: profile.country, looking_for: profile.looking_for },
-        });
-        if (!cancelled && !error && data?.story_age) {
-          setAiProfile(prev => ({
-            ...prev,
-            blind_date_story_age:      data.story_age,
-            blind_date_story_location: data.story_location,
-            blind_date_story_intent:   data.story_intent,
-          }));
-        }
-      } catch { /* fallback to hardcoded silently */ }
-      finally { if (!cancelled) setGeneratingStories(false); }
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
-  // Stable questions — never shuffle after first render
-  const questions = useMemo(
-    () => buildQuestions(aiProfile),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [aiProfile.id, aiProfile.blind_date_story_age, aiProfile.blind_date_story_location, aiProfile.blind_date_story_intent],
-  );
+  // Questions are static profile-building prompts
+  const questions = useMemo(() => buildQuestions(profile), [profile.id]);
 
   const current = questions[step];
 
   const handleSelect = (idx: number) => {
     if (selected !== null || phase !== "quiz") return;
-    const isCorrect = idx === current.correct;
     setSelected(idx);
-    // Blur reveal: immediate visual feedback on selection
-    const delta = isCorrect ? BLUR_CORRECT : BLUR_WRONG;
-    setBlurLevel(prev => Math.max(BLUR_FLOOR, prev - delta));
-    // Brief white flash to reward the reveal
+    // Every answer always clears blur — no wrong answers when talking about yourself
+    setBlurLevel(prev => Math.max(BLUR_FLOOR, prev - BLUR_CORRECT));
     setRevealFlash(true);
     setTimeout(() => setRevealFlash(false), 350);
   };
 
   const handleNext = async () => {
     if (selected === null || submitting) return;
-    const isCorrect = selected === current.correct;
-    const newAnswers = [...answers, isCorrect];
+    const chosenOption = current.options[selected];
+    const newAnswers: ViewerAnswer[] = [
+      ...viewerAnswers,
+      { field: current.field, question: current.text, answer: chosenOption.value },
+    ];
+    setViewerAnswers(newAnswers);
+
+    // Save answer to viewer's own profile in background (non-blocking)
+    if (userId !== "guest-user" && !import.meta.env.DEV) {
+      supabase.from("profiles")
+        .update({ [current.field]: chosenOption.value })
+        .eq("id", userId)
+        .then(() => {/* silent */});
+    }
 
     if (step < questions.length - 1) {
-      setAnswers(newAnswers);
       setSelected(null);
       setStep(s => s + 1);
       return;
     }
 
-    // Final question — submit and determine pass/fail
+    // All questions answered → always pass
     setSubmitting(true);
-    const score = newAnswers.filter(Boolean).length;
-
-    if (!import.meta.env.DEV) {
-      await supabase.rpc("submit_blind_date_attempt" as any, {
-        p_guesser_id: userId,
-        p_target_id:  profile.id,
-        p_score:      score,
-      });
-    }
-
     setSubmitting(false);
-    if (score >= 2) {
-      // Perfect score → full reveal; 2/3 → partial reveal (still blurred to floor)
-      const finalBlur = score === questions.length ? 0 : blurLevel;
-      setBlurLevel(finalBlur);
-      setPhase("passed");
-      onPassedAndReady(profile.id, finalBlur);
-    } else {
-      setPhase("failed");
-    }
+    setBlurLevel(BLUR_FLOOR);
+    setPhase("passed");
+    onPassedAndReady(profile.id, BLUR_FLOOR);
   };
 
   const handleCoinUnlock = async (cost: number) => {
@@ -423,14 +401,6 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
     setUnlocking(true);
     const ok = await deductCoins(cost, "blind_date_unlock");
     if (ok) {
-      // Mark as passed in DB
-      if (!import.meta.env.DEV) {
-        await supabase.rpc("submit_blind_date_attempt" as any, {
-          p_guesser_id: userId,
-          p_target_id:  profile.id,
-          p_score:      3,
-        });
-      }
       setBlurLevel(0);
       setPhase("unlocked");
       onUnlockedWithCoins(profile.id);
@@ -438,24 +408,31 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
     setUnlocking(false);
   };
 
+  const coinCost = questionTier === "custom" ? 15 : 5;
+
   const handleSendQuestion = async () => {
     if (!question.trim() || sendingQ) return;
+    if (balance < coinCost) return;
     setSendingQ(true);
+    const ok = await deductCoins(coinCost, "blind_date_question");
+    if (!ok) { setSendingQ(false); return; }
     try {
       const { data: pushToken } = await supabase.rpc("send_blind_date_question" as any, {
-        p_asker_id:  userId,
-        p_target_id: profile.id,
-        p_question:  question.trim(),
+        p_asker_id:      userId,
+        p_target_id:     profile.id,
+        p_question:      question.trim(),
+        p_coins_spent:   coinCost,
+        p_is_preset:     questionTier === "preset",
+        p_viewer_answers: JSON.stringify(viewerAnswers),
       });
-      // Fire push notification to the target if they have a token
       if (pushToken) {
         const askerRow = await supabase.from("profiles").select("name").eq("id", userId).single();
         const askerName = (askerRow.data as any)?.name?.split(" ")[0] ?? "Someone";
         await supabase.functions.invoke("send-push-notification", {
           body: {
             push_token: pushToken,
-            title: "💘 Blind Date — you've got a question!",
-            body:  `${askerName} passed your quiz and wants to ask you something…`,
+            title: "💘 Blind Date — someone's curious about you!",
+            body:  `${askerName} answered your profile questions and wants to ask you something…`,
           },
         }).catch(() => { /* push is enhancement only */ });
       }
@@ -464,17 +441,15 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
     setPhase("asked");
   };
 
-  // Button colour helper
+  // Button colour helper (selected = highlight, unselected = dim after pick)
   const btnColor = (idx: number): string => {
     if (selected === null) return "rgba(255,255,255,0.08)";
-    if (idx === current.correct) return "rgba(34,197,94,0.35)";
-    if (idx === selected && selected !== current.correct) return "rgba(239,68,68,0.35)";
-    return "rgba(255,255,255,0.05)";
+    if (idx === selected) return "rgba(194,24,91,0.35)";
+    return "rgba(255,255,255,0.04)";
   };
   const btnBorder = (idx: number): string => {
     if (selected === null) return "1px solid rgba(255,255,255,0.12)";
-    if (idx === current.correct) return "1px solid rgba(34,197,94,0.6)";
-    if (idx === selected && selected !== current.correct) return "1px solid rgba(239,68,68,0.5)";
+    if (idx === selected) return "1px solid rgba(194,24,91,0.7)";
     return "1px solid rgba(255,255,255,0.06)";
   };
 
@@ -586,20 +561,8 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
           </div>
         </div>
 
-        {/* ── Spinner while stories generate ─────────────────────────────── */}
-        {generatingStories && (
-          <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
-              style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid rgba(194,24,91,0.2)", borderTopColor: "#c2185b" }}
-            />
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.45)" }}>Writing their story…</div>
-          </div>
-        )}
-
         {/* ── Quiz ───────────────────────────────────────────────────────── */}
-        {!generatingStories && phase === "quiz" && (
+        {phase === "quiz" && (
           <div style={{ padding: "16px 18px 20px", display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
             {/* Progress dots */}
             <div style={{ display: "flex", gap: 5 }}>
@@ -612,25 +575,33 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
               ))}
             </div>
 
-            {/* Question label */}
-            <div style={{ fontSize: 11, color: "rgba(194,24,91,0.9)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-              Question {step + 1} of {questions.length}
+            {/* Header: emoji + step label */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 22 }}>{current.emoji}</span>
+              <div>
+                <div style={{ fontSize: 11, color: "rgba(194,24,91,0.9)", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                  About you — {step + 1}/{questions.length}
+                </div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 1 }}>
+                  {profile.name.split(" ")[0]} will see your answers
+                </div>
+              </div>
             </div>
 
-            {/* Story clue */}
+            {/* Subtitle hint */}
             <div style={{
-              fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.65,
-              padding: "12px 14px",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.07)",
-              borderRadius: 14,
+              fontSize: 12, color: "rgba(255,255,255,0.5)", lineHeight: 1.6,
+              padding: "10px 13px",
+              background: "rgba(194,24,91,0.07)",
+              border: "1px solid rgba(194,24,91,0.18)",
+              borderRadius: 12,
               fontStyle: "italic",
             }}>
-              "{current.clue}"
+              {current.subtitle}
             </div>
 
             {/* Question */}
-            <div style={{ fontSize: 15, fontWeight: 700, color: "white" }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: "white", lineHeight: 1.3 }}>
               {current.text}
             </div>
 
@@ -642,27 +613,23 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
                   whileTap={selected === null ? { scale: 0.96 } : {}}
                   onClick={() => handleSelect(i)}
                   style={{
-                    padding: "10px 8px",
-                    borderRadius: 50,
+                    padding: "11px 8px",
+                    borderRadius: 14,
                     background: btnColor(i),
                     border: btnBorder(i),
-                    color: selected !== null && i === current.correct
-                      ? "rgba(134,239,172,1)"
-                      : selected === i && selected !== current.correct
-                        ? "rgba(252,165,165,1)"
-                        : "rgba(255,255,255,0.85)",
+                    color: selected === i ? "rgba(255,180,200,1)" : "rgba(255,255,255,0.80)",
                     fontSize: 12, fontWeight: 600,
                     cursor: selected === null ? "pointer" : "default",
                     transition: "background 0.25s, border-color 0.25s, color 0.25s",
-                    textAlign: "center",
+                    textAlign: "center", lineHeight: 1.35,
                   }}
                 >
-                  {opt}
+                  {opt.label}
                 </motion.button>
               ))}
             </div>
 
-            {/* Next / Submit */}
+            {/* Next / Continue */}
             <motion.button
               whileTap={selected !== null ? { scale: 0.97 } : {}}
               onClick={handleNext}
@@ -675,27 +642,38 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
                 fontSize: 14, fontWeight: 700,
                 cursor: selected !== null ? "pointer" : "not-allowed",
                 transition: "background 0.25s",
-                opacity: submitting ? 0.7 : 1,
                 boxShadow: selected !== null ? "0 4px 20px rgba(194,24,91,0.4)" : "none",
               }}
             >
-              {submitting ? "Submitting…" : step < questions.length - 1 ? "Next →" : "Submit"}
+              {step < questions.length - 1 ? "Next →" : "See the reveal ✨"}
             </motion.button>
           </div>
         )}
 
         {/* ── Passed ─────────────────────────────────────────────────────── */}
-        {!generatingStories && phase === "passed" && (
+        {phase === "passed" && (
           <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
-            <div style={{ fontSize: 36 }}>{blurLevel === 0 ? "🎉" : "🥳"}</div>
+            <div style={{ fontSize: 36 }}>🥳</div>
             <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>
-              {blurLevel === 0 ? "Perfect score!" : "You passed!"}
+              Your answers are on the way!
             </div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.5 }}>
-              {blurLevel === 0
-                ? `You fully revealed ${profile.name.split(" ")[0]}'s photo. Now make a move — ask them something.`
-                : `You unlocked the chat. Ask ${profile.name.split(" ")[0]} one question and they'll get notified you passed.`
-              }
+            {/* Viewer answers summary */}
+            <div style={{
+              width: "100%", background: "rgba(194,24,91,0.08)", border: "1px solid rgba(194,24,91,0.22)",
+              borderRadius: 14, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8,
+            }}>
+              <div style={{ fontSize: 10, color: "rgba(194,24,91,0.8)", fontWeight: 800, letterSpacing: "0.06em", marginBottom: 2 }}>
+                {profile.name.split(" ")[0]} will see this about you
+              </div>
+              {viewerAnswers.map((a, i) => (
+                <div key={i} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{a.question}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.88)" }}>→ {a.answer}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", textAlign: "center", lineHeight: 1.5 }}>
+              Now send them a question — they get your answers and your question together.
             </div>
 
             {/* ── Ask a question CTA ── */}
@@ -713,131 +691,209 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
               <span>💬</span> Ask {profile.name.split(" ")[0]} a question
             </motion.button>
 
-            {blurLevel > 0 && (
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => handleCoinUnlock(COINS_PASS_FULL)}
-                disabled={balance < COINS_PASS_FULL || unlocking}
-                style={{
-                  width: "100%", padding: "12px", borderRadius: 50,
-                  background: balance >= COINS_PASS_FULL ? "linear-gradient(135deg,#f59e0b,#f97316)" : "rgba(245,158,11,0.2)",
-                  border: "none", color: "white", fontSize: 13, fontWeight: 700,
-                  cursor: balance >= COINS_PASS_FULL ? "pointer" : "not-allowed",
-                  boxShadow: balance >= COINS_PASS_FULL ? "0 4px 16px rgba(245,158,11,0.4)" : "none",
-                }}
-              >
-                {unlocking ? "Unlocking…" : `🔓 Full reveal instead — ${COINS_PASS_FULL} coins`}
-              </motion.button>
-            )}
+            {/* Full reveal coin option */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => handleCoinUnlock(COINS_PASS_FULL)}
+              disabled={balance < COINS_PASS_FULL || unlocking}
+              style={{
+                width: "100%", padding: "11px", borderRadius: 50,
+                background: balance >= COINS_PASS_FULL ? "linear-gradient(135deg,#f59e0b,#f97316)" : "rgba(245,158,11,0.15)",
+                border: "none", color: "white", fontSize: 12, fontWeight: 700,
+                cursor: balance >= COINS_PASS_FULL ? "pointer" : "not-allowed",
+                boxShadow: balance >= COINS_PASS_FULL ? "0 4px 16px rgba(245,158,11,0.35)" : "none",
+              }}
+            >
+              {unlocking ? "Unlocking…" : `🔓 Full photo reveal instead — ${COINS_PASS_FULL} coins`}
+            </motion.button>
 
             <button
               onClick={onStartChat}
-              style={{
-                background: "none", border: "none",
-                color: "rgba(255,255,255,0.35)", fontSize: 12, cursor: "pointer", marginTop: -4,
-              }}
+              style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer" }}
             >
               Skip — go straight to chat →
             </button>
           </div>
         )}
 
-        {/* ── Ask a question ──────────────────────────────────────────────── */}
-        {!generatingStories && phase === "ask" && (() => {
+        {/* ── Ask a question — tier selection ────────────────────────────── */}
+        {phase === "ask" && (() => {
           const firstName = profile.name.split(" ")[0];
-          const prompts = [
-            "What's your go-to weekend plan?",
-            "Coffee or tea person?",
-            "Best place you've ever travelled?",
+          const PRESET_QUESTIONS = [
+            "What's your idea of a perfect Sunday?",
+            "What's something you're really proud of?",
             "What makes you laugh most?",
-            "What are you most proud of?",
+            "Best place you've ever been?",
+            "One thing on your bucket list?",
           ];
-          return (
-            <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: 28, marginBottom: 6 }}>💌</div>
-                <div style={{ fontSize: 17, fontWeight: 800, color: "white" }}>
-                  Ask {firstName} one question
-                </div>
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4, lineHeight: 1.5 }}>
-                  They'll be notified you passed their quiz and want to connect. Make it count.
-                </div>
-              </div>
 
-              {/* Quick prompt chips */}
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
-                {prompts.map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setQuestion(p)}
+          if (!questionTier) {
+            // Tier picker
+            return (
+              <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>💌</div>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: "white" }}>Ask {firstName} something</div>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 4, lineHeight: 1.5 }}>
+                    They'll receive your profile answers + your question together.
+                  </div>
+                </div>
+
+                {/* Preset tier */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setQuestionTier("preset"); setQuestion(""); }}
+                  style={{
+                    width: "100%", padding: "16px 18px", borderRadius: 16,
+                    background: "rgba(194,24,91,0.12)", border: "1.5px solid rgba(194,24,91,0.35)",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between",
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "white" }}>Pick a question</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 3 }}>Choose from curated icebreakers</div>
+                  </div>
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 50,
+                    background: "linear-gradient(135deg,#c2185b,#e91e8c)",
+                    fontSize: 12, fontWeight: 800, color: "white",
+                    boxShadow: "0 2px 12px rgba(194,24,91,0.4)",
+                  }}>🪙 5</div>
+                </motion.button>
+
+                {/* Custom tier */}
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => { setQuestionTier("custom"); setQuestion(""); }}
+                  style={{
+                    width: "100%", padding: "16px 18px", borderRadius: 16,
+                    background: "rgba(139,92,246,0.1)", border: "1.5px solid rgba(139,92,246,0.3)",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between",
+                    textAlign: "left",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "white" }}>Write your own</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 3 }}>Send any question you want</div>
+                  </div>
+                  <div style={{
+                    padding: "5px 12px", borderRadius: 50,
+                    background: "linear-gradient(135deg,#7c3aed,#a855f7)",
+                    fontSize: 12, fontWeight: 800, color: "white",
+                    boxShadow: "0 2px 12px rgba(139,92,246,0.4)",
+                  }}>🪙 15</div>
+                </motion.button>
+
+                <button
+                  onClick={() => setPhase("passed")}
+                  style={{ background: "none", border: "none", color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer" }}
+                >
+                  ← Back
+                </button>
+              </div>
+            );
+          }
+
+          if (questionTier === "preset") {
+            return (
+              <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <button onClick={() => setQuestionTier(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 18, cursor: "pointer", padding: 0 }}>←</button>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: "white" }}>Pick a question</div>
+                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>5 coins • {firstName} will see it with your answers</div>
+                  </div>
+                </div>
+
+                {PRESET_QUESTIONS.map(q => (
+                  <motion.button
+                    key={q}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setQuestion(q)}
                     style={{
-                      padding: "6px 12px", borderRadius: 50, cursor: "pointer",
-                      background: question === p ? "rgba(194,24,91,0.3)" : "rgba(255,255,255,0.06)",
-                      border: `1px solid ${question === p ? "rgba(194,24,91,0.7)" : "rgba(255,255,255,0.1)"}`,
-                      color: question === p ? "rgba(255,180,200,1)" : "rgba(255,255,255,0.55)",
-                      fontSize: 11, fontWeight: 600, transition: "all 0.18s",
+                      width: "100%", padding: "13px 16px", borderRadius: 14, textAlign: "left",
+                      background: question === q ? "rgba(194,24,91,0.22)" : "rgba(255,255,255,0.05)",
+                      border: `1.5px solid ${question === q ? "rgba(194,24,91,0.65)" : "rgba(255,255,255,0.09)"}`,
+                      color: question === q ? "rgba(255,180,200,1)" : "rgba(255,255,255,0.75)",
+                      fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.18s",
                     }}
                   >
-                    {p}
-                  </button>
+                    {q}
+                  </motion.button>
                 ))}
+
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={handleSendQuestion}
+                  disabled={!question || sendingQ || balance < 5}
+                  style={{
+                    marginTop: 4, width: "100%", padding: "14px", borderRadius: 50,
+                    background: question && balance >= 5 ? "linear-gradient(135deg,#c2185b,#e91e8c)" : "rgba(194,24,91,0.15)",
+                    border: "none", color: "white", fontSize: 14, fontWeight: 800,
+                    cursor: question && balance >= 5 ? "pointer" : "not-allowed",
+                    boxShadow: question && balance >= 5 ? "0 4px 20px rgba(194,24,91,0.4)" : "none",
+                    opacity: sendingQ ? 0.7 : 1,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  }}
+                >
+                  {sendingQ ? "Sending…" : balance < 5 ? "Not enough coins" : `💌 Send for 5 coins`}
+                </motion.button>
+              </div>
+            );
+          }
+
+          // Custom question
+          return (
+            <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <button onClick={() => setQuestionTier(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", fontSize: 18, cursor: "pointer", padding: 0 }}>←</button>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: "white" }}>Write your question</div>
+                  <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>15 coins • {firstName} will see it with your answers</div>
+                </div>
               </div>
 
-              {/* Text input */}
               <textarea
                 value={question}
                 onChange={e => setQuestion(e.target.value.slice(0, 120))}
-                placeholder={`Write your question for ${firstName}…`}
-                rows={3}
+                placeholder={`Ask ${firstName} anything…`}
+                rows={4}
                 style={{
-                  width: "100%", padding: "12px 14px",
+                  width: "100%", padding: "13px 15px",
                   background: "rgba(255,255,255,0.05)",
                   border: "1px solid rgba(255,255,255,0.12)",
                   borderRadius: 14, color: "white", fontSize: 13,
                   resize: "none", outline: "none",
-                  fontFamily: "inherit", lineHeight: 1.5,
-                  boxSizing: "border-box",
+                  fontFamily: "inherit", lineHeight: 1.5, boxSizing: "border-box",
                 }}
               />
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "right", marginTop: -8 }}>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", textAlign: "right", marginTop: -6 }}>
                 {question.length}/120
               </div>
 
-              {/* Send button */}
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={handleSendQuestion}
-                disabled={!question.trim() || sendingQ}
+                disabled={!question.trim() || sendingQ || balance < 15}
                 style={{
                   width: "100%", padding: "14px", borderRadius: 50,
-                  background: question.trim()
-                    ? "linear-gradient(135deg,#c2185b,#e91e8c)"
-                    : "rgba(194,24,91,0.15)",
+                  background: question.trim() && balance >= 15 ? "linear-gradient(135deg,#7c3aed,#a855f7)" : "rgba(139,92,246,0.15)",
                   border: "none", color: "white", fontSize: 14, fontWeight: 800,
-                  cursor: question.trim() ? "pointer" : "not-allowed",
-                  boxShadow: question.trim() ? "0 4px 20px rgba(194,24,91,0.4)" : "none",
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                  cursor: question.trim() && balance >= 15 ? "pointer" : "not-allowed",
+                  boxShadow: question.trim() && balance >= 15 ? "0 4px 20px rgba(139,92,246,0.4)" : "none",
                   opacity: sendingQ ? 0.7 : 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
                 }}
               >
-                {sendingQ ? "Sending…" : `💌 Send question to ${firstName}`}
+                {sendingQ ? "Sending…" : balance < 15 ? "Not enough coins" : `💌 Send for 15 coins`}
               </motion.button>
-
-              <button
-                onClick={() => setPhase("passed")}
-                style={{
-                  background: "none", border: "none",
-                  color: "rgba(255,255,255,0.3)", fontSize: 12, cursor: "pointer",
-                }}
-              >
-                ← Back
-              </button>
             </div>
           );
         })()}
 
         {/* ── Question sent confirmation ──────────────────────────────────── */}
-        {!generatingStories && phase === "asked" && (
+        {phase === "asked" && (
           <div style={{ padding: "24px 18px 28px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
@@ -848,21 +904,22 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
               💌
             </motion.div>
             <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>
-              Question sent!
+              Sent!
             </div>
             <div style={{
-              background: "rgba(194,24,91,0.1)",
-              border: "1px solid rgba(194,24,91,0.25)",
-              borderRadius: 16, padding: "14px 16px",
-              fontSize: 13, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, textAlign: "center",
+              width: "100%", background: "rgba(194,24,91,0.08)",
+              border: "1px solid rgba(194,24,91,0.22)",
+              borderRadius: 14, padding: "13px 15px",
+              fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.65,
             }}>
-              <strong style={{ color: "white" }}>{profile.name.split(" ")[0]}</strong> will be notified that you joined their Blind Date, passed their questions, and want to ask them something. If they reply, you'll both connect.
+              <strong style={{ color: "white" }}>{profile.name.split(" ")[0]}</strong> will receive your profile answers <em>and</em> your question together — they'll know exactly who's asking before they reply.
             </div>
             <div style={{
-              fontSize: 12, color: "rgba(255,255,255,0.35)",
+              width: "100%",
+              fontSize: 13, color: "rgba(255,255,255,0.75)",
               fontStyle: "italic", textAlign: "center",
-              background: "rgba(255,255,255,0.03)", borderRadius: 12, padding: "10px 14px",
-              border: "1px solid rgba(255,255,255,0.07)",
+              background: "rgba(255,255,255,0.04)", borderRadius: 12, padding: "11px 14px",
+              border: "1px solid rgba(255,255,255,0.08)",
             }}>
               "{question}"
             </div>
@@ -880,52 +937,8 @@ function BlindDateQAModal({ profile, userId, onClose, onPassedAndReady, onUnlock
           </div>
         )}
 
-        {/* ── Failed ─────────────────────────────────────────────────────── */}
-        {!generatingStories && phase === "failed" && (
-          <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
-            <div style={{ fontSize: 36 }}>😔</div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>Not quite…</div>
-            <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", textAlign: "center", lineHeight: 1.5 }}>
-              You didn't unlock the chat this time.<br />
-              But you can still see who this is for <strong style={{ color: "#f59e0b" }}>{COINS_FAIL} coins</strong>.
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => handleCoinUnlock(COINS_FAIL)}
-              disabled={balance < COINS_FAIL || unlocking}
-              style={{
-                width: "100%", padding: "13px", borderRadius: 50,
-                background: balance >= COINS_FAIL
-                  ? "linear-gradient(135deg,#f59e0b,#f97316)"
-                  : "rgba(245,158,11,0.2)",
-                border: "none", color: "white", fontSize: 14, fontWeight: 700,
-                cursor: balance >= COINS_FAIL ? "pointer" : "not-allowed",
-                boxShadow: balance >= COINS_FAIL ? "0 4px 20px rgba(245,158,11,0.4)" : "none",
-              }}
-            >
-              {unlocking ? "Unlocking…" : `🪙 Unlock anyway — ${COINS_FAIL} coins`}
-            </motion.button>
-            <button
-              onClick={onClose}
-              style={{
-                width: "100%", padding: "12px", borderRadius: 50,
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.12)",
-                color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer",
-              }}
-            >
-              Next profile →
-            </button>
-            {balance < COINS_FAIL && (
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textAlign: "center" }}>
-                You need {COINS_FAIL - balance} more coins
-              </div>
-            )}
-          </div>
-        )}
-
         {/* ── Fully unlocked ─────────────────────────────────────────────── */}
-        {!generatingStories && phase === "unlocked" && (
+        {phase === "unlocked" && (
           <div style={{ padding: "20px 18px 24px", display: "flex", flexDirection: "column", gap: 14, alignItems: "center" }}>
             <div style={{ fontSize: 36 }}>✨</div>
             <div style={{ fontSize: 18, fontWeight: 800, color: "white", textAlign: "center" }}>Unlocked!</div>
@@ -971,6 +984,7 @@ function BlindDateCard({ profile, stackIndex, revealedBlur, unlocked, isFeatured
   const cardX = useMotionValue(0);
   const cardY = useMotionValue(0);
   const rotate = useTransform(cardX, [-280, 0, 280], [-18, 0, 18]);
+  const [showSwipeHint, setShowSwipeHint] = useState(isFeatured ?? false);
 
   // Stack depth visuals
   const scaleVal  = [1, 0.95, 0.91][stackIndex] ?? 0.88;
@@ -979,6 +993,7 @@ function BlindDateCard({ profile, stackIndex, revealedBlur, unlocked, isFeatured
   const displayBlur = unlocked ? 0 : revealedBlur !== null ? revealedBlur : BLUR_START;
 
   const handleDragEnd = (_: PointerEvent, info: PanInfo) => {
+    setShowSwipeHint(false);
     const totalMove = Math.hypot(info.offset.x, info.offset.y);
 
     // Tap
@@ -1069,11 +1084,19 @@ function BlindDateCard({ profile, stackIndex, revealedBlur, unlocked, isFeatured
           style={{ opacity: unlockOpacity, position: "absolute", top: 16, left: 0, right: 0, display: "flex", justifyContent: "center" }}
         >
           <div style={{
-            background: "rgba(245,158,11,0.85)", backdropFilter: "blur(8px)",
-            borderRadius: 20, padding: "5px 14px",
-            fontSize: 11, fontWeight: 700, color: "white", letterSpacing: "0.05em",
+            display: "flex", alignItems: "center", gap: 7,
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)",
+            borderRadius: 20, padding: "5px 14px 5px 8px",
+            border: "1px solid rgba(255,255,255,0.15)",
           }}>
-            ↑ UNLOCK — {COINS_INSTANT} COINS
+            <img
+              src="https://ik.imagekit.io/dateme/Tap%20gesture%20icon%20in%20monochrome.png"
+              alt="tap"
+              style={{ width: 22, height: 22, objectFit: "contain" }}
+            />
+            <span style={{ fontSize: 11, fontWeight: 700, color: "white", letterSpacing: "0.05em" }}>
+              UNLOCK — {COINS_INSTANT} COINS
+            </span>
           </div>
         </motion.div>
       )}
@@ -1090,6 +1113,31 @@ function BlindDateCard({ profile, stackIndex, revealedBlur, unlocked, isFeatured
           </div>
         </motion.div>
       )}
+
+      {/* Swipe gesture hint — first card only */}
+      <AnimatePresence>
+        {showSwipeHint && isTop && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.35 }}
+            style={{
+              position: "absolute", inset: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              pointerEvents: "none", zIndex: 5,
+            }}
+          >
+            <motion.img
+              src="https://ik.imagekit.io/dateme/Swipe%20up%20icon%20with%20hand%20gesture.png"
+              alt="Swipe hint"
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              style={{ width: 120, height: "auto", filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.6))" }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Distance badge — top right */}
       {distanceKm !== null && (
@@ -1190,24 +1238,50 @@ function BlindDateCard({ profile, stackIndex, revealedBlur, unlocked, isFeatured
             )}
           </div>
 
-          {/* Fingerprint Q&A button — bottom right */}
+          {/* Tap to answer Q&A button — bottom right */}
           {isTop && !unlocked && (
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={(e) => { e.stopPropagation(); onTap(); }}
-              style={{
-                flexShrink: 0, marginLeft: 12,
-                width: 56, height: 56, borderRadius: "50%",
-                background: "linear-gradient(135deg,rgba(194,24,91,0.85),rgba(236,72,153,0.75))",
-                border: "2px solid rgba(255,255,255,0.25)",
-                backdropFilter: "blur(10px)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                boxShadow: "0 4px 20px rgba(194,24,91,0.5), 0 0 0 6px rgba(194,24,91,0.12)",
-              }}
-            >
-              <span style={{ fontSize: 26, lineHeight: 1 }}>👆</span>
-            </motion.button>
+            <div style={{ position: "relative", flexShrink: 0, marginLeft: 12, width: 93, height: 93 }}>
+              {/* White glow beat ring */}
+              <motion.div
+                animate={{ scale: [1, 1.55, 1], opacity: [0.6, 0, 0.6] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }}
+                style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  border: "2.5px solid rgba(255,255,255,0.85)",
+                  boxShadow: "0 0 18px 4px rgba(255,255,255,0.5)",
+                  pointerEvents: "none",
+                }}
+              />
+              {/* Second delayed ring */}
+              <motion.div
+                animate={{ scale: [1, 1.55, 1], opacity: [0.4, 0, 0.4] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                style={{
+                  position: "absolute", inset: 0, borderRadius: "50%",
+                  border: "2px solid rgba(255,255,255,0.55)",
+                  pointerEvents: "none",
+                }}
+              />
+              <motion.button
+                whileTap={{ scale: 0.88 }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                onClick={(e) => { e.stopPropagation(); onTap(); }}
+                style={{
+                  width: 93, height: 93, borderRadius: "50%",
+                  background: "transparent", border: "none", padding: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer",
+                  filter: "drop-shadow(0 0 14px rgba(255,255,255,0.7))",
+                }}
+              >
+                <img
+                  src="https://ik.imagekit.io/dateme/Tapping%20gesture%20on%20a%20glossy%20button.png"
+                  alt="Tap to answer"
+                  style={{ width: 93, height: 93, objectFit: "contain" }}
+                />
+              </motion.button>
+            </div>
           )}
         </div>
       </div>
@@ -1370,43 +1444,54 @@ export default function BlindDateGrid({ userId, onClose, onStartChat }: { userId
     >
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 10,
         padding: `max(14px, env(safe-area-inset-top, 14px)) 14px 10px`,
         flexShrink: 0, zIndex: 2,
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>💘 Blind Date</div>
-          </div>
+        <img
+          src="https://ik.imagekit.io/dateme/Untitleddasdasdasd-removebg-preview.png"
+          alt="Blind Date"
+          style={{ height: 56, width: "auto", filter: "drop-shadow(0 0 8px rgba(194,24,91,0.5))" }}
+        />
+
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 17, fontWeight: 800, color: "white", letterSpacing: "0.01em" }}>Blind Date</div>
+          <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", fontWeight: 500, letterSpacing: "0.04em", marginTop: 2 }}>Discrete Dating Members</div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          {/* Coin balance — tap to open shop */}
+        {/* Right: coin badge + home button */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
+          {/* Coin badge */}
           <motion.button
-            whileTap={{ scale: 0.94 }}
+            whileTap={{ scale: 0.93 }}
             onClick={() => setShowCoinShop(true)}
             style={{
               display: "flex", alignItems: "center", gap: 5,
-              background: "rgba(0,0,0,0.45)", backdropFilter: "blur(10px)",
+              background: "rgba(0,0,0,0.50)", backdropFilter: "blur(10px)",
               borderRadius: 20, padding: "6px 12px",
-              border: "1px solid rgba(245,158,11,0.3)",
+              border: "1px solid rgba(245,158,11,0.35)",
               cursor: "pointer",
             }}
           >
-            <span style={{ fontSize: 14 }}>🪙</span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#f59e0b" }}>{balance}</span>
+            <span style={{ fontSize: 15 }}>🪙</span>
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#f59e0b" }}>{balance}</span>
           </motion.button>
 
-          <img
-            src="https://ik.imagekit.io/dateme/Untitleddasdasdasd-removebg-preview.png"
-            alt="Blind Date"
-            style={{ height: 52, width: "auto", filter: "drop-shadow(0 0 8px rgba(194,24,91,0.5))" }}
-          />
+          {/* Home button */}
+          <motion.button
+            whileTap={{ scale: 0.93 }}
+            onClick={onClose}
+            style={{
+              width: 36, height: 36, borderRadius: "50%", flexShrink: 0,
+              background: "rgba(0,0,0,0.50)", backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              color: "white", fontSize: 16,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >🏠</motion.button>
         </div>
       </div>
-
-      {/* Divider */}
-      <div style={{ height: 1, background: "rgba(194,24,91,0.25)", flexShrink: 0, marginBottom: 8 }} />
 
       {/* ── Card area ──────────────────────────────────────────────────── */}
       <div style={{
@@ -1475,54 +1560,58 @@ export default function BlindDateGrid({ userId, onClose, onStartChat }: { userId
 
       </div>
 
-      {/* ── Boost bar — flex sibling, never covered by cards ───────────── */}
+      {/* ── Bottom bar ─────────────────────────────────────────────────── */}
       <div style={{
         flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-        padding: `10px 20px max(18px, env(safe-area-inset-bottom, 18px))`,
+        padding: `8px 16px max(20px, env(safe-area-inset-bottom, 20px))`,
+        display: "flex", flexDirection: "column", gap: 10,
       }}>
-        {/* X close button */}
-        <motion.button
-          whileTap={{ scale: 0.92 }}
-          onClick={onClose}
-          style={{
-            width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
-            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(14px)",
-            border: "1.5px solid rgba(255,255,255,0.13)",
-            color: "rgba(255,255,255,0.65)", fontSize: 18,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer",
-            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
-          }}
-        >✕</motion.button>
+        {/* Close + coin balance row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={onClose}
+            style={{
+              width: 46, height: 46, borderRadius: "50%", flexShrink: 0,
+              background: "rgba(0,0,0,0.55)", backdropFilter: "blur(14px)",
+              border: "1.5px solid rgba(255,255,255,0.13)",
+              color: "rgba(255,255,255,0.7)", fontSize: 18,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+            }}
+          >✕</motion.button>
 
-        {/* Boost button */}
-        <motion.button
-          whileTap={{ scale: 0.94 }}
-          onClick={() => setShowBoostModal(true)}
-          style={{
-            display: "flex", alignItems: "center", gap: 8,
-            background: boostActive
-              ? "linear-gradient(135deg,rgba(245,158,11,0.28),rgba(249,115,22,0.22))"
-              : "rgba(0,0,0,0.55)",
-            backdropFilter: "blur(14px)",
-            borderRadius: 50, padding: "11px 28px",
-            border: boostActive
-              ? "1.5px solid rgba(245,158,11,0.65)"
-              : "1.5px solid rgba(255,255,255,0.13)",
-            cursor: "pointer",
-            boxShadow: boostActive
-              ? "0 0 18px rgba(245,158,11,0.35), 0 4px 16px rgba(0,0,0,0.4)"
-              : "0 4px 16px rgba(0,0,0,0.4)",
-          }}
-        >
-          <span style={{ fontSize: 18 }}>🚀</span>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: boostActive ? "#f59e0b" : "rgba(255,255,255,0.85)", lineHeight: 1.1 }}>
-              {boostActive ? `Boosted · ${boostHoursLeft}h left` : "Boost my profile"}
-            </span>
+          {/* Matches this month stat */}
+          <div style={{
+            flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "rgba(0,0,0,0.55)", backdropFilter: "blur(14px)",
+            borderRadius: 50, padding: "11px 20px",
+            border: "1.5px solid rgba(194,24,91,0.30)",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 18 }}>💘</span>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: "#fff", lineHeight: 1 }}>3,782</div>
+                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.50)", letterSpacing: "0.04em", marginTop: 1 }}>MATCHES THIS MONTH</div>
+              </div>
+            </div>
+            <div style={{
+              display: "flex", alignItems: "center", gap: 5,
+              fontSize: 10, fontWeight: 800, color: "#4ade80",
+              background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.30)",
+              borderRadius: 20, padding: "3px 10px", letterSpacing: "0.04em",
+            }}>
+              <motion.div
+                animate={{ opacity: [1, 0.2, 1], scale: [1, 0.75, 1] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e",
+                  boxShadow: "0 0 6px #22c55e" }}
+              />
+              LIVE
+            </div>
           </div>
-        </motion.button>
+        </div>
       </div>
 
       {/* ── Q&A Modal ──────────────────────────────────────────────────── */}

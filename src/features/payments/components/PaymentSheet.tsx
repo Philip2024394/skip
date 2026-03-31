@@ -1,15 +1,16 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import { X, Check, Crown, Zap, Star, Globe, Ticket, Rocket, ShieldCheck, EyeOff, Sparkles, Heart } from "lucide-react";
-import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
-import { useUserCurrency } from "@/shared/hooks/useUserCurrency";
+import { PREMIUM_FEATURES, PremiumFeature, getFeaturePriceCents } from "@/data/premiumFeatures";
+import { useUserCurrency, getUserCountry } from "@/shared/hooks/useUserCurrency";
+import { getRegionForCountry } from "@/shared/utils/regionalPricing";
 
 interface PaymentSheetProps {
   open: boolean;
   onClose: () => void;
   /** Pre-selected feature to highlight. Null = show all equally */
   selectedFeature?: PremiumFeature | null;
-  onPurchase: (feature: PremiumFeature) => void;
+  onPurchase: (feature: PremiumFeature, region?: string) => void;
   loading?: boolean;
 }
 
@@ -57,17 +58,24 @@ export default function PaymentSheet({
   const subs = PREMIUM_FEATURES.filter(f => SUBSCRIPTIONS.includes(f.id));
   const oneTime = PREMIUM_FEATURES.filter(f => !SUBSCRIPTIONS.includes(f.id));
 
+  // Derive user's region once for consistent display
+  const userCountry = getUserCountry();
+  const userRegion  = getRegionForCountry(userCountry);
+
+  /** Returns the regional price in cents for a feature */
+  const regionalCents = (f: PremiumFeature) => getFeaturePriceCents(f.id, userCountry);
+
   function handleSelect(f: PremiumFeature) {
     setActive(f);
   }
 
   function handleBuy() {
     if (!syncedActive) return;
-    onPurchase(syncedActive);
+    onPurchase(syncedActive, userRegion);
   }
 
   const priceLabel = syncedActive
-    ? fmt(syncedActive.priceCents, syncedActive.isSubscription ? "/mo" : "")
+    ? fmt(regionalCents(syncedActive), syncedActive.isSubscription ? "/mo" : "")
     : null;
 
   return (
@@ -163,7 +171,7 @@ export default function PaymentSheet({
                     badge={BADGE[f.id]}
                     gradient={GRADIENT_MAP[f.color] ?? GRADIENT_MAP.vip}
                     icon={ICON_MAP[f.icon] ?? ICON_MAP.crown}
-                    priceLabel={fmt(f.priceCents, "/mo")}
+                    priceLabel={fmt(regionalCents(f), "/mo")}
                     onSelect={() => handleSelect(f)}
                   />
                 ))}
@@ -180,7 +188,7 @@ export default function PaymentSheet({
                     badge={BADGE[f.id]}
                     gradient={GRADIENT_MAP[f.color] ?? GRADIENT_MAP.love}
                     icon={ICON_MAP[f.icon] ?? ICON_MAP.rocket}
-                    priceLabel={fmt(f.priceCents)}
+                    priceLabel={fmt(regionalCents(f))}
                     onSelect={() => handleSelect(f)}
                   />
                 ))}

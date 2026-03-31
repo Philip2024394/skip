@@ -64,29 +64,41 @@ const ReportDialog = ({ open, onOpenChange, reportedUserId, reportedUserName, on
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white max-w-sm rounded-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-white">{t("report.title")} {reportedUserName}</DialogTitle>
-          <DialogDescription className="text-white/50">{t("report.why")}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-2">
-          {REASON_KEYS.map(({ value, key }) => (
-            <button key={key} onClick={() => setReason(value)}
-              className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all ${reason === value ? "gradient-love text-white" : "bg-white/5 text-white/70 hover:bg-white/10"}`}>
-              {t(key)}
-            </button>
-          ))}
-        </div>
-        {reason && (
-          <Textarea placeholder={t("report.details")} className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl resize-none" rows={2} value={details} onChange={(e) => setDetails(e.target.value)} />
-        )}
-        <div className="flex gap-2 mt-2">
-          <Button onClick={handleBlock} disabled={blocking} variant="outline" className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl">
-            {blocking ? "Blocking…" : t("report.blockUser")}
-          </Button>
-          <Button onClick={handleSubmit} disabled={loading || !reason} className="flex-1 gradient-love text-white border-0 rounded-xl">
-            {loading ? t("report.sending") : t("report.submit")}
-          </Button>
+      <DialogContent className="border-white/10 text-white max-w-sm rounded-2xl overflow-hidden p-0">
+        <div
+          className="relative p-6 rounded-2xl"
+          style={{
+            backgroundImage: "url('https://ik.imagekit.io/dateme/Untitledsdfasdfsd.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm rounded-2xl" />
+          <div className="relative z-10 space-y-4">
+            <DialogHeader>
+              <DialogTitle className="text-white">{t("report.title")} {reportedUserName}</DialogTitle>
+              <DialogDescription className="text-white/50">{t("report.why")}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              {REASON_KEYS.map(({ value, key }) => (
+                <button key={key} onClick={() => setReason(value)}
+                  className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all ${reason === value ? "gradient-love text-white" : "bg-white/5 text-white/70 hover:bg-white/10"}`}>
+                  {t(key)}
+                </button>
+              ))}
+            </div>
+            {reason && (
+              <Textarea placeholder={t("report.details")} className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl resize-none" rows={2} value={details} onChange={(e) => setDetails(e.target.value)} />
+            )}
+            <div className="flex gap-2 mt-2">
+              <Button onClick={handleBlock} disabled={blocking} variant="outline" className="flex-1 border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl">
+                {blocking ? "Blocking…" : t("report.blockUser")}
+              </Button>
+              <Button onClick={handleSubmit} disabled={loading || !reason} className="flex-1 gradient-love text-white border-0 rounded-xl">
+                {loading ? t("report.sending") : t("report.submit")}
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

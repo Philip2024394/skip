@@ -124,7 +124,7 @@ export const DATE_IDEA_METADATA: Record<string, DateIdeaMetadata> = {
     vibe: "Romantic & Elegant",
     whyGoodDate: [
       "Shows thoughtfulness and effort",
-      "Ambient lighting creates intimate mood",
+      "Ambient lighting creates a romantic mood",
       "Great food enhances the experience",
       "Perfect for making a good impression"
     ],

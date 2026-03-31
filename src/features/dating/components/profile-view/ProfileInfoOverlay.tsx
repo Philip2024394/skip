@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { getPrimaryBadgeKey } from "@/shared/utils/profileBadges";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { useBlockUser } from "@/shared/hooks/useBlockUser";
+import DatingInsightsPanel from "./DatingInsightsPanel";
 
 import { calcValuesMatch } from "@/shared/utils/valuesQuiz";
 import { QUESTION_TEMPLATES } from "@/features/dating/data/profileQuestions";
@@ -24,6 +25,9 @@ interface ProfileInfoPanelProps {
   answeredValues?: Record<string, string>;
   coinBalance?: number;
   onBlock?: () => void;
+  currentUserId?: string;
+  deductCoins?: (amount: number, reason: string) => Promise<boolean>;
+  isConnected?: boolean;
 }
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: string }) =>
@@ -400,7 +404,7 @@ function ShyFieldsSection({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift, onAskQuestion, askedStates = {}, answeredValues = {}, coinBalance = 0, onBlock }: ProfileInfoPanelProps) {
+export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift, onAskQuestion, askedStates = {}, answeredValues = {}, coinBalance = 0, onBlock, currentUserId, deductCoins, isConnected = false }: ProfileInfoPanelProps) {
   const navigate = useNavigate();
   const basicInfo = profile?.basic_info || {};
   const lifestyleInfo = profile?.lifestyle_info || {};
@@ -437,6 +441,22 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
 
   const { blockUser, blocking } = useBlockUser();
   const [confirmBlock, setConfirmBlock] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
+
+  const handleReport = async (reason: string) => {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && profile?.id) {
+      await supabase.from("reports" as any).insert({
+        reporter_id: user.id,
+        reported_id: profile.id,
+        reason,
+      }).then(() => {});
+    }
+    setReportSent(true);
+    setShowReport(false);
+  };
 
   return (
     <motion.div
@@ -865,6 +885,102 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
           </div>
           );
         })()}
+
+        {/* ── Dating Insights section ── */}
+        {currentUserId && deductCoins && (
+          <DatingInsightsPanel
+            profile={profile}
+            currentUserId={currentUserId}
+            coinBalance={coinBalance}
+            deductCoins={deductCoins}
+            isConnected={isConnected}
+          />
+        )}
+
+        {/* ── Report section ── */}
+        {profile?.id && (
+          <div style={{ marginTop: 8, marginBottom: 4 }}>
+            {!reportSent ? (
+              <button
+                onClick={() => setShowReport(true)}
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.18)",
+                  borderRadius: 12, padding: "9px 16px", cursor: "pointer",
+                  color: "rgba(239,68,68,0.65)", fontSize: 12, fontWeight: 600,
+                }}
+              >
+                <span style={{ fontSize: 13 }}>🚩</span> Is this person real? Report
+              </button>
+            ) : (
+              <p style={{ textAlign: "center", color: "rgba(74,222,128,0.7)", fontSize: 11, fontWeight: 600, margin: 0 }}>
+                ✓ Report submitted — our team will review within 24 hours
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* ── Report sheet overlay ── */}
+        <AnimatePresence>
+          {showReport && (
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              style={{
+                position: "fixed", inset: 0, zIndex: 200,
+                background: "rgba(0,0,0,0.72)", backdropFilter: "blur(8px)",
+                display: "flex", alignItems: "flex-end",
+              }}
+              onClick={() => setShowReport(false)}
+            >
+              <motion.div
+                initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
+                transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                onClick={e => e.stopPropagation()}
+                style={{ width: "100%", borderRadius: "20px 20px 0 0", overflow: "hidden", position: "relative" }}
+              >
+                <div style={{
+                  position: "absolute", inset: 0,
+                  backgroundImage: "url('https://ik.imagekit.io/dateme/Untitledsdfasdfsd.png')",
+                  backgroundSize: "cover", backgroundPosition: "center",
+                }} />
+                <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.62)", backdropFilter: "blur(2px)" }} />
+                <div style={{ position: "relative", zIndex: 1, padding: "20px 20px 40px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+                    <p style={{ color: "white", fontWeight: 800, fontSize: 16, margin: 0 }}>
+                      Report {profileName.split(" ")[0]}
+                    </p>
+                    <button onClick={() => setShowReport(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.5)", fontSize: 20, lineHeight: 1 }}>✕</button>
+                  </div>
+                  <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
+                    Your report is anonymous. Our team reviews all reports within 24 hours.
+                  </p>
+                  {[
+                    { key: "fake_profile", label: "Fake or catfish profile", emoji: "🎭" },
+                    { key: "suspicious_messages", label: "Suspicious or scam messages", emoji: "⚠️" },
+                    { key: "money_request", label: "Asking for money or crypto", emoji: "💸" },
+                    { key: "inappropriate", label: "Inappropriate content", emoji: "🚫" },
+                    { key: "other", label: "Other concern", emoji: "🔍" },
+                  ].map(opt => (
+                    <motion.button
+                      key={opt.key}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleReport(opt.key)}
+                      style={{
+                        width: "100%", display: "flex", alignItems: "center", gap: 12,
+                        background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+                        borderRadius: 14, padding: "12px 14px", marginBottom: 8,
+                        cursor: "pointer", textAlign: "left",
+                      }}
+                    >
+                      <span style={{ fontSize: 20 }}>{opt.emoji}</span>
+                      <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: 600 }}>{opt.label}</span>
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── My Bestie's section ── */}
         {(() => {

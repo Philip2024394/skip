@@ -215,6 +215,18 @@ const PaymentSuccess = () => {
           if (error) throw error;
           if (!data?.success) throw new Error(data?.error || "Payment verification failed");
           setFeatureActivated(feature);
+        } else if (searchParams.get("teddy_invite")) {
+          // Teddy Room invite payment — activate via verify-payment
+          const { data, error } = await supabase.functions.invoke("verify-payment", { body: { sessionId } });
+          if (error) throw error;
+          if (!data?.success) throw new Error(data?.error || "Payment verification failed");
+          setFeatureActivated("teddy_room_invite");
+        } else if (searchParams.get("key_purchase") === "true") {
+          // Key bundle purchase — award keys server-side and show key success screen
+          const { data, error } = await supabase.functions.invoke("verify-payment", { body: { sessionId } });
+          if (error) throw error;
+          if (!data?.success) throw new Error(data?.error || "Payment verification failed");
+          setFeatureActivated("key_bundle");
         } else {
           // Connection unlock (WhatsApp / Video / Both)
           const { data, error } = await supabase.functions.invoke("verify-payment", { body: { sessionId } });
@@ -352,6 +364,16 @@ const PaymentSuccess = () => {
       icon: <Video className="w-8 h-8 text-purple-400" />,
       headline: "Call Extended! 📹",
       sub: "15 more minutes have been added to your video call. Enjoy your conversation!",
+    },
+    key_bundle: {
+      icon: <span className="text-5xl">🗝️</span>,
+      headline: "Keys Added to Your Wallet!",
+      sub: "Your keys are ready — tap any profile you've matched with, open the safe, and reveal their contact details.",
+    },
+    teddy_room_invite: {
+      icon: <span className="text-5xl">🐻</span>,
+      headline: "Welcome to the Teddy Room! 🎉",
+      sub: "You're in. Head back to the chat and tap 🐻 Our Room to share photos and videos privately together.",
     },
   };
 

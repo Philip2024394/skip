@@ -179,6 +179,63 @@ BEGIN
 END; $$;`,
   },
   {
+    step: 7,
+    title: "Contact provider + chat-first columns",
+    desc: "Adds contact_provider (WhatsApp / Telegram / Instagram / etc.) and chat_first flag to profiles. Used to display provider icons on swipe cards and gate the contact-reveal flow.",
+    sql: `-- Add contact provider columns to profiles
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS contact_provider TEXT,
+  ADD COLUMN IF NOT EXISTS chat_first       BOOLEAN NOT NULL DEFAULT false;
+
+COMMENT ON COLUMN public.profiles.contact_provider IS 'Platform the user prefers for off-app contact: whatsapp | telegram | instagram | tiktok | snapchat | phone | line | wechat | signal | facebook';
+COMMENT ON COLUMN public.profiles.chat_first       IS 'When true the user wants to chat in-app before their contact is purchased';`,
+  },
+  {
+    step: 8,
+    title: "Teddy Room invite system",
+    desc: "Creates teddy_room_invites (invite tracking + Stripe session) and teddy_room_media (shared photos/videos per room pair) tables, with RLS policies so only the two matched users can access each room.",
+    sql: `-- Teddy Room invites
+CREATE TABLE IF NOT EXISTS public.teddy_room_invites (
+  id                uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_owner_id     uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  invited_user_id   uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  status            text NOT NULL DEFAULT 'pending'
+                      CHECK (status IN ('pending','accepted','declined','expired')),
+  stripe_session_id text,
+  subscription_id   text,
+  created_at        timestamptz NOT NULL DEFAULT now(),
+  accepted_at       timestamptz,
+  expires_at        timestamptz,
+  UNIQUE (room_owner_id, invited_user_id)
+);
+ALTER TABLE public.teddy_room_invites ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Owner can manage own invites"
+  ON public.teddy_room_invites FOR ALL
+  USING (auth.uid() = room_owner_id OR auth.uid() = invited_user_id);
+CREATE POLICY "Admin full access invites"
+  ON public.teddy_room_invites FOR ALL USING (public.is_admin());
+
+-- Teddy Room shared media
+CREATE TABLE IF NOT EXISTS public.teddy_room_media (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_owner_id   uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  invited_user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  uploaded_by     uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  media_url       text NOT NULL,
+  media_type      text NOT NULL CHECK (media_type IN ('photo','video')),
+  caption         text,
+  created_at      timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS teddy_media_room_idx
+  ON public.teddy_room_media (room_owner_id, invited_user_id, created_at DESC);
+ALTER TABLE public.teddy_room_media ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Room members can manage media"
+  ON public.teddy_room_media FOR ALL
+  USING (auth.uid() = room_owner_id OR auth.uid() = invited_user_id);
+CREATE POLICY "Admin full access media"
+  ON public.teddy_room_media FOR ALL USING (public.is_admin());`,
+  },
+  {
     step: 5,
     title: "Create connect4_games table",
     desc: "Stores Connect 4 game results, bets, and win/loss records. Required for the Games tab in admin.",

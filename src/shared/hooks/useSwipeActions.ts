@@ -248,11 +248,11 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
     props.setFeatureDialog(feature);
   }, [props.user, props.setGuestPrompt, props.setFeatureDialog]);
 
-  const handleConfirmPurchase = useCallback(async (feature: PremiumFeature) => {
+  const handleConfirmPurchase = useCallback(async (feature: PremiumFeature, region?: string) => {
     props.setFeatureLoading(true);
     const invokePurchase = async (): Promise<{ data: any; error: any }> => {
       return supabase.functions.invoke("purchase-feature", {
-        body: { priceId: feature.priceId, featureId: feature.id },
+        body: { priceId: feature.priceId, featureId: feature.id, region: region ?? "us" },
       });
     };
     try {

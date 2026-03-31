@@ -11,6 +11,8 @@
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import type { PremiumFeature } from "@/data/premiumFeatures";
+import { getRegionForCountry } from "@/shared/utils/regionalPricing";
+import { getUserCountry } from "@/shared/hooks/useUserCurrency";
 
 /** Map our feature IDs to RevenueCat/Google Play product IDs */
 const GOOGLE_PLAY_PRODUCT_IDS: Record<string, string> = {
@@ -44,7 +46,7 @@ export function isNetworkError(err: unknown): boolean {
  */
 export async function purchaseFeature(
   feature: PremiumFeature,
-  options?: { targetUserId?: string }
+  options?: { targetUserId?: string; region?: string }
 ): Promise<{ url?: string; error?: string }> {
   if (isNativePlatform()) {
     return purchaseNative(feature, options);
@@ -56,14 +58,17 @@ export async function purchaseFeature(
 
 async function purchaseWeb(
   feature: PremiumFeature,
-  options?: { targetUserId?: string }
+  options?: { targetUserId?: string; region?: string }
 ): Promise<{ url?: string; error?: string }> {
   try {
+    // Resolve region: caller-supplied → detected from stored country → us fallback
+    const region = options?.region ?? getRegionForCountry(getUserCountry());
     const fnName = feature.id === "vip" ? "purchase-subscription" : "purchase-feature";
     const { data, error } = await supabase.functions.invoke(fnName, {
       body: {
-        priceId: feature.priceId,
+        priceId: feature.priceId, // kept for backwards-compat with purchase-subscription
         featureId: feature.id,
+        region,
         ...(options?.targetUserId ? { targetUserId: options.targetUserId } : {}),
       },
     });

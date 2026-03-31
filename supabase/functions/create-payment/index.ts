@@ -45,18 +45,24 @@ serve(async (req) => {
     let targetUserId: string | undefined;
     let targetHasBadges: boolean | undefined;
     let connectionType: string | undefined;
+    let keyPurchase = false;
+    let bundleSize: number | "monthly" = 1;
+    let userRegion: string | undefined; // asia | au | us | uk | eu
     try {
       const body = await req.json();
       targetUserId = body?.targetUserId;
       targetHasBadges = body?.targetHasBadges === true;
       connectionType = body?.connectionType; // 'whatsapp' | 'video' | 'both'
+      keyPurchase = body?.keyPurchase === true;
+      bundleSize = body?.bundleSize ?? 1;
+      userRegion = body?.region; // optional — passed from frontend country detection
     } catch {
       return new Response(JSON.stringify({ error: "Missing or invalid request body" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
       });
     }
-    if (!targetUserId) {
+    if (!keyPurchase && !targetUserId) {
       return new Response(JSON.stringify({ error: "targetUserId is required" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,
@@ -66,7 +72,7 @@ serve(async (req) => {
     const isUuid = (v: string) =>
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 
-    if (isUuid(targetUserId)) {
+    if (!keyPurchase && targetUserId && isUuid(targetUserId)) {
       const nowIso = new Date().toISOString();
       const [{ data: iLike, error: iLikeErr }, { data: theyLike, error: theyLikeErr }] = await Promise.all([
         supabaseAdmin
@@ -99,6 +105,53 @@ serve(async (req) => {
           status: 403,
         });
       }
+    }
+
+    // ── Key bundle purchase — skip free-unlock / VIP checks, go straight to Stripe ──
+    if (keyPurchase) {
+      const isMonthly = bundleSize === "monthly";
+      let priceId: string;
+      let checkoutMode: "payment" | "subscription" = "payment";
+      if (isMonthly) {
+        priceId = Deno.env.get("STRIPE_PRICE_KEY_MONTHLY") || "";
+        checkoutMode = "subscription";
+      } else if (bundleSize === 10) {
+        priceId = Deno.env.get("STRIPE_PRICE_KEY_10") || "";
+      } else if (bundleSize === 3) {
+        priceId = Deno.env.get("STRIPE_PRICE_KEY_3") || "";
+      } else {
+        priceId = Deno.env.get("STRIPE_PRICE_KEY_1") || Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ";
+      }
+
+      const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+        apiVersion: "2024-11-20.acacia",
+      });
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      const customerId = customers.data[0]?.id;
+      const origin = req.headers.get("origin") || "";
+      const bundleSizeStr = String(bundleSize);
+
+      const sessionParams: Parameters<typeof stripe.checkout.sessions.create>[0] = {
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: checkoutMode,
+        success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}&key_purchase=true`,
+        cancel_url: `${origin}/`,
+        metadata: { user_id: user.id, key_purchase: "true", key_bundle_size: bundleSizeStr },
+      };
+
+      if (isMonthly) {
+        (sessionParams as any).subscription_data = {
+          metadata: { user_id: user.id, feature_id: "key_monthly" },
+        };
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
     }
 
     // ── Check buyer profile for free unlocks + subscription ─────────────────
@@ -206,9 +259,38 @@ serve(async (req) => {
       });
     }
 
-    const priceId = targetHasBadges
-      ? (Deno.env.get("STRIPE_PRICE_WHATSAPP_BADGES") || Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ")
-      : (Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ");
+    // ── Regional price lookup ─────────────────────────────────────────────────
+    // Try to get the Stripe price ID for the user's region from the
+    // regional_prices table (populated by setup-regional-prices function).
+    // Falls back to the legacy env var if regional pricing isn't set up yet.
+    let priceId: string;
+    {
+      const productKey = targetHasBadges ? "whatsapp_badges" : "whatsapp";
+      let regionalPriceId: string | null = null;
+
+      if (userRegion) {
+        const { data: regionalRow } = await supabaseAdmin
+          .from("regional_prices")
+          .select("price_id")
+          .eq("product_key", "whatsapp")
+          .eq("region", userRegion)
+          .maybeSingle();
+        regionalPriceId = regionalRow?.price_id ?? null;
+      }
+
+      // Fallback chain: regional → badges env → base env → hardcoded
+      if (regionalPriceId) {
+        priceId = regionalPriceId;
+      } else if (targetHasBadges) {
+        priceId = Deno.env.get("STRIPE_PRICE_WHATSAPP_BADGES")
+          || Deno.env.get("STRIPE_PRICE_WHATSAPP")
+          || "price_1T8NbHBChzWuxQIpeGY4LLYQ";
+      } else {
+        priceId = Deno.env.get("STRIPE_PRICE_WHATSAPP") || "price_1T8NbHBChzWuxQIpeGY4LLYQ";
+      }
+
+      void productKey; // suppress unused warning
+    }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2024-11-20.acacia",
@@ -237,6 +319,7 @@ serve(async (req) => {
         user_id: user.id,
         target_user_id: targetUserId,
         connection_type: connectionType || "whatsapp",
+        region: userRegion || "us",
       },
     });
 

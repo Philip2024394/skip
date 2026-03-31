@@ -1,7 +1,7 @@
 // Unique descriptions for every date idea — used in profile lower window and date idea cards
 export const DATE_IDEA_DESCRIPTIONS: Record<string, string> = {
   // ── Café & Drinks ──
-  "Coffee At A Cozy Café ☕": "Perfect for intimate conversations in a warm, relaxed setting. Great coffee and comfortable chairs make it easy to open up and enjoy each other's company without pressure.",
+  "Coffee At A Cozy Café ☕": "Perfect for meaningful conversations in a warm, relaxed setting. Great coffee and comfortable chairs make it easy to open up and enjoy each other's company without pressure.",
   "Coffee And Deep Conversation ☕": "Two cups, one table, and a conversation that could go anywhere. The best connections start with honesty over a simple coffee.",
   "Morning Coffee Date ☀️": "Fresh starts make for fresh conversations. Morning energy is positive and focused — great for people who want something genuine from the start.",
   "Iced Coffee And A Walk 🧋": "Grab something cold and let the walk take you wherever feels right. No plans, no pressure — just vibes and good conversation.",
@@ -17,7 +17,7 @@ export const DATE_IDEA_DESCRIPTIONS: Record<string, string> = {
   "Casual Lunch Date 🍽️": "No overthinking, no fancy outfits — just two people enjoying a good meal and seeing if the chemistry is real.",
   "Street Food Adventure 🍜": "Hop between stalls, share plates, and discover hidden gems. The energy of the street becomes the backdrop for a date full of flavour.",
   "Trying A New Restaurant Together 🍽️": "Exploring a place neither of you has been to means everything is a shared discovery. That sense of newness sparks real connection.",
-  "Sushi Night Together 🍣": "Rolling through a sushi menu together feels intimate and fun. Great food, clean flavours, and a chill atmosphere make for easy conversation.",
+  "Sushi Night Together 🍣": "Rolling through a sushi menu together feels personal and fun. Great food, clean flavours, and a chill atmosphere make for easy conversation.",
   "Pizza And A Movie Night 🍕": "The ultimate low-pressure combo. Grab a slice, pick a film, and let the evening unfold naturally.",
   "Brunch On A Lazy Weekend 🥐": "Slow mornings, good food, and no rush. Brunch dates feel more personal because they take the formality out of meeting someone new.",
   "Dessert And Late Night Walk 🍰": "Sweet treats followed by a quiet stroll under the city lights. Relaxed, romantic, and the kind of date that naturally extends into the night.",
@@ -31,7 +31,7 @@ export const DATE_IDEA_DESCRIPTIONS: Record<string, string> = {
 
   // ── Outdoors & Nature ──
   "Walk In The Park 🌳": "Fresh air and natural scenery make conversations flow freely. Low pressure, no time limit — just two people strolling and discovering what they have in common.",
-  "Picnic In The Park 🧺": "Thoughtful preparation goes a long way. A blanket, good food, and open sky create an intimate, relaxed atmosphere for real connection.",
+  "Picnic In The Park 🧺": "Thoughtful preparation goes a long way. A blanket, good food, and open sky create a relaxed, open atmosphere for real connection.",
   "Lakeside Picnic 🦢": "The calm water, gentle breeze, and natural beauty create a peaceful setting where meaningful conversations unfold naturally.",
   "Beach Sunset Walk 🌅": "Golden light, sea breeze, and the sound of waves — hard to beat. The setting does the work, letting the conversation go wherever it needs to.",
   "Walk Along The Beach 🏖️": "Sand between your toes, ocean stretching to the horizon. A beach walk strips away pretence and lets you just be real with each other.",
@@ -84,7 +84,7 @@ export const DATE_IDEA_DESCRIPTIONS: Record<string, string> = {
   "Badminton Game 🏸": "Simple, active, and surprisingly fun as a date. The rallies keep you moving and the breaks keep you talking.",
   "Beach Volleyball 🏐": "Sun, sand, and teamwork. Playing beach volleyball together is energetic, playful, and a natural way to bond.",
   "Rock Climbing Gym 🧗": "Trust, encouragement, and cheering each other on. Rock climbing dates build connection through shared challenge and support.",
-  "Yoga In The Park 🧘": "Stretching and breathing together in nature creates a calm, centred energy. A yoga date is intimate in the most peaceful way.",
+  "Yoga In The Park 🧘": "Stretching and breathing together in nature creates a calm, centred energy. A yoga date is calming in the most peaceful way.",
 
   // ── Romantic & Relaxed ──
   "Watching The City Lights Together 🌃": "Finding a quiet spot above the city and watching it sparkle below. The view sets the scene for the kind of conversation you never want to end.",
@@ -94,7 +94,7 @@ export const DATE_IDEA_DESCRIPTIONS: Record<string, string> = {
   "Long Drive With Music 🎶": "Windows down, playlist on, and open road ahead. A long drive date is about the journey and the person beside you.",
   "Sunset Picnic 🌅": "Golden light, fresh air, and good food on a blanket. The setting does the work, letting the conversation go wherever it needs to.",
   "Sharing Stories Under The Stars ✨": "When the world goes quiet and the sky opens up, something shifts. This is where real stories come out — the ones that matter.",
-  "Balcony Dinner Together 🕯️": "A private dinner with a view, candlelight optional. It's intimate without being overwhelming — just two people and good food.",
+  "Balcony Dinner Together 🕯️": "A private dinner with a view, candlelight optional. It's personal without being overwhelming — just two people and good food.",
   "Cozy Movie Night At Home 🛋️": "Blankets, snacks, and a film you both pick together. Home movie nights feel safe, warm, and surprisingly close.",
   "Slow Dancing Together 💃": "No choreography needed — just two people, a song, and the courage to be close. Slow dancing is timeless romance.",
 

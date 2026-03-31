@@ -1,9 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { Button } from "@/shared/components/button";
-import { PremiumFeature, getFeatureIcon, getFeatureGradient } from "@/data/premiumFeatures";
+import { PremiumFeature, getFeatureIcon, getFeatureGradient, getFeaturePriceCents } from "@/data/premiumFeatures";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useUserCurrency } from "@/shared/hooks/useUserCurrency";
+import { useUserCurrency, getUserCountry } from "@/shared/hooks/useUserCurrency";
+import { getRegionForCountry } from "@/shared/utils/regionalPricing";
 
 const featureDetails: Record<string, { bullets: string[]; tagline: string }> = {
   boost: {
@@ -65,7 +66,7 @@ const featureDetails: Record<string, { bullets: string[]; tagline: string }> = {
 interface FeaturePurchaseDialogProps {
   feature: PremiumFeature | null;
   onClose: () => void;
-  onContinue: (feature: PremiumFeature) => void;
+  onContinue: (feature: PremiumFeature, region?: string) => void;
   loading?: boolean;
 }
 
@@ -74,12 +75,16 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
   const { fmt } = useUserCurrency();
   if (!feature) return null;
 
+  const userCountry = getUserCountry();
+  const userRegion  = getRegionForCountry(userCountry);
+  const regionalCents = getFeaturePriceCents(feature.id, userCountry);
+
   const Icon = getFeatureIcon(feature.icon);
   const gradient = getFeatureGradient(feature.color);
   const details = featureDetails[feature.id] || { tagline: feature.description, bullets: [] };
   // Detect subscription (VIP) by feature id or price string containing "/mo"
   const priceSuffix = feature.id === "vip" || feature.price.includes("/mo") ? "/mo" : "";
-  const displayPrice = fmt(feature.priceCents, priceSuffix);
+  const displayPrice = fmt(regionalCents, priceSuffix);
 
   return (
     <AnimatePresence>
@@ -145,7 +150,7 @@ const FeaturePurchaseDialog = ({ feature, onClose, onContinue, loading }: Featur
 
           {/* Price & CTA */}
           <Button
-            onClick={() => onContinue(feature)}
+            onClick={() => onContinue(feature, userRegion)}
             disabled={loading}
             className={`w-full ${gradient} text-primary-foreground border-0 font-bold h-12 rounded-xl text-base`}
           >

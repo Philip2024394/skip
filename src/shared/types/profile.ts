@@ -117,4 +117,6 @@ export interface Profile {
   social_followers?: number | null;
   video_verified?: boolean;
   photo_verified?: boolean;
+  contact_provider?: string | null;
+  chat_first?: boolean | null;
 }

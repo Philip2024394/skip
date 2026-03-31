@@ -25,6 +25,37 @@ async function activateFeature(session: Stripe.Checkout.Session) {
 
   if (!userId) return;
 
+  // Key bundle purchase (create-payment keyPurchase flow)
+  if (session.metadata?.key_purchase === "true") {
+    const bundleSizeRaw = session.metadata?.key_bundle_size ?? "1";
+    const bundleAward = bundleSizeRaw === "monthly" ? 5 : parseInt(bundleSizeRaw, 10);
+    const { data: prof } = await supabaseAdmin
+      .from("profiles")
+      .select("keys_balance")
+      .eq("id", userId)
+      .maybeSingle();
+    await supabaseAdmin
+      .from("profiles")
+      .update({ keys_balance: (prof?.keys_balance ?? 0) + bundleAward })
+      .eq("id", userId);
+    await supabaseAdmin.from("key_transactions").insert({
+      user_id: userId,
+      type: "earn",
+      amount: bundleAward,
+      reason: `stripe_bundle_${bundleSizeRaw}`,
+    });
+    await supabaseAdmin.from("payments").insert({
+      user_id: userId,
+      stripe_session_id: session.id,
+      stripe_payment_intent: session.payment_intent as string,
+      amount_cents: session.amount_total ?? 0,
+      currency: session.currency ?? "usd",
+      status: "paid",
+      feature_id: "key_bundle",
+    });
+    return;
+  }
+
   // WhatsApp / Video / Both connection payment (create-payment flow)
   if (targetUserId && !featureId) {
     const connectionType = session.metadata?.connection_type || "whatsapp";
@@ -158,6 +189,21 @@ async function activateFeature(session: Stripe.Checkout.Session) {
         teddy_room_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       }).eq("id", userId);
       break;
+
+    case "teddy_room_invite": {
+      const roomOwnerId = session.metadata?.room_owner_id;
+      const inviteId = session.metadata?.invite_id;
+      const until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      if (roomOwnerId && inviteId) {
+        await supabaseAdmin.from("teddy_room_invites").update({
+          status: "accepted",
+          accepted_at: new Date().toISOString(),
+          expires_at: until,
+          stripe_session_id: session.id,
+        }).eq("id", inviteId);
+      }
+      break;
+    }
   }
 
   // Record payment for all feature purchases
@@ -215,7 +261,17 @@ serve(async (req) => {
         const featureId = sub.metadata?.feature_id;
         if (userId) {
           const until = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-          if (featureId === "global_dating") {
+          if (featureId === "key_monthly") {
+            // Award 5 keys per monthly renewal
+            const { data: prof } = await supabaseAdmin
+              .from("profiles").select("keys_balance").eq("id", userId).maybeSingle();
+            await supabaseAdmin.from("profiles")
+              .update({ keys_balance: (prof?.keys_balance ?? 0) + 5 })
+              .eq("id", userId);
+            await supabaseAdmin.from("key_transactions").insert({
+              user_id: userId, type: "earn", amount: 5, reason: "monthly_renewal",
+            });
+          } else if (featureId === "global_dating") {
             await supabaseAdmin.from("profiles").update({
               global_dating_active: true,
               global_dating_expires_at: until,
@@ -227,6 +283,16 @@ serve(async (req) => {
               teddy_room_active: true,
               teddy_room_expires_at: until,
             }).eq("id", userId);
+          } else if (featureId === "teddy_room_invite") {
+            // Renew invite membership for another month
+            const inviteId = sub.metadata?.invite_id;
+            if (inviteId) {
+              await supabaseAdmin.from("teddy_room_invites").update({
+                status: "accepted",
+                expires_at: until,
+                subscription_id: subId,
+              }).eq("id", inviteId);
+            }
           } else {
             // VIP / Connect Monthly
             await supabaseAdmin.from("profiles").update({
@@ -258,6 +324,14 @@ serve(async (req) => {
             teddy_room_active: false,
             teddy_room_expires_at: null,
           }).eq("id", userId);
+        } else if (featureId === "teddy_room_invite") {
+          // Mark invite as expired on cancellation
+          const inviteId = sub.metadata?.invite_id;
+          if (inviteId) {
+            await supabaseAdmin.from("teddy_room_invites")
+              .update({ status: "expired" })
+              .eq("id", inviteId);
+          }
         } else {
           // VIP / Connect Monthly
           await supabaseAdmin.from("profiles").update({

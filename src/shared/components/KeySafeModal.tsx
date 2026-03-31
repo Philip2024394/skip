@@ -212,8 +212,16 @@ function FragmentDots({ count }: { count: number }) {
   );
 }
 
+// ── Bundle options ─────────────────────────────────────────────────────────────
+const KEY_BUNDLES = [
+  { size: 1 as const,         label: "1 Key",       price: "$1.99",  sub: "",             badge: "",           color: "#c2185b" },
+  { size: 3 as const,         label: "3 Keys",      price: "$4.99",  sub: "~$1.66 each",  badge: "POPULAR",    color: "#7c3aed" },
+  { size: 10 as const,        label: "10 Keys",     price: "$9.99",  sub: "~$1.00 each",  badge: "BEST VALUE", color: "#d97706" },
+  { size: "monthly" as const, label: "Monthly",     price: "$5.99",  sub: "5 keys/month", badge: "SUBSCRIBE",  color: "#0891b2" },
+];
+
 // ── Main component ─────────────────────────────────────────────────────────────
-export default function KeySafeModal({ profile, userId, onClose, onBuyKey }: Props) {
+export default function KeySafeModal({ profile, userId, onClose }: Omit<Props, "onBuyKey"> & { onBuyKey?: () => void }) {
   const [screen, setScreen] = useState<Screen>("loading");
   const [keyBalance, setKeyBalance] = useState(0);
   const [fragments, setFragments] = useState(0);
@@ -222,6 +230,8 @@ export default function KeySafeModal({ profile, userId, onClose, onBuyKey }: Pro
   const [convertError, setConvertError] = useState<string | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [unlockError, setUnlockError] = useState<string | null>(null);
+  const [buyingBundle, setBuyingBundle] = useState<1 | 3 | 10 | "monthly" | null>(null);
+  const [buyError, setBuyError] = useState<string | null>(null);
   const coinBal = useCoinBalance(userId);
 
   const avatarSrc = profile.photos?.[0] ?? profile.avatar_url;
@@ -273,6 +283,26 @@ export default function KeySafeModal({ profile, userId, onClose, onBuyKey }: Pro
       setTimeout(() => setScreen("revealed"), 3800);
     } else {
       setUnlockError(data?.error || "Could not unlock — please try again.");
+    }
+  };
+
+  const handleBuyBundle = async (size: 1 | 3 | 10 | "monthly") => {
+    if (buyingBundle) return;
+    setBuyingBundle(size);
+    setBuyError(null);
+    try {
+      const { data, error } = await (supabase.functions as any).invoke("create-payment", {
+        body: { keyPurchase: true, bundleSize: size },
+      });
+      if (error || !data?.url) {
+        setBuyError(error?.message || data?.error || "Failed to start checkout");
+        setBuyingBundle(null);
+        return;
+      }
+      window.location.href = data.url;
+    } catch (err: any) {
+      setBuyError(err.message || "Unexpected error");
+      setBuyingBundle(null);
     }
   };
 
@@ -395,34 +425,47 @@ export default function KeySafeModal({ profile, userId, onClose, onBuyKey }: Pro
                     </p>
                   </div>
 
-                  {/* Path 1: Buy key (Stripe payment) */}
+                  {/* Path 1: Buy key bundle (Stripe) */}
                   <div
-                    className="rounded-2xl p-4 space-y-2"
-                    style={{
-                      background: "rgba(194,24,91,0.12)",
-                      border: "1px solid rgba(194,24,91,0.3)",
-                    }}
+                    className="rounded-2xl p-4 space-y-3"
+                    style={{ background: "rgba(194,24,91,0.10)", border: "1px solid rgba(194,24,91,0.28)" }}
                   >
                     <div className="flex items-center gap-2">
                       <Key className="w-4 h-4 text-pink-400" />
-                      <p className="text-white font-bold text-sm">Buy a Key</p>
-                      <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-400 font-bold border border-pink-500/30">
-                        Rp 15.000
-                      </span>
+                      <p className="text-white font-bold text-sm">Buy Keys</p>
                     </div>
-                    <p className="text-white/45 text-xs leading-relaxed">
-                      Purchase a key directly and use it on any profile. One key = one safe unlocked.
-                    </p>
-                    <button
-                      onClick={() => { onClose(); onBuyKey(); }}
-                      className="w-full py-2.5 rounded-xl font-bold text-white text-sm transition-all hover:opacity-90 active:scale-[0.98]"
-                      style={{
-                        background: "linear-gradient(135deg, #c2185b, #ec4899)",
-                        boxShadow: "0 0 16px rgba(194,24,91,0.35)",
-                      }}
-                    >
-                      Buy Key — Rp 15.000
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      {KEY_BUNDLES.map((b) => {
+                        const isActive = buyingBundle === b.size;
+                        return (
+                          <button
+                            key={String(b.size)}
+                            onClick={() => handleBuyBundle(b.size)}
+                            disabled={!!buyingBundle}
+                            className="relative rounded-xl p-3 text-left transition-all disabled:opacity-60 active:scale-[0.97]"
+                            style={{
+                              background: `${b.color}18`,
+                              border: `1px solid ${b.color}44`,
+                            }}
+                          >
+                            {b.badge && (
+                              <span
+                                className="absolute -top-2 right-2 text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                                style={{ background: b.color, color: "#fff" }}
+                              >
+                                {b.badge}
+                              </span>
+                            )}
+                            <p className="text-white font-black text-sm leading-tight">
+                              {isActive ? "…" : b.label}
+                            </p>
+                            <p className="font-bold text-xs mt-0.5" style={{ color: b.color }}>{b.price}</p>
+                            {b.sub && <p className="text-white/40 text-[10px] mt-0.5">{b.sub}</p>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {buyError && <p className="text-red-400 text-[11px]">{buyError}</p>}
                   </div>
 
                   {/* Path 2: Collect fragments */}

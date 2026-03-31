@@ -78,6 +78,10 @@ import {
 import ChatPanel from "@/features/messaging/components/ChatPanel";
 import { usePushNotifications } from "@/shared/hooks/usePushNotifications";
 import BlindDateGrid from "@/features/dating/components/BlindDateGrid";
+import RateToDate from "@/features/dating/components/RateToDate";
+import { FEATURE_UNLOCKS } from "@/shared/components/FeatureJourneyBanner";
+import CityProgressBanner from "@/shared/components/CityProgressBanner";
+import { useCityLaunch } from "@/shared/hooks/useCityLaunch";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -228,7 +232,7 @@ const Index = () => {
   const isProfileRoute = location.pathname.startsWith("/profile/");
   const profileRouteId = isProfileRoute ? (params as any).id : undefined;
   const DEV_MOCK_USER = import.meta.env.DEV
-    ? { id: "dev-user-001", email: "admin@2dateme.com", user_metadata: { name: "Dev Admin" } }
+    ? { id: "dev-user-001", email: "admin@2dateme.com", user_metadata: { name: "Dev Admin" }, created_at: new Date(Date.now() - 3 * 86_400_000).toISOString() }
     : null;
 
   // Check for admin session in localStorage (set by AuthPage when 12345 is entered)
@@ -291,6 +295,20 @@ const Index = () => {
   const [showDrawer, setShowDrawer] = useState(false);
   const [showBrowse, setShowBrowse] = useState(false);
   const [showBlindDate, setShowBlindDate] = useState(false);
+  const [showRateToDate, setShowRateToDate] = useState(false);
+  const [drawerTick, setDrawerTick] = useState(0);
+  useEffect(() => {
+    if (!showDrawer) return;
+    const id = setInterval(() => setDrawerTick(t => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, [showDrawer]);
+
+  // City launch system
+  const { status: cityStatus, justWentLive } = useCityLaunch(
+    user?.id ?? null,
+    user?.city ?? null,
+    user?.country ?? null,
+  );
   const [filters, setFilters] = useState<FilterState>(() => defaultFilters);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
 
@@ -325,8 +343,13 @@ const Index = () => {
   const mockProfiles = useMemo(() => generateIndonesianProfiles(50), []);
   const allProfiles = useMemo(() => {
     const mockCount = Math.max(0, 50 - dbProfiles.length);
-    return [...mockProfiles.slice(0, mockCount), ...dbProfiles];
-  }, [mockProfiles, dbProfiles]);
+    const base = [...mockProfiles.slice(0, mockCount), ...dbProfiles];
+    // When city is live, filter to local city profiles only
+    if (cityStatus?.is_live && user?.city) {
+      return base.filter(p => p.city?.toLowerCase() === user.city.toLowerCase());
+    }
+    return base;
+  }, [mockProfiles, dbProfiles, cityStatus?.is_live, user?.city]);
 
   // Apply filters
   const filteredProfiles = useMemo(() => {
@@ -1297,26 +1320,6 @@ const Index = () => {
                   >
                     <Zap className="w-4 h-4" />
                   </button>
-                  {/* Blind Date toggle */}
-                  <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => setShowBlindDate(v => !v)}
-                    aria-label="Blind Date"
-                    title="Blind Date"
-                    style={{
-                      width: 32, height: 32, borderRadius: "50%",
-                      background: showBlindDate ? "#c2185b" : "rgba(0,0,0,0.5)",
-                      border: showBlindDate ? "1.5px solid #c2185b" : "1px solid rgba(255,255,255,0.15)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      cursor: "pointer", fontSize: 16, flexShrink: 0,
-                      boxShadow: showBlindDate ? "0 0 14px rgba(194,24,91,0.6)" : "none",
-                      backdropFilter: "blur(8px)",
-                      transition: "background 0.25s, box-shadow 0.25s, border-color 0.25s",
-                    }}
-                  >
-                    💘
-                  </motion.button>
-
                   {/* Coin balance badge */}
                   <CoinHub
                     balance={coinBalance.balance}
@@ -1351,6 +1354,13 @@ const Index = () => {
       <AnimatePresence>
         {showBlindDate && user && (
           <BlindDateGrid key="blind-date" userId={user.id} onClose={() => setShowBlindDate(false)} onStartChat={(p) => { setShowBlindDate(false); setChatProfile(p); }} />
+        )}
+      </AnimatePresence>
+
+      {/* ── Rate To Date ──────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showRateToDate && user && (
+          <RateToDate key="rate-to-date" userId={user.id} onClose={() => setShowRateToDate(false)} onStartChat={(p) => { setShowRateToDate(false); setChatProfile(p as any); }} />
         )}
       </AnimatePresence>
 
@@ -1436,6 +1446,12 @@ const Index = () => {
                     setSelectedList([]);
                     setSelectedIndex(0);
                   }}
+                  currentUserId={user?.id}
+                  deductCoins={coinBalance.deductCoins}
+                  isConnected={
+                    confirmedBestieIds.includes(selectedProfile?.id) ||
+                    (iLiked.some(p => p.id === selectedProfile?.id) && likedMe.some(p => p.id === selectedProfile?.id))
+                  }
                 />
               )
             ) : (
@@ -2182,27 +2198,141 @@ const Index = () => {
                   <div style={{ height: 1, background: "rgba(194,24,91,0.35)", marginTop: 8 }} />
                 </div>
 
-                {/* ── Drawer button helper ── */}
+                {/* ── Drawer helpers ── */}
                 {(() => {
+                  void drawerTick; // tick reference forces re-render each minute
+                  const createdAt = user?.created_at ?? new Date().toISOString();
+                  const days = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
+
+                  const msUntil = (day: number) =>
+                    Math.max(0, new Date(createdAt).getTime() + day * 86_400_000 - Date.now());
+
+                  const fmt = (ms: number) => {
+                    if (ms <= 0) return "Unlocking…";
+                    const h = Math.floor(ms / 3_600_000);
+                    const m = Math.floor((ms % 3_600_000) / 60_000);
+                    if (h > 23) return `${Math.floor(h / 24)}d ${h % 24}h`;
+                    return `${h}h ${String(m).padStart(2, "0")}m`;
+                  };
+
+                  // Feature action map
+                  const featureActions: Record<string, () => void> = {
+                    swipe:    () => { setShowDrawer(false); },
+                    chat:     () => { setShowDrawer(false); navigate("/inbox"); },
+                    coins:    () => { setShowDrawer(false); setShowCoinWallet(true); },
+                    blind:    () => { setShowDrawer(false); setShowBlindDate(true); },
+                    rtd:      () => { setShowDrawer(false); setShowRateToDate(true); },
+                    connect4: () => { setShowDrawer(false); navigate("/games/connect4"); },
+                    keys:     () => { setShowDrawer(false); },
+                    teddy:    () => { setShowDrawer(false); navigate("/teddy"); },
+                    global:   () => { setShowDrawer(false); },
+                    vip:      () => { setShowDrawer(false); setFeatureDialog(KEY_TO_FEATURE["unlock:vip"]); },
+                  };
+
+                  // All features including Rate To Date
+                  const ALL_FEATURES = [
+                    ...FEATURE_UNLOCKS,
+                    { day: 2, key: "rtd", feature: "Rate To Date", emoji: "⭐", description: "First impression dating", color: "#f59e0b" },
+                  ].sort((a, b) => a.day - b.day);
+
+                  // ── Feature Banner ──────────────────────────────────────
+                  const FeatureBanner = ({ f }: { f: typeof ALL_FEATURES[0] }) => {
+                    const isUnlocked = f.day <= days;
+                    const remaining  = msUntil(f.day);
+                    const isNext     = !isUnlocked && remaining > 0 && ALL_FEATURES.filter(x => x.day > days)[0]?.key === f.key;
+                    const action     = featureActions[f.key];
+
+                    return (
+                      <motion.button
+                        whileTap={isUnlocked ? { scale: 0.97 } : {}}
+                        onClick={isUnlocked ? (action ?? undefined) : undefined}
+                        style={{
+                          width: "100%", display: "flex", alignItems: "center",
+                          padding: 0, borderRadius: 14, overflow: "hidden",
+                          border: isUnlocked
+                            ? `1.5px solid ${f.color}55`
+                            : "1.5px solid rgba(255,255,255,0.07)",
+                          cursor: isUnlocked ? "pointer" : "default",
+                          background: "none",
+                          boxShadow: isUnlocked ? `0 2px 16px ${f.color}22` : "none",
+                          opacity: isUnlocked ? 1 : isNext ? 0.75 : 0.42,
+                          transition: "opacity 0.2s",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {/* Left colour slab */}
+                        <div style={{
+                          width: 52, flexShrink: 0, alignSelf: "stretch",
+                          background: isUnlocked
+                            ? `linear-gradient(160deg,${f.color},${f.color}bb)`
+                            : "rgba(255,255,255,0.06)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 22,
+                          boxShadow: isUnlocked ? `inset -4px 0 12px rgba(0,0,0,0.25)` : "none",
+                        }}>
+                          {isUnlocked ? f.emoji : "🔒"}
+                        </div>
+
+                        {/* Text body */}
+                        <div style={{
+                          flex: 1, minWidth: 0, padding: "10px 10px",
+                          background: "rgba(0,0,0,0.55)",
+                          textAlign: "left",
+                        }}>
+                          <div style={{ fontSize: 12, fontWeight: 800, color: isUnlocked ? "white" : "rgba(255,255,255,0.55)", lineHeight: 1 }}>
+                            {f.feature}
+                          </div>
+                          <div style={{ fontSize: 9, color: "rgba(255,255,255,0.35)", marginTop: 3, lineHeight: 1.3 }}>
+                            {f.description}
+                          </div>
+                        </div>
+
+                        {/* Right status */}
+                        <div style={{
+                          flexShrink: 0, padding: "0 10px",
+                          background: "rgba(0,0,0,0.55)",
+                          alignSelf: "stretch",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                        }}>
+                          {isUnlocked ? (
+                            <div style={{
+                              width: 22, height: 22, borderRadius: "50%",
+                              background: `linear-gradient(135deg,${f.color},${f.color}99)`,
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              fontSize: 11, color: "white", fontWeight: 800,
+                              boxShadow: `0 2px 8px ${f.color}50`,
+                            }}>→</div>
+                          ) : (
+                            <div style={{ textAlign: "right" }}>
+                              <div style={{ fontSize: 9, fontWeight: 800, color: isNext ? "#f48fb1" : "rgba(255,255,255,0.3)", whiteSpace: "nowrap" }}>
+                                {isNext ? fmt(remaining) : `Day ${f.day}`}
+                              </div>
+                              {isNext && (
+                                <div style={{ fontSize: 8, color: "rgba(255,255,255,0.2)", marginTop: 1 }}>until unlock</div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </motion.button>
+                    );
+                  };
+
+                  // ── Simple DrawerBtn for non-feature items ──────────────
                   const DrawerBtn = ({ icon, label, onClick: handleClick }: { icon: string; label: string; onClick: () => void }) => (
                     <motion.button
                       whileTap={{ scale: 0.96 }}
                       onClick={handleClick}
                       style={{
                         display: "flex", alignItems: "center", gap: 10,
-                        width: "100%", padding: "11px 14px",
-                        background: "rgba(194,24,91,0.18)",
-                        border: "1.5px solid rgba(194,24,91,0.45)",
+                        width: "100%", padding: "10px 12px",
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.09)",
                         borderRadius: 12, cursor: "pointer", color: "white",
-                        fontSize: 14, fontWeight: 600, letterSpacing: "0.01em",
-                        boxShadow: "0 2px 12px rgba(194,24,91,0.18)",
+                        fontSize: 13, fontWeight: 600,
                         backdropFilter: "blur(6px)",
-                        transition: "background 0.2s, border-color 0.2s",
                       }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(194,24,91,0.35)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#c2185b"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(194,24,91,0.18)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(194,24,91,0.45)"; }}
                     >
-                      <span style={{ fontSize: 18 }}>{icon}</span>
+                      <span style={{ fontSize: 16 }}>{icon}</span>
                       <span>{label}</span>
                     </motion.button>
                   );
@@ -2210,17 +2340,38 @@ const Index = () => {
                   const SectionLabel = ({ label }: { label: string }) => (
                     <div style={{
                       fontSize: 9, fontWeight: 800, letterSpacing: "0.1em",
-                      textTransform: "uppercase", color: "rgba(255,255,255,0.3)",
-                      paddingLeft: 4, paddingTop: 6, paddingBottom: 2,
-                    }}>
-                      {label}
-                    </div>
+                      textTransform: "uppercase", color: "rgba(255,255,255,0.25)",
+                      paddingLeft: 2, paddingTop: 8, paddingBottom: 2,
+                    }}>{label}</div>
                   );
 
                   const boost = HOME_UNLOCK_PACKAGES.find(p => p.key === "unlock:boost");
 
                   return (
                     <>
+                      {/* ── City Progress ───────────────────────── */}
+                      {cityStatus && (
+                        <CityProgressBanner
+                          status={cityStatus}
+                          justWentLive={justWentLive}
+                          onInvite={() => {
+                            setShowDrawer(false);
+                            // Share invite link
+                            if (navigator.share) {
+                              navigator.share({ title: "Join me on 2DateMe", url: window.location.origin }).catch(() => {});
+                            } else {
+                              navigator.clipboard.writeText(window.location.origin).then(() => toast.success("Link copied!"));
+                            }
+                          }}
+                        />
+                      )}
+
+                      {/* ── Features ───────────────────────────── */}
+                      <SectionLabel label="Features" />
+                      {ALL_FEATURES.map(f => (
+                        <FeatureBanner key={f.key} f={f} />
+                      ))}
+
                       {/* ── My Profile ─────────────────────────── */}
                       <SectionLabel label="My Profile" />
                       <DrawerBtn
@@ -2231,60 +2382,19 @@ const Index = () => {
                       <DrawerBtn
                         icon="🔥"
                         label="Boost My Profile"
-                        onClick={() => {
-                          setShowDrawer(false);
-                          if (boost) setFeatureDialog(KEY_TO_FEATURE["unlock:boost"]);
-                        }}
+                        onClick={() => { setShowDrawer(false); if (boost) setFeatureDialog(KEY_TO_FEATURE["unlock:boost"]); }}
                       />
                       <DrawerBtn
                         icon="👁️"
                         label="Who Viewed Me"
                         onClick={() => { setShowDrawer(false); navigate("/who-viewed-me"); }}
                       />
-                      <DrawerBtn
-                        icon="👑"
-                        label="Upgrade to VIP"
-                        onClick={() => { setShowDrawer(false); setFeatureDialog(KEY_TO_FEATURE["unlock:vip"]); }}
-                      />
-
-                      {/* ── Inbox ──────────────────────────────── */}
-                      <SectionLabel label="Inbox" />
-                      <DrawerBtn
-                        icon="💎"
-                        label="Inbox & Messages"
-                        onClick={() => { setShowDrawer(false); navigate("/inbox"); }}
-                      />
-
-                      {/* ── Games ──────────────────────────────── */}
-                      <SectionLabel label="Games" />
-                      <DrawerBtn
-                        icon="🔴"
-                        label="Connect 4"
-                        onClick={() => { setShowDrawer(false); navigate("/games/connect4"); }}
-                      />
 
                       {/* ── Discover ───────────────────────────── */}
                       <SectionLabel label="Discover" />
-                      <DrawerBtn
-                        icon="🗺️"
-                        label="Nearby Map"
-                        onClick={() => { setShowDrawer(false); navigate("/map"); }}
-                      />
-                      <DrawerBtn
-                        icon="📍"
-                        label="Date Spots"
-                        onClick={() => { setShowDrawer(false); navigate("/dates"); }}
-                      />
-                      <DrawerBtn
-                        icon="🎟️"
-                        label="Events Near Me"
-                        onClick={() => { setShowDrawer(false); navigate("/events"); }}
-                      />
-                      <DrawerBtn
-                        icon="🧸"
-                        label="My Teddy Room"
-                        onClick={() => { setShowDrawer(false); navigate("/teddy"); }}
-                      />
+                      <DrawerBtn icon="🗺️" label="Nearby Map" onClick={() => { setShowDrawer(false); navigate("/map"); }} />
+                      <DrawerBtn icon="📍" label="Date Spots" onClick={() => { setShowDrawer(false); navigate("/dates"); }} />
+                      <DrawerBtn icon="🎟️" label="Events Near Me" onClick={() => { setShowDrawer(false); navigate("/events"); }} />
                     </>
                   );
                 })()}

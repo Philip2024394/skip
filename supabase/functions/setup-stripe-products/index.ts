@@ -44,7 +44,7 @@ const PRODUCTS: ProductSpec[] = [
   {
     key: "TEDDY_ROOM",
     name: "Teddy Room",
-    description: "Private PIN-protected vault for intimate photos & videos.",
+    description: "Private PIN-protected media vault for personal photos & videos shared with trusted connections.",
     mode: "subscription",
     amount: 499,
     currency: "usd",

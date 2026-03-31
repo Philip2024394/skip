@@ -5,9 +5,30 @@ import { useMessages, validateChatMessage } from "@/shared/hooks/useMessages";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import VideoCallPanel from "@/features/video/components/VideoCallPanel";
 import ContactRevealModal, { PLATFORMS_ALL, PlatformId } from "./ContactRevealModal";
+import TeddyRoomModal from "./TeddyRoomModal";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCoinBalance } from "@/shared/hooks/useCoinBalance";
+
+// ── Teddy Room invite helpers ─────────────────────────────────────────────────
+const TEDDY_INVITE_PREFIX = "__TEDDY_INVITE__";
+interface TeddyInvitePayload { inviteId: string; checkoutUrl: string; }
+function encodeTeddyInvite(payload: TeddyInvitePayload): string {
+  return TEDDY_INVITE_PREFIX + JSON.stringify(payload);
+}
+function decodeTeddyInvite(content: string): TeddyInvitePayload | null {
+  if (!content.startsWith(TEDDY_INVITE_PREFIX)) return null;
+  try { return JSON.parse(content.slice(TEDDY_INVITE_PREFIX.length)); }
+  catch { return null; }
+}
+
+interface TeddyRoomInvite {
+  id: string;
+  room_owner_id: string;
+  invited_user_id: string;
+  status: "pending" | "accepted" | "declined" | "expired";
+  expires_at: string | null;
+}
 
 // ── Contact card helpers ───────────────────────────────────────────────────────
 
@@ -105,6 +126,12 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   // DEV: platform picker for the test banner
   const [devPlatform, setDevPlatform] = useState<PlatformId>("whatsapp");
 
+  // ── Teddy Room state ─────────────────────────────────────────────────────────
+  const [hasTeddyRoom, setHasTeddyRoom] = useState(false);
+  const [teddyInvite, setTeddyInvite] = useState<TeddyRoomInvite | null>(null);
+  const [sendingTeddyInvite, setSendingTeddyInvite] = useState(false);
+  const [showTeddyRoom, setShowTeddyRoom] = useState(false);
+
   // ── Translation state ────────────────────────────────────────────────────────
   // translationCache: msgId → { translated, original, loading }
   const [translationCache, setTranslationCache] = useState<Record<string, { translated: string; original: string } | "loading">>({});
@@ -142,6 +169,51 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
   }, []);
 
   const { balance, deductCoins } = useCoinBalance(currentUserId);
+
+  // ── Load teddy room status ───────────────────────────────────────────────────
+  useEffect(() => {
+    const loadTeddy = async () => {
+      // Check if current user owns a Teddy Room
+      const { data: prof } = await (supabase.from("profiles") as any)
+        .select("teddy_room_active")
+        .eq("id", currentUserId)
+        .maybeSingle();
+      setHasTeddyRoom(!!prof?.teddy_room_active);
+
+      // Check for existing invite between these two users (either direction)
+      const { data: invite } = await (supabase as any).from("teddy_room_invites")
+        .select("*")
+        .or(`and(room_owner_id.eq.${currentUserId},invited_user_id.eq.${otherUser.id}),and(room_owner_id.eq.${otherUser.id},invited_user_id.eq.${currentUserId})`)
+        .not("status", "eq", "declined")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (invite) setTeddyInvite(invite as TeddyRoomInvite);
+    };
+    loadTeddy();
+  }, [currentUserId, otherUser.id]);
+
+  // ── Send Teddy Room invite ───────────────────────────────────────────────────
+  const handleSendTeddyInvite = async () => {
+    if (sendingTeddyInvite) return;
+    setSendingTeddyInvite(true);
+    try {
+      const { data, error } = await (supabase.functions as any).invoke("create-teddy-invite", {
+        body: { invitedUserId: otherUser.id },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || error?.message || "Could not send invite");
+        return;
+      }
+      setTeddyInvite({ id: data.inviteId, room_owner_id: currentUserId, invited_user_id: otherUser.id, status: "pending", expires_at: null });
+      await sendMessage(encodeTeddyInvite({ inviteId: data.inviteId, checkoutUrl: data.checkoutUrl }));
+      toast.success(`Teddy Room invite sent to ${firstName}! 🐻`);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send invite");
+    } finally {
+      setSendingTeddyInvite(false);
+    }
+  };
 
   const handleReport = async (reason: string) => {
     try {
@@ -368,45 +440,61 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
               transition={{ type: "spring", stiffness: 380, damping: 34 }}
               onClick={e => e.stopPropagation()}
               style={{
-                width: "100%", background: "#0c0c14",
-                border: "1px solid rgba(255,255,255,0.09)",
+                width: "100%",
                 borderRadius: "20px 20px 0 0",
-                padding: "20px 20px 40px",
+                overflow: "hidden",
+                position: "relative",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-                <p style={{ color: "white", fontWeight: 800, fontSize: 16, margin: 0 }}>
-                  Report {firstName}
+              {/* Background image */}
+              <div style={{
+                position: "absolute", inset: 0,
+                backgroundImage: "url('https://ik.imagekit.io/dateme/Untitledsdfasdfsd.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }} />
+              {/* Dark overlay */}
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "rgba(0,0,0,0.62)",
+                backdropFilter: "blur(2px)",
+              }} />
+              {/* Content */}
+              <div style={{ position: "relative", zIndex: 1, padding: "20px 20px 40px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                  <p style={{ color: "white", fontWeight: 800, fontSize: 16, margin: 0 }}>
+                    Report {firstName}
+                  </p>
+                  <button onClick={() => setShowReport(false)} style={{ background: "none", border: "none", cursor: "pointer" }}>
+                    <X style={{ width: 20, height: 20, color: "rgba(255,255,255,0.4)" }} />
+                  </button>
+                </div>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
+                  Your report is anonymous. Our team reviews all reports within 24 hours.
                 </p>
-                <button onClick={() => setShowReport(false)} style={{ background: "none", border: "none", cursor: "pointer" }}>
-                  <X style={{ width: 20, height: 20, color: "rgba(255,255,255,0.4)" }} />
-                </button>
+                {[
+                  { key: "fake_profile", label: "Fake or catfish profile", emoji: "🎭" },
+                  { key: "suspicious_messages", label: "Suspicious or scam messages", emoji: "⚠️" },
+                  { key: "money_request", label: "Asking for money or crypto", emoji: "💸" },
+                  { key: "inappropriate", label: "Inappropriate content", emoji: "🚫" },
+                  { key: "other", label: "Other concern", emoji: "🔍" },
+                ].map(opt => (
+                  <motion.button
+                    key={opt.key}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleReport(opt.key)}
+                    style={{
+                      width: "100%", display: "flex", alignItems: "center", gap: 12,
+                      background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)",
+                      borderRadius: 14, padding: "12px 14px", marginBottom: 8,
+                      cursor: "pointer", textAlign: "left",
+                    }}
+                  >
+                    <span style={{ fontSize: 20 }}>{opt.emoji}</span>
+                    <span style={{ color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: 600 }}>{opt.label}</span>
+                  </motion.button>
+                ))}
               </div>
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 12, margin: "0 0 16px", lineHeight: 1.5 }}>
-                Your report is anonymous. Our team reviews all reports within 24 hours.
-              </p>
-              {[
-                { key: "fake_profile", label: "Fake or catfish profile", emoji: "🎭" },
-                { key: "suspicious_messages", label: "Suspicious or scam messages", emoji: "⚠️" },
-                { key: "money_request", label: "Asking for money or crypto", emoji: "💸" },
-                { key: "inappropriate", label: "Inappropriate content", emoji: "🚫" },
-                { key: "other", label: "Other concern", emoji: "🔍" },
-              ].map(opt => (
-                <motion.button
-                  key={opt.key}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleReport(opt.key)}
-                  style={{
-                    width: "100%", display: "flex", alignItems: "center", gap: 12,
-                    background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
-                    borderRadius: 14, padding: "12px 14px", marginBottom: 8,
-                    cursor: "pointer", textAlign: "left",
-                  }}
-                >
-                  <span style={{ fontSize: 20 }}>{opt.emoji}</span>
-                  <span style={{ color: "rgba(255,255,255,0.75)", fontSize: 14, fontWeight: 600 }}>{opt.label}</span>
-                </motion.button>
-              ))}
             </motion.div>
           </motion.div>
         )}
@@ -468,6 +556,66 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
                     style={{ display: "flex", justifyContent: isMine ? "flex-end" : "flex-start" }}
                   >
                     {(() => {
+                      // ── Teddy Room invite card ──────────────────────────────
+                      const teddyPayload = decodeTeddyInvite(msg.content);
+                      if (teddyPayload) {
+                        const inviteAccepted = teddyInvite?.status === "accepted";
+                        return (
+                          <div style={{
+                            maxWidth: "84%",
+                            background: "linear-gradient(135deg,rgba(168,85,247,0.18),rgba(124,58,237,0.12))",
+                            border: "1.5px solid rgba(168,85,247,0.4)",
+                            borderRadius: 18, padding: "14px 16px",
+                            boxShadow: "0 4px 20px rgba(168,85,247,0.18)",
+                          }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                              <span style={{ fontSize: 24 }}>🐻</span>
+                              <div>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: "#c084fc", letterSpacing: "0.05em" }}>
+                                  TEDDY ROOM INVITE
+                                </div>
+                                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", marginTop: 1 }}>
+                                  {isMine ? `You invited ${firstName} · $2.99/mo` : `${firstName} invited you · $2.99/mo`}
+                                </div>
+                              </div>
+                            </div>
+                            {inviteAccepted ? (
+                              <button
+                                onClick={() => setShowTeddyRoom(true)}
+                                style={{
+                                  width: "100%", padding: "10px", borderRadius: 12, border: "none",
+                                  background: "linear-gradient(135deg,#a855f7,#7c3aed)",
+                                  color: "white", fontSize: 13, fontWeight: 800, cursor: "pointer",
+                                  boxShadow: "0 0 16px rgba(168,85,247,0.4)",
+                                }}
+                              >
+                                🐻 Open Teddy Room
+                              </button>
+                            ) : isMine ? (
+                              <div style={{
+                                padding: "9px 12px", borderRadius: 10, textAlign: "center",
+                                background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.2)",
+                                fontSize: 12, color: "rgba(255,255,255,0.45)",
+                              }}>
+                                ⏳ Waiting for {firstName} to join…
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => { window.location.href = teddyPayload.checkoutUrl; }}
+                                style={{
+                                  width: "100%", padding: "10px", borderRadius: 12, border: "none",
+                                  background: "linear-gradient(135deg,#a855f7,#7c3aed)",
+                                  color: "white", fontSize: 13, fontWeight: 800, cursor: "pointer",
+                                  boxShadow: "0 0 16px rgba(168,85,247,0.4)",
+                                }}
+                              >
+                                🐻 Join for $2.99/mo
+                              </button>
+                            )}
+                          </div>
+                        );
+                      }
+
                       const card = decodeContactCard(msg.content);
                       if (card) {
                         const plat = PLATFORMS_ALL.find(p => p.id === card.platform) ?? PLATFORMS_ALL[0];
@@ -699,6 +847,43 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
             <span style={{ fontSize: 9, color: draft.length > 450 ? "#fbbf24" : "rgba(255,255,255,0.14)" }}>
               {draft.length}/500
             </span>
+            {/* Teddy Room button — show invite option or open room */}
+            {teddyInvite?.status === "accepted" ? (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowTeddyRoom(true)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: "linear-gradient(135deg,rgba(168,85,247,0.22),rgba(124,58,237,0.16))",
+                  border: "1px solid rgba(168,85,247,0.45)",
+                  borderRadius: 20, padding: "5px 11px",
+                  cursor: "pointer", flexShrink: 0,
+                }}
+              >
+                <span style={{ fontSize: 11 }}>🐻</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#c084fc", whiteSpace: "nowrap" }}>Our Room</span>
+              </motion.button>
+            ) : hasTeddyRoom && !teddyInvite ? (
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSendTeddyInvite}
+                disabled={sendingTeddyInvite}
+                style={{
+                  display: "flex", alignItems: "center", gap: 5,
+                  background: "linear-gradient(135deg,rgba(168,85,247,0.22),rgba(124,58,237,0.16))",
+                  border: "1px solid rgba(168,85,247,0.45)",
+                  borderRadius: 20, padding: "5px 11px",
+                  cursor: sendingTeddyInvite ? "default" : "pointer", flexShrink: 0,
+                  opacity: sendingTeddyInvite ? 0.6 : 1,
+                }}
+              >
+                <span style={{ fontSize: 11 }}>🐻</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#c084fc", whiteSpace: "nowrap" }}>
+                  {sendingTeddyInvite ? "Inviting…" : "Invite to Room"}
+                </span>
+              </motion.button>
+            ) : null}
+
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowContactShare(true)}
@@ -835,6 +1020,20 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
             </p>
           </motion.div>
         </motion.div>
+      )}
+    </AnimatePresence>
+
+    {/* ── Teddy Room Modal ────────────────────────────────────────────────── */}
+    <AnimatePresence>
+      {showTeddyRoom && teddyInvite && (
+        <TeddyRoomModal
+          userId={currentUserId}
+          partnerId={otherUser.id}
+          partnerName={firstName}
+          partnerAvatar={otherUser.avatar_url ?? undefined}
+          invite={teddyInvite}
+          onClose={() => setShowTeddyRoom(false)}
+        />
       )}
     </AnimatePresence>
 

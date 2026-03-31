@@ -41,7 +41,7 @@ const PrivacyPage = () => {
         </p>
 
         <Section title="1. Information We Collect">
-          <p><strong className="text-white">Registration data:</strong> Name, email address, age, gender, sexual preference, country, city, bio, and profile photos provided when you create an account.</p>
+          <p><strong className="text-white">Registration data:</strong> Name, email address, age, gender, dating preferences, country, city, bio, and profile photos provided when you create an account.</p>
           <p><strong className="text-white">Contact details:</strong> WhatsApp number, which is stored securely and only shared with another user after both parties have matched <em>and</em> a connection payment has been completed.</p>
           <p><strong className="text-white">Usage data:</strong> Likes, super likes, swipe activity, feature purchases, session duration, and app interaction logs.</p>
           <p><strong className="text-white">Location data:</strong> Approximate GPS coordinates (with your permission) to calculate distance between users and display profiles on the map. You can revoke this permission at any time in your device settings.</p>
