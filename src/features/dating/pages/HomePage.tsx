@@ -2521,6 +2521,7 @@ const Index = () => {
             currentUserCoins={coinBalance.balance}
             onCoinsSpent={(amount) => coinBalance.addCoins(-amount)}
             initialMode={browseInitialMode}
+            onLike={handleLike}
           />
         )}
       </AnimatePresence>
@@ -2555,7 +2556,13 @@ export default Index;
 // ── Member Browser ─────────────────────────────────────────────────────────────
 
 // Individual profile card — static image, no cycling flash
-const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonightBadge, showWeekendBadge, showPlus1Badge, isLiked, onHeartPress }: { profile: any; onSelect: (p: any) => void; showTonightBadge?: boolean; showWeekendBadge?: boolean; showPlus1Badge?: boolean; isLiked?: boolean; onHeartPress?: (p: any) => void }) {
+const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, onHeartPress, onViewProfile, isLiked }: {
+  profile: any;
+  onSelect: (p: any) => void;
+  onHeartPress?: (p: any) => void;
+  onViewProfile?: (p: any) => void;
+  isLiked?: boolean;
+}) {
   const extras = (Array.isArray((profile as any).images) ? (profile as any).images : []) as string[];
   const imgList = [profile.image, ...extras, profile.avatar_url]
     .filter((u): u is string => typeof u === "string" && u.length > 0)
@@ -2570,7 +2577,18 @@ const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonig
   const status: "online" | "busy" | "offline" =
     diffMin < 5 ? "online" : diffMin < 30 ? "busy" : "offline";
 
-  const hasHeartButton = !!onHeartPress;
+  // Border: red glow when liked → pink heartbeat when online → default
+  const borderColor = isLiked
+    ? "2px solid rgba(239,68,68,0.85)"
+    : status === "online"
+      ? "2px solid rgba(244,114,182,0.9)"
+      : "1.5px solid rgba(255,255,255,0.12)";
+
+  const boxShadow = isLiked
+    ? "0 0 14px 3px rgba(239,68,68,0.45), 0 0 4px 1px rgba(239,68,68,0.25)"
+    : "none";
+
+  const animation = (!isLiked && status === "online") ? "card-heartbeat 1.8s ease-in-out infinite" : "none";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flexShrink: 0 }}>
@@ -2582,18 +2600,15 @@ const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonig
           position: "relative",
           width: "100%",
           paddingBottom: "133%",
-          borderRadius: hasHeartButton ? "12px 12px 0 0" : 12,
+          borderRadius: "12px 12px 0 0",
           overflow: "hidden",
-          border: status === "online"
-            ? "2px solid rgba(244,114,182,0.9)"
-            : "1.5px solid rgba(255,255,255,0.12)",
-          borderBottom: hasHeartButton ? "none" : undefined,
+          border: borderColor,
+          borderBottom: "none",
           background: "#111",
           cursor: "pointer",
-          boxShadow: status === "online"
-            ? "0 0 0 0 rgba(244,114,182,0.5)"
-            : "none",
-          animation: status === "online" ? "card-heartbeat 1.8s ease-in-out infinite" : "none",
+          boxShadow,
+          animation,
+          transition: "border 0.25s, box-shadow 0.25s",
         }}
       >
         <div style={{ position: "absolute", inset: 0 }}>
@@ -2623,9 +2638,26 @@ const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonig
             )}
           </div>
 
+          {/* Heart overlay — top-right, visible when liked */}
+          {isLiked && (
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 18 }}
+              style={{
+                position: "absolute", top: 7, right: 7,
+                width: 26, height: 26, borderRadius: "50%",
+                background: "rgba(239,68,68,0.85)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 0 10px rgba(239,68,68,0.7)",
+              }}
+            >
+              <Heart size={13} color="#fff" fill="#fff" />
+            </motion.div>
+          )}
 
-          {/* Status dot — green pulsing when online */}
-          {status === "online" && (
+          {/* Status dot — green pulsing when online (only when not liked) */}
+          {!isLiked && status === "online" && (
             <span style={{
               position: "absolute", top: 7, right: 7,
               width: 11, height: 11, borderRadius: "50%",
@@ -2637,15 +2669,15 @@ const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonig
             }} />
           )}
 
-          {/* Finger-tap view button — bottom right */}
+          {/* Finger-tap button — navigates to profile page */}
           <button
-            onClick={(e) => { e.stopPropagation(); onSelect(profile); }}
+            onClick={(e) => { e.stopPropagation(); (onViewProfile ?? onSelect)(profile); }}
             style={{
               position: "absolute", bottom: 8, right: 7,
               width: 28, height: 28, borderRadius: "50%",
-              background: "rgba(255,255,255,0.18)",
+              background: "rgba(251,191,36,0.25)",
               backdropFilter: "blur(8px)",
-              border: "1.5px solid rgba(255,255,255,0.35)",
+              border: "1.5px solid rgba(251,191,36,0.55)",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", fontSize: 14,
               boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
@@ -2656,37 +2688,35 @@ const BrowseCard = React.memo(function BrowseCard({ profile, onSelect, showTonig
         </div>
       </motion.div>
 
-      {/* Heart invite button */}
-      {hasHeartButton && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onHeartPress!(profile); }}
-          style={{
-            width: "100%", padding: "8px 0",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
-            background: isLiked ? "rgba(236,72,153,0.25)" : "rgba(0,0,0,0.55)",
-            border: "1.5px solid rgba(255,255,255,0.12)",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            borderRadius: "0 0 12px 12px",
-            cursor: isLiked ? "default" : "pointer",
-            transition: "background 0.2s",
-          }}
-        >
-          <Heart
-            size={15}
-            color={isLiked ? "#f472b6" : "rgba(255,255,255,0.45)"}
-            fill={isLiked ? "#f472b6" : "none"}
-            style={{ transition: "all 0.2s" }}
-          />
-          <span style={{ fontSize: 10, fontWeight: 700, color: isLiked ? "#f472b6" : "rgba(255,255,255,0.45)" }}>
-            {isLiked ? "Invited" : "Invite"}
-          </span>
-        </button>
-      )}
+      {/* Heart like button — silent, no modal */}
+      <button
+        onClick={(e) => { e.stopPropagation(); if (!isLiked) onHeartPress?.(profile); }}
+        style={{
+          width: "100%", padding: "7px 0",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 5,
+          background: isLiked ? "rgba(239,68,68,0.2)" : "rgba(0,0,0,0.55)",
+          border: isLiked ? "1.5px solid rgba(239,68,68,0.4)" : "1.5px solid rgba(255,255,255,0.12)",
+          borderTop: "none",
+          borderRadius: "0 0 12px 12px",
+          cursor: isLiked ? "default" : "pointer",
+          transition: "background 0.2s, border 0.2s",
+        }}
+      >
+        <Heart
+          size={14}
+          color={isLiked ? "#ef4444" : "rgba(255,255,255,0.45)"}
+          fill={isLiked ? "#ef4444" : "none"}
+          style={{ transition: "all 0.2s" }}
+        />
+        <span style={{ fontSize: 10, fontWeight: 700, color: isLiked ? "#ef4444" : "rgba(255,255,255,0.45)" }}>
+          {isLiked ? "Liked" : "Like"}
+        </span>
+      </button>
     </div>
   );
 });
 
-function MemberBrowser({ profiles, onClose, onSelect, currentUserId, currentUserCoins, onCoinsSpent, initialMode }: {
+function MemberBrowser({ profiles, onClose, onSelect, currentUserId, currentUserCoins, onCoinsSpent, initialMode, onLike }: {
   profiles: any[];
   onClose: () => void;
   onSelect: (p: any) => void;
@@ -2694,9 +2724,10 @@ function MemberBrowser({ profiles, onClose, onSelect, currentUserId, currentUser
   currentUserCoins: number;
   onCoinsSpent: (amount: number) => void;
   initialMode?: "grid" | "tonight" | "weekend" | "plus1";
+  onLike?: (p: any) => void;
 }) {
+  const navigate = useNavigate();
   const [browseMode, setBrowseMode] = useState<"grid" | "tonight" | "weekend" | "plus1">(initialMode ?? "grid");
-  const [requestTarget, setRequestTarget] = useState<any>(null);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
 
   const MODES = [
@@ -2728,7 +2759,7 @@ function MemberBrowser({ profiles, onClose, onSelect, currentUserId, currentUser
   const handleHeartPress = (profile: any) => {
     if (likedIds.has(profile.id)) return;
     setLikedIds(prev => new Set([...prev, profile.id]));
-    setRequestTarget(profile);
+    onLike?.(profile);
   };
 
   return (
@@ -2865,28 +2896,13 @@ function MemberBrowser({ profiles, onClose, onSelect, currentUserId, currentUser
               key={profile.id}
               profile={profile}
               onSelect={handleCardTap}
-              showTonightBadge={browseMode === "tonight"}
-              showWeekendBadge={browseMode === "weekend"}
-              showPlus1Badge={browseMode === "plus1"}
               isLiked={likedIds.has(profile.id)}
               onHeartPress={handleHeartPress}
+              onViewProfile={(p) => navigate(`/profile/${p.id}`)}
             />
           ))}
         </div>
       )}
-
-      {/* Tonight invite modal */}
-      <TonightRequestModal
-        open={!!requestTarget}
-        profile={requestTarget}
-        currentUserId={currentUserId}
-        currentUserCoins={currentUserCoins}
-        onClose={() => setRequestTarget(null)}
-        onSent={(_profileId, coinsSpent) => {
-          onCoinsSpent(coinsSpent);
-          setRequestTarget(null);
-        }}
-      />
 
       <style>{`
         @keyframes dot-pulse {
