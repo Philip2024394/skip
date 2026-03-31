@@ -265,6 +265,7 @@ const ProfileEditor = () => {
         orientation: (row.orientation as string) || "",
         contact_preference: (row.contact_preference as string) || "whatsapp",
         contact_provider: (row.contact_provider as string) || "WhatsApp",
+        mobile_carrier: (row.mobile_carrier as string) || null,
         contact_confirmed: !!(row.contact_confirmed as boolean),
         contact_locked: !!(row.contact_locked as boolean),
         contact_unlock_requested: !!(row.contact_unlock_requested as boolean),
@@ -415,6 +416,7 @@ const ProfileEditor = () => {
     const { error } = await (supabase.from("profiles").update as any)({
       whatsapp: num,
       contact_provider: profile.contact_provider,
+      mobile_carrier: profile.mobile_carrier ?? null,
       contact_confirmed: true,
       contact_locked: true,
     }).eq("id", userId);
@@ -1160,6 +1162,23 @@ const ProfileEditor = () => {
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white placeholder:text-white/30 focus:border-pink-500/50 focus:outline-none font-mono"
                 />
                 <p className="text-white/30 text-[10px]">Include country code · e.g. +62 for Indonesia, +1 for US</p>
+
+                {/* Mobile carrier — Indonesian network */}
+                <div className="space-y-1">
+                  <p className="text-white/40 text-[10px] font-semibold uppercase tracking-wide">Mobile carrier (Indonesia)</p>
+                  <select
+                    value={profile.mobile_carrier ?? ""}
+                    onChange={e => update("mobile_carrier" as any, e.target.value || null)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm appearance-none"
+                  >
+                    <option value="" className="bg-[#1a1a1a]">Select your carrier…</option>
+                    {["Telkomsel","XL Axiata","Indosat Ooredoo","Smartfren","Tri (3)","Axis","By.U"].map(c => (
+                      <option key={c} value={c} className="bg-[#1a1a1a]">{c}</option>
+                    ))}
+                    <option value="Other" className="bg-[#1a1a1a]">Other / International</option>
+                  </select>
+                  <p className="text-white/25 text-[10px]">Shown to visitors so they know your network before calling</p>
+                </div>
 
                 {/* Confirm button */}
                 {profile.whatsapp && profile.whatsapp.trim().length > 5 && (

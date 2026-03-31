@@ -118,5 +118,6 @@ export interface Profile {
   video_verified?: boolean;
   photo_verified?: boolean;
   contact_provider?: string | null;
+  mobile_carrier?: string | null;
   chat_first?: boolean | null;
 }

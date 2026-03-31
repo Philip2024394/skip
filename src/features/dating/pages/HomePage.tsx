@@ -44,6 +44,8 @@ import { VideoCallScreen } from "@/features/video/components";
 import { IncomingCallScreen } from "@/features/video/components";
 import CoinCollectModal, { TEDDY_VIDEO } from "@/features/dating/components/CoinCollectModal";
 import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
+import FreeTonightSheet from "@/features/dating/components/FreeTonightSheet";
+import TonightInboxModal from "@/features/dating/components/TonightInboxModal";
 import GlobalDatingUpsell from "@/features/dating/components/GlobalDatingUpsell";
 import { useGlobalDating } from "@/shared/hooks/useGlobalDating";
 import { getUserCountry } from "@/shared/hooks/useUserCurrency";
@@ -731,6 +733,27 @@ const Index = () => {
 
   // Cultural Bridge Guide overlay
   const [showCulturalGuide, setShowCulturalGuide] = useState(false);
+  // Free Tonight
+  const [showFreeTonightSheet, setShowFreeTonightSheet] = useState(false);
+  const [showTonightInbox, setShowTonightInbox] = useState(false);
+  const [tonightInboxCount, setTonightInboxCount] = useState(0);
+
+  // Poll tonight inbox count every 60s
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchCount = async () => {
+      const now = new Date().toISOString();
+      const { count } = await (supabase.from("tonight_requests") as any)
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", user.id)
+        .eq("status", "pending")
+        .gt("expires_at", now);
+      setTonightInboxCount(count ?? 0);
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 60_000);
+    return () => clearInterval(interval);
+  }, [user?.id]);
   // Real Gift flow
   const [showRealGiftFlow, setShowRealGiftFlow] = useState(false);
   const [realGiftTarget, setRealGiftTarget] = useState<any>(null);
@@ -1321,6 +1344,22 @@ const Index = () => {
                   >
                     <Zap className="w-4 h-4" />
                   </button>
+                  {/* Free Tonight button */}
+                  <button
+                    onClick={() => setShowFreeTonightSheet(true)}
+                    aria-label="Free Tonight"
+                    title="Free Tonight"
+                    className="relative w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-yellow-400/30 flex items-center justify-center transition-colors hover:border-yellow-400/60"
+                    style={{ boxShadow: "0 0 10px rgba(234,179,8,0.2)" }}
+                  >
+                    <span style={{ fontSize: 15 }}>🌙</span>
+                    {tonightInboxCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-black text-[9px] font-black flex items-center justify-center">
+                        {tonightInboxCount}
+                      </span>
+                    )}
+                  </button>
+
                   {/* Coin balance badge */}
                   <CoinHub
                     balance={coinBalance.balance}
@@ -1961,6 +2000,28 @@ const Index = () => {
         )}
       </AnimatePresence>
 
+
+      {/* ── Free Tonight Sheet ───────────────────────────────────── */}
+      <FreeTonightSheet
+        open={showFreeTonightSheet}
+        onClose={() => setShowFreeTonightSheet(false)}
+        currentUserId={user?.id ?? ""}
+        currentUserCoins={coinBalance.balance}
+        onCoinsSpent={(amount) => coinBalance.addCoins(-amount)}
+      />
+
+      {/* ── Tonight Inbox Modal ───────────────────────────────────── */}
+      <TonightInboxModal
+        open={showTonightInbox}
+        onClose={() => { setShowTonightInbox(false); setTonightInboxCount(0); }}
+        currentUserId={user?.id ?? ""}
+        onAccepted={(senderId) => {
+          setShowTonightInbox(false);
+          // Find the sender profile and trigger contact unlock
+          const senderProfile = [...iLiked, ...likedMe].find(p => p.id === senderId);
+          if (senderProfile) handleUnlock(senderProfile);
+        }}
+      />
 
       {/* ── Real Gift Order Flow ──────────────────────────────────── */}
       <AnimatePresence>
