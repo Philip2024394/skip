@@ -56,7 +56,6 @@ interface LikesLibraryProps {
   onSelectProfile: (profile: Profile, sourceList: Profile[]) => void;
   onPurchaseFeature: (feature: PremiumFeature) => void;
   onCulturalGuide?: () => void;
-  onVisitorGuide?: () => void;
 }
 
 type Tab = "sent" | "received" | "new" | "treat" | "unlock" | "distance" | "gifts" | "video";
@@ -110,7 +109,7 @@ const LikesLibrary = ({
   hidePrivateTabs,
   currentUserId,
   receivedHighlightProfileId, heartDropProfileId, superLikeGlowProfileId,
-  onUnlock, onChat, onSelectProfile, onPurchaseFeature, onCulturalGuide, onVisitorGuide,
+  onUnlock, onChat, onSelectProfile, onPurchaseFeature, onCulturalGuide,
 }: LikesLibraryProps) => {
   const [tab, setTab] = useState<Tab>("new");
   const [activePromoIndex, setActivePromoIndex] = useState<number | null>(null);
@@ -407,7 +406,6 @@ const LikesLibrary = ({
                     { key: "activity" as const, label: "Online Activity", emoji: "🔍", action: "section" },
                     { key: "video" as const, label: "Video", emoji: "🎬", action: "video" },
                     { key: "cultural" as const, label: "Cultural Guide", emoji: "🌏", action: "cultural" },
-                    { key: "visitor" as const, label: "Travel Guide", emoji: "✈️", action: "visitor" },
                     { key: "teddy" as const, label: "Teddy Room", emoji: "🧸", action: "teddy" },
                   ] as { key: string; label: string; emoji: string; action: string }[]
                 ).map((s, idx) => (
@@ -425,8 +423,6 @@ const LikesLibrary = ({
                         onTabChange?.("video");
                       } else if (s.action === "cultural") {
                         onCulturalGuide?.();
-                      } else if (s.action === "visitor") {
-                        onVisitorGuide?.();
                       } else if (s.action === "teddy") {
                         window.location.href = "/teddy";
                       } else {

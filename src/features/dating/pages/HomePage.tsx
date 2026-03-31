@@ -47,7 +47,6 @@ import CulturalBridgePage from "@/features/dating/pages/CulturalBridgePage";
 import GlobalDatingUpsell from "@/features/dating/components/GlobalDatingUpsell";
 import { useGlobalDating } from "@/shared/hooks/useGlobalDating";
 import { getUserCountry } from "@/shared/hooks/useUserCurrency";
-import VisitorGuidePage from "@/features/dating/pages/VisitorGuidePage";
 import { RealGiftOrderFlow } from "@/features/real-gifts/RealGiftOrderFlow";
 import { ShimmerButton, AnimatedGradientText, MagicCard } from "@/shared/components/magic-ui";
 import { GiftDeliveryNotification } from "@/features/real-gifts/GiftDeliveryNotification";
@@ -732,8 +731,6 @@ const Index = () => {
 
   // Cultural Bridge Guide overlay
   const [showCulturalGuide, setShowCulturalGuide] = useState(false);
-  // Visitor Guide overlay
-  const [showVisitorGuide, setShowVisitorGuide] = useState(false);
   // Real Gift flow
   const [showRealGiftFlow, setShowRealGiftFlow] = useState(false);
   const [realGiftTarget, setRealGiftTarget] = useState<any>(null);
@@ -1703,7 +1700,6 @@ const Index = () => {
                       }}
                       onPurchaseFeature={handlePurchaseFeature}
                       onCulturalGuide={() => setShowCulturalGuide(true)}
-                      onVisitorGuide={() => setShowVisitorGuide(true)}
                     />
                   </div>
                 </motion.div>
@@ -1965,12 +1961,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* ── Visitor Guide overlay ─────────────────────────────────── */}
-      <AnimatePresence>
-        {showVisitorGuide && (
-          <VisitorGuidePage onClose={() => setShowVisitorGuide(false)} profile={selectedProfile} />
-        )}
-      </AnimatePresence>
 
       {/* ── Real Gift Order Flow ──────────────────────────────────── */}
       <AnimatePresence>
