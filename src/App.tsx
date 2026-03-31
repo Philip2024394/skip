@@ -34,10 +34,10 @@ const Connect4Page     = lazy(() => import("@/features/games/pages/Connect4Page"
 
 const queryClient = new QueryClient();
 
-const AppContent = () => {
-  // Anonymous page-view tracking — feeds the Stats tab in admin dashboard
-  usePageTracking();
+// Must be rendered inside BrowserRouter so useLocation() works
+const PageTracker = () => { usePageTracking(); return null; };
 
+const AppContent = () => {
   useEffect(() => {
     // Track ad link opens (for ad analytics)
     try {
@@ -57,6 +57,7 @@ const AppContent = () => {
 
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <PageTracker />
       <Routes>
         <Route path="/" element={<AuthPage />} />
         <Route path="/home" element={<ProtectedRoute><Suspense fallback={<LoadingFallback />}><HomePage /></Suspense></ProtectedRoute>} />
