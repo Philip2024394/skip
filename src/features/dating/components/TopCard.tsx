@@ -23,7 +23,7 @@ interface TopCardProps {
   t: any;
   isAnimatingTopCardRef: any;
   selectedList: any[];
-  selectedProfileSection: "basic" | "lifestyle" | "interests" | "images" | null;
+  selectedProfileSection: "basic" | "lifestyle" | "interests" | "images" | "activity" | null;
   setSelectedIndex: (fn: (i: number) => number) => void;
   setProfileImageIndex: (fn: (i: number) => number) => void;
   setProfileImageDirection: (v: 1 | -1) => void;

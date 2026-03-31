@@ -1,11 +1,11 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Star } from "lucide-react";
+import { Heart, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import MatchCelebrationOverlay from "@/features/dating/components/MatchCelebrationOverlay";
 import { Button } from "@/shared/components/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/dialog";
@@ -66,71 +66,103 @@ interface AppDialogsProps {
   handleA2HSDismiss: () => void;
 }
 
-export default function AppDialogs(props: AppDialogsProps) {
-  const { t, locale } = useLanguage();
+function ReferralDialog(props: AppDialogsProps) {
+  const [copied, setCopied] = useState(false);
+  const link = `https://2dateme.com/?ref=${props.referralCode || ""}`;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(link).then(() => {
+      setCopied(true);
+      toast.success("Link copied!");
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
+  const handleShare = () => {
+    const msg = `Hey! I'm on 2DateMe — the dating app that connects you via WhatsApp! 🌍❤️\n\nJoin using my link and we both get 3 FREE Super Likes when you sign up:\n${link}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    try { localStorage.setItem(props.REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
+    window.open(url, "_blank", "noopener,noreferrer");
+    props.setShowReferralPopup(false);
+  };
+
+  const dismiss = () => {
+    props.setShowReferralPopup(false);
+    try { localStorage.setItem(props.REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
+  };
 
   return (
-    <>
-      {/* Referral Popup */}
-      <Dialog
-        open={props.showReferralPopup && !!props.user}
-        onOpenChange={(open) => {
-          if (!open) {
-            props.setShowReferralPopup(false);
-            try { localStorage.setItem(props.REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
-          }
-        }}
-      >
-        <DialogContent className="bg-black/90 backdrop-blur-xl border border-white/10 text-white max-w-sm mx-auto rounded-3xl overflow-hidden">
-          <DialogHeader className="text-center">
-            <DialogTitle className="font-display text-center text-white">
-              <div className="w-14 h-14 mx-auto mb-2 rounded-full bg-yellow-400/15 border border-yellow-300/30 flex items-center justify-center shadow-[0_0_18px_rgba(250,204,21,0.18)]">
-                <Star className="w-8 h-8 text-yellow-300" />
-              </div>
-              Get 10 FREE Super Likes!
+    <Dialog
+      open={props.showReferralPopup && !!props.user}
+      onOpenChange={(open) => { if (!open) dismiss(); }}
+    >
+      <DialogContent hideClose className="border-0 max-w-sm w-full h-screen max-h-screen mx-auto rounded-none overflow-hidden p-0 flex flex-col" style={{
+          backgroundImage: "url('https://ik.imagekit.io/dateme/Untitledgfhjfghjfghj.png')",
+          backgroundSize: "100% 100%",
+          backgroundPosition: "center",
+        }}>
+        {/* Footer content pinned to bottom */}
+        <div className="relative z-10 flex flex-col justify-end flex-1 p-6 pb-12">
+          <DialogHeader className="text-center mb-1">
+            <DialogTitle className="font-display text-center text-gray-900 text-2xl drop-shadow-none">
+              Get 3 FREE Super Likes!
             </DialogTitle>
-            <DialogDescription className="text-center text-white/60">
-              Share 2DateMe with a friend on WhatsApp
-            </DialogDescription>
           </DialogHeader>
+          <div className="text-center mb-3 space-y-0.5">
+            <p className="text-gray-800 text-[13px] font-semibold">⭐ You get 3 Super Likes</p>
+            <p className="text-gray-800 text-[13px] font-semibold">⭐ Your friend gets 3 Super Likes</p>
+            <p className="text-gray-600 text-[11px] mt-1">Rewarded when your friend registers</p>
+          </div>
 
-          <div className="mt-3 space-y-3">
-            <div className="rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
-              <p className="text-white/40 text-[10px] font-semibold">Your link</p>
-              <p className="text-white text-[12px] font-bold break-all">
-                {`https://2dateme.com/?ref=${props.referralCode || ""}`}
-              </p>
+          <div className="space-y-3">
+            {/* Link + copy */}
+            <div className="rounded-2xl bg-black/15 backdrop-blur-md border border-black/10 px-3 py-2 flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-800 text-[9px] font-semibold uppercase tracking-wide">Your invite link</p>
+                <p className="text-gray-900 text-[11px] font-bold truncate">{link}</p>
+              </div>
+              <button
+                onClick={handleCopy}
+                className="flex-shrink-0 w-8 h-8 rounded-xl bg-black/20 backdrop-blur-md border border-black/10 flex items-center justify-center transition-all hover:bg-black/30"
+                title="Copy link"
+              >
+                {copied
+                  ? <Check className="w-4 h-4 text-green-700" />
+                  : <Copy className="w-4 h-4 text-gray-900" />
+                }
+              </button>
             </div>
 
+            {/* WhatsApp share button */}
             <Button
               type="button"
-              className="w-full h-12 rounded-2xl bg-green-500 hover:bg-green-500/90 text-white font-black"
-              onClick={() => {
-                const code = props.referralCode || "";
-                const link = `https://2dateme.com/?ref=${code}`;
-                const msg = `Hey! I just joined 2DateMe — Indonesia's dating app where you connect via WhatsApp! 🇮🇩❤️\nJoin me here: ${link}`;
-                const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-                try { localStorage.setItem(props.REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
-                window.open(url, "_blank", "noopener,noreferrer");
-                props.setShowReferralPopup(false);
-              }}
+              className="w-full h-12 rounded-2xl bg-green-500 hover:bg-green-500/90 text-white font-black text-[14px] gap-2"
+              onClick={handleShare}
             >
-              Share on WhatsApp 💚
+              <span>💚</span> Share on WhatsApp
             </Button>
 
             <button
               type="button"
-              className="w-full text-center text-white/60 text-[11px] font-semibold underline underline-offset-2"
-              onClick={() => {
-                props.setShowReferralPopup(false);
-                try { localStorage.setItem(props.REFERRAL_POPUP_SHOWN_KEY, "true"); } catch { /* ignore */ }
-              }}
+              className="w-full text-center text-gray-700 text-[14px] font-semibold py-2"
+              onClick={dismiss}
             >
               Maybe later
             </button>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export default function AppDialogs(props: AppDialogsProps) {
+  const { t } = useLanguage();
+
+  return (
+    <>
+      {/* Referral Popup */}
+      <ReferralDialog {...props} />
 
       {/* Match Celebration Overlay — full screen, 5s auto-dismiss */}
       {props.matchedProfile && (
@@ -198,7 +230,7 @@ export default function AppDialogs(props: AppDialogsProps) {
       {/* Guest auth prompt */}
       <GuestAuthPrompt
         open={props.guestPrompt.open}
-        trigger={props.guestPrompt.trigger}
+        trigger={props.guestPrompt.trigger as any}
         onClose={() => props.setGuestPrompt((p: any) => ({ ...p, open: false }))}
       />
 

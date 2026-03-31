@@ -30,8 +30,8 @@ interface LikesLibraryProps {
   profileFirstDateIdea?: string | null;
   profileDatePlaces?: Profile["first_date_places"];
   onTabChange?: (tab: Tab) => void;
-  selectedProfileSection?: "basic" | "lifestyle" | "interests" | "images";
-  onSelectProfileSection?: (section: "basic" | "lifestyle" | "interests" | "images") => void;
+  selectedProfileSection?: "basic" | "lifestyle" | "interests" | "images" | "activity";
+  onSelectProfileSection?: (section: "basic" | "lifestyle" | "interests" | "images" | "activity") => void;
   selectedUnlockItemKey?: string;
   onSelectUnlockItem?: (key: string) => void;
   selectedTreatItem?: TreatKey | null;
@@ -404,6 +404,7 @@ const LikesLibrary = ({
                   [
                     { key: "basic" as const, label: "Profile", emoji: "👤", action: "section" },
                     { key: "images" as const, label: "Images", emoji: "📸", action: "section" },
+                    { key: "activity" as const, label: "Online Activity", emoji: "🔍", action: "section" },
                     { key: "video" as const, label: "Video", emoji: "🎬", action: "video" },
                     { key: "cultural" as const, label: "Cultural Guide", emoji: "🌏", action: "cultural" },
                     { key: "visitor" as const, label: "Travel Guide", emoji: "✈️", action: "visitor" },
@@ -429,7 +430,7 @@ const LikesLibrary = ({
                       } else if (s.action === "teddy") {
                         window.location.href = "/teddy";
                       } else {
-                        onSelectProfileSection?.(s.key as "basic" | "lifestyle" | "interests" | "images");
+                        onSelectProfileSection?.(s.key as "basic" | "lifestyle" | "interests" | "images" | "activity");
                       }
                     }}
                     className={`flex flex-col items-center justify-center gap-2 p-3 rounded-xl cursor-pointer transition-all hover:scale-[1.02] backdrop-blur-md border relative w-full ${selectedProfileSection === s.key ? "border-pink-500/70 ring-2 ring-pink-500/40 bg-pink-950/40" : "bg-black/50 border-white/10"}`}

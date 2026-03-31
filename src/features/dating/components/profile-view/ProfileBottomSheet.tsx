@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence } from "framer-motion";
 import DistanceMapOverlay from "./DistanceMapOverlay";
+import DatingInsightsPanel from "./DatingInsightsPanel";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/components/button";
 import { PREMIUM_FEATURES } from "@/data/premiumFeatures";
@@ -19,8 +20,12 @@ interface ProfileBottomSheetProps {
   // Tab state
   aboutMeTab: "new" | "sent" | "received" | "treat" | "gifts";
   setAboutMeTab: (v: "new" | "sent" | "received" | "treat" | "gifts") => void;
-  selectedProfileSection: "basic" | "lifestyle" | "interests" | null;
-  setSelectedProfileSection: (v: "basic" | "lifestyle" | "interests" | null) => void;
+  selectedProfileSection: "basic" | "lifestyle" | "interests" | "activity" | null;
+  setSelectedProfileSection: (v: "basic" | "lifestyle" | "interests" | "activity" | null) => void;
+  currentUserId?: string;
+  coinBalance?: number;
+  deductCoins?: (amount: number, reason: string) => Promise<boolean>;
+  isConnected?: boolean;
   selectedDatePlace: any;
   setSelectedDatePlace: (v: any) => void;
   selectedTreatItem: "massage" | "beautician" | "flowers" | "jewelry" | null;
@@ -60,7 +65,7 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
           }`}
       >
         <div
-          className={`h-full w-full rounded-2xl bg-gradient-to-br from-fuchsia-900/25 via-black/35 to-purple-900/25 backdrop-blur-md border-2 border-fuchsia-300/25 ring-1 ring-fuchsia-300/15 shadow-[0_8px_24px_rgba(0,0,0,0.55)] flex ${props.aboutMeTab === "received" && ["unlock:single", "unlock:pack3", "unlock:pack10"].includes(props.selectedUnlockItemKey)
+          className={`h-full w-full rounded-2xl bg-gradient-to-br from-fuchsia-900/25 via-black/35 to-purple-900/25 backdrop-blur-md border-2 border-fuchsia-300/40 ring-2 ring-black/60 shadow-[0_0_0_1px_rgba(0,0,0,0.8),0_8px_32px_rgba(0,0,0,0.7)] flex ${props.aboutMeTab === "received" && ["unlock:single", "unlock:pack3", "unlock:pack10"].includes(props.selectedUnlockItemKey)
               ? "p-0 items-stretch justify-stretch rounded-none border-0 ring-0 shadow-none"
               : "px-4 py-3 items-center justify-center"
             }`}
@@ -528,6 +533,28 @@ export default function ProfileBottomSheet(props: ProfileBottomSheetProps) {
                       <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, textAlign: "center" }}>
                         Select a section above to view details
                       </p>
+                    </div>
+                  );
+                }
+
+                if (props.selectedProfileSection === "activity") {
+                  return (
+                    <div style={{ padding: "4px 2px 16px" }}>
+                      {props.currentUserId && props.deductCoins ? (
+                        <DatingInsightsPanel
+                          profile={props.selectedProfile}
+                          currentUserId={props.currentUserId}
+                          coinBalance={props.coinBalance ?? 0}
+                          deductCoins={props.deductCoins}
+                          isConnected={props.isConnected ?? true}
+                        />
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 12, textAlign: "center" }}>
+                            Sign in to unlock activity insights
+                          </p>
+                        </div>
+                      )}
                     </div>
                   );
                 }

@@ -21,6 +21,7 @@ import { TreatOverlay, AppDialogs, DailyMatchSuggestion, shouldShowDailyMatch, m
 import type { TravelNoticeType } from "@/features/dating/components";
 import { ProfileBottomSheet, ProfileInfoPanel, ProfileImagesPanel, DateIdeaDetailPanel, TreatDetailPanel } from "@/features/dating/components";
 import VideoIntroPanel from "@/features/dating/components/profile-view/VideoIntroPanel";
+import DatingInsightsPanel from "@/features/dating/components/profile-view/DatingInsightsPanel";
 import DistanceMapOverlay from "@/features/dating/components/profile-view/DistanceMapOverlay";
 import InternationalMarriagePanel from "@/features/dating/components/profile-view/InternationalMarriagePanel";
 import { useLanguage } from "@/i18n/LanguageContext";
@@ -724,7 +725,7 @@ const Index = () => {
   const [selectedTreatItem, setSelectedTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>("massage");
   const [openTreatItem, setOpenTreatItem] = useState<"massage" | "beautician" | "flowers" | "jewelry" | null>(null);
   const [selectedDateIdeaIndex, setSelectedDateIdeaIndex] = useState<number | null>(null);
-  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests" | "images" | null>(null);
+  const [selectedProfileSection, setSelectedProfileSection] = useState<"basic" | "lifestyle" | "interests" | "images" | "activity" | null>(null);
   const [profileImageViewIndex, setProfileImageViewIndex] = useState(0);
   const [selectedDatePlace, setSelectedDatePlace] = useState<any | null>(null);
   const [selectedUnlockItemKey, setSelectedUnlockItemKey] = useState<string>("unlock:single");
@@ -1267,8 +1268,11 @@ const Index = () => {
       {/* Header — padded for status bar safe area */}
       <header className="flex items-center justify-between px-4 py-2.5 relative z-10 pt-safe" style={{ paddingTop: `max(0.625rem, env(safe-area-inset-top, 0px))` }}>
         <div className="flex items-center gap-2">
-          <AppLogo alt={APP_NAME} className="w-10 h-10 object-contain drop-shadow-[0_0_8px_rgba(220,80,150,0.5)]" />
-          <span className="font-display font-bold text-white text-xl tracking-tight leading-none">{APP_NAME}</span>
+          <AppLogo alt={APP_NAME} className="w-12 h-12 object-contain drop-shadow-[0_0_8px_rgba(220,80,150,0.5)]" />
+          <div className="flex flex-col leading-none gap-0.5">
+            <span className="font-display font-bold text-white text-xl tracking-tight leading-none">{APP_NAME}</span>
+            <span className="text-white/45 font-medium leading-none" style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase" }}>Updates every 24 hours</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -1371,7 +1375,7 @@ const Index = () => {
           ? (selectedProfile?.first_date_places || [])[selectedDateIdeaIndex]
           : null;
         const showDateIdeaPanel = !!dateIdeaPlace;
-        const showProfilePanel = isProfileRoute && aboutMeTab === "new" && selectedProfileSection !== null;
+        const showProfilePanel = isProfileRoute && aboutMeTab === "new" && selectedProfileSection !== null && selectedProfileSection !== "activity";
         const showVideoPanel = isProfileRoute && aboutMeTab === "video";
         const showFullPanel = showDateIdeaPanel || showProfilePanel || showVideoPanel;
 
@@ -1391,6 +1395,24 @@ const Index = () => {
                 onClose={() => setAboutMeTab("new")}
                 onMatch={(name, id) => setMatchData({ name, id })}
               />
+            ) : selectedProfileSection === "activity" && isProfileRoute ? (
+              <div style={{
+                height: "100%", overflowY: "auto",
+                padding: "12px 16px 24px",
+                borderRadius: 20,
+                backgroundImage: "url(https://ik.imagekit.io/7grri5v7d/vip%20jhh33.png)",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundColor: "rgba(236,72,153,0.7)",
+              }}>
+                <DatingInsightsPanel
+                  profile={selectedProfile}
+                  currentUserId={user?.id ?? ""}
+                  coinBalance={coinBalance.balance}
+                  deductCoins={coinBalance.deductCoins}
+                  isConnected={true}
+                />
+              </div>
             ) : showProfilePanel ? (
               selectedProfileSection === "images" ? (
                 <ProfileImagesPanel
@@ -1633,7 +1655,7 @@ const Index = () => {
                         }
                         setAboutMeTab(t);
                       }}
-                      selectedProfileSection={isProfileRoute ? selectedProfileSection : undefined}
+                      selectedProfileSection={isProfileRoute ? (selectedProfileSection ?? undefined) : undefined}
                       onSelectProfileSection={(s) => {
                         if (!isProfileRoute) return;
                         setSelectedProfileSection(s as any);
