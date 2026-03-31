@@ -248,7 +248,13 @@ const LikesLibrary = ({
       >
         <h2 className="font-display font-bold text-sm text-foreground flex items-center gap-1.5">
           <Heart className="w-4 h-4 text-primary" fill="currentColor" />
-          {title ?? "Match"}
+          {title ?? (
+            tab === "new" ? "New Members" :
+            tab === "sent" ? "Profiles Liked" :
+            tab === "received" ? "Profiles Liked Me" :
+            tab === "match" ? "Matches" :
+            "Members"
+          )}
         </h2>
 
 
