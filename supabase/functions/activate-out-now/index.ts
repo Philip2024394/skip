@@ -74,6 +74,7 @@ serve(async (req) => {
             type: "out_now",
             userId,
             name: firstName,
+            url: `/out-now?highlight=${userId}`,
           },
         },
       })
