@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   Copy, Download, Plus, Trash2, CheckCircle2, Search,
@@ -9,6 +9,7 @@ import {
 import { toast } from "sonner";
 import type { AdminProfile } from "../types";
 import logoHeart from "@/assets/images/logo-heart.png";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Platform presets ────────────────────────────────────────────────────────
 const PLATFORMS = [
@@ -198,24 +199,72 @@ interface AdItem {
   overlayOpacity: number;
 }
 
-const AD_QUEUE_KEY = "2dateme_ad_queue";
 const AD_TRACK_PREFIX = "2dateme_adv_";
 const genId = () => Math.random().toString(36).slice(2, 10);
 
-function loadQueue(): AdItem[] {
-  try { return JSON.parse(localStorage.getItem(AD_QUEUE_KEY) || "[]"); } catch { return []; }
+// ── Supabase row ↔ AdItem helpers ──────────────────────────────────────────
+function rowToAdItem(row: Record<string, unknown>): AdItem {
+  return {
+    id:              row.id as string,
+    adType:          (row.ad_type as AdType) || "image",
+    profileId:       row.profile_id as string | undefined,
+    profileName:     row.profile_name as string | undefined,
+    profileAge:      row.profile_age as number | undefined,
+    profileCity:     row.profile_city as string | undefined,
+    profileAvatar:   row.profile_avatar as string | undefined,
+    imageUrl:        (row.image_url as string) || "",
+    videoUrl:        row.video_url as string | undefined,
+    caption:         (row.caption as string) || "",
+    hashtags:        (row.hashtags as string[]) || [],
+    country:         (row.country as string) || "indonesia",
+    platform:        (row.platform as string) || "ig_square",
+    customW:         row.custom_w as number | undefined,
+    customH:         row.custom_h as number | undefined,
+    status:          (row.status as "queued" | "used") || "queued",
+    createdAt:       (row.created_at as string) || new Date().toISOString(),
+    copiedAt:        row.copied_at as string | undefined,
+    cropX:           (row.crop_x as number) ?? 0,
+    cropY:           (row.crop_y as number) ?? 0,
+    cropZoom:        (row.crop_zoom as number) ?? 1,
+    overlayEnabled:  (row.overlay_enabled as boolean) ?? true,
+    overlayPosition: (row.overlay_position as OverlayPos) || "bottom-right",
+    overlayOpacity:  (row.overlay_opacity as number) ?? 0.9,
+  };
 }
-function saveQueue(q: AdItem[]) {
-  try { localStorage.setItem(AD_QUEUE_KEY, JSON.stringify(q)); } catch {}
+
+function adItemToRow(ad: AdItem) {
+  return {
+    id:               ad.id,
+    ad_type:          ad.adType,
+    profile_id:       ad.profileId ?? null,
+    profile_name:     ad.profileName ?? null,
+    profile_age:      ad.profileAge ?? null,
+    profile_city:     ad.profileCity ?? null,
+    profile_avatar:   ad.profileAvatar ?? null,
+    image_url:        ad.imageUrl,
+    video_url:        ad.videoUrl ?? null,
+    caption:          ad.caption,
+    hashtags:         ad.hashtags,
+    country:          ad.country,
+    platform:         ad.platform,
+    custom_w:         ad.customW ?? null,
+    custom_h:         ad.customH ?? null,
+    status:           ad.status,
+    created_at:       ad.createdAt,
+    copied_at:        ad.copiedAt ?? null,
+    crop_x:           ad.cropX,
+    crop_y:           ad.cropY,
+    crop_zoom:        ad.cropZoom,
+    overlay_enabled:  ad.overlayEnabled,
+    overlay_position: ad.overlayPosition,
+    overlay_opacity:  ad.overlayOpacity,
+  };
 }
 export function trackAdView(adId: string): void {
   try {
     const k = AD_TRACK_PREFIX + adId;
     localStorage.setItem(k, String((parseInt(localStorage.getItem(k) || "0")) + 1));
   } catch {}
-}
-function getAdViews(adId: string): number {
-  try { return parseInt(localStorage.getItem(AD_TRACK_PREFIX + adId) || "0"); } catch { return 0; }
 }
 function getAllAdViews(): Record<string, number> {
   const out: Record<string, number> = {};
@@ -412,7 +461,8 @@ export default function AdCreatorTab({ profiles }: Props) {
   const [overlayOpacity, setOverlayOpacity] = useState(0.9);
 
   // Queue state
-  const [queue, setQueue] = useState<AdItem[]>(loadQueue);
+  const [queue, setQueue] = useState<AdItem[]>([]);
+  const [queueLoading, setQueueLoading] = useState(true);
   const [queueFilter, setQueueFilter] = useState<"all" | "queued" | "used">("queued");
   const [copiedIds, setCopiedIds] = useState<Set<string>>(new Set());
   const [linkCopiedIds, setLinkCopiedIds] = useState<Set<string>>(new Set());
@@ -427,6 +477,18 @@ export default function AdCreatorTab({ profiles }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  // ── Load queue from Supabase on mount ───────────────────────────────────
+  const loadQueueFromDB = useCallback(async () => {
+    setQueueLoading(true);
+    const { data, error } = await (supabase as any).from("admin_ads")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) setQueue((data as Record<string, unknown>[]).map(rowToAdItem));
+    setQueueLoading(false);
+  }, []);
+
+  useEffect(() => { loadQueueFromDB(); }, [loadQueueFromDB]);
 
   // Load view counts on mount and refresh
   useEffect(() => { setAdViews(getAllAdViews()); }, [queue.length]);
@@ -513,7 +575,7 @@ export default function AdCreatorTab({ profiles }: Props) {
     } catch { toast.error("Copy failed"); }
   };
 
-  const handleSaveToQueue = () => {
+  const handleSaveToQueue = async () => {
     if (adType === "image" && !activeImageSrc) { toast.error("Add an image first"); return; }
     if (adType === "video" && !videoFile) { toast.error("Upload a video first"); return; }
     if (!caption.trim()) { toast.error("Add a caption"); return; }
@@ -538,11 +600,10 @@ export default function AdCreatorTab({ profiles }: Props) {
       cropX, cropY, cropZoom,
       overlayEnabled, overlayPosition, overlayOpacity,
     };
-    const newQueue = [ad, ...queue];
-    setQueue(newQueue);
-    saveQueue(newQueue);
+    const { error } = await (supabase as any).from("admin_ads").insert(adItemToRow(ad));
+    if (error) { toast.error("Failed to save ad"); return; }
+    setQueue(q => [ad, ...q]);
     toast.success("Ad saved to queue!");
-    // Reset image for next ad
     setImageFile(null);
     setImageUrl(selectedProfile?.avatar_url || "");
     setCropX(0); setCropY(0); setCropZoom(1);
@@ -554,11 +615,11 @@ export default function AdCreatorTab({ profiles }: Props) {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedIds(s => new Set(s).add(ad.id));
-      const updated = queue.map(a =>
-        a.id === ad.id ? { ...a, status: "used" as const, copiedAt: new Date().toISOString() } : a
-      );
-      setQueue(updated);
-      saveQueue(updated);
+      const copiedAt = new Date().toISOString();
+      await (supabase as any).from("admin_ads")
+        .update({ status: "used", copied_at: copiedAt })
+        .eq("id", ad.id);
+      setQueue(q => q.map(a => a.id === ad.id ? { ...a, status: "used" as const, copiedAt } : a));
       toast.success("Caption copied! Ad marked as used.");
       setTimeout(() => setCopiedIds(s => { const n = new Set(s); n.delete(ad.id); return n; }), 2000);
     } catch {
@@ -588,21 +649,23 @@ export default function AdCreatorTab({ profiles }: Props) {
     }
   };
 
-  const handleDeleteAd = (id: string) => {
-    const updated = queue.filter(a => a.id !== id);
-    setQueue(updated);
-    saveQueue(updated);
+  const handleDeleteAd = async (id: string) => {
+    const { error } = await (supabase as any).from("admin_ads").delete().eq("id", id);
+    if (error) { toast.error("Delete failed"); return; }
+    setQueue(q => q.filter(a => a.id !== id));
     toast.success("Ad deleted");
   };
 
-  const handleClearUsed = () => {
-    const updated = queue.filter(a => a.status !== "used");
-    setQueue(updated);
-    saveQueue(updated);
+  const handleClearUsed = async () => {
+    const usedIds = queue.filter(a => a.status === "used").map(a => a.id);
+    if (usedIds.length === 0) return;
+    const { error } = await (supabase as any).from("admin_ads").delete().in("id", usedIds);
+    if (error) { toast.error("Clear failed"); return; }
+    setQueue(q => q.filter(a => a.status !== "used"));
     toast.success("Cleared used ads");
   };
 
-  const handleBatchGenerate = () => {
+  const handleBatchGenerate = async () => {
     const ids = batchIds.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
     if (ids.length === 0) { toast.error("Enter at least one profile ID"); return; }
     setBatchGenerating(true);
@@ -621,6 +684,7 @@ export default function AdCreatorTab({ profiles }: Props) {
         : bPack.captions[captionIdx];
       newAds.push({
         id: genId(),
+        adType: "image",
         profileId: pid,
         profileName: profile?.name,
         profileAge: profile?.age,
@@ -634,11 +698,14 @@ export default function AdCreatorTab({ profiles }: Props) {
         status: "queued",
         createdAt: new Date().toISOString(),
         cropX: 0, cropY: 0, cropZoom: 1,
+        overlayEnabled: true,
+        overlayPosition: "bottom-right",
+        overlayOpacity: 0.9,
       });
     });
-    const updated = [...newAds, ...queue];
-    setQueue(updated);
-    saveQueue(updated);
+    const { error } = await (supabase as any).from("admin_ads").insert(newAds.map(adItemToRow));
+    if (error) { toast.error("Batch save failed"); setBatchGenerating(false); return; }
+    setQueue(q => [...newAds, ...q]);
     setBatchGenerating(false);
     setBatchIds("");
     toast.success(`Generated ${newAds.length} ads!`);
@@ -651,13 +718,12 @@ export default function AdCreatorTab({ profiles }: Props) {
     const allText = queued.map(a => `${a.caption}\n\n${a.hashtags.join(" ")}`).join("\n\n---\n\n");
     try {
       await navigator.clipboard.writeText(allText);
-      const updated = queue.map(a =>
-        queued.find(q => q.id === a.id)
-          ? { ...a, status: "used" as const, copiedAt: new Date().toISOString() }
-          : a
-      );
-      setQueue(updated);
-      saveQueue(updated);
+      const copiedAt = new Date().toISOString();
+      const queuedIds = queued.map(a => a.id);
+      await (supabase as any).from("admin_ads")
+        .update({ status: "used", copied_at: copiedAt })
+        .in("id", queuedIds);
+      setQueue(q => q.map(a => queuedIds.includes(a.id) ? { ...a, status: "used" as const, copiedAt } : a));
       toast.success(`Copied ${queued.length} captions to clipboard!`);
     } catch {
       toast.error("Copy failed");
@@ -1118,6 +1184,12 @@ export default function AdCreatorTab({ profiles }: Props) {
       {/* ══ QUEUE ═══════════════════════════════════════════════════════════ */}
       {section === "queue" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+
+          {queueLoading && (
+            <div style={{ textAlign: "center", padding: "24px 0", color: "rgba(255,255,255,0.4)", fontSize: 13 }}>
+              Loading ads from database…
+            </div>
+          )}
 
           {/* Stats + actions */}
           <div style={{ display: "flex", gap: 8 }}>

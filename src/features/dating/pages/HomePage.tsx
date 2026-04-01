@@ -349,6 +349,10 @@ const Index = () => {
     user?.id && user.id !== "guest-user" ? user.id : null,
     mutualMatchIds,
   );
+  const outNowActiveSessions = useMemo(
+    () => [outNow.incomingSession, outNow.myPurchasedSession].filter(Boolean) as NonNullable<typeof outNow.incomingSession>[],
+    [outNow.incomingSession, outNow.myPurchasedSession],
+  );
   const [outNowMapProfile, setOutNowMapProfile] = useState<any | null>(null);
 
   // ── Daily swipe scarcity ──────────────────────────────────────────────────
@@ -1439,21 +1443,6 @@ const Index = () => {
                   >
                     <Zap className="w-4 h-4" />
                   </button>
-                  {/* Free Tonight button */}
-                  <button
-                    onClick={() => { setBrowseInitialMode("tonight"); setShowBrowse(true); }}
-                    aria-label="Free Tonight"
-                    title="Free Tonight"
-                    className="relative w-8 h-8 rounded-full bg-black/50 backdrop-blur-md border border-yellow-400/30 flex items-center justify-center transition-colors hover:border-yellow-400/60"
-                    style={{ boxShadow: "0 0 10px rgba(234,179,8,0.2)" }}
-                  >
-                    <span style={{ fontSize: 15 }}>🌙</span>
-                    {tonightInboxCount > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-black text-[9px] font-black flex items-center justify-center">
-                        {tonightInboxCount}
-                      </span>
-                    )}
-                  </button>
 
                   {/* Daily swipe counter pill */}
                   {user?.id && user.id !== "guest-user" && !dailySwipes.isLocked && dailySwipes.swipesLeft <= 15 && (
@@ -1627,9 +1616,9 @@ const Index = () => {
                     confirmedBestieIds.includes(selectedProfile?.id ?? "") ||
                     (iLiked.some(p => p.id === selectedProfile?.id) && likedMe.some(p => p.id === selectedProfile?.id))
                   }
-                  isOutNow={outNow.activeSessions.some(s => s.userId === selectedProfile?.id)}
+                  isOutNow={outNowActiveSessions.some(s => s.userId === selectedProfile?.id)}
                   onOutNowTap={() => {
-                    const session = outNow.activeSessions.find(s => s.userId === selectedProfile?.id);
+                    const session = outNowActiveSessions.find(s => s.userId === selectedProfile?.id);
                     if (session) setOutNowMapProfile({ ...selectedProfile, distanceBand: session.distanceBand, meet_now_expires_at: session.expiresAt, isOutNowSession: session });
                   }}
                 />
@@ -1667,7 +1656,7 @@ const Index = () => {
                   onUnlockCard={() => setShowUnlockCard(true)}
                   currentUser={user}
                   onSwipeAction={tickC4Swipe}
-                  outNowUserIds={outNow.activeSessions.map(s => s.userId)}
+                  outNowUserIds={outNowActiveSessions.map(s => s.userId)}
                 />
 
                 {/* ── Connect 4 Promo Card ────────────────────────────── */}
@@ -1875,7 +1864,7 @@ const Index = () => {
                       profiles={bottomProfiles}
                       direction="down"
                       roseAvailable={roseAvailable}
-                      outNowUserIds={outNow.activeSessions.map(s => s.userId)}
+                      outNowUserIds={outNowActiveSessions.map(s => s.userId)}
                       onRose={handleRose}
                       onLike={(p) => {
                         if (dailySwipes.isLocked) return;
@@ -2623,6 +2612,14 @@ const Index = () => {
                         <NewUserBoostBanner userId={user.id} />
                       )}
 
+                      {/* ── Out Now toggle ─────────────────────── */}
+                      <OutNowToggle
+                        isActive={outNow.isActive}
+                        expiresAt={outNow.expiresAt}
+                        onActivate={outNow.activateOutNow}
+                        onDeactivate={outNow.deactivateOutNow}
+                      />
+
                       {/* ── City Progress ───────────────────────── */}
                       {cityStatus && (
                         <CityProgressBanner
@@ -2694,16 +2691,6 @@ const Index = () => {
                             );
                           })()}
                         </div>
-                      )}
-
-                      {/* ── Out Now toggle ─────────────────────── */}
-                      {user?.id && user.id !== "guest-user" && (
-                        <OutNowToggle
-                          isActive={outNow.isActive}
-                          expiresAt={outNow.expiresAt}
-                          onActivate={outNow.activateOutNow}
-                          onDeactivate={outNow.deactivateOutNow}
-                        />
                       )}
 
                       {/* ── My Profile ─────────────────────────── */}

@@ -5,7 +5,7 @@
  */
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ShieldCheck, Camera, X } from "lucide-react";
+import { Camera, X } from "lucide-react";
 
 interface PhotoRequiredModalProps {
   action: "like" | "match" | "chat" | "unlock" | "rose";
@@ -48,7 +48,7 @@ export default function PhotoRequiredModal({ action, onClose }: PhotoRequiredMod
         {/* Sheet */}
         <motion.div
           className="relative w-full max-w-md rounded-t-3xl overflow-hidden"
-          style={{ background: "linear-gradient(180deg, #111 0%, #0d0d0d 100%)" }}
+          style={{ background: `url('https://ik.imagekit.io/dateme/Untitledfdsfsdfdsfsdfg.png?updatedAt=1774981955914') center/cover no-repeat` }}
           initial={{ y: "100%" }}
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
@@ -65,12 +65,11 @@ export default function PhotoRequiredModal({ action, onClose }: PhotoRequiredMod
           <div className="px-6 pt-7 pb-8 space-y-5">
             {/* Icon + headline */}
             <div className="flex flex-col items-center gap-3 text-center">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg,rgba(236,72,153,0.2),rgba(168,85,247,0.2))", border: "1px solid rgba(236,72,153,0.3)" }}
-              >
-                <ShieldCheck className="w-8 h-8 text-pink-400" />
-              </div>
+              <img
+                src="https://ik.imagekit.io/dateme/Smartphone%20capturing%20DSLR%20camera%20flash.png?updatedAt=1775005180680"
+                alt=""
+                className="w-20 h-20 object-contain drop-shadow-[0_0_16px_rgba(236,72,153,0.4)]"
+              />
               <div>
                 <h2 className="text-white font-bold text-lg leading-snug">
                   Add your photo to {copy.verb} {copy.emoji}

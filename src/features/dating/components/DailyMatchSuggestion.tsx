@@ -50,8 +50,6 @@ function generateMatchReasons(profile: any): string[] {
     reasons.push(`Matching values around ${rg.religion} lifestyle`);
   if (bi.languages?.length > 1)
     reasons.push(`Speaks ${bi.languages.slice(0, 2).join(" & ")} like you`);
-  if (profile?.no_drama)
-    reasons.push("Values honest, drama-free connection — just like you");
   if (profile?.available_tonight)
     reasons.push("Active and available — perfect timing to connect");
   if (rg.date_type)

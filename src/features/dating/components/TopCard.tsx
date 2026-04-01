@@ -197,7 +197,7 @@ export default function TopCard(props: TopCardProps) {
                 </span>
               )}
               {props.selectedProfile.name}, {props.selectedProfile.age}
-              {!props.isProfileRoute && <ProfileBadge profile={props.selectedProfile} t={props.t} isProfilePage={false} />}
+
               {(props.selectedProfile.is_mock && (props.selectedProfile as any).mock_online_hours
                 ? isMockCurrentlyOnline(props.selectedProfile.id, props.selectedProfile.country, (props.selectedProfile as any).mock_online_hours, (props.selectedProfile as any).mock_offline_days)
                 : isOnline(props.selectedProfile.last_seen_at)) && (

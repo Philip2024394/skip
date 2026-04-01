@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Zap, Users, MapPin, RefreshCw } from "lucide-react";
@@ -116,8 +116,9 @@ export default function OutNowMapPage() {
   const markersRef  = useRef<Map<string, any>>(new Map());
 
   const [authUser, setAuthUser]           = useState<any>(null);
-  const [myLat, setMyLat]                 = useState<number | null>(null);
-  const [myLng, setMyLng]                 = useState<number | null>(null);
+  // Default to Jakarta centre so map + mocks are always visible
+  const [myLat, setMyLat]                 = useState<number>(-6.2088);
+  const [myLng, setMyLng]                 = useState<number>(106.8456);
   const [mapReady, setMapReady]           = useState(false);
   const [locLoading, setLocLoading]       = useState(true);
   const [outNowUsers, setOutNowUsers]     = useState<OutNowUser[]>([]);
@@ -174,20 +175,50 @@ export default function OutNowMapPage() {
       });
   }, [authUser?.id]);
 
+  // ── Mock Indonesian Out Now profiles (absolute Jakarta/Bali coords) ──────────
+  const buildMocks = useCallback((baseLat: number, baseLng: number, ids: string[]): OutNowUser[] => {
+    const expires = new Date(Date.now() + 90 * 60 * 1000).toISOString();
+    // Absolute coords spread around Jakarta centre (-6.2088, 106.8456)
+    const raw = [
+      { id: "mock-on-01", name: "Putri",   age: 24, avatar_url: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=150&h=150&fit=crop&crop=face", lat: -6.2012, lng: 106.8523, verified: true,  mutual: true  },
+      { id: "mock-on-02", name: "Dewi",    age: 22, avatar_url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop&crop=face", lat: -6.2155, lng: 106.8398, verified: false, mutual: true  },
+      { id: "mock-on-03", name: "Sari",    age: 26, avatar_url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=150&h=150&fit=crop&crop=face", lat: -6.1944, lng: 106.8601, verified: true,  mutual: false },
+      { id: "mock-on-04", name: "Ayu",     age: 23, avatar_url: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=150&h=150&fit=crop&crop=face", lat: -6.2234, lng: 106.8312, verified: false, mutual: false },
+      { id: "mock-on-05", name: "Citra",   age: 25, avatar_url: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=150&h=150&fit=crop&crop=face", lat: -6.1876, lng: 106.8734, verified: true,  mutual: true  },
+      { id: "mock-on-06", name: "Rina",    age: 27, avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face", lat: -6.2301, lng: 106.8589, verified: false, mutual: false },
+      { id: "mock-on-07", name: "Indah",   age: 21, avatar_url: "https://images.unsplash.com/photo-1502767089025-6572583495b9?w=150&h=150&fit=crop&crop=face", lat: -6.2067, lng: 106.8201, verified: true,  mutual: false },
+    ];
+    return raw.map(m => {
+      const km = haversineKm(baseLat, baseLng, m.lat, m.lng);
+      return {
+        id: m.id, name: m.name, age: m.age, avatar_url: m.avatar_url,
+        lat: m.lat, lng: m.lng, distanceKm: km, distanceBand: getBand(km),
+        isVerified: m.verified, isMutualMatch: m.mutual || ids.includes(m.id),
+        expiresAt: expires, lockedBy: null, lockExpiresAt: null,
+      };
+    }).sort((a, b) => a.distanceKm - b.distanceKm);
+  }, []);
+
   // Load all Out Now users within radius
   const loadUsers = useCallback(async (silent = false) => {
-    if (!myLat || !myLng || !authUser?.id) return;
     if (!silent) setRefreshing(true);
+
+    if (!authUser?.id) {
+      // Guest / not logged in — show mocks immediately
+      setOutNowUsers(buildMocks(myLat, myLng, []));
+      setRefreshing(false);
+      return;
+    }
+
     const { data } = await (supabase.from as any)("profiles")
       .select("id, name, age, avatar_url, latitude, longitude, is_verified, photo_verified, meet_now_active, meet_now_expires_at, meet_now_locked_by, meet_now_lock_expires_at")
       .eq("meet_now_active", true)
       .gt("meet_now_expires_at", new Date().toISOString())
       .neq("id", authUser.id);
 
-    if (data) {
+    if (data && data.length > 0) {
       const users: OutNowUser[] = data
         .map((p: any) => {
-          // Round lat/lng to 2dp (~1km precision) for privacy
           const lat = p.latitude  ? Math.round(p.latitude  * 100) / 100 : myLat + (Math.random() - 0.5) * 0.005;
           const lng = p.longitude ? Math.round(p.longitude * 100) / 100 : myLng + (Math.random() - 0.5) * 0.005;
           const km  = haversineKm(myLat, myLng, lat, lng);
@@ -205,9 +236,12 @@ export default function OutNowMapPage() {
         .filter((u: OutNowUser) => u.distanceKm <= 10)
         .sort((a: OutNowUser, b: OutNowUser) => a.distanceKm - b.distanceKm);
       setOutNowUsers(users);
+    } else {
+      // No real Out Now users — show mocks so the page is never empty
+      setOutNowUsers(buildMocks(myLat, myLng, mutualIds));
     }
     setRefreshing(false);
-  }, [myLat, myLng, authUser?.id, mutualIds]);
+  }, [myLat, myLng, authUser?.id, mutualIds, buildMocks]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
 
@@ -320,9 +354,6 @@ export default function OutNowMapPage() {
     };
     return () => { delete (window as any).__onmSelect; };
   }, [outNowUsers]);
-
-  // ── Nearest 5 (already sorted by distance) ──────────────────────────────────
-  const nearest5 = useMemo(() => outNowUsers.slice(0, 5), [outNowUsers]);
 
   // ── Actions ──────────────────────────────────────────────────────────────────
   const handleLike = async (target: OutNowUser) => {
@@ -458,7 +489,7 @@ export default function OutNowMapPage() {
                 </div>
 
                 <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 6, scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                  {outNowUsers.slice(0, 7).map(u => {
+                  {outNowUsers.slice(0, 4).map(u => {
                     const isSelected = selected?.id === u.id;
                     const color = ringColor(u);
                     return (

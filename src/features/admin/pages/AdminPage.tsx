@@ -571,8 +571,9 @@ const AdminPage = () => {
 
   return (
     <div className="h-screen bg-[#0a0a0a] text-white flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-white/8 bg-[#0a0a0a]/95 backdrop-blur-md flex-shrink-0">
+
+      {/* ── Top header bar ─────────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-6 py-3 border-b border-white/8 bg-[#0f0f0f]/95 backdrop-blur-md flex-shrink-0">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate("/")} className="w-8 h-8 rounded-full bg-white/8 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/15 transition-colors">
             <ArrowLeft className="w-4 h-4" />
@@ -581,67 +582,55 @@ const AdminPage = () => {
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
               <Shield className="w-3.5 h-3.5 text-white" />
             </div>
-            <span className="font-bold text-white text-sm">Admin Dashboard</span>
+            <span className="font-bold text-white">2DateMe Admin</span>
           </div>
           {alertsBadge > 0 && (
-            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{alertsBadge}</span>
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{alertsBadge} alerts</span>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate("/admin/whatsapp-leads")}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 border border-green-500 rounded-lg hover:bg-green-700 transition-colors"
-          >
-            <MessageSquare className="w-4 h-4 text-white" />
-            <span className="text-white text-sm font-bold">WhatsApp Leads</span>
+          <button onClick={() => navigate("/admin/whatsapp-leads")} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600/80 border border-green-500/50 rounded-lg hover:bg-green-600 transition-colors text-sm font-semibold">
+            <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
           </button>
-          <button
-            onClick={() => navigate("/admin/world-map")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 border border-blue-500 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Globe className="w-4 h-4 text-white" />
-            <span className="text-white text-sm font-bold">World Map</span>
-          </button>
-          <button
-            onClick={() => navigate("/test")}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 border border-purple-500 rounded-lg hover:bg-purple-700 transition-colors"
-          >
-            <span className="text-white text-sm font-bold">Test</span>
+          <button onClick={() => navigate("/admin/world-map")} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/80 border border-blue-500/50 rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold">
+            <Globe className="w-3.5 h-3.5" /> World Map
           </button>
           <span className={`w-2 h-2 rounded-full ${dbConnected ? "bg-green-400" : "bg-red-400"}`} />
-          <span className="text-[10px] text-white/40 font-medium">{dbConnected ? "Live" : "Offline"}</span>
-          <button
-            onClick={loadData}
-            className={`w-8 h-8 rounded-full bg-white/8 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/15 transition-colors ${refreshing ? "animate-spin" : ""}`}
-          >
+          <span className="text-xs text-white/40 font-medium">{dbConnected ? "Live" : "Offline"}</span>
+          <button onClick={loadData} className={`w-8 h-8 rounded-full bg-white/8 flex items-center justify-center text-white/50 hover:text-white transition-colors ${refreshing ? "animate-spin" : ""}`}>
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
       </header>
 
-      {/* Tab bar */}
-      <div className="flex px-3 pt-3 gap-1 flex-shrink-0 bg-[#0a0a0a] border-b border-white/8 pb-3">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`flex-1 py-2 rounded-xl text-[10px] font-semibold flex items-center justify-center gap-1 transition-all relative ${tab === t.id
-              ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md"
-              : "bg-white/8 text-white/50 hover:bg-white/12 hover:text-white/70"
+      {/* ── Body: sidebar + content ─────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
+
+        {/* Sidebar nav */}
+        <aside className="w-48 flex-shrink-0 bg-[#0d0d0d] border-r border-white/8 flex flex-col py-3 px-2 gap-0.5 overflow-y-auto">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative ${
+                tab === t.id
+                  ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md"
+                  : "text-white/50 hover:bg-white/8 hover:text-white"
               }`}
-          >
-            {t.icon}{t.label}
-            {t.badge !== undefined && t.badge > 0 && (
-              <span className={`absolute -top-1 -right-1 min-w-[14px] h-[14px] rounded-full text-[8px] font-bold flex items-center justify-center px-0.5 ${tab === t.id ? "bg-white text-pink-600" : "bg-pink-500 text-white"}`}>
-                {t.badge > 99 ? "99+" : t.badge}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
+            >
+              {t.icon}
+              <span className="flex-1 text-left">{t.label}</span>
+              {t.badge !== undefined && t.badge > 0 && (
+                <span className={`min-w-[18px] h-[18px] rounded-full text-[9px] font-bold flex items-center justify-center px-1 ${tab === t.id ? "bg-white text-pink-600" : "bg-pink-500 text-white"}`}>
+                  {t.badge > 99 ? "99+" : t.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </aside>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
 
         {/* ══ OVERVIEW TAB ══════════════════════════════════════════ */}
         {tab === "overview" && (
@@ -1474,6 +1463,7 @@ const AdminPage = () => {
           />
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };

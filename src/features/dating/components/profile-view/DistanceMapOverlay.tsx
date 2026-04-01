@@ -19,8 +19,6 @@ const BADGE_FILTERS = [
   { key: "weekend_plans",      icon: "📅", label: "Weekend" },
   { key: "is_plusone",         icon: "✚",  label: "Plus One" },
   { key: "late_night_chat",    icon: "💬", label: "Late Night" },
-  { key: "no_drama",           icon: "✨", label: "No Drama" },
-  { key: "generous_lifestyle", icon: "🎁", label: "Generous" },
 ];
 
 // ── Marker helpers ───────────────────────────────────────────────────────────

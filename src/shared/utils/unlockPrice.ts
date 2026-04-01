@@ -6,10 +6,7 @@
 export type ProfileLike = {
   available_tonight?: boolean;
   is_plusone?: boolean;
-  generous_lifestyle?: boolean;
   weekend_plans?: boolean;
-  late_night_chat?: boolean;
-  no_drama?: boolean;
 };
 
 export const UNLOCK_CENTS_DEFAULT = 199;
@@ -20,10 +17,7 @@ export function hasUnlockBadges(p: ProfileLike | null | undefined): boolean {
   return !!(
     p.available_tonight ||
     p.is_plusone ||
-    p.generous_lifestyle ||
-    p.weekend_plans ||
-    p.late_night_chat ||
-    p.no_drama
+    p.weekend_plans
   );
 }
 

@@ -1,13 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { CalendarDays, Gift, Heart, MapPin, MessageCircle, MoonStar, ShieldCheck, Unlock } from "lucide-react";
+import { CalendarDays, Heart, MapPin, MessageCircle, Unlock } from "lucide-react";
 import { isProfileLocked } from "@/features/dating/utils/profileLock";
 import { Button } from "@/shared/components/button";
 import PromoCard from "@/shared/components/PromoCard";
 import { PREMIUM_FEATURES, PremiumFeature } from "@/data/premiumFeatures";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import { getUnlockPriceLabel } from "@/shared/utils/unlockPrice";
-import { firstName } from "@/shared/utils";
 import { CountdownBadge } from "@/features/dating/components/likes-library/CountdownBadge";
 
 type Tab = "sent" | "received" | "new" | "treat" | "match" | "distance" | "gifts" | "video";
@@ -142,21 +141,9 @@ export default function LikesCarousel(props: LikesCarouselProps) {
                 <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">
                   <span className="text-yellow-300 font-black text-[7px] leading-none">+1</span>
                 </span>
-              ) : profile.generous_lifestyle ? (
-                <span className="absolute -top-1 -left-1 bg-black border border-amber-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(245,158,11,0.5)]">
-                  <Gift className="w-2.5 h-2.5 text-amber-300" />
-                </span>
               ) : profile.weekend_plans ? (
                 <span className="absolute -top-1 -left-1 bg-black border border-primary/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(180,80,150,0.5)]">
                   <CalendarDays className="w-2.5 h-2.5 text-primary" />
-                </span>
-              ) : profile.late_night_chat ? (
-                <span className="absolute -top-1 -left-1 bg-black border border-indigo-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(99,102,241,0.5)]">
-                  <MoonStar className="w-2.5 h-2.5 text-indigo-300" />
-                </span>
-              ) : profile.no_drama ? (
-                <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">
-                  <ShieldCheck className="w-2.5 h-2.5 text-yellow-300" />
                 </span>
               ) : props.tab === "new" && profile.available_tonight ? (
                 <span className="absolute -top-1 -left-1 bg-black border border-yellow-400/70 rounded-full w-4 h-4 flex items-center justify-center shadow-[0_0_6px_rgba(250,204,21,0.5)]">🌙</span>

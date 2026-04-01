@@ -567,10 +567,7 @@ const FilterPanel = ({ open, onClose, filters, onApply }: FilterPanelProps) => {
                     <ToggleRow label="Online Now" desc="Currently active on the app" emoji="🟢" value={local.onlineNow} onChange={() => set("onlineNow", !local.onlineNow)} />
                     <ToggleRow label="Free Tonight" desc="Available to meet up tonight" emoji="🌙" value={local.availableTonight} onChange={() => set("availableTonight", !local.availableTonight)} />
                     <ToggleRow label="Plus One" desc="Open to social outings & friendship" emoji="✚" value={local.plusOne} onChange={() => set("plusOne", !local.plusOne)} />
-                    <ToggleRow label="Generous Spirit" desc="Warm, kind and thoughtful personality" emoji="🎁" value={local.generousLifestyle} onChange={() => set("generousLifestyle", !local.generousLifestyle)} />
                     <ToggleRow label="Weekend Plans" desc="Planning something this weekend" emoji="📅" value={local.weekendPlans} onChange={() => set("weekendPlans", !local.weekendPlans)} />
-                    <ToggleRow label="Late Night Chat" desc="Night owl, active after dark" emoji="🦉" value={local.lateNightChat} onChange={() => set("lateNightChat", !local.lateNightChat)} />
-                    <ToggleRow label="No Drama" desc="Values honest, chill connections" emoji="✨" value={local.noDrama} onChange={() => set("noDrama", !local.noDrama)} />
                   </div>
                 </div>
 

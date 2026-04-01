@@ -127,29 +127,17 @@ const BADGE_INFO: Record<string, { icon: string; label: string; meaning: string;
     meaning: "This person enjoys social settings and is open to building genuine friendships through shared experiences. They are looking for real, mutual connections — not any form of paid or arranged arrangement.",
     tip: "Ask what kind of social activities they enjoy most.",
   },
-  generous_lifestyle: {
-    icon: "🎁",
-    label: "Generous Spirit",
-    meaning: "This person is warm, kind, and naturally thoughtful in how they connect with people. They care about making others feel valued through genuine attention and kindness — it's a personality trait, not a financial one.",
-    tip: "Ask what matters most to them in a connection.",
-  },
   weekend_plans: {
     icon: "📅",
     label: "Weekend Plans",
     meaning: "This person is actively planning something for the weekend and is open to having someone join. They are not waiting around — they want to make plans now and include the right person in their weekend.",
     tip: "Suggest a weekend activity — they're ready to go!",
   },
-  late_night_chat: {
-    icon: "🌙",
-    label: "Late Night",
-    meaning: "This person is a night owl and comes alive after dark. They are most active, social and engaged during late hours. If you enjoy deep late-night conversations or spontaneous night plans, this is your match.",
-    tip: "Message late evening for the best response.",
-  },
-  no_drama: {
-    icon: "✨",
-    label: "No Drama",
-    meaning: "This person values peace, honesty and straightforward communication. They are not interested in games or complications — just a real, calm and genuine connection with someone who means what they say.",
-    tip: "Be direct and genuine — they'll appreciate it.",
+  meet_now_active: {
+    icon: "⚡",
+    label: "Out Now",
+    meaning: "This person is free right now and nearby. They've activated Out Now to meet up today — not tomorrow, right now. Tap to see their location on the map.",
+    tip: "Tap the Out Now banner to see how close they are.",
   },
 };
 

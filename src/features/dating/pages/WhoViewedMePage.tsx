@@ -750,16 +750,20 @@ export default function WhoViewedMePage() {
           }}>
             🪙 {coinBalance}
           </div>
-          {/* Home button — right */}
+          {/* Back button — right */}
           <button
-            onClick={() => navigate("/home")}
+            onClick={() => navigate(-1)}
             style={{
-              background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: 20, width: 34, height: 34, cursor: "pointer",
-              color: "white", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
+              width: 42, height: 42, borderRadius: "50%",
+              background: "rgba(0,0,0,0.72)", border: "1px solid rgba(255,255,255,0.12)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", backdropFilter: "blur(12px)", flexShrink: 0,
             }}
-          >🏠</button>
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
+          </button>
         </div>
 
         {/* ── Body ──────────────────────────────────────────────────── */}
