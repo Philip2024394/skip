@@ -31,6 +31,7 @@ interface SwipeStackProps {
   onOpenMap?: (profile: Profile) => void;
   onCoinCard?: () => void;
   onUnlockCard?: () => void;
+  outNowUserIds?: string[];
 }
 
 const SWIPE_THRESHOLD = 80;
@@ -52,6 +53,7 @@ export default function SwipeStack({
   onOpenMap,
   onCoinCard,
   onUnlockCard,
+  outNowUserIds = [],
 }: SwipeStackProps) {
   // Index as a ref AND state — ref for synchronous reads inside callbacks,
   // state to trigger re-renders.
@@ -535,7 +537,13 @@ export default function SwipeStack({
                 )}
                 {(profile.name || "").split(" ")[0]}, {profile.age}
               </h3>
-              {(profile.is_mock && (profile as any).mock_online_hours
+              {outNowUserIds.includes(profile.id) && (
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: "#fbbf24" }} />
+                  <span className="relative inline-flex rounded-full h-3 w-3" style={{ background: "#fbbf24", boxShadow: "0 0 8px rgba(251,191,36,0.9)" }} />
+                </span>
+              )}
+              {!outNowUserIds.includes(profile.id) && (profile.is_mock && (profile as any).mock_online_hours
                 ? isMockCurrentlyOnline(profile.id, profile.country, (profile as any).mock_online_hours, (profile as any).mock_offline_days)
                 : isOnline(profile.last_seen_at)) && (
                   <span className="relative flex h-3 w-3">

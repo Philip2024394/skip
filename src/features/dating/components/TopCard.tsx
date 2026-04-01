@@ -40,6 +40,7 @@ interface TopCardProps {
   onUnlockCard?: () => void;
   onSwipeAction?: () => void;
   currentUser?: any;
+  outNowUserIds?: string[];
 }
 
 
@@ -276,6 +277,7 @@ export default function TopCard(props: TopCardProps) {
           }}
           onCoinCard={props.onCoinCard}
           onUnlockCard={props.onUnlockCard}
+          outNowUserIds={props.outNowUserIds}
         />
       )}
     </div>

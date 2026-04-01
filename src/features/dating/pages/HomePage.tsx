@@ -93,6 +93,11 @@ import NewUserBoostBanner from "@/features/dating/components/NewUserBoostBanner"
 import FrustrationModal from "@/features/dating/components/FrustrationModal";
 import ScoreRing from "@/features/dating/components/ScoreRing";
 import SwipeLockOverlay from "@/features/dating/components/SwipeLockOverlay";
+import OutNowToggle from "@/features/dating/components/OutNowToggle";
+import OutNowOverlay from "@/features/dating/components/OutNowOverlay";
+import OutNowCountdown from "@/features/dating/components/OutNowCountdown";
+import OutNowMapSheet from "@/features/dating/components/OutNowMapSheet";
+import { useOutNow } from "@/shared/hooks/useOutNow";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -334,6 +339,17 @@ const Index = () => {
 
   // ── Login streak (auto-claims on mount, shows toast + coins) ─────────────
   const { streak: loginStreak } = useLoginStreak(user?.id && user.id !== "guest-user" ? user.id : null);
+
+  // ── Out Now ───────────────────────────────────────────────────────────────
+  const mutualMatchIds = useMemo(
+    () => iLiked.filter(p => likedMe.some(l => l.id === p.id)).map(p => p.id),
+    [iLiked, likedMe],
+  );
+  const outNow = useOutNow(
+    user?.id && user.id !== "guest-user" ? user.id : null,
+    mutualMatchIds,
+  );
+  const [outNowMapProfile, setOutNowMapProfile] = useState<any | null>(null);
 
   // ── Daily swipe scarcity ──────────────────────────────────────────────────
   const spendCoinsForSwipes = async (amount: number): Promise<boolean> => {
@@ -1611,6 +1627,11 @@ const Index = () => {
                     confirmedBestieIds.includes(selectedProfile?.id ?? "") ||
                     (iLiked.some(p => p.id === selectedProfile?.id) && likedMe.some(p => p.id === selectedProfile?.id))
                   }
+                  isOutNow={outNow.activeSessions.some(s => s.userId === selectedProfile?.id)}
+                  onOutNowTap={() => {
+                    const session = outNow.activeSessions.find(s => s.userId === selectedProfile?.id);
+                    if (session) setOutNowMapProfile({ ...selectedProfile, distanceBand: session.distanceBand, meet_now_expires_at: session.expiresAt, isOutNowSession: session });
+                  }}
                 />
               )
             ) : (
@@ -1646,6 +1667,7 @@ const Index = () => {
                   onUnlockCard={() => setShowUnlockCard(true)}
                   currentUser={user}
                   onSwipeAction={tickC4Swipe}
+                  outNowUserIds={outNow.activeSessions.map(s => s.userId)}
                 />
 
                 {/* ── Connect 4 Promo Card ────────────────────────────── */}
@@ -1853,6 +1875,7 @@ const Index = () => {
                       profiles={bottomProfiles}
                       direction="down"
                       roseAvailable={roseAvailable}
+                      outNowUserIds={outNow.activeSessions.map(s => s.userId)}
                       onRose={handleRose}
                       onLike={(p) => {
                         if (dailySwipes.isLocked) return;
@@ -2192,6 +2215,57 @@ const Index = () => {
           <DailyBoostButton userId={user.id} />
         </div>
       )}
+
+      {/* ── Out Now map sheet (from profile Out Now tap) ───────────── */}
+      <AnimatePresence>
+        {outNowMapProfile && user?.id && (
+          <OutNowMapSheet
+            profile={{
+              id: outNowMapProfile.id,
+              name: outNowMapProfile.name,
+              avatar_url: outNowMapProfile.avatar_url,
+              distanceBand: outNowMapProfile.distanceBand,
+              isVerified: outNowMapProfile.is_verified || outNowMapProfile.photo_verified,
+              meet_now_expires_at: outNowMapProfile.meet_now_expires_at,
+              latitude: outNowMapProfile.latitude,
+              longitude: outNowMapProfile.longitude,
+            }}
+            isLocked={!!(outNowMapProfile.isOutNowSession?.lockedBy && outNowMapProfile.isOutNowSession.lockedBy !== user.id)}
+            lockExpiresAt={outNowMapProfile.isOutNowSession?.lockExpiresAt}
+            onOTW={async () => {
+              const result = await outNow.purchaseOTW(outNowMapProfile.id);
+              if (result?.url) window.open(result.url, "_blank");
+              setOutNowMapProfile(null);
+            }}
+            onClose={() => setOutNowMapProfile(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Out Now overlays ───────────────────────────────────────── */}
+      <AnimatePresence>
+        {outNow.incomingSession && user?.id && (
+          <OutNowOverlay
+            session={outNow.incomingSession}
+            currentUserId={user.id}
+            onPurchase={() => outNow.purchaseOTW(outNow.incomingSession!.userId)}
+            onDismiss={() => outNow.setIncomingSession(null)}
+            onJoinWaitlist={() => outNow.joinWaitlist(outNow.incomingSession!.userId)}
+            coinBalance={coinBalance.balance}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {outNow.myPurchasedSession && user?.id && (
+          <OutNowCountdown
+            session={outNow.myPurchasedSession}
+            isActivator={false}
+            onConfirmMet={() => outNow.confirmMet(outNow.myPurchasedSession!.userId)}
+            onMoveOn={() => outNow.moveOn(outNow.myPurchasedSession!.userId)}
+            currentUserId={user.id}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ── Frustration modal ──────────────────────────────────────── */}
       <FrustrationModal
@@ -2620,6 +2694,16 @@ const Index = () => {
                             );
                           })()}
                         </div>
+                      )}
+
+                      {/* ── Out Now toggle ─────────────────────── */}
+                      {user?.id && user.id !== "guest-user" && (
+                        <OutNowToggle
+                          isActive={outNow.isActive}
+                          expiresAt={outNow.expiresAt}
+                          onActivate={outNow.activateOutNow}
+                          onDeactivate={outNow.deactivateOutNow}
+                        />
                       )}
 
                       {/* ── My Profile ─────────────────────────── */}

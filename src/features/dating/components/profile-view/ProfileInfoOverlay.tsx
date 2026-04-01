@@ -28,6 +28,8 @@ interface ProfileInfoPanelProps {
   currentUserId?: string;
   deductCoins?: (amount: number, reason: string) => Promise<boolean>;
   isConnected?: boolean;
+  isOutNow?: boolean;
+  onOutNowTap?: () => void;
 }
 
 const InfoRow = ({ icon, label, value }: { icon: string; label: string; value?: string }) =>
@@ -404,7 +406,7 @@ function ShyFieldsSection({
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift, onAskQuestion, askedStates = {}, answeredValues = {}, coinBalance = 0, onBlock, currentUserId, deductCoins, isConnected = false }: ProfileInfoPanelProps) {
+export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUserQuiz, allProfiles = [], onBestieRequest, isBestie = false, isBestiePending = false, onSendRealGift, onAskQuestion, askedStates = {}, answeredValues = {}, coinBalance = 0, onBlock, currentUserId, deductCoins, isConnected = false, isOutNow = false, onOutNowTap }: ProfileInfoPanelProps) {
   const navigate = useNavigate();
   const basicInfo = profile?.basic_info || {};
   const lifestyleInfo = profile?.lifestyle_info || {};
@@ -599,6 +601,34 @@ export default function ProfileInfoPanel({ profile, onClose: _onClose, currentUs
           scrollbarColor: "rgba(236,72,153,0.4) transparent",
         }}
       >
+        {/* ── Out Now banner ── */}
+        {isOutNow && (
+          <button
+            onClick={onOutNowTap}
+            style={{
+              width: "100%", marginBottom: 14, padding: "12px 14px",
+              background: "linear-gradient(135deg, rgba(251,191,36,0.15), rgba(245,158,11,0.08))",
+              border: "1px solid rgba(251,191,36,0.4)",
+              borderRadius: 16, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 12,
+              boxShadow: "0 0 16px rgba(251,191,36,0.12)",
+            }}
+          >
+            {/* Pulsing dot */}
+            <span style={{ position: "relative", width: 10, height: 10, flexShrink: 0 }}>
+              <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#fbbf24", opacity: 0.6, animation: "ping 1.5s infinite" }} />
+              <span style={{ position: "absolute", inset: 0, borderRadius: "50%", background: "#fbbf24" }} />
+            </span>
+            <div style={{ flex: 1, textAlign: "left" }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: "#fbbf24" }}>⚡ Out Now</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.45)", marginTop: 1 }}>
+                Nearby and free right now · tap to see map &amp; distance
+              </div>
+            </div>
+            <span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)" }}>›</span>
+          </button>
+        )}
+
         {/* -- Profile / Basic Info -- */}
         <div style={{
           margin: "14px 0 6px 0",
