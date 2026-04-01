@@ -80,13 +80,36 @@ export default function PhotoVerifyPage({ userId, onVerified, onClose }: PhotoVe
 
       const { data: { publicUrl } } = supabase.storage.from("verification-selfies").getPublicUrl(path);
 
-      await (supabase.from("verification_selfies" as any).insert as any)({
-        user_id: userId,
-        selfie_url: publicUrl,
-        status: "pending",
-      });
+      // ── Immediately grant photo-verified badge (free tier) ──────────────────
+      // ID-doc verification ($4.99) is a separate paid tier handled in DashboardPage.
+      await Promise.all([
+        // Mark profile as photo-verified
+        supabase.from("profiles").update({
+          is_verified: true,
+          photo_verified: true,
+          verification_status: "approved",
+          verification_photo_url: publicUrl,
+        } as any).eq("id", userId),
+        // Award 50 coins for completing verification
+        (supabase.rpc as any)("award_coins", {
+          p_user_id: userId,
+          p_amount: 50,
+          p_reason: "photo_verification_complete",
+        }),
+        // Log selfie record
+        (supabase.from("verification_selfies" as any).insert as any)({
+          user_id: userId,
+          selfie_url: publicUrl,
+          status: "auto_approved",
+        }),
+      ]);
 
       setStep("submitted");
+      toast.success("✅ Verified! +50 coins earned", {
+        description: "Your profile now shows the verified badge",
+        duration: 5000,
+      });
+      setTimeout(() => onVerified(), 1800);
     } catch (err: any) {
       toast.error(err?.message ?? "Upload failed. Try again.");
     } finally {

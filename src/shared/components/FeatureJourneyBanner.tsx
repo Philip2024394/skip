@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { pushFeatureUnlocked } from "@/shared/utils/pushNotify";
 
 // ── Feature unlock schedule ────────────────────────────────────────────────────
 export interface FeatureUnlock {
@@ -42,24 +44,56 @@ function fmtCountdown(ms: number): string {
   return `${h}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
 }
 
+const TOAST_KEY = "fj_toasted_keys";
+function getToastedKeys(): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(TOAST_KEY) ?? "[]")); } catch { return new Set(); }
+}
+function markToasted(key: string) {
+  try {
+    const s = getToastedKeys(); s.add(key);
+    localStorage.setItem(TOAST_KEY, JSON.stringify([...s]));
+  } catch { /* silent */ }
+}
+
 // ── Props ──────────────────────────────────────────────────────────────────────
 interface Props {
-  createdAt: string; // ISO timestamp from profiles.created_at
+  createdAt: string;
+  userId?: string;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function FeatureJourneyBanner({ createdAt }: Props) {
-  const [now, setNow] = useState(Date.now());
+export default function FeatureJourneyBanner({ createdAt, userId }: Props) {
   const [expanded, setExpanded] = useState(false);
+  const firedRef = useRef(false);
 
   // Tick every second for live countdown
+  const [, setTick] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1_000);
+    const id = setInterval(() => setTick(t => t + 1), 1_000);
     return () => clearInterval(id);
   }, []);
 
   const days = daysSince(createdAt);
   const unlocked = FEATURE_UNLOCKS.filter(f => f.day <= days);
+
+  // Fire a toast + push the first time each feature unlocks
+  useEffect(() => {
+    if (firedRef.current) return;
+    const toasted = getToastedKeys();
+    const newlyUnlocked = unlocked.filter(f => f.day > 0 && !toasted.has(f.key));
+    if (newlyUnlocked.length === 0) return;
+    firedRef.current = true;
+    newlyUnlocked.forEach((f, i) => {
+      setTimeout(() => {
+        toast.success(`${f.emoji} ${f.feature} unlocked!`, {
+          description: f.description,
+          duration: 5000,
+        });
+        markToasted(f.key);
+        if (userId) pushFeatureUnlocked(userId, f.feature, f.emoji);
+      }, i * 1200);
+    });
+  }, [unlocked.length, userId]);
   const locked   = FEATURE_UNLOCKS.filter(f => f.day > days);
   const next     = locked[0] ?? null;
   const progress = unlocked.length / FEATURE_UNLOCKS.length;

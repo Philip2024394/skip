@@ -86,10 +86,13 @@ import CityProgressBanner from "@/shared/components/CityProgressBanner";
 import { useCityLaunch } from "@/shared/hooks/useCityLaunch";
 import { useScoredFeed } from "@/shared/hooks/useScoredFeed";
 import { useFrustrationDetector } from "@/shared/hooks/useFrustrationDetector";
+import { useDailySwipes } from "@/shared/hooks/useDailySwipes";
+import { useLoginStreak } from "@/shared/hooks/useLoginStreak";
 import DailyBoostButton from "@/features/dating/components/DailyBoostButton";
 import NewUserBoostBanner from "@/features/dating/components/NewUserBoostBanner";
 import FrustrationModal from "@/features/dating/components/FrustrationModal";
 import ScoreRing from "@/features/dating/components/ScoreRing";
+import SwipeLockOverlay from "@/features/dating/components/SwipeLockOverlay";
 
 const LOCAL_LIKES_KEY = "local-liked-profiles";
 const LOCAL_LIKED_ME_KEY = "local-liked-me-profiles";
@@ -328,6 +331,24 @@ const Index = () => {
   useEffect(() => {
     if (user?.id) fetchFeed({ country: filters.country ?? null, genderFilter: filters.gender ?? null });
   }, [user?.id, fetchFeed, filters.country, filters.gender]);
+
+  // ── Login streak (auto-claims on mount, shows toast + coins) ─────────────
+  const { streak: loginStreak } = useLoginStreak(user?.id && user.id !== "guest-user" ? user.id : null);
+
+  // ── Daily swipe scarcity ──────────────────────────────────────────────────
+  const spendCoinsForSwipes = async (amount: number): Promise<boolean> => {
+    if (!user?.id) return false;
+    try {
+      const { data } = await (supabase.rpc as any)("spend_coins", { p_user_id: user.id, p_amount: amount, p_reason: "swipe_refill" });
+      if (data !== -1) { coinBalance.addCoins(-amount); return true; }
+      return false;
+    } catch { return false; }
+  };
+  const dailySwipes = useDailySwipes(
+    user?.id && user.id !== "guest-user" ? user.id : null,
+    coinBalance.balance,
+    spendCoinsForSwipes,
+  );
 
   // Load blocked user IDs so they are filtered from the feed
   useEffect(() => {
@@ -652,6 +673,8 @@ const Index = () => {
   const [myReferralCode, setMyReferralCode] = useState<string | null>(null);
   const [showReferralPopup, setShowReferralPopup] = useState(false);
   const [showCoinCard, setShowCoinCard] = useState(false);
+  const [showUnlockCard, setShowUnlockCard] = useState(false);
+  const [unlockCardCollected, setUnlockCardCollected] = useState(false);
 
   // ── Connect 4 promo card ──────────────────────────────────────────────────────
   const [showC4Promo, setShowC4Promo] = useState(false);
@@ -762,7 +785,7 @@ const Index = () => {
     if (!user?.id) return;
     const fetchCount = async () => {
       const now = new Date().toISOString();
-      const { count } = await (supabase.from("tonight_requests") as any)
+      const { count } = await (supabase as any).from("tonight_requests")
         .select("id", { count: "exact", head: true })
         .eq("receiver_id", user.id)
         .eq("status", "pending")
@@ -1172,7 +1195,7 @@ const Index = () => {
     showGuestPrompt,
     upsertLocalLikedProfile,
     toast,
-    t,
+    t: t as (key: string) => string,
     navigate,
     userCountry: getUserCountry(),
     isGlobalDater,
@@ -1195,9 +1218,11 @@ const Index = () => {
   // ── Preview-gated action wrappers ─────────────────────────────────────────
   const gatedLike = useCallback((profile: any) => {
     if (isPreviewMode) { setPhotoRequiredAction("like"); return; }
+    if (dailySwipes.isLocked) { return; } // blocked by swipe limit
     onFrustrationSwipe(); // track swipe for frustration detector
+    dailySwipes.recordSwipe();
     handleLike(profile);
-  }, [isPreviewMode, handleLike, onFrustrationSwipe]);
+  }, [isPreviewMode, handleLike, onFrustrationSwipe, dailySwipes]);
 
   const gatedChat = useCallback((profile: any) => {
     if (isPreviewMode) { setPhotoRequiredAction("chat"); return; }
@@ -1388,7 +1413,7 @@ const Index = () => {
                   </button>
                   <button
                     onClick={() => {
-                      if (!user) { showGuestPrompt("premium"); return; }
+                      if (!user) { showGuestPrompt("purchase"); return; }
                       const vip = PREMIUM_FEATURES.find(f => f.id === "vip");
                       if (vip) setFeatureDialog(vip);
                     }}
@@ -1413,6 +1438,23 @@ const Index = () => {
                       </span>
                     )}
                   </button>
+
+                  {/* Daily swipe counter pill */}
+                  {user?.id && user.id !== "guest-user" && !dailySwipes.isLocked && dailySwipes.swipesLeft <= 15 && (
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      style={{
+                        padding: "3px 8px", borderRadius: 12,
+                        background: dailySwipes.swipesLeft <= 5 ? "rgba(239,68,68,0.25)" : "rgba(251,191,36,0.18)",
+                        border: `1px solid ${dailySwipes.swipesLeft <= 5 ? "rgba(239,68,68,0.5)" : "rgba(251,191,36,0.4)"}`,
+                        color: dailySwipes.swipesLeft <= 5 ? "#f87171" : "#fbbf24",
+                        fontSize: 10, fontWeight: 800,
+                      }}
+                    >
+                      {dailySwipes.swipesLeft} left
+                    </motion.div>
+                  )}
 
                   {/* Score ring — attractiveness score */}
                   {user?.id && user.id !== "guest-user" && (
@@ -1484,7 +1526,7 @@ const Index = () => {
               />
             ) : showVideoPanel && selectedProfile ? (
               <VideoIntroPanel
-                profile={selectedProfile}
+                profile={{ ...selectedProfile, video_url: selectedProfile.video_url ?? undefined }}
                 currentUserId={user?.id}
                 currentUserName={userName}
                 onClose={() => setAboutMeTab("new")}
@@ -1520,8 +1562,8 @@ const Index = () => {
                   likedMe={likedMe}
                   onOpenMap={(p) => setMapProfile(p)}
                   onBestieRequest={handleBestieRequest}
-                  isBestie={confirmedBestieIds.includes(selectedProfile?.id)}
-                  isBestiePending={sentBestieIds.includes(selectedProfile?.id)}
+                  isBestie={confirmedBestieIds.includes(selectedProfile?.id ?? "")}
+                  isBestiePending={sentBestieIds.includes(selectedProfile?.id ?? "")}
                 />
               ) : (
                 <ProfileInfoPanel
@@ -1529,8 +1571,8 @@ const Index = () => {
                   onClose={() => setSelectedProfileSection(null)}
                   allProfiles={allProfiles}
                   onBestieRequest={handleBestieRequest}
-                  isBestie={confirmedBestieIds.includes(selectedProfile?.id)}
-                  isBestiePending={sentBestieIds.includes(selectedProfile?.id)}
+                  isBestie={confirmedBestieIds.includes(selectedProfile?.id ?? "")}
+                  isBestiePending={sentBestieIds.includes(selectedProfile?.id ?? "")}
                   onSendRealGift={() => { setRealGiftTarget(selectedProfile); setShowRealGiftFlow(true); }}
                   coinBalance={coinBalance.balance}
                   onAskQuestion={(template) => {
@@ -1566,7 +1608,7 @@ const Index = () => {
                   currentUserId={user?.id}
                   deductCoins={coinBalance.deductCoins}
                   isConnected={
-                    confirmedBestieIds.includes(selectedProfile?.id) ||
+                    confirmedBestieIds.includes(selectedProfile?.id ?? "") ||
                     (iLiked.some(p => p.id === selectedProfile?.id) && likedMe.some(p => p.id === selectedProfile?.id))
                   }
                 />
@@ -1813,16 +1855,32 @@ const Index = () => {
                       roseAvailable={roseAvailable}
                       onRose={handleRose}
                       onLike={(p) => {
+                        if (dailySwipes.isLocked) return;
+                        dailySwipes.recordSwipe();
                         handleLike(p);
                         advanceBottomQueue(p.id);
                         if (user) navigate(`/profile/${p.id}`);
                       }}
                       onPass={(p) => {
+                        if (dailySwipes.isLocked) return;
+                        dailySwipes.recordSwipe();
                         sessionStatsRef.current.passed += 1;
                         setSessionTick((v) => v + 1);
                         advanceBottomQueue(p.id);
                         tickC4Swipe();
                       }}
+                    />
+                    {/* Swipe lock overlay */}
+                    <SwipeLockOverlay
+                      open={dailySwipes.isLocked}
+                      swipesLeft={dailySwipes.swipesLeft}
+                      coinsBalance={coinBalance.balance}
+                      coinsPerRefill={dailySwipes.coinsPerRefill}
+                      swipesPerRefill={dailySwipes.swipesPerRefill}
+                      refilling={dailySwipes.refilling}
+                      canRefillWithCoins={dailySwipes.canRefillWithCoins}
+                      onRefill={() => dailySwipes.refillWithCoins()}
+                      onBuyCoins={() => setShowCoinWallet(true)}
                     />
                   </div>
                 )}
@@ -1960,7 +2018,7 @@ const Index = () => {
       <AppDialogs
         showReferralPopup={showReferralPopup}
         setShowReferralPopup={setShowReferralPopup}
-        referralCode={myReferralCode}
+        referralCode={myReferralCode ?? ""}
         user={user}
         REFERRAL_POPUP_SHOWN_KEY={REFERRAL_POPUP_SHOWN_KEY}
         matchedProfile={matchDialog}
@@ -2513,6 +2571,56 @@ const Index = () => {
                       {ALL_FEATURES.map(f => (
                         <FeatureBanner key={f.key} f={f} />
                       ))}
+
+                      {/* ── Login streak card ──────────────────── */}
+                      {loginStreak.currentStreak > 0 && (
+                        <div style={{
+                          margin: "2px 0 10px",
+                          background: "rgba(251,191,36,0.08)",
+                          border: "1px solid rgba(251,191,36,0.2)",
+                          borderRadius: 14, padding: "10px 14px",
+                          display: "flex", alignItems: "center", gap: 12,
+                        }}>
+                          {/* flame + count */}
+                          <div style={{ textAlign: "center", minWidth: 38 }}>
+                            <div style={{ fontSize: 22, lineHeight: 1 }}>🔥</div>
+                            <div style={{ fontSize: 16, fontWeight: 900, color: "#fbbf24", lineHeight: 1.2 }}>
+                              {loginStreak.currentStreak}
+                            </div>
+                            <div style={{ fontSize: 8, color: "rgba(255,255,255,0.35)", fontWeight: 600, letterSpacing: "0.04em" }}>
+                              {loginStreak.currentStreak === 1 ? "DAY" : "DAYS"}
+                            </div>
+                          </div>
+                          {/* text */}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.85)" }}>
+                              {loginStreak.currentStreak >= 7 ? "You're on fire! 🚀" : "Daily Streak"}
+                            </div>
+                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginTop: 2 }}>
+                              {loginStreak.longestStreak > loginStreak.currentStreak
+                                ? `Best: ${loginStreak.longestStreak} days`
+                                : "Personal best!"}
+                            </div>
+                          </div>
+                          {/* next milestone */}
+                          {(() => {
+                            const milestones = [1, 3, 7, 14, 30];
+                            const next = milestones.find(m => m > loginStreak.currentStreak);
+                            if (!next) return null;
+                            const rewards: Record<number,number> = {1:5,3:15,7:50,14:100,30:250};
+                            return (
+                              <div style={{ textAlign: "right" }}>
+                                <div style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginBottom: 2 }}>Day {next}</div>
+                                <div style={{
+                                  fontSize: 10, fontWeight: 800,
+                                  background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)",
+                                  color: "#fbbf24", borderRadius: 12, padding: "2px 8px",
+                                }}>+{rewards[next]} 🪙</div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
 
                       {/* ── My Profile ─────────────────────────── */}
                       <SectionLabel label="My Profile" />

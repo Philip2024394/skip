@@ -6,6 +6,7 @@ import { LIKE_EXPIRY_MS, SUPER_LIKES_BALANCE_KEY, POST_LOGIN_LANDING_KEY } from 
 import { isNetworkError } from "@/shared/utils/payments";
 import { hasUnlockBadges } from "@/shared/utils/unlockPrice";
 import { markSwipeStart } from "@/shared/hooks/usePopupQueue";
+import { pushLikeReceived, pushMatchReceived } from "@/shared/utils/pushNotify";
 
 interface UseSwipeActionsProps {
   user: any;
@@ -90,21 +91,11 @@ export const useSwipeActions = (props: UseSwipeActionsProps) => {
         props.toast("🪙 +5 coins", { description: "Bonus earned for a new match! 🎉" });
       }, 1200);
       // Push: notify the other person of the match
-      supabase.functions.invoke("send-push", { body: {
-        recipientId: profile.id,
-        title: "🎉 New Match!",
-        body: `You matched with ${props.user.user_metadata?.name ?? "someone"}!`,
-        url: "/",
-      }}).catch(() => {});
+      pushMatchReceived(profile.id, props.user.user_metadata?.name ?? props.user.name ?? "Someone");
     } else {
       props.toast("💗 " + props.t("swipe.liked"), { description: `${props.t("swipe.youLiked")} ${profile.name}` });
       // Push: notify the other person of a new like
-      supabase.functions.invoke("send-push", { body: {
-        recipientId: profile.id,
-        title: "❤️ Someone liked you!",
-        body: "Open 2DateMe to see who it is.",
-        url: "/",
-      }}).catch(() => {});
+      pushLikeReceived(profile.id, props.user.user_metadata?.name ?? props.user.name ?? "Someone");
     }
   }, [props.user, props.iLiked, props.likedMe, props.setILiked, props.setMatchDialog, props.upsertLocalLikedProfile, props.toast, props.t]);
 

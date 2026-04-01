@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Send, ShieldCheck, Lock, Video, Flag, X } from "lucide-react";
 import { useMessages, validateChatMessage } from "@/shared/hooks/useMessages";
+import { pushMessageReceived } from "@/shared/utils/pushNotify";
 import { isOnline } from "@/shared/hooks/useOnlineStatus";
 import VideoCallPanel from "@/features/video/components/VideoCallPanel";
 import ContactRevealModal, { PLATFORMS_ALL, PlatformId } from "./ContactRevealModal";
@@ -288,6 +289,8 @@ export default function ChatPanel({ currentUserId, otherUser, onClose, onUnlock 
     setDraft("");
     setError(null);
     inputRef.current?.focus();
+    // Push notify the receiver (no-op if they're active in the app)
+    pushMessageReceived(otherUser.id, otherUser.name?.split(" ")[0] ?? "Someone", trimmed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

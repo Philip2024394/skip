@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/features/dating/components/SwipeCard";
 import { LIKE_EXPIRY_MS } from "@/shared/services/constants";
+import { pushLikeReceived } from "@/shared/utils/pushNotify";
 
 interface UseRealtimeLikesProps {
   user: any;
@@ -92,6 +93,10 @@ export const useRealtimeLikes = (props: UseRealtimeLikesProps) => {
           } else {
             props.setLikedMe((prev) => (prev.some((x) => x.id === profile.id) ? prev : [...prev, profile]));
             props.saveLocalLikedMeProfiles([...props.getLocalLikedMeProfiles().filter((x) => x.id !== profile.id), profile].slice(0, 100));
+          }
+          // Push notification to receiver (only fires if app is in background/closed)
+          if (props.user?.id) {
+            pushLikeReceived(props.user.id, profile.name || "Someone");
           }
         }
       )
